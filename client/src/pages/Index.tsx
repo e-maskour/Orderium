@@ -85,9 +85,9 @@ const Index = () => {
     filters.categoryId === null
       ? products
       : products.filter(
-        (p) =>
-          Array.isArray(p.categories) && p.categories.some((c) => c.id === filters.categoryId),
-      );
+          (p) =>
+            Array.isArray(p.categories) && p.categories.some((c) => c.id === filters.categoryId),
+        );
 
   const greeting = user?.customerName
     ? `${t('hello') || 'Bonjour'}, ${user.customerName.split(' ')[0]}! 👋`
@@ -119,7 +119,7 @@ const Index = () => {
             boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
           }}
         >
-          <CartDrawer isOpen={true} onClose={() => { }} isPanelMode={true} />
+          <CartDrawer isOpen={true} onClose={() => {}} isPanelMode={true} />
           <div
             onMouseDown={startResizing}
             style={{

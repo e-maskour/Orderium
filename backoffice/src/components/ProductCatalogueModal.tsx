@@ -357,33 +357,33 @@ export function ProductCatalogueModal({
       style={
         isMobile
           ? {
-            width: '100vw',
-            maxWidth: '100vw',
-            maxHeight: '90dvh',
-            margin: 0,
-            borderRadius: '1rem 1rem 0 0',
-          }
+              width: '100vw',
+              maxWidth: '100vw',
+              maxHeight: '90dvh',
+              margin: 0,
+              borderRadius: '1rem 1rem 0 0',
+            }
           : { width: '95vw', maxWidth: '58rem' }
       }
       breakpoints={isMobile ? undefined : { '960px': '90vw', '640px': '100vw' }}
       contentStyle={
         isMobile
           ? {
-            padding: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            height: 0,
-            maxHeight: 'none',
-          }
+              padding: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              height: 0,
+              maxHeight: 'none',
+            }
           : {
-            padding: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: 'calc(85dvh - 9rem)',
-          }
+              padding: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: 'calc(85dvh - 9rem)',
+            }
       }
     >
       <style>{PCAT_STYLES}</style>
