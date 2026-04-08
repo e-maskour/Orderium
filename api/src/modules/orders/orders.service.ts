@@ -1080,8 +1080,8 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
 
     const isPosOrder =
-      order.originType === OrderOriginType.CLIENT_POS ||
-      order.originType === OrderOriginType.ADMIN_POS;
+      (order.originType as OrderOriginType) === OrderOriginType.CLIENT_POS ||
+      (order.originType as OrderOriginType) === OrderOriginType.ADMIN_POS;
 
     if (!isPosOrder && order.isValidated) {
       throw new BadRequestException('ORDER_VALIDATED');
@@ -1116,20 +1116,22 @@ export class OrdersService {
 
     for (const order of orders) {
       const isPosOrder =
-        order.originType === OrderOriginType.CLIENT_POS ||
-        order.originType === OrderOriginType.ADMIN_POS;
+        (order.originType as OrderOriginType) === OrderOriginType.CLIENT_POS ||
+        (order.originType as OrderOriginType) === OrderOriginType.ADMIN_POS;
 
       if (!isPosOrder && order.isValidated) {
         const ref = order.documentNumber || `#${order.id}`;
-        throw new BadRequestException(`Order ${ref} is validated and cannot be deleted`);
+        throw new BadRequestException(
+          `Order ${ref} is validated and cannot be deleted`,
+        );
       }
     }
 
     const posOrderIds = orders
       .filter(
         (o) =>
-          o.originType === OrderOriginType.CLIENT_POS ||
-          o.originType === OrderOriginType.ADMIN_POS,
+          (o.originType as OrderOriginType) === OrderOriginType.CLIENT_POS ||
+          (o.originType as OrderOriginType) === OrderOriginType.ADMIN_POS,
       )
       .map((o) => o.id);
 
@@ -1139,7 +1141,9 @@ export class OrdersService {
         [posOrderIds],
       );
       if (paymentRows.length > 0) {
-        const withPaymentIds: number[] = paymentRows.map((r: any) => Number(r.orderId));
+        const withPaymentIds: number[] = paymentRows.map((r: any) =>
+          Number(r.orderId),
+        );
         const refs = withPaymentIds.map((pid) => {
           const o = orders.find((ord) => ord.id === pid);
           return o?.orderNumber || `#${pid}`;
