@@ -38,15 +38,15 @@ for APP in $APPS; do
     pnpm lint > /dev/null 2>&1
     CHECK_RESULT=$(pnpm lint:check 2>&1)
     # Count only errors (not warnings) — exit non-zero only if errors > 0
-    ERROR_COUNT=$(echo "$CHECK_RESULT" | grep -c " error ")
+    ERROR_COUNT=$(echo "$CHECK_RESULT" | grep -c " error " || true)
     if [ "$ERROR_COUNT" -gt 0 ]; then
       echo ""
       echo "  ✖  $APP — $ERROR_COUNT error(s) found:"
-      echo "$CHECK_RESULT" | grep " error " | grep -v "prettier/prettier" | head -10
+      echo "$CHECK_RESULT" | grep " error " | grep -v "prettier/prettier" | head -10 || true
       echo ""
       FAILED=1
     else
-      WARN_COUNT=$(echo "$CHECK_RESULT" | grep -c " warning ")
+      WARN_COUNT=$(echo "$CHECK_RESULT" | grep -c " warning " || true)
       if [ "$WARN_COUNT" -gt 0 ]; then
         echo "  ⚠  $APP — passed (${WARN_COUNT} warning(s))"
         WARNED=1

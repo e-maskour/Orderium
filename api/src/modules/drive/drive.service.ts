@@ -30,7 +30,7 @@ export class DriveService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly storage: DriveStorageService,
-  ) {}
+  ) { }
 
   private get nodeRepo(): Repository<DriveNode> {
     return this.tenantConnService.getRepository(DriveNode);
@@ -821,11 +821,12 @@ export class DriveService {
           where: { storageKey: f.key, isTrashed: false },
           select: ['id'],
         });
+        const source: 'user' | 'system' = node ? 'user' : 'system';
         return {
           ...f,
           canDelete: !!node,
           driveNodeId: node?.id ?? null,
-          source: node ? 'user' : 'system',
+          source,
         };
       }),
     );
