@@ -71,7 +71,7 @@ export class OrdersService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
