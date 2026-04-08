@@ -4,6 +4,13 @@ export class AddPerformanceIndexes1743600000000 implements MigrationInterface {
   name = 'AddPerformanceIndexes1743600000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Skip on brand-new tenant databases: the core tables don't exist yet.
+    // They will be created by InitialMigration1774300911703, which runs after
+    // this migration in timestamp order. New tenants get these indexes via
+    // TypeORM entity-level @Index() decorators applied by the InitialMigration.
+    const productsExists = await queryRunner.hasTable('products');
+    if (!productsExists) return;
+
     // ─── Enable pg_trgm for fast ILIKE '%search%' queries ───────
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
 
