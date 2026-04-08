@@ -10,7 +10,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(StockQuantResponseDto)
 @Controller('inventory/stock')
 export class StockController {
-  constructor(private readonly stockService: StockService) { }
+  constructor(private readonly stockService: StockService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all stock (aggregated across warehouses)' })

@@ -23,7 +23,7 @@ export class PartnersService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get partnerRepository(): Repository<Partner> {
     return this.tenantConnService.getRepository(Partner);

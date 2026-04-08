@@ -10,7 +10,10 @@ import { SequenceAuditLog } from './entities/sequence-audit-log.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateSequenceDto } from './dto/create-sequence.dto';
 import { UpdateSequenceDto } from './dto/update-sequence.dto';
-import { computePeriodKey, computeEffectivePeriodKey } from './helpers/compute-period-key';
+import {
+  computePeriodKey,
+  computeEffectivePeriodKey,
+} from './helpers/compute-period-key';
 import {
   formatDocumentNumber,
   buildFormatTemplate,
@@ -24,157 +27,157 @@ export const DEFAULT_SEQUENCES: Omit<
   Sequence,
   'id' | 'createdAt' | 'updatedAt' | 'lastGeneratedAt' | 'lastResetAt'
 >[] = [
-    {
-      entityType: 'invoice_sale',
-      name: 'Factures de vente',
-      prefix: 'FA',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'FA-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '', // set at seed time
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'invoice_purchase',
-      name: "Factures d'achat",
-      prefix: 'PA',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'PA-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'quote',
-      name: 'Devis',
-      prefix: 'DV',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'DV-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'delivery_note',
-      name: 'Bons de livraison',
-      prefix: 'BL',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'BL-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'purchase_order',
-      name: "Bons d'achat",
-      prefix: 'BA',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'BA-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'payment',
-      name: 'Paiements',
-      prefix: 'PAY',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'PAY-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'receipt',
-      name: 'Reçu',
-      prefix: '',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: true,
-      trimesterInFormat: false,
-      formatTemplate: 'YYYY-MM-DD-XXXX',
-      resetPeriod: 'daily',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'order',
-      name: 'Commandes POS',
-      prefix: 'CMD',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'CMD-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-    {
-      entityType: 'price_request',
-      name: 'Demandes de prix',
-      prefix: 'DP',
-      suffix: '',
-      numberLength: 4,
-      yearInFormat: true,
-      monthInFormat: true,
-      dayInFormat: false,
-      trimesterInFormat: false,
-      formatTemplate: 'DP-YYYY-MM-XXXX',
-      resetPeriod: 'monthly',
-      currentPeriodKey: '',
-      nextNumber: 1,
-      isActive: true,
-    },
-  ];
+  {
+    entityType: 'invoice_sale',
+    name: 'Factures de vente',
+    prefix: 'FA',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'FA-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '', // set at seed time
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'invoice_purchase',
+    name: "Factures d'achat",
+    prefix: 'PA',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'PA-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'quote',
+    name: 'Devis',
+    prefix: 'DV',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'DV-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'delivery_note',
+    name: 'Bons de livraison',
+    prefix: 'BL',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'BL-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'purchase_order',
+    name: "Bons d'achat",
+    prefix: 'BA',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'BA-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'payment',
+    name: 'Paiements',
+    prefix: 'PAY',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'PAY-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'receipt',
+    name: 'Reçu',
+    prefix: '',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: true,
+    trimesterInFormat: false,
+    formatTemplate: 'YYYY-MM-DD-XXXX',
+    resetPeriod: 'daily',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'order',
+    name: 'Commandes POS',
+    prefix: 'CMD',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'CMD-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+  {
+    entityType: 'price_request',
+    name: 'Demandes de prix',
+    prefix: 'DP',
+    suffix: '',
+    numberLength: 4,
+    yearInFormat: true,
+    monthInFormat: true,
+    dayInFormat: false,
+    trimesterInFormat: false,
+    formatTemplate: 'DP-YYYY-MM-XXXX',
+    resetPeriod: 'monthly',
+    currentPeriodKey: '',
+    nextNumber: 1,
+    isActive: true,
+  },
+];
 
 @Injectable()
 export class SequencesService {
   private readonly logger = new Logger(SequencesService.name);
 
-  constructor(private readonly tenantConnService: TenantConnectionService) { }
+  constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   private get repo(): Repository<Sequence> {
     return this.tenantConnService.getRepository(Sequence);
@@ -230,7 +233,7 @@ export class SequencesService {
       if (!rows.length) {
         throw new NotFoundException(
           `No active sequence found for entity type '${entityType}'. ` +
-          `Run the sequences seeder or create it via the admin API.`,
+            `Run the sequences seeder or create it via the admin API.`,
         );
       }
 
@@ -279,7 +282,8 @@ export class SequencesService {
       // period (yearly) but now runs with a finer effective period (monthly).
       // This is NOT a real period change — don't reset the counter mid-period.
       // The key is simply updated to the finer-grained value.
-      const isFormatUpgrade = !!storedKey && newPeriodKey.startsWith(storedKey + '-');
+      const isFormatUpgrade =
+        !!storedKey && newPeriodKey.startsWith(storedKey + '-');
 
       // A forward period advance: new key is lexicographically after the stored
       // key (e.g. '2026-05' > '2026-04'). Lexicographic comparison works for
@@ -503,7 +507,9 @@ export class SequencesService {
     );
 
     // Normalise the same [rows[], metadata] wrapping
-    const updatedRows: Array<{ next_number: number }> = Array.isArray(updated[0])
+    const updatedRows: Array<{ next_number: number }> = Array.isArray(
+      updated[0],
+    )
       ? updated[0]
       : updated;
 
@@ -593,7 +599,11 @@ export class SequencesService {
     const trimesterInFormatCreate = dto.trimesterInFormat ?? false;
     const periodKey = computeEffectivePeriodKey(
       resetPeriod,
-      { dayInFormat, monthInFormat: monthInFormatCreate, trimesterInFormat: trimesterInFormatCreate },
+      {
+        dayInFormat,
+        monthInFormat: monthInFormatCreate,
+        trimesterInFormat: trimesterInFormatCreate,
+      },
       now,
     );
 
@@ -639,10 +649,15 @@ export class SequencesService {
       // stores a monthly key — keeps generateNext in sync.
       const newDayInFormat = dto.dayInFormat ?? seq.dayInFormat;
       const newMonthInFormat = dto.monthInFormat ?? seq.monthInFormat;
-      const newTrimesterInFormat = dto.trimesterInFormat ?? seq.trimesterInFormat;
+      const newTrimesterInFormat =
+        dto.trimesterInFormat ?? seq.trimesterInFormat;
       seq.currentPeriodKey = computeEffectivePeriodKey(
         newResetPeriod,
-        { dayInFormat: newDayInFormat, monthInFormat: newMonthInFormat, trimesterInFormat: newTrimesterInFormat },
+        {
+          dayInFormat: newDayInFormat,
+          monthInFormat: newMonthInFormat,
+          trimesterInFormat: newTrimesterInFormat,
+        },
         now,
       );
       if (dto.nextNumber !== undefined) {
@@ -695,7 +710,11 @@ export class SequencesService {
           ...def,
           currentPeriodKey: computeEffectivePeriodKey(
             def.resetPeriod,
-            { dayInFormat: def.dayInFormat, monthInFormat: def.monthInFormat, trimesterInFormat: def.trimesterInFormat },
+            {
+              dayInFormat: def.dayInFormat,
+              monthInFormat: def.monthInFormat,
+              trimesterInFormat: def.trimesterInFormat,
+            },
             now,
           ),
         }),
@@ -722,7 +741,11 @@ export class SequencesService {
             ...defaultDef,
             currentPeriodKey: computeEffectivePeriodKey(
               defaultDef.resetPeriod,
-              { dayInFormat: defaultDef.dayInFormat, monthInFormat: defaultDef.monthInFormat, trimesterInFormat: defaultDef.trimesterInFormat },
+              {
+                dayInFormat: defaultDef.dayInFormat,
+                monthInFormat: defaultDef.monthInFormat,
+                trimesterInFormat: defaultDef.trimesterInFormat,
+              },
               now,
             ),
           }),
@@ -733,7 +756,6 @@ export class SequencesService {
         `No active sequence found for entity type '${entityType}'`,
       );
     }
-
 
     return seq;
   }

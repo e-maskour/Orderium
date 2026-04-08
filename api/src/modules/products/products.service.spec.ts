@@ -391,9 +391,7 @@ describe('ProductsService', () => {
       productRepo.manager.query.mockResolvedValue([{ count: '3' }]);
 
       await expect(service.remove(1)).rejects.toThrow(ConflictException);
-      await expect(service.remove(1)).rejects.toThrow(
-        'PRODUCT_IN_INVOICES',
-      );
+      await expect(service.remove(1)).rejects.toThrow('PRODUCT_IN_INVOICES');
     });
 
     it('throws NotFoundException when product does not exist', async () => {

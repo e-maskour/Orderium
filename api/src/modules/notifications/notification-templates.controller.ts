@@ -83,7 +83,7 @@ export class NotificationTemplatesController {
   constructor(
     private readonly templateService: NotificationTemplateService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List all notification templates' })

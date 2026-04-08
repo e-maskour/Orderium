@@ -60,7 +60,11 @@ export function computeEffectivePeriodKey(
   },
   date: Date,
 ): string {
-  const { dayInFormat = false, monthInFormat = false, trimesterInFormat = false } = formatFlags;
+  const {
+    dayInFormat = false,
+    monthInFormat = false,
+    trimesterInFormat = false,
+  } = formatFlags;
 
   // Derive the period implied by the format's time components.
   const formatPeriod: string = dayInFormat
@@ -74,7 +78,8 @@ export function computeEffectivePeriodKey(
   // Use whichever is more granular (higher number).
   const cfgGranularity = GRANULARITY[resetPeriod] ?? 1;
   const fmtGranularity = GRANULARITY[formatPeriod] ?? 0;
-  const effective = fmtGranularity > cfgGranularity ? formatPeriod : resetPeriod;
+  const effective =
+    fmtGranularity > cfgGranularity ? formatPeriod : resetPeriod;
 
   // Special case: quarterly (trimester) — Q1 = months 1-3, Q2 = 4-6, etc.
   if (effective === 'quarterly') {

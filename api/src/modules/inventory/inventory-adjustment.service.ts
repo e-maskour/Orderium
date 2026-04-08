@@ -26,7 +26,7 @@ export class InventoryAdjustmentService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get adjustmentRepository(): Repository<InventoryAdjustment> {
     return this.tenantConnService.getRepository(InventoryAdjustment);
@@ -95,7 +95,12 @@ export class InventoryAdjustmentService {
   async findOne(id: number): Promise<InventoryAdjustment> {
     const adjustment = await this.adjustmentRepository.findOne({
       where: { id },
-      relations: ['warehouse', 'lines', 'lines.product', 'lines.product.saleUnitOfMeasure'],
+      relations: [
+        'warehouse',
+        'lines',
+        'lines.product',
+        'lines.product.saleUnitOfMeasure',
+      ],
     });
 
     if (!adjustment) {

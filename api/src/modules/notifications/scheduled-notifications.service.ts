@@ -25,7 +25,7 @@ export class ScheduledNotificationsService {
     private readonly tenantConnService: TenantConnectionService,
     private readonly tenantService: TenantService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) { }
+  ) {}
 
   private get productRepo(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);
@@ -132,7 +132,9 @@ export class ScheduledNotificationsService {
         .where('order.amountDueDate IS NOT NULL')
         .andWhere('order.amountDueDate < :today', { today })
         .andWhere('order.remainingAmount > 0')
-        .andWhere('order.originType = :originType', { originType: 'CLIENT_POS' })
+        .andWhere('order.originType = :originType', {
+          originType: 'CLIENT_POS',
+        })
         .getMany();
 
       for (const order of overdueOrders) {

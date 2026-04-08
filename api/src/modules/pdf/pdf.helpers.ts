@@ -47,9 +47,8 @@ export function extractPartnerInfo(
         ? entity.supplierAddress || entity.supplier?.address
         : entity.customerAddress || entity.customer?.address) ?? undefined,
     customerIce:
-      (isDemandePrix
-        ? entity.supplier?.ice
-        : entity.customer?.ice) ?? undefined,
+      (isDemandePrix ? entity.supplier?.ice : entity.customer?.ice) ??
+      undefined,
     supplierName: isDemandePrix
       ? entity.supplierName || entity.supplier?.name || undefined
       : undefined,

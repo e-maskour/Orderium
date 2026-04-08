@@ -35,7 +35,7 @@ export class QuotesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
-  ) { }
+  ) {}
 
   private get quoteRepository(): Repository<Quote> {
     return this.tenantConnService.getRepository(Quote);
@@ -358,7 +358,10 @@ export class QuotesService {
     // Roll back the sequence counter if this was the last issued number in the period.
     if (!quote.documentNumber.startsWith('PROV')) {
       const seqTypeForRelease = quote.supplierId ? 'price_request' : 'quote';
-      await this.sequencesService.releaseNumber(seqTypeForRelease, quote.documentNumber);
+      await this.sequencesService.releaseNumber(
+        seqTypeForRelease,
+        quote.documentNumber,
+      );
     }
 
     let nextProvNumber: string;

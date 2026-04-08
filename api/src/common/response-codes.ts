@@ -863,7 +863,11 @@ export const PDF = {
   /** GET /pdf/receipt/:orderId            → binary PDF stream */
   RECEIPT: { code: 'PDF200_04', status: 200, message: 'Receipt PDF Generated' },
   /** POST /pdf/regenerate/:type/:id       → regenerate & re-upload to MinIO */
-  REGENERATED: { code: 'PDF200_05', status: 200, message: 'PDF regenerated and stored successfully' },
+  REGENERATED: {
+    code: 'PDF200_05',
+    status: 200,
+    message: 'PDF regenerated and stored successfully',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

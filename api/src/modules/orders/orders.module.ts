@@ -25,4 +25,4 @@ import { SequencesModule } from '../sequences/sequences.module';
   providers: [OrdersService, OrderPaymentsService],
   exports: [OrdersService, OrderPaymentsService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

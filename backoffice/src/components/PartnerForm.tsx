@@ -343,13 +343,15 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
                     style={{ width: '100%', fontFamily: 'monospace' }}
                   />
                 </div>
-                <label className="p-label">{t('if')}</label>
-                <InputText
-                  id="if"
-                  {...register('if')}
-                  placeholder={t('enterIF')}
-                  style={{ width: '100%', fontFamily: 'monospace' }}
-                />
+                <div className="p-field">
+                  <label className="p-label">{t('if')}</label>
+                  <InputText
+                    id="if"
+                    {...register('if')}
+                    placeholder={t('enterIF')}
+                    style={{ width: '100%', fontFamily: 'monospace' }}
+                  />
+                </div>
               </div>
               <div className="p-field">
                 <label className="p-label">{t('cnss')}</label>
@@ -379,135 +381,134 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
                 />
               </div>
             </div>
+          )}
+        </div>
+
+        {/* ── Sidebar ── */}
+        <div
+          className="partner-sidebar"
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+        >
+          {/* Settings */}
+          <div style={panel}>
+            {sectionHeader(
+              '#f5f3ff',
+              '#7c3aed',
+              <SlidersHorizontal style={{ width: '1rem', height: '1rem' }} />,
+              t('settings'),
+              t('typeAndStatus'),
+            )}
+
+            <div className="p-field" style={{ marginBottom: '1.5rem' }}>
+              <label className="p-label">{t('partnerType')}</label>
+              <div className="partner-type-select">
+                <Controller
+                  name="isCompany"
+                  control={control}
+                  render={({ field }) => (
+                    <SelectButton
+                      value={field.value ? 'company' : 'individual'}
+                      onChange={(e) => field.onChange(e.value === 'company')}
+                      options={partnerTypeOptions}
+                      optionLabel="label"
+                      optionValue="value"
+                      style={{ width: '100%' }}
+                    />
+                  )}
+                />
+              </div>
+              <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
+                {isCompany ? t('companyTypeDescription') : t('individualTypeDescription')}
+              </p>
             </div>
-          )}
-      </div>
 
-      {/* ── Sidebar ── */}
-      <div
-        className="partner-sidebar"
-        style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-      >
-        {/* Settings */}
-        <div style={panel}>
-          {sectionHeader(
-            '#f5f3ff',
-            '#7c3aed',
-            <SlidersHorizontal style={{ width: '1rem', height: '1rem' }} />,
-            t('settings'),
-            t('typeAndStatus'),
-          )}
-
-          <div className="p-field" style={{ marginBottom: '1.5rem' }}>
-            <label className="p-label">{t('partnerType')}</label>
-            <div className="partner-type-select">
+            <div className="p-field">
+              <label className="p-label">{t('status')}</label>
               <Controller
-                name="isCompany"
+                name="isEnabled"
                 control={control}
                 render={({ field }) => (
-                  <SelectButton
-                    value={field.value ? 'company' : 'individual'}
-                    onChange={(e) => field.onChange(e.value === 'company')}
-                    options={partnerTypeOptions}
-                    optionLabel="label"
-                    optionValue="value"
-                    style={{ width: '100%' }}
-                  />
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.75rem',
+                      background: field.value ? '#f0fdf4' : '#fafafa',
+                      borderRadius: '0.5rem',
+                      border: `1px solid ${field.value ? '#bbf7d0' : '#e2e8f0'}`,
+                    }}
+                  >
+                    <InputSwitch
+                      checked={field.value ?? true}
+                      onChange={(e) => field.onChange(e.value)}
+                    />
+                    <div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: field.value ? '#15803d' : '#64748b',
+                        }}
+                      >
+                        {field.value ? t('active') : t('inactive')}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                        {field.value ? t('visibleInSystem') : t('hiddenFromSystem')}
+                      </p>
+                    </div>
+                  </div>
                 )}
               />
             </div>
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
-              {isCompany ? t('companyTypeDescription') : t('individualTypeDescription')}
-            </p>
           </div>
 
-          <div className="p-field">
-            <label className="p-label">{t('status')}</label>
-            <Controller
-              name="isEnabled"
-              control={control}
-              render={({ field }) => (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem',
-                    background: field.value ? '#f0fdf4' : '#fafafa',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${field.value ? '#bbf7d0' : '#e2e8f0'}`,
-                  }}
-                >
-                  <InputSwitch
-                    checked={field.value ?? true}
-                    onChange={(e) => field.onChange(e.value)}
-                  />
-                  <div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: field.value ? '#15803d' : '#64748b',
-                      }}
-                    >
-                      {field.value ? t('active') : t('inactive')}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {field.value ? t('visibleInSystem') : t('hiddenFromSystem')}
-                    </p>
+          {/* Tips card (edit mode shows partner info) */}
+          {isEdit && partner && (
+            <div style={{ ...panel, background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)' }}>
+              <p
+                style={{
+                  margin: '0 0 0.5rem',
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}
+              >
+                {t('partnerInfo')}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {[
+                  {
+                    label: t('createdAt'),
+                    value: new Date(partner.dateCreated).toLocaleDateString(),
+                  },
+                  {
+                    label: t('updatedAt'),
+                    value: new Date(partner.dateUpdated).toLocaleDateString(),
+                  },
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>{label}</span>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f172a' }}>
+                      {value}
+                    </span>
                   </div>
-                </div>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* Tips card (edit mode shows partner info) */}
-        {isEdit && partner && (
-          <div style={{ ...panel, background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)' }}>
-            <p
-              style={{
-                margin: '0 0 0.5rem',
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                color: '#94a3b8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-              }}
-            >
-              {t('partnerInfo')}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[
-                {
-                  label: t('createdAt'),
-                  value: new Date(partner.dateCreated).toLocaleDateString(),
-                },
-                {
-                  label: t('updatedAt'),
-                  value: new Date(partner.dateUpdated).toLocaleDateString(),
-                },
-              ].map(({ label, value }) => (
-                <div
-                  key={label}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>{label}</span>
-                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f172a' }}>
-                    {value}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
-    </form >
+    </form>
   );
 }

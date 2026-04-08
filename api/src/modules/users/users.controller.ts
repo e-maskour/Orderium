@@ -26,7 +26,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(UserResponseDto)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
   @ApiOperation({ summary: 'List users with filtering and pagination' })

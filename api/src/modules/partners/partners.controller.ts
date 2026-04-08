@@ -26,7 +26,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(PartnerResponseDto)
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) { }
+  constructor(private readonly partnersService: PartnersService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new partner' })

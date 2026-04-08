@@ -71,7 +71,7 @@ export class OrdersService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
@@ -827,8 +827,13 @@ export class OrdersService {
 
     // Roll back the sequence counter if this was the last issued number in the period.
     if (!order.documentNumber.startsWith('PROV')) {
-      const seqTypeForRelease = order.supplierId ? 'purchase_order' : 'delivery_note';
-      await this.sequencesService.releaseNumber(seqTypeForRelease, order.documentNumber);
+      const seqTypeForRelease = order.supplierId
+        ? 'purchase_order'
+        : 'delivery_note';
+      await this.sequencesService.releaseNumber(
+        seqTypeForRelease,
+        order.documentNumber,
+      );
     }
 
     let nextProvNumber: string;

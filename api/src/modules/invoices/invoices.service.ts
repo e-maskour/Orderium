@@ -43,7 +43,7 @@ export class InvoicesService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
@@ -489,8 +489,13 @@ export class InvoicesService {
 
     // Roll back the sequence counter if this was the last issued number in the period.
     if (!invoice.documentNumber.startsWith('PROV')) {
-      const seqTypeForRelease = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
-      await this.sequencesService.releaseNumber(seqTypeForRelease, invoice.documentNumber);
+      const seqTypeForRelease = invoice.supplierId
+        ? 'invoice_purchase'
+        : 'invoice_sale';
+      await this.sequencesService.releaseNumber(
+        seqTypeForRelease,
+        invoice.documentNumber,
+      );
     }
 
     const nextProvNumber = invoice.documentNumber.startsWith('PROV')

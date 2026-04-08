@@ -34,7 +34,7 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })

@@ -23,7 +23,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(RoleResponseDto)
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) { }
+  constructor(private readonly rolesService: RolesService) {}
 
   @Get()
   @ApiOperation({ summary: 'List all roles' })

@@ -30,7 +30,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @ApiTags('Quotes')
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) { }
+  constructor(private readonly quotesService: QuotesService) {}
 
   @Post('list')
   @Serialize(QuoteListResponseDto)

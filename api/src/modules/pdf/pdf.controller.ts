@@ -10,7 +10,7 @@ import { PDF } from '../../common/response-codes';
 @PortalRoute()
 @Controller('pdf')
 export class PDFController {
-  constructor(private readonly pdfService: PDFService) { }
+  constructor(private readonly pdfService: PDFService) {}
 
   /**
    * Generate PDF for invoice
@@ -171,10 +171,7 @@ export class PDFController {
   @ApiOperation({ summary: 'Regenerate and re-store PDF for a document' })
   @ApiResponse({ status: 200, description: 'PDF regenerated successfully' })
   @ApiResponse({ status: 404, description: 'Document not found' })
-  async regeneratePDF(
-    @Param('type') type: string,
-    @Param('id') id: string,
-  ) {
+  async regeneratePDF(@Param('type') type: string, @Param('id') id: string) {
     const validTypes = ['invoice', 'quote', 'delivery-note'];
     if (!validTypes.includes(type)) {
       return ApiRes(

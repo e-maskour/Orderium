@@ -12,4 +12,4 @@ import { SequencesModule } from '../sequences/sequences.module';
   providers: [QuotesService],
   exports: [QuotesService],
 })
-export class QuotesModule { }
+export class QuotesModule {}

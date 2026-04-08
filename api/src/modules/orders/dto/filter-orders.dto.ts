@@ -84,7 +84,8 @@ export class FilterOrdersDto {
 
   @ApiProperty({
     required: false,
-    description: 'Filter by order origin type: BACKOFFICE | CLIENT_POS | ADMIN_POS',
+    description:
+      'Filter by order origin type: BACKOFFICE | CLIENT_POS | ADMIN_POS',
     enum: OrderOriginType,
     isArray: true,
   })

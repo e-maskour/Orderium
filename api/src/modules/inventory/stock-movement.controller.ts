@@ -28,7 +28,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(StockMovementResponseDto)
 @Controller('inventory/movements')
 export class StockMovementController {
-  constructor(private readonly stockService: StockService) { }
+  constructor(private readonly stockService: StockService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new stock movement (draft)' })

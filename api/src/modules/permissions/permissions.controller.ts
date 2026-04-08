@@ -23,7 +23,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(PermissionResponseDto)
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) { }
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   @Get()
   @ApiOperation({ summary: 'List all permissions' })

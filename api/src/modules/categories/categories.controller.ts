@@ -23,7 +23,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(CategoryResponseDto)
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) { }
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })

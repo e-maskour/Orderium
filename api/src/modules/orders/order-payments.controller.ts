@@ -28,7 +28,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 export class OrderPaymentsController {
   private readonly logger = new Logger(OrderPaymentsController.name);
 
-  constructor(private readonly orderPaymentsService: OrderPaymentsService) { }
+  constructor(private readonly orderPaymentsService: OrderPaymentsService) {}
 
   @Post()
   @ApiOperation({ summary: 'Record a payment for an order' })

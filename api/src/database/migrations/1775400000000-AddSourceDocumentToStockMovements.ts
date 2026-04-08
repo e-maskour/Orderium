@@ -8,8 +8,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Also creates a composite index on (source_document_type, source_document_id)
  * to support efficient idempotency checks and reversal lookups.
  */
-export class AddSourceDocumentToStockMovements1775400000000
-  implements MigrationInterface {
+export class AddSourceDocumentToStockMovements1775400000000 implements MigrationInterface {
   name = 'AddSourceDocumentToStockMovements1775400000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

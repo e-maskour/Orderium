@@ -39,7 +39,7 @@ export class ConfigurationsController {
   constructor(
     private readonly configurationsService: ConfigurationsService,
     @Inject(DataSource) private dataSource: DataSource,
-  ) { }
+  ) {}
 
   @Get()
   @Serialize(ConfigurationResponseDto)
@@ -232,7 +232,7 @@ export class ConfigurationsController {
     if (existingSequence.nextNumber > 1) {
       throw new BadRequestException(
         `Cannot update sequence. Invoices already exist using this sequence (next number: ${existingSequence.nextNumber}). ` +
-        `To modify this sequence, please create a new one instead.`,
+          `To modify this sequence, please create a new one instead.`,
       );
     }
 

@@ -1,6 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CategorySummaryDto, UomSummaryDto } from '../../../common/dto/summary.dto';
+import {
+  CategorySummaryDto,
+  UomSummaryDto,
+} from '../../../common/dto/summary.dto';
 
 class WarehouseSummaryDto {
   @ApiProperty()

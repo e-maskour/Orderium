@@ -10,7 +10,7 @@ import {
 
 @Injectable()
 export class OrderPaymentsService {
-  constructor(private readonly tenantConnService: TenantConnectionService) { }
+  constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   private get repo(): Repository<OrderPayment> {
     return this.tenantConnService.getRepository(OrderPayment);
@@ -56,7 +56,9 @@ export class OrderPaymentsService {
       .leftJoin('o.customer', 'customer')
       .addSelect(['customer.id', 'customer.name', 'customer.phoneNumber'])
       .where('o.direction = :dir', { dir: 'VENTE' })
-      .andWhere('o.originType != :origin', { origin: OrderOriginType.BACKOFFICE })
+      .andWhere('o.originType != :origin', {
+        origin: OrderOriginType.BACKOFFICE,
+      })
       .orderBy('o.dateCreated', 'DESC')
       .getMany();
 

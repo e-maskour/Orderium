@@ -15,7 +15,7 @@ export class OrderItem implements IOrderItem {
     public description?: string,
     public price?: number,
     public tax?: number,
-  ) { }
+  ) {}
 
   get displayPrice(): string {
     return `$${this.unitPrice.toFixed(2)}`;
@@ -74,7 +74,7 @@ export class Order implements IOrder {
     public internalNote?: string,
     public date?: string,
     public isValidated?: boolean,
-  ) { }
+  ) {}
 
   get displayTotal(): string {
     return `$${this.total.toFixed(2)}`;

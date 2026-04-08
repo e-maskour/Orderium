@@ -46,7 +46,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) { }
+  ) {}
 
   @Post('create')
   @Serialize(ProductResponseDto)

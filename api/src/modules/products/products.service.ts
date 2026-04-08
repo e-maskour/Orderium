@@ -27,7 +27,7 @@ export class ProductsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get productRepository(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);
@@ -123,7 +123,12 @@ export class ProductsService {
 
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure', 'warehouse'],
+      relations: [
+        'categories',
+        'saleUnitOfMeasure',
+        'purchaseUnitOfMeasure',
+        'warehouse',
+      ],
     });
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found`);

@@ -33,7 +33,7 @@ export class DeliveryService {
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
     return this.tenantConnService.getRepository(DeliveryPerson);

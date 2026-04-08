@@ -21,7 +21,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(WarehouseResponseDto)
 @Controller('inventory/warehouses')
 export class WarehouseController {
-  constructor(private readonly warehouseService: WarehouseService) { }
+  constructor(private readonly warehouseService: WarehouseService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new warehouse' })

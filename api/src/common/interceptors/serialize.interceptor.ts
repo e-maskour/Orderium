@@ -14,7 +14,7 @@ export const SERIALIZE_KEY = 'serialize_dto';
 
 @Injectable()
 export class SerializeInterceptor implements NestInterceptor {
-  constructor(private readonly reflector: Reflector) { }
+  constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const DtoClass = this.reflector.getAllAndOverride<

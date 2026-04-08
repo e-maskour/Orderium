@@ -9,4 +9,4 @@ import { TenantModule } from '../tenant/tenant.module';
   providers: [SequencesService],
   exports: [SequencesService],
 })
-export class SequencesModule { }
+export class SequencesModule {}

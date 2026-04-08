@@ -8,9 +8,15 @@ import { InventoryModule } from '../inventory/inventory.module';
 import { SequencesModule } from '../sequences/sequences.module';
 
 @Module({
-  imports: [TenantModule, ConfigurationsModule, PDFModule, InventoryModule, SequencesModule],
+  imports: [
+    TenantModule,
+    ConfigurationsModule,
+    PDFModule,
+    InventoryModule,
+    SequencesModule,
+  ],
   controllers: [InvoicesController],
   providers: [InvoicesService],
   exports: [InvoicesService],
 })
-export class InvoicesModule { }
+export class InvoicesModule {}

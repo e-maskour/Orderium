@@ -14,8 +14,8 @@ import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 
 export interface OrderResponseDto {
   id: number;
-  orderNumber: string | null;   // CLIENT_POS / ADMIN_POS sequence (CMD-xxx)
-  documentNumber: string;       // BACKOFFICE delivery-note / purchase-order number
+  orderNumber: string | null; // CLIENT_POS / ADMIN_POS sequence (CMD-xxx)
+  documentNumber: string; // BACKOFFICE delivery-note / purchase-order number
   receiptNumber: string | null; // POS receipt number
   date: Date;
   dueDate: Date | null;

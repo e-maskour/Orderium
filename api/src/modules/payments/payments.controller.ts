@@ -23,7 +23,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(PaymentResponseDto)
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new payment' })

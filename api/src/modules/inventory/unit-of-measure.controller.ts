@@ -25,7 +25,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(UomResponseDto)
 @Controller('inventory/uom')
 export class UnitOfMeasureController {
-  constructor(private readonly uomService: UnitOfMeasureService) { }
+  constructor(private readonly uomService: UnitOfMeasureService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new unit of measure' })

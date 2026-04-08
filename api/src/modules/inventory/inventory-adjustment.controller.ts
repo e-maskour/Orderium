@@ -27,7 +27,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Serialize(InventoryAdjustmentResponseDto)
 @Controller('inventory/adjustments')
 export class InventoryAdjustmentController {
-  constructor(private readonly adjustmentService: InventoryAdjustmentService) { }
+  constructor(private readonly adjustmentService: InventoryAdjustmentService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new inventory adjustment' })
@@ -76,11 +76,14 @@ export class InventoryAdjustmentController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const list = await this.adjustmentService.generateCountingList(+warehouseId, {
-      search,
-      page: page ? +page : 1,
-      limit: limit ? +limit : 50,
-    });
+    const list = await this.adjustmentService.generateCountingList(
+      +warehouseId,
+      {
+        search,
+        page: page ? +page : 1,
+        limit: limit ? +limit : 50,
+      },
+    );
     return ApiRes(ADJ.COUNTING_LIST, list);
   }
 

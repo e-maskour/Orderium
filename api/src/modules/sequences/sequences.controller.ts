@@ -26,7 +26,7 @@ import { SEQ } from '../../common/response-codes';
 export class SequencesController {
   private readonly logger = new Logger(SequencesController.name);
 
-  constructor(private readonly sequencesService: SequencesService) { }
+  constructor(private readonly sequencesService: SequencesService) {}
 
   @Get()
   @ApiOperation({ summary: 'List all sequences for the current tenant' })

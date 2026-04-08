@@ -33,7 +33,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @PortalRoute()
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   @Serialize(OrderDetailResponseDto)

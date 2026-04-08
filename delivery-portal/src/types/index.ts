@@ -14,14 +14,14 @@ export interface Order {
   totalAmount: number;
   status?: string; // Main order status
   deliveryStatus:
-  | 'pending'
-  | 'assigned'
-  | 'confirmed'
-  | 'picked_up'
-  | 'to_delivery'
-  | 'in_delivery'
-  | 'delivered'
-  | 'canceled';
+    | 'pending'
+    | 'assigned'
+    | 'confirmed'
+    | 'picked_up'
+    | 'to_delivery'
+    | 'in_delivery'
+    | 'delivered'
+    | 'canceled';
   pendingAt?: string;
   assignedAt?: string;
   confirmedAt?: string;

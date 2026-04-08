@@ -91,7 +91,7 @@ export class PDFService implements OnModuleDestroy {
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
-  ) { }
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
@@ -295,9 +295,14 @@ export class PDFService implements OnModuleDestroy {
     );
 
     // Persist new URL
-    await entityRepo.update(documentId, { pdfUrl: newUrl } as Record<string, unknown>);
+    await entityRepo.update(documentId, { pdfUrl: newUrl } as Record<
+      string,
+      unknown
+    >);
 
-    this.logger.log(`🔄 PDF regenerated for ${documentType} #${documentId}: ${newUrl}`);
+    this.logger.log(
+      `🔄 PDF regenerated for ${documentType} #${documentId}: ${newUrl}`,
+    );
     return newUrl;
   }
 
@@ -414,7 +419,7 @@ export class PDFService implements OnModuleDestroy {
     const documentNumber =
       documentType === 'receipt' && order.receiptNumber
         ? order.receiptNumber
-        : order.orderNumber ?? order.documentNumber;
+        : (order.orderNumber ?? order.documentNumber);
 
     const isDemandePrix = !!order.supplierId;
 
@@ -497,7 +502,8 @@ export class PDFService implements OnModuleDestroy {
 
       const footerTemplate = renderFooterTemplate({
         footerLines,
-        hideVAT: data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS',
+        hideVAT:
+          data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS',
       });
 
       const pdfBuffer = await page.pdf({
@@ -573,7 +579,8 @@ export class PDFService implements OnModuleDestroy {
       documentType,
       data.isDemandePrix,
     );
-    const hideVAT = data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
+    const hideVAT =
+      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
     // Only hide prices for demande de prix (quotes with supplier), not for facture achat or bon d'achat
     const hidePrices =
       (documentType === 'quote' && data.isDemandePrix) || false;
@@ -646,7 +653,8 @@ export class PDFService implements OnModuleDestroy {
     data: DocumentData,
     company: CompanyConfigData,
   ): string {
-    const hideVAT = data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
+    const hideVAT =
+      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
     const companyLines = this.buildCompanyLines(company);
 
     // Generate items HTML — table rows for the new design

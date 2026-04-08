@@ -28,7 +28,7 @@ import { calcAvailableQty } from './stock.helpers';
 export class StockService {
   private readonly logger = new Logger(StockService.name);
 
-  constructor(private readonly tenantConnService: TenantConnectionService) { }
+  constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   private get stockQuantRepository(): Repository<StockQuant> {
     return this.tenantConnService.getRepository(StockQuant);
@@ -211,18 +211,18 @@ export class StockService {
       this.productRepository.findOne({ where: { id: createDto.productId } }),
       createDto.sourceWarehouseId
         ? this.warehouseRepository.findOne({
-          where: { id: createDto.sourceWarehouseId },
-        })
+            where: { id: createDto.sourceWarehouseId },
+          })
         : null,
       createDto.destWarehouseId
         ? this.warehouseRepository.findOne({
-          where: { id: createDto.destWarehouseId },
-        })
+            where: { id: createDto.destWarehouseId },
+          })
         : null,
       createDto.unitOfMeasureId
         ? this.uomRepository.findOne({
-          where: { id: createDto.unitOfMeasureId },
-        })
+            where: { id: createDto.unitOfMeasureId },
+          })
         : null,
     ]);
     if (!product)
@@ -296,7 +296,7 @@ export class StockService {
       if (stockQuant.availableQuantity < movement.quantity) {
         throw new BadRequestException(
           `Insufficient stock at ${movement.sourceWarehouse?.name}. ` +
-          `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
+            `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
         );
       }
     }
@@ -774,7 +774,7 @@ export class StockService {
           if (available < item.quantity) {
             throw new BadRequestException(
               `Insufficient stock for product #${item.productId}. ` +
-              `Available: ${available}, Required: ${item.quantity}`,
+                `Available: ${available}, Required: ${item.quantity}`,
             );
           }
         }

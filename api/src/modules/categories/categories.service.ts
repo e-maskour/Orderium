@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, Inject, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  ConflictException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Category } from './entities/category.entity';
@@ -10,7 +15,7 @@ export class CategoriesService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get categoryRepository(): Repository<Category> {
     return this.tenantConnService.getRepository(Category);

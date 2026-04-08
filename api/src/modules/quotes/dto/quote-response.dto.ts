@@ -1,6 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartnerSummaryDto, ProductSummaryDto } from '../../../common/dto/summary.dto';
+import {
+  PartnerSummaryDto,
+  ProductSummaryDto,
+} from '../../../common/dto/summary.dto';
 
 /**
  * Nested quote item — used inside QuoteDetailResponseDto.

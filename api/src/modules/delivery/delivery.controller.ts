@@ -32,7 +32,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @Controller('delivery')
 @PortalRoute()
 export class DeliveryController {
-  constructor(private readonly deliveryService: DeliveryService) { }
+  constructor(private readonly deliveryService: DeliveryService) {}
 
   @Public()
   @Post('login')

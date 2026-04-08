@@ -30,7 +30,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) { }
+  constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post('list')
   @Serialize(InvoiceListResponseDto)

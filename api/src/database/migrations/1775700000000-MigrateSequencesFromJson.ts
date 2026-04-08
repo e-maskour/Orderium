@@ -33,7 +33,7 @@ export class MigrateSequencesFromJson1775700000000 implements MigrationInterface
 
     const now = new Date();
     let migratedCount = 0;
-    let skippedCount = 0;
+    const skippedCount = 0;
 
     for (const row of rows) {
       const seqArray = (row.values?.sequences ?? []) as Array<
