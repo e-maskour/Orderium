@@ -263,7 +263,7 @@ export function usePushNotifications(
         return false;
       }
     },
-    [state.isSupported, state.permission, state.token, requestPermission],
+    [state.isSupported, state.permission, requestPermission],
   );
 
   // Auto-register token when userId changes and permission is granted

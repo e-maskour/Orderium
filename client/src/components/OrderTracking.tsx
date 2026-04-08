@@ -52,6 +52,7 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
       }
     };
     fetchOrderStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderNumber, customerId, language]);
 
   if (isLoading) {

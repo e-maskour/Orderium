@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { StockService } from './stock.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { StockQuant } from './entities/stock-quant.entity';
 import {
   StockMovement,
@@ -151,8 +152,7 @@ describe('StockService', () => {
         },
         // Also register under the class token so NestJS DI resolves it
         {
-          provide: require('../tenant/tenant-connection.service')
-            .TenantConnectionService,
+          provide: TenantConnectionService,
           useValue: mockTenantConnService,
         },
       ],

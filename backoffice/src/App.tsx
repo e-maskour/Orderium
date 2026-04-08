@@ -42,6 +42,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
         /* fail open — don't block the app */
       })
       .finally(() => setReady(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!ready) {

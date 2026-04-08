@@ -300,7 +300,7 @@ export default function Dashboard() {
   });
 
   const statistics = comprehensiveStats?.overview;
-  const dailyStats = comprehensiveStats?.dailyStats ?? [];
+  const dailyStats = useMemo(() => comprehensiveStats?.dailyStats ?? [], [comprehensiveStats]);
   const topProducts = comprehensiveStats?.topProducts ?? [];
   const recentOrders = recentOrdersData?.orders ?? [];
 

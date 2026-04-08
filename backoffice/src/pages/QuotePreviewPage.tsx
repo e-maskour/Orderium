@@ -39,6 +39,7 @@ export default function QuotePreviewPage() {
     if (token) {
       loadQuote();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const loadQuote = async () => {

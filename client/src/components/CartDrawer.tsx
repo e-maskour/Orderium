@@ -220,6 +220,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
       window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isPanelMode]);
 
   const handleItemClick = (item: CartItem) => {

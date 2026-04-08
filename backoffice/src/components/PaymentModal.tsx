@@ -87,6 +87,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       }
       fetchTotalPaid();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, payment]);
 
   const fetchTotalPaid = async () => {

@@ -69,6 +69,7 @@ export const ProductQuantityModal = ({
     if (!isOpen) {
       setQuantity('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, product?.id, initialQuantity]);
 
   if (!product || !isOpen) return null;

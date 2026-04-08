@@ -98,6 +98,7 @@ const Checkout = () => {
     } finally {
       setIsSearchingCustomer(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

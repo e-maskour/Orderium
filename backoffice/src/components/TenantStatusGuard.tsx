@@ -35,6 +35,7 @@ const DEFAULT_MODULES: TenantModules = {
 
 const ModulesContext = createContext<TenantModules>(DEFAULT_MODULES);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTenantModules(): TenantModules {
   return useContext(ModulesContext);
 }

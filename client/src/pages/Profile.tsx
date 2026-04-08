@@ -39,6 +39,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (user?.customerId) loadCustomerData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.customerId]);
 
   const loadCustomerData = async () => {

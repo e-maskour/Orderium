@@ -50,6 +50,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
     if (isOpen) {
       fetchPayments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, invoiceId]);
 
   const fetchPayments = async () => {

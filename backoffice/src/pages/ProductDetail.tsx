@@ -231,6 +231,7 @@ export default function ProductDetail() {
         isPriceChangeAllowed: product.isPriceChangeAllowed,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, taxRates.length, uoms.length]);
 
   // If uoms loaded after product, backfill missing unit defaults
@@ -241,6 +242,7 @@ export default function ProductDetail() {
       if (!cur.saleUnitId) setValue('saleUnitId', defaultUom.id, { shouldDirty: false });
       if (!cur.purchaseUnitId) setValue('purchaseUnitId', defaultUom.id, { shouldDirty: false });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uoms.length]);
 
   const handleRegenerateCode = async () => {
@@ -1102,47 +1104,47 @@ export default function ProductDetail() {
                 iconBg: string;
                 accent: string;
               }[] = [
-                {
-                  label: t('onHand'),
-                  value: totalOnHand,
-                  Icon: Package,
-                  color: '#0f172a',
-                  iconBg: '#f1f5f9',
-                  accent: '#94a3b8',
-                },
-                {
-                  label: t('available'),
-                  value: totalAvailable,
-                  Icon: CheckCircle,
-                  color: '#059669',
-                  iconBg: '#ecfdf5',
-                  accent: '#10b981',
-                },
-                {
-                  label: t('reserved'),
-                  value: totalReserved,
-                  Icon: Lock,
-                  color: '#d97706',
-                  iconBg: '#fffbeb',
-                  accent: '#f59e0b',
-                },
-                {
-                  label: t('incoming'),
-                  value: totalIncoming,
-                  Icon: TrendingUp,
-                  color: '#2563eb',
-                  iconBg: '#eff6ff',
-                  accent: '#3b82f6',
-                },
-                {
-                  label: t('outgoing'),
-                  value: totalOutgoing,
-                  Icon: TrendingDown,
-                  color: '#ea580c',
-                  iconBg: '#fff7ed',
-                  accent: '#f97316',
-                },
-              ];
+                  {
+                    label: t('onHand'),
+                    value: totalOnHand,
+                    Icon: Package,
+                    color: '#0f172a',
+                    iconBg: '#f1f5f9',
+                    accent: '#94a3b8',
+                  },
+                  {
+                    label: t('available'),
+                    value: totalAvailable,
+                    Icon: CheckCircle,
+                    color: '#059669',
+                    iconBg: '#ecfdf5',
+                    accent: '#10b981',
+                  },
+                  {
+                    label: t('reserved'),
+                    value: totalReserved,
+                    Icon: Lock,
+                    color: '#d97706',
+                    iconBg: '#fffbeb',
+                    accent: '#f59e0b',
+                  },
+                  {
+                    label: t('incoming'),
+                    value: totalIncoming,
+                    Icon: TrendingUp,
+                    color: '#2563eb',
+                    iconBg: '#eff6ff',
+                    accent: '#3b82f6',
+                  },
+                  {
+                    label: t('outgoing'),
+                    value: totalOutgoing,
+                    Icon: TrendingDown,
+                    color: '#ea580c',
+                    iconBg: '#fff7ed',
+                    accent: '#f97316',
+                  },
+                ];
               return (
                 <>
                   <div

@@ -180,6 +180,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
       set('logo', base64);
     };
     reader.readAsDataURL(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDrop = useCallback(

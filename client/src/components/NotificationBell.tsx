@@ -135,6 +135,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       });
     }
     prevUnreadRef.current = unreadCount;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unreadCount]);
 
   // ── Keyboard + scroll lock ──

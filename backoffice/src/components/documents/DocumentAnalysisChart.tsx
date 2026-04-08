@@ -174,20 +174,23 @@ export function DocumentAnalysisChart({
     return options;
   }, [documentType, t]);
 
-  const monthNames = [
-    t('january') || 'Jan',
-    t('february') || 'Fév',
-    t('march') || 'Mar',
-    t('april') || 'Avr',
-    t('may') || 'Mai',
-    t('june') || 'Juin',
-    t('july') || 'Juil',
-    t('august') || 'Août',
-    t('september') || 'Sep',
-    t('october') || 'Oct',
-    t('november') || 'Nov',
-    t('december') || 'Déc',
-  ];
+  const monthNames = useMemo(
+    () => [
+      t('january') || 'Jan',
+      t('february') || 'Fév',
+      t('march') || 'Mar',
+      t('april') || 'Avr',
+      t('may') || 'Mai',
+      t('june') || 'Juin',
+      t('july') || 'Juil',
+      t('august') || 'Août',
+      t('september') || 'Sep',
+      t('october') || 'Oct',
+      t('november') || 'Nov',
+      t('december') || 'Déc',
+    ],
+    [t],
+  );
 
   // Prepare series and labels based on measure
   const { series, labels } = useMemo(() => {

@@ -132,6 +132,7 @@ export function NotificationBell() {
       toastInfo(t('newNotification') as string, { duration: 5000 });
     }
     prevUnreadRef.current = unreadCount;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unreadCount]);
 
   // ── Keyboard + scroll lock ──

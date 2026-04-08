@@ -73,6 +73,7 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
   } = form;
   const { handleApiErrors } = useApiErrors(form);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const isCompany = watch('isCompany');
 
   useEffect(() => {
