@@ -30,7 +30,7 @@ export class DriveService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly storage: DriveStorageService,
-  ) { }
+  ) {}
 
   private get nodeRepo(): Repository<DriveNode> {
     return this.tenantConnService.getRepository(DriveNode);
