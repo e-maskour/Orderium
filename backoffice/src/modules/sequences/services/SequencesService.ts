@@ -85,4 +85,3 @@ export class SequencesService {
 }
 
 export const sequencesService = SequencesService.getInstance();
-

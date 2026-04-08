@@ -87,9 +87,7 @@ export default function StockMovements() {
 
   const clearSelection = () => setSelectedRows([]);
   const toggleSelectAll = () =>
-    selectedRows.length === movements.length
-      ? setSelectedRows([])
-      : setSelectedRows(movements);
+    selectedRows.length === movements.length ? setSelectedRows([]) : setSelectedRows(movements);
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; cls: string }> = {
@@ -254,9 +252,12 @@ export default function StockMovements() {
                   isOutbound = outboundTypes.includes(m.movementType);
                 }
                 const sign = isOutbound ? '-' : '+';
-                const uom = m.unitOfMeasureCode ? ` ${translateUomCode(m.unitOfMeasureCode, language)}` : '';
+                const uom = m.unitOfMeasureCode
+                  ? ` ${translateUomCode(m.unitOfMeasureCode, language)}`
+                  : '';
                 return `${sign}${parseFloat(m.quantity.toString()).toFixed(2)}${uom}`;
-              }, bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
+              },
+              bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
               bottomRight: (m: StockMovement) => getStatusBadge(m.status),
             }}
           />
@@ -349,21 +350,55 @@ export default function StockMovements() {
 
                 if (inboundTypes.includes(mov.movementType)) {
                   source = externalLabel;
-                  dest = mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
+                  dest =
+                    mov.destWarehouseName ||
+                    (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
                 } else if (outboundTypes.includes(mov.movementType)) {
-                  source = mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
+                  source =
+                    mov.sourceWarehouseName ||
+                    (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
                   dest = externalLabel;
                 } else {
                   // internal / adjustment
-                  source = mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
-                  dest = mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
+                  source =
+                    mov.sourceWarehouseName ||
+                    (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
+                  dest =
+                    mov.destWarehouseName ||
+                    (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
                 }
 
                 return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                    <span style={inboundTypes.includes(mov.movementType) ? { color: '#64748b', fontStyle: 'italic' } : undefined}>{source}</span>
-                    <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
-                    <span style={outboundTypes.includes(mov.movementType) ? { color: '#64748b', fontStyle: 'italic' } : undefined}>{dest}</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.875rem',
+                      color: '#475569',
+                    }}
+                  >
+                    <span
+                      style={
+                        inboundTypes.includes(mov.movementType)
+                          ? { color: '#64748b', fontStyle: 'italic' }
+                          : undefined
+                      }
+                    >
+                      {source}
+                    </span>
+                    <ArrowLeftRight
+                      style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }}
+                    />
+                    <span
+                      style={
+                        outboundTypes.includes(mov.movementType)
+                          ? { color: '#64748b', fontStyle: 'italic' }
+                          : undefined
+                      }
+                    >
+                      {dest}
+                    </span>
                   </div>
                 );
               }}
@@ -400,7 +435,8 @@ export default function StockMovements() {
                       gap: '0.25rem',
                     }}
                   >
-                    {sign}{qty}
+                    {sign}
+                    {qty}
                     {mov.unitOfMeasureCode && (
                       <span style={{ fontWeight: 500, opacity: 0.75 }}>
                         {translateUomCode(mov.unitOfMeasureCode, language)}
@@ -453,83 +489,153 @@ export default function StockMovements() {
           breakpoints={{ '768px': '95vw' }}
           dismissableMask
         >
-          {selectedMovement && (() => {
-            const mov = selectedMovement;
-            const rows: { label: string; value: React.ReactNode }[] = [
-              { label: t('type'), value: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>{getTypeIcon(mov.movementType)}{getTypeLabel(mov.movementType)}</span> },
-              { label: t('product'), value: mov.productName || `#${mov.productId}` },
-              ...(mov.productCode ? [{ label: t('code'), value: <span style={{ fontFamily: 'monospace' }}>{mov.productCode}</span> }] : []),
-              {
-                label: t('quantity'), value: (() => {
-                  const outboundTypes = ['delivery', 'return_out', 'production_out', 'scrap'];
-                  const isOut = mov.movementType === 'adjustment'
-                    ? !mov.destWarehouseId && !!mov.sourceWarehouseId
-                    : outboundTypes.includes(mov.movementType);
-                  return (
-                    <span
+          {selectedMovement &&
+            (() => {
+              const mov = selectedMovement;
+              const rows: { label: string; value: React.ReactNode }[] = [
+                {
+                  label: t('type'),
+                  value: (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+                      {getTypeIcon(mov.movementType)}
+                      {getTypeLabel(mov.movementType)}
+                    </span>
+                  ),
+                },
+                { label: t('product'), value: mov.productName || `#${mov.productId}` },
+                ...(mov.productCode
+                  ? [
+                      {
+                        label: t('code'),
+                        value: <span style={{ fontFamily: 'monospace' }}>{mov.productCode}</span>,
+                      },
+                    ]
+                  : []),
+                {
+                  label: t('quantity'),
+                  value: (() => {
+                    const outboundTypes = ['delivery', 'return_out', 'production_out', 'scrap'];
+                    const isOut =
+                      mov.movementType === 'adjustment'
+                        ? !mov.destWarehouseId && !!mov.sourceWarehouseId
+                        : outboundTypes.includes(mov.movementType);
+                    return (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          backgroundColor: isOut ? '#fee2e2' : '#dcfce7',
+                          color: isOut ? '#dc2626' : '#15803d',
+                          fontWeight: 700,
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {isOut ? '-' : '+'}
+                        {parseFloat(mov.quantity.toString()).toFixed(2)}
+                        {mov.unitOfMeasureCode && (
+                          <span style={{ fontWeight: 500, opacity: 0.75 }}>
+                            {translateUomCode(mov.unitOfMeasureCode, language)}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })(),
+                },
+                { label: t('status'), value: getStatusBadge(mov.status) },
+                ...(mov.sourceWarehouseName || mov.sourceWarehouseId
+                  ? [
+                      {
+                        label: t('source'),
+                        value:
+                          mov.sourceWarehouseName || `${t('warehouse')} ${mov.sourceWarehouseId}`,
+                      },
+                    ]
+                  : []),
+                ...(mov.destWarehouseName || mov.destWarehouseId
+                  ? [
+                      {
+                        label: t('destination'),
+                        value: mov.destWarehouseName || `${t('warehouse')} ${mov.destWarehouseId}`,
+                      },
+                    ]
+                  : []),
+                ...(mov.partnerName ? [{ label: t('partner'), value: mov.partnerName }] : []),
+                ...(mov.origin
+                  ? [
+                      {
+                        label: t('origin'),
+                        value: (
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                            {mov.origin}
+                          </span>
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(mov.lotNumber ? [{ label: t('lotNumber'), value: mov.lotNumber }] : []),
+                ...(mov.serialNumber
+                  ? [{ label: t('serialNumber'), value: mov.serialNumber }]
+                  : []),
+                ...(mov.dateDone
+                  ? [
+                      {
+                        label: t('dateDone'),
+                        value: new Date(mov.dateDone).toLocaleString('fr-FR'),
+                      },
+                    ]
+                  : []),
+                ...(mov.dateScheduled && !mov.dateDone
+                  ? [
+                      {
+                        label: t('dateScheduled'),
+                        value: new Date(mov.dateScheduled).toLocaleDateString('fr-FR'),
+                      },
+                    ]
+                  : []),
+                ...(mov.notes ? [{ label: t('notes'), value: mov.notes }] : []),
+              ];
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {rows.map((row, i) => (
+                    <div
+                      key={i}
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        backgroundColor: isOut ? '#fee2e2' : '#dcfce7',
-                        color: isOut ? '#dc2626' : '#15803d',
-                        fontWeight: 700,
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.875rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '1rem',
+                        padding: '0.625rem 0',
+                        borderBottom: i < rows.length - 1 ? '1px solid #f1f5f9' : 'none',
                       }}
                     >
-                      {isOut ? '-' : '+'}{parseFloat(mov.quantity.toString()).toFixed(2)}
-                      {mov.unitOfMeasureCode && (
-                        <span style={{ fontWeight: 500, opacity: 0.75 }}>
-                          {translateUomCode(mov.unitOfMeasureCode, language)}
-                        </span>
-                      )}
-                    </span>
-                  );
-                })()
-              },
-              { label: t('status'), value: getStatusBadge(mov.status) },
-              ...(mov.sourceWarehouseName || mov.sourceWarehouseId ? [{ label: t('source'), value: mov.sourceWarehouseName || `${t('warehouse')} ${mov.sourceWarehouseId}` }] : []),
-              ...(mov.destWarehouseName || mov.destWarehouseId ? [{ label: t('destination'), value: mov.destWarehouseName || `${t('warehouse')} ${mov.destWarehouseId}` }] : []),
-              ...(mov.partnerName ? [{ label: t('partner'), value: mov.partnerName }] : []),
-              ...(mov.origin ? [{ label: t('origin'), value: <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{mov.origin}</span> }] : []),
-              ...(mov.lotNumber ? [{ label: t('lotNumber'), value: mov.lotNumber }] : []),
-              ...(mov.serialNumber ? [{ label: t('serialNumber'), value: mov.serialNumber }] : []),
-              ...(mov.dateDone ? [{ label: t('dateDone'), value: new Date(mov.dateDone).toLocaleString('fr-FR') }] : []),
-              ...(mov.dateScheduled && !mov.dateDone ? [{ label: t('dateScheduled'), value: new Date(mov.dateScheduled).toLocaleDateString('fr-FR') }] : []),
-              ...(mov.notes ? [{ label: t('notes'), value: mov.notes }] : []),
-            ];
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {rows.map((row, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: '1rem',
-                      padding: '0.625rem 0',
-                      borderBottom: i < rows.length - 1 ? '1px solid #f1f5f9' : 'none',
-                    }}
-                  >
-                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500, flexShrink: 0 }}>{row.label}</span>
-                    <span style={{ fontSize: '0.875rem', color: '#1e293b', textAlign: 'right' }}>{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
+                      <span
+                        style={{
+                          fontSize: '0.8125rem',
+                          color: '#64748b',
+                          fontWeight: 500,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {row.label}
+                      </span>
+                      <span style={{ fontSize: '0.875rem', color: '#1e293b', textAlign: 'right' }}>
+                        {row.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
         </Dialog>
 
         <FloatingActionBar
           selectedCount={selectedRows.length}
           onClearSelection={clearSelection}
           onSelectAll={toggleSelectAll}
-          isAllSelected={
-            selectedRows.length === movements.length && movements.length > 0
-          }
+          isAllSelected={selectedRows.length === movements.length && movements.length > 0}
           totalCount={movements.length}
           itemLabel="mouvement"
           actions={(() => {

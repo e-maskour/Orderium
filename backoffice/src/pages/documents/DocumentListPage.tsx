@@ -212,7 +212,11 @@ export default function DocumentListPage({
           toastDeleteError(error, t);
         }
       },
-      { description: t('confirmDeleteDocument'), confirmLabel: t('delete'), variant: 'destructive' },
+      {
+        description: t('confirmDeleteDocument'),
+        confirmLabel: t('delete'),
+        variant: 'destructive',
+      },
     );
   };
 
@@ -576,31 +580,31 @@ export default function DocumentListPage({
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {(documentType === 'devis'
                   ? [
-                    { key: 'all', label: t('all'), icon: '📋' },
-                    { key: 'draft', label: t('draft'), icon: '📝' },
-                    { key: 'open', label: t('statusOpen'), icon: '🔓' },
-                    { key: 'signed', label: t('statusSigned'), icon: '✍️' },
-                    { key: 'closed', label: t('statusClosed'), icon: '🔒' },
-                    { key: 'invoiced', label: t('statusInvoiced'), icon: '✅' },
-                  ]
+                      { key: 'all', label: t('all'), icon: '📋' },
+                      { key: 'draft', label: t('draft'), icon: '📝' },
+                      { key: 'open', label: t('statusOpen'), icon: '🔓' },
+                      { key: 'signed', label: t('statusSigned'), icon: '✍️' },
+                      { key: 'closed', label: t('statusClosed'), icon: '🔒' },
+                      { key: 'invoiced', label: t('statusInvoiced'), icon: '✅' },
+                    ]
                   : documentType === 'bon_livraison'
                     ? [
-                      { key: 'all', label: t('all'), icon: '📋' },
-                      { key: 'draft', label: t('draft'), icon: '📝' },
-                      { key: 'validated', label: t('statusValidated'), icon: '✓' },
-                      { key: 'in_progress', label: t('statusInProgress'), icon: '🔄' },
-                      { key: 'delivered', label: t('statusDeliveredBon'), icon: '✅' },
-                      { key: 'cancelled', label: t('statusCancelled'), icon: '❌' },
-                      { key: 'invoiced', label: t('statusInvoicedBon'), icon: '📄' },
-                    ]
+                        { key: 'all', label: t('all'), icon: '📋' },
+                        { key: 'draft', label: t('draft'), icon: '📝' },
+                        { key: 'validated', label: t('statusValidated'), icon: '✓' },
+                        { key: 'in_progress', label: t('statusInProgress'), icon: '🔄' },
+                        { key: 'delivered', label: t('statusDeliveredBon'), icon: '✅' },
+                        { key: 'cancelled', label: t('statusCancelled'), icon: '❌' },
+                        { key: 'invoiced', label: t('statusInvoicedBon'), icon: '📄' },
+                      ]
                     : [
-                      { key: 'all', label: t('all'), icon: '📋' },
-                      { key: 'draft', label: t('draft'), icon: '📝' },
-                      { key: 'unpaid', label: t('statusUnpaid'), icon: '⏳' },
-                      { key: 'partial', label: t('statusPartial'), icon: '⚠️' },
-                      { key: 'paid', label: t('statusPaid'), icon: '✅' },
-                      { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
-                    ]
+                        { key: 'all', label: t('all'), icon: '📋' },
+                        { key: 'draft', label: t('draft'), icon: '📝' },
+                        { key: 'unpaid', label: t('statusUnpaid'), icon: '⏳' },
+                        { key: 'partial', label: t('statusPartial'), icon: '⚠️' },
+                        { key: 'paid', label: t('statusPaid'), icon: '✅' },
+                        { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
+                      ]
                 ).map((filter) => (
                   <Button
                     key={filter.key}
@@ -611,11 +615,11 @@ export default function DocumentListPage({
                       fontSize: '0.75rem',
                       ...(statusFilter === filter.key
                         ? {
-                          backgroundColor: '#235ae4',
-                          color: '#fff',
-                          boxShadow: '0 10px 15px rgba(35,90,228,0.3)',
-                          border: 'none',
-                        }
+                            backgroundColor: '#235ae4',
+                            color: '#fff',
+                            boxShadow: '0 10px 15px rgba(35,90,228,0.3)',
+                            border: 'none',
+                          }
                         : { backgroundColor: '#f8fafc', color: '#334155' }),
                     }}
                   />

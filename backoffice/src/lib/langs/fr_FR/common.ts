@@ -498,6 +498,7 @@ export default {
     'Ce livreur est assigné à des commandes actives et ne peut pas être supprimé.',
   CATEGORY_HAS_CHILDREN:
     'Cette catégorie contient des sous-catégories et ne peut pas être supprimée.',
-  CATEGORY_HAS_PRODUCTS: 'Cette catégorie est assignée à des produits et ne peut pas être supprimée.',
+  CATEGORY_HAS_PRODUCTS:
+    'Cette catégorie est assignée à des produits et ne peut pas être supprimée.',
   WAREHOUSE_HAS_PRODUCTS: 'Cet entrepôt est assigné à des produits et ne peut pas être supprimé.',
 };

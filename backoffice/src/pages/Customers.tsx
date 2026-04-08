@@ -12,7 +12,12 @@ import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { toastDeleted, toastError, toastDeleteError, toastConfirm } from '../services/toast.service';
+import {
+  toastDeleted,
+  toastError,
+  toastDeleteError,
+  toastConfirm,
+} from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
 

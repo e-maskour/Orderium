@@ -11,7 +11,10 @@ export function PushNotificationProvider() {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   };
 
-  const { requestPermission, permission, token, error } = usePushNotifications(admin?.id, onNotification);
+  const { requestPermission, permission, token, error } = usePushNotifications(
+    admin?.id,
+    onNotification,
+  );
 
   const hasRequestedPermissionRef = useRef(false);
 

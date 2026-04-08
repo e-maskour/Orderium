@@ -1094,16 +1094,64 @@ export default function ProductDetail() {
             {/* ── Summary KPI cards ── */}
             {(() => {
               const globalUomCode = (product as any)?.saleUnitOfMeasure?.code ?? '';
-              const kpis: { label: string; value: number; Icon: React.ElementType; color: string; iconBg: string; accent: string }[] = [
-                { label: t('onHand'), value: totalOnHand, Icon: Package, color: '#0f172a', iconBg: '#f1f5f9', accent: '#94a3b8' },
-                { label: t('available'), value: totalAvailable, Icon: CheckCircle, color: '#059669', iconBg: '#ecfdf5', accent: '#10b981' },
-                { label: t('reserved'), value: totalReserved, Icon: Lock, color: '#d97706', iconBg: '#fffbeb', accent: '#f59e0b' },
-                { label: t('incoming'), value: totalIncoming, Icon: TrendingUp, color: '#2563eb', iconBg: '#eff6ff', accent: '#3b82f6' },
-                { label: t('outgoing'), value: totalOutgoing, Icon: TrendingDown, color: '#ea580c', iconBg: '#fff7ed', accent: '#f97316' },
+              const kpis: {
+                label: string;
+                value: number;
+                Icon: React.ElementType;
+                color: string;
+                iconBg: string;
+                accent: string;
+              }[] = [
+                {
+                  label: t('onHand'),
+                  value: totalOnHand,
+                  Icon: Package,
+                  color: '#0f172a',
+                  iconBg: '#f1f5f9',
+                  accent: '#94a3b8',
+                },
+                {
+                  label: t('available'),
+                  value: totalAvailable,
+                  Icon: CheckCircle,
+                  color: '#059669',
+                  iconBg: '#ecfdf5',
+                  accent: '#10b981',
+                },
+                {
+                  label: t('reserved'),
+                  value: totalReserved,
+                  Icon: Lock,
+                  color: '#d97706',
+                  iconBg: '#fffbeb',
+                  accent: '#f59e0b',
+                },
+                {
+                  label: t('incoming'),
+                  value: totalIncoming,
+                  Icon: TrendingUp,
+                  color: '#2563eb',
+                  iconBg: '#eff6ff',
+                  accent: '#3b82f6',
+                },
+                {
+                  label: t('outgoing'),
+                  value: totalOutgoing,
+                  Icon: TrendingDown,
+                  color: '#ea580c',
+                  iconBg: '#fff7ed',
+                  accent: '#f97316',
+                },
               ];
               return (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.875rem' }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: '0.875rem',
+                    }}
+                  >
                     {kpis.map(({ label, value, Icon, color, iconBg, accent }) => (
                       <div
                         key={label}
@@ -1117,16 +1165,61 @@ export default function ProductDetail() {
                           boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                         }}
                       >
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accent, borderRadius: '0.875rem 0.875rem 0 0' }} />
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
-                          <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '3px',
+                            background: accent,
+                            borderRadius: '0.875rem 0.875rem 0 0',
+                          }}
+                        />
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            marginBottom: '0.875rem',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '0.6875rem',
+                              fontWeight: 700,
+                              color: '#94a3b8',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                            }}
+                          >
                             {label}
                           </span>
-                          <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div
+                            style={{
+                              width: '2rem',
+                              height: '2rem',
+                              borderRadius: '0.5rem',
+                              background: iconBg,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
                             <Icon size={14} color={color} />
                           </div>
                         </div>
-                        <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.025em' }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '1.75rem',
+                            fontWeight: 800,
+                            color,
+                            lineHeight: 1,
+                            letterSpacing: '-0.025em',
+                          }}
+                        >
                           {value.toFixed(2)}
                         </p>
                       </div>
@@ -1134,8 +1227,21 @@ export default function ProductDetail() {
                   </div>
                   {globalUomCode && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>Unité de mesure :</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.1875rem 0.625rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '9999px', color: '#475569', letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+                        Unité de mesure :
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '0.1875rem 0.625rem',
+                          background: '#f8fafc',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '9999px',
+                          color: '#475569',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
                         {globalUomCode}
                       </span>
                     </div>
@@ -1220,11 +1326,22 @@ export default function ProductDetail() {
               {/* Warehouse cards */}
               {stockQuants.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-                  <Building2 style={{ width: 48, height: 48, margin: '0 auto 1rem', opacity: 0.25 }} />
-                  <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>{t('noStockRecordsFound')}</p>
+                  <Building2
+                    style={{ width: 48, height: 48, margin: '0 auto 1rem', opacity: 0.25 }}
+                  />
+                  <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>
+                    {t('noStockRecordsFound')}
+                  </p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', padding: '1rem 1.25rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.625rem',
+                    padding: '1rem 1.25rem',
+                  }}
+                >
                   {stockQuants.map((row: any) => {
                     const onHand = parseFloat(row.quantity?.toString() || '0');
                     const available = parseFloat(row.availableQuantity?.toString() || '0');
@@ -1233,24 +1350,92 @@ export default function ProductDetail() {
                     const outgoing = parseFloat(row.outgoingQuantity?.toString() || '0');
                     const isInStock = available > 0;
                     const metrics = [
-                      { label: t('onHand'), display: onHand.toFixed(2), sign: '', color: '#0f172a', dimBg: 'transparent' },
-                      { label: t('available'), display: available.toFixed(2), sign: '', color: isInStock ? '#059669' : '#ef4444', dimBg: isInStock ? '#f0fdf4' : '#fef2f2' },
-                      { label: t('reserved'), display: reserved > 0 ? reserved.toFixed(2) : '—', sign: '', color: reserved > 0 ? '#d97706' : '#cbd5e1', dimBg: '#fffbeb' },
-                      { label: t('incoming'), display: incoming > 0 ? incoming.toFixed(2) : '—', sign: incoming > 0 ? '+' : '', color: incoming > 0 ? '#2563eb' : '#cbd5e1', dimBg: '#eff6ff' },
-                      { label: t('outgoing'), display: outgoing > 0 ? outgoing.toFixed(2) : '—', sign: outgoing > 0 ? '-' : '', color: outgoing > 0 ? '#ea580c' : '#cbd5e1', dimBg: '#fff7ed' },
+                      {
+                        label: t('onHand'),
+                        display: onHand.toFixed(2),
+                        sign: '',
+                        color: '#0f172a',
+                        dimBg: 'transparent',
+                      },
+                      {
+                        label: t('available'),
+                        display: available.toFixed(2),
+                        sign: '',
+                        color: isInStock ? '#059669' : '#ef4444',
+                        dimBg: isInStock ? '#f0fdf4' : '#fef2f2',
+                      },
+                      {
+                        label: t('reserved'),
+                        display: reserved > 0 ? reserved.toFixed(2) : '—',
+                        sign: '',
+                        color: reserved > 0 ? '#d97706' : '#cbd5e1',
+                        dimBg: '#fffbeb',
+                      },
+                      {
+                        label: t('incoming'),
+                        display: incoming > 0 ? incoming.toFixed(2) : '—',
+                        sign: incoming > 0 ? '+' : '',
+                        color: incoming > 0 ? '#2563eb' : '#cbd5e1',
+                        dimBg: '#eff6ff',
+                      },
+                      {
+                        label: t('outgoing'),
+                        display: outgoing > 0 ? outgoing.toFixed(2) : '—',
+                        sign: outgoing > 0 ? '-' : '',
+                        color: outgoing > 0 ? '#ea580c' : '#cbd5e1',
+                        dimBg: '#fff7ed',
+                      },
                     ];
                     return (
                       <div
                         key={row.id ?? row.warehouse?.id}
-                        style={{ border: '1px solid #e2e8f0', borderRadius: '0.875rem', background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+                        style={{
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '0.875rem',
+                          background: '#fff',
+                          overflow: 'hidden',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        }}
                       >
                         {/* card header */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '0.75rem 1rem',
+                            borderBottom: '1px solid #f1f5f9',
+                          }}
+                        >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                            <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', flexShrink: 0, background: isInStock ? '#22c55e' : '#d1d5db', display: 'inline-block', boxShadow: isInStock ? '0 0 0 3px #dcfce7' : 'none' }} />
-                            <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}>{row.warehouse?.name || t('unknown')}</span>
+                            <span
+                              style={{
+                                width: '0.5rem',
+                                height: '0.5rem',
+                                borderRadius: '50%',
+                                flexShrink: 0,
+                                background: isInStock ? '#22c55e' : '#d1d5db',
+                                display: 'inline-block',
+                                boxShadow: isInStock ? '0 0 0 3px #dcfce7' : 'none',
+                              }}
+                            />
+                            <span
+                              style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}
+                            >
+                              {row.warehouse?.name || t('unknown')}
+                            </span>
                           </div>
-                          <span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '0.1875rem 0.625rem', borderRadius: '9999px', background: isInStock ? '#dcfce7' : '#f1f5f9', color: isInStock ? '#15803d' : '#64748b', border: `1px solid ${isInStock ? '#bbf7d0' : '#e2e8f0'}` }}>
+                          <span
+                            style={{
+                              fontSize: '0.6875rem',
+                              fontWeight: 600,
+                              padding: '0.1875rem 0.625rem',
+                              borderRadius: '9999px',
+                              background: isInStock ? '#dcfce7' : '#f1f5f9',
+                              color: isInStock ? '#15803d' : '#64748b',
+                              border: `1px solid ${isInStock ? '#bbf7d0' : '#e2e8f0'}`,
+                            }}
+                          >
                             {isInStock ? 'En stock' : 'Rupture'}
                           </span>
                         </div>
@@ -1259,10 +1444,39 @@ export default function ProductDetail() {
                           {metrics.map(({ label, display, sign, color, dimBg }, i) => (
                             <div
                               key={label}
-                              style={{ padding: '0.875rem 0.5rem', background: dimBg, borderRight: i < 4 ? '1px solid #f1f5f9' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}
+                              style={{
+                                padding: '0.875rem 0.5rem',
+                                background: dimBg,
+                                borderRight: i < 4 ? '1px solid #f1f5f9' : 'none',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                              }}
                             >
-                              <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{label}</span>
-                              <span style={{ fontSize: '1.0625rem', fontWeight: 800, color, lineHeight: 1 }}>{sign}{display}</span>
+                              <span
+                                style={{
+                                  fontSize: '0.625rem',
+                                  fontWeight: 700,
+                                  color: '#94a3b8',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.07em',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {label}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '1.0625rem',
+                                  fontWeight: 800,
+                                  color,
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {sign}
+                                {display}
+                              </span>
                             </div>
                           ))}
                         </div>

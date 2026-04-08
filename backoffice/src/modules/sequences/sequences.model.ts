@@ -67,7 +67,8 @@ export class Sequence implements ISequence {
       const parts = this.currentPeriodKey.split('-');
       const year = parseInt(parts[0], 10);
       if (!isNaN(year)) {
-        const monthPart = parts[1] && !/^T/.test(parts[1]) ? parseInt(parts[1], 10) - 1 : now.getMonth();
+        const monthPart =
+          parts[1] && !/^T/.test(parts[1]) ? parseInt(parts[1], 10) - 1 : now.getMonth();
         const dayPart = parts[2] ? parseInt(parts[2], 10) : 1;
         now = new Date(year, monthPart, dayPart);
       }

@@ -52,7 +52,7 @@ export default {
   adjNotesPlaceholder: 'Remarques ou instructions pour les compteurs…',
 
   // View / Detail modal
-  adjDetailTitle: 'Détail de l\'ajustement',
+  adjDetailTitle: "Détail de l'ajustement",
   adjLoadingDetail: 'Chargement du détail…',
   adjInfoWarehouse: 'Entrepôt',
   adjInfoStatus: 'Statut',
@@ -66,8 +66,9 @@ export default {
   adjNoLines: 'Aucune ligne de comptage',
 
   // Validate modal
-  adjValidateTitle: 'Valider l\'ajustement',
-  adjValidateSubtitle: 'Saisissez les quantités réellement comptées. Seuls les produits avec un écart seront enregistrés.',
+  adjValidateTitle: "Valider l'ajustement",
+  adjValidateSubtitle:
+    'Saisissez les quantités réellement comptées. Seuls les produits avec un écart seront enregistrés.',
   adjSearchProduct: 'Rechercher un produit…',
   adjLoadingProducts: 'Chargement des produits…',
   adjNoProductsFound: 'Aucun produit trouvé dans cet entrepôt',

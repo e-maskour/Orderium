@@ -326,7 +326,7 @@ export default function DocumentEditPage({
           ? (doc as any).invoiceNumber
           : documentType === 'devis'
             ? (doc as any).quoteNumber
-            : ((doc as any).documentNumber || (doc as any).orderNumber);
+            : (doc as any).documentNumber || (doc as any).orderNumber;
       setInvoiceNumber(docNumber);
 
       // Handle date fields based on document type and available data
@@ -452,23 +452,23 @@ export default function DocumentEditPage({
       const subtotal = isDemandePrix
         ? null
         : items.reduce((sum, item) => {
-          const itemTotal = item.quantity * item.unitPrice;
-          const discountAmount =
-            item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
-          const afterDiscount = itemTotal - discountAmount;
-          return sum + afterDiscount;
-        }, 0);
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            return sum + afterDiscount;
+          }, 0);
 
       const totalTax = isDemandePrix
         ? null
         : items.reduce((sum, item) => {
-          const itemTotal = item.quantity * item.unitPrice;
-          const discountAmount =
-            item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
-          const afterDiscount = itemTotal - discountAmount;
-          const tax = afterDiscount * (item.tax / 100);
-          return sum + tax;
-        }, 0);
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            const tax = afterDiscount * (item.tax / 100);
+            return sum + tax;
+          }, 0);
 
       const total = isDemandePrix ? null : subtotal! + totalTax!;
 
@@ -534,7 +534,7 @@ export default function DocumentEditPage({
       console.error('Error updating document:', error);
       toastError(
         error.message ||
-        `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
+          `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
       );
     } finally {
       setSaving(false);
@@ -1891,11 +1891,11 @@ export default function DocumentEditPage({
           const leftAction: DocumentAction | null =
             documentType === 'facture' && isValidated && status !== 'draft'
               ? {
-                id: 'payment-history',
-                label: t('paymentHistory'),
-                icon: <History size={16} />,
-                onClick: () => setShowPaymentHistory(true),
-              }
+                  id: 'payment-history',
+                  label: t('paymentHistory'),
+                  icon: <History size={16} />,
+                  onClick: () => setShowPaymentHistory(true),
+                }
               : null;
 
           return (

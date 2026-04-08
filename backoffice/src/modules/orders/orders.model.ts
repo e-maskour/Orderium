@@ -278,9 +278,7 @@ export class Order implements IOrder {
   }
 
   get isFromExternal(): boolean {
-    return (
-      this.originType === 'CLIENT_POS' || this.originType === 'ADMIN_POS'
-    );
+    return this.originType === 'CLIENT_POS' || this.originType === 'ADMIN_POS';
   }
 
   // Methods

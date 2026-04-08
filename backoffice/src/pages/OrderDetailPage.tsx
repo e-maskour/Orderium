@@ -267,9 +267,9 @@ export default function OrderDetailPage() {
   const computedItems = editMode ? editItems : items;
   const computedSubtotal = editMode
     ? editItems.reduce(
-      (s: number, i: any) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unitPrice) || 0),
-      0,
-    )
+        (s: number, i: any) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unitPrice) || 0),
+        0,
+      )
     : (order?.subtotal ?? order?.total ?? 0);
   const computedTotal = editMode
     ? Math.max(0, computedSubtotal - globalDiscount)
@@ -301,16 +301,16 @@ export default function OrderDetailPage() {
       ...editItems,
       ...(newItem && newItem.description
         ? [
-          {
-            description: newItem.description,
-            quantity: newItem.quantity,
-            unitPrice: newItem.unitPrice,
-            productId: newItem.productId,
-            discount: 0,
-            discountType: 0,
-            tax: 0,
-          },
-        ]
+            {
+              description: newItem.description,
+              quantity: newItem.quantity,
+              unitPrice: newItem.unitPrice,
+              productId: newItem.productId,
+              discount: 0,
+              discountType: 0,
+              tax: 0,
+            },
+          ]
         : []),
     ];
     const mappedItems = allItems.map((item: any) => ({
@@ -1207,11 +1207,11 @@ export default function OrderDetailPage() {
                                     setNewItem((prev) =>
                                       prev
                                         ? {
-                                          ...prev,
-                                          description: p.name,
-                                          unitPrice: String(p.price),
-                                          productId: p.id,
-                                        }
+                                            ...prev,
+                                            description: p.name,
+                                            unitPrice: String(p.price),
+                                            productId: p.id,
+                                          }
                                         : null,
                                     );
                                     setShowSuggestions(false);

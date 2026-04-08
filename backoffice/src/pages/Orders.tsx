@@ -84,7 +84,9 @@ export default function Orders() {
   }, [quickSearch]);
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string[]>([]);
-  const [originTypeFilter, setOriginTypeFilter] = useState<'all' | 'BACKOFFICE' | 'CLIENT_POS' | 'ADMIN_POS'>('all');
+  const [originTypeFilter, setOriginTypeFilter] = useState<
+    'all' | 'BACKOFFICE' | 'CLIENT_POS' | 'ADMIN_POS'
+  >('all');
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -1273,7 +1275,7 @@ export default function Orders() {
             selectedKeys={new Set(selectedOrders)}
             onToggleSelect={(key) => toggleSelectOrder(key as number)}
             config={{
-              topLeft: (o: any) => `${o.displayOrderNumber}`,  // uses displayOrderNumber getter (orderNumber ?? documentNumber ?? #id)
+              topLeft: (o: any) => `${o.displayOrderNumber}`, // uses displayOrderNumber getter (orderNumber ?? documentNumber ?? #id)
               topRight: (o: any) => `${formatAmount(o.total || 0, 2)} ${t('currency')}`,
               bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
               bottomRight: (o: any) => {
@@ -1412,11 +1414,11 @@ export default function Orders() {
                 }}
               >
                 {appliedFilters.search ||
-                  appliedFilters.orderNumber ||
-                  appliedFilters.deliveryStatus?.length > 0 ||
-                  appliedFilters.originType !== 'all' ||
-                  appliedFilters.dateRange.start ||
-                  appliedFilters.dateRange.end
+                appliedFilters.orderNumber ||
+                appliedFilters.deliveryStatus?.length > 0 ||
+                appliedFilters.originType !== 'all' ||
+                appliedFilters.dateRange.start ||
+                appliedFilters.dateRange.end
                   ? t('noOrdersMatchFilter')
                   : t('noOrdersYet')}
               </p>
@@ -1426,12 +1428,12 @@ export default function Orders() {
                 appliedFilters.originType !== 'all' ||
                 appliedFilters.dateRange.start ||
                 appliedFilters.dateRange.end) && (
-                  <Button
-                    label={t('resetFilters')}
-                    onClick={resetFilters}
-                    style={{ marginTop: '1.5rem' }}
-                  />
-                )}
+                <Button
+                  label={t('resetFilters')}
+                  onClick={resetFilters}
+                  style={{ marginTop: '1.5rem' }}
+                />
+              )}
             </div>
           </div>
         ) : (
@@ -1986,18 +1988,18 @@ export default function Orders() {
                 !deliveryModalSearch ||
                 p.name.toLowerCase().includes(deliveryModalSearch.toLowerCase()),
             ).length === 0 && (
-              <p
-                style={{
-                  textAlign: 'center',
-                  color: '#94a3b8',
-                  fontSize: '0.875rem',
-                  padding: '1.5rem 0',
-                  margin: 0,
-                }}
-              >
-                {t('noDeliveryPersons')}
-              </p>
-            )}
+            <p
+              style={{
+                textAlign: 'center',
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                padding: '1.5rem 0',
+                margin: 0,
+              }}
+            >
+              {t('noDeliveryPersons')}
+            </p>
+          )}
         </div>
       </Dialog>
 
@@ -2041,7 +2043,8 @@ export default function Orders() {
                 {t('addPayment')}
               </p>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
-                {t('orderNumber')} {orders.find((o: any) => o.id === paymentOrderId)?.displayOrderNumber}
+                {t('orderNumber')}{' '}
+                {orders.find((o: any) => o.id === paymentOrderId)?.displayOrderNumber}
               </p>
             </div>
           </div>

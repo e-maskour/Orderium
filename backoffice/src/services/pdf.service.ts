@@ -106,10 +106,7 @@ class PDFService {
   /**
    * Regenerate a stored PDF (delete old from MinIO, generate new, upload and persist URL)
    */
-  async regeneratePdf(
-    documentType: DocumentType,
-    documentId: number,
-  ): Promise<string> {
+  async regeneratePdf(documentType: DocumentType, documentId: number): Promise<string> {
     const response = await apiClient.post<{ pdfUrl: string }>(
       API_ROUTES.PDF.REGENERATE(documentType as 'invoice' | 'quote' | 'delivery-note', documentId),
     );

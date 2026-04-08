@@ -79,13 +79,19 @@ export default function Sequences() {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateSequenceDTO) => sequencesService.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sequences'] }); closeModal(); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      closeModal();
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateSequenceDTO }) =>
       sequencesService.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sequences'] }); closeModal(); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sequences'] });
+      closeModal();
+    },
   });
 
   const resetMutation = useMutation({
@@ -161,7 +167,15 @@ export default function Sequences() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+        <div
+          style={{
+            padding: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '16rem',
+          }}
+        >
           <div style={{ color: '#475569' }}>{t('loading')}</div>
         </div>
       </AdminLayout>
@@ -179,7 +193,16 @@ export default function Sequences() {
             <Button
               icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => navigate('/configurations')}
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+              style={{
+                width: '2.25rem',
+                height: '2.25rem',
+                flexShrink: 0,
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                color: '#64748b',
+                borderRadius: '0.625rem',
+                padding: 0,
+              }}
             />
           }
           actions={undefined}
@@ -207,7 +230,15 @@ export default function Sequences() {
           />
         </div>
 
-        <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div
+          className="responsive-table-desktop"
+          style={{
+            background: '#ffffff',
+            borderRadius: '0.75rem',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden',
+          }}
+        >
           <DataTable
             className="seq-datatable"
             value={sequences}
@@ -221,38 +252,97 @@ export default function Sequences() {
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
-            <Column field="name" header={t('name')} sortable
-              body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>}
-            />
-            <Column field="entityType" header={t('entityType')} sortable
-              body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{entityTypeOptions.find((o) => o.value === row.entityType)?.label || row.entityType}</span>}
-            />
-            <Column field="formatTemplate" header={t('format')} sortable
-              body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>{row.formatTemplate || '—'}</span>}
-            />
-            <Column header={t('nextDocumentNumber')}
+            <Column
+              field="name"
+              header={t('name')}
+              sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#16a34a', fontFamily: 'monospace' }}>{row.nextFormattedNumber}</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                  {row.name}
+                </span>
               )}
             />
-            <Column field="resetPeriod" header={t('resetPeriod')} sortable
+            <Column
+              field="entityType"
+              header={t('entityType')}
+              sortable
+              body={(row: Sequence) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  {entityTypeOptions.find((o) => o.value === row.entityType)?.label ||
+                    row.entityType}
+                </span>
+              )}
+            />
+            <Column
+              field="formatTemplate"
+              header={t('format')}
+              sortable
+              body={(row: Sequence) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>
+                  {row.formatTemplate || '—'}
+                </span>
+              )}
+            />
+            <Column
+              header={t('nextDocumentNumber')}
+              body={(row: Sequence) => (
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#16a34a',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {row.nextFormattedNumber}
+                </span>
+              )}
+            />
+            <Column
+              field="resetPeriod"
+              header={t('resetPeriod')}
+              sortable
               body={(row: Sequence) => {
                 const opt = resetPeriodOptions.find((o) => o.value === row.resetPeriod);
-                return <span style={{ fontSize: '0.875rem', color: '#475569' }}>{opt?.label || row.resetPeriod}</span>;
+                return (
+                  <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                    {opt?.label || row.resetPeriod}
+                  </span>
+                );
               }}
             />
-            <Column field="isActive" header={t('status')}
+            <Column
+              field="isActive"
+              header={t('status')}
               body={(row: Sequence) => (
-                <span className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}>
+                <span
+                  className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}
+                >
                   {row.isActive ? t('active') : t('inactive')}
                 </span>
               )}
             />
-            <Column header={t('actions')} headerStyle={{ textAlign: 'right' }}
+            <Column
+              header={t('actions')}
+              headerStyle={{ textAlign: 'right' }}
               body={(row: Sequence) => (
                 <div style={{ textAlign: 'right' }}>
-                  <Button icon={<RotateCcw style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleReset(row)} text rounded severity="warning" title={t('resetSequence')} />
-                  <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" title={t('edit')} />
+                  <Button
+                    icon={<RotateCcw style={{ width: '1rem', height: '1rem' }} />}
+                    onClick={() => handleReset(row)}
+                    text
+                    rounded
+                    severity="warning"
+                    title={t('resetSequence')}
+                  />
+                  <Button
+                    icon={<Pencil style={{ width: '1rem', height: '1rem' }} />}
+                    onClick={() => openEditModal(row)}
+                    text
+                    rounded
+                    severity="info"
+                    title={t('edit')}
+                  />
                 </div>
               )}
             />
@@ -278,23 +368,66 @@ export default function Sequences() {
           }
         >
           <form id="sequences-modal-form" onSubmit={handleSubmit}>
-
             {/* ── Live preview banner ────────────────────────────────────────── */}
-            <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', borderRadius: '0.75rem', padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)',
+                borderRadius: '0.75rem',
+                padding: '1.25rem 1.5rem',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+            >
               <div>
-                <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                <div
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: '#93c5fd',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    marginBottom: '0.25rem',
+                  }}
+                >
                   {t('preview')}
                 </div>
-                <div style={{ fontFamily: 'monospace', fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em' }}>
+                <div
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    letterSpacing: '0.05em',
+                  }}
+                >
                   {preview}
                 </div>
               </div>
               {editingSequence && (
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      color: '#93c5fd',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     {t('nextNumber')}
                   </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
+                  <div
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      color: '#fff',
+                    }}
+                  >
                     {editingSequence.nextDocumentNumber || `#${editingSequence.nextNumber}`}
                   </div>
                 </div>
@@ -303,20 +436,52 @@ export default function Sequences() {
 
             {/* ── Locked warning ────────────────────────────────────────────── */}
             {isLocked && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', padding: '0.75rem 1rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.625rem', marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.625rem',
+                  padding: '0.75rem 1rem',
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: '0.625rem',
+                  marginBottom: '1.25rem',
+                }}
+              >
                 <span style={{ fontSize: '1rem', flexShrink: 0 }}>⚠️</span>
-                <p style={{ fontSize: '0.8125rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>{t('sequenceInUseReadonly')}</p>
+                <p style={{ fontSize: '0.8125rem', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+                  {t('sequenceInUseReadonly')}
+                </p>
               </div>
             )}
 
             {/* ── Section: Identity ──────────────────────────────────────────── */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.875rem',
+                  paddingBottom: '0.5rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
                 {t('identity')}
               </div>
               <div className="form-grid-2" style={{ gap: '0.875rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     {t('name')} <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <InputText
@@ -329,7 +494,15 @@ export default function Sequences() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     {t('entityType')} <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <Dropdown
@@ -348,12 +521,33 @@ export default function Sequences() {
 
             {/* ── Section: Numbering ────────────────────────────────────────── */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.875rem',
+                  paddingBottom: '0.5rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
                 {t('numbering')}
               </div>
               <div className="form-grid-2" style={{ gap: '0.875rem', marginBottom: '0.875rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>{t('prefix')}</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    {t('prefix')}
+                  </label>
                   <InputText
                     value={formData.prefix}
                     onChange={(e) => set({ prefix: e.target.value })}
@@ -363,7 +557,17 @@ export default function Sequences() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>{t('suffix')}</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    {t('suffix')}
+                  </label>
                   <InputText
                     value={formData.suffix}
                     onChange={(e) => set({ suffix: e.target.value })}
@@ -374,7 +578,15 @@ export default function Sequences() {
               </div>
               <div className="form-grid-2" style={{ gap: '0.875rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
                     {t('numberLength')} <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <InputText
@@ -387,12 +599,29 @@ export default function Sequences() {
                     required
                     style={{ width: '100%' }}
                   />
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem', display: 'block' }}>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#94a3b8',
+                      marginTop: '0.25rem',
+                      display: 'block',
+                    }}
+                  >
                     {String(1).padStart(formData.numberLength || 4, '0')}
                   </span>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>{t('resetPeriod')}</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: '#374151',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    {t('resetPeriod')}
+                  </label>
                   <Dropdown
                     value={formData.resetPeriod}
                     onChange={(e) => set({ resetPeriod: e.value })}
@@ -408,61 +637,181 @@ export default function Sequences() {
 
             {/* ── Section: Date components ──────────────────────────────────── */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.875rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '0.875rem',
+                  paddingBottom: '0.5rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
                 {t('dateComponents')}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
                 {/* Year */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: `1.5px solid ${formData.yearInPrefix ? '#3b82f6' : '#e2e8f0'}`, background: formData.yearInPrefix ? '#eff6ff' : '#fafafa', cursor: isLocked ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}>
-                  <Checkbox checked={formData.yearInPrefix} onChange={() => !isLocked && set({ yearInPrefix: !formData.yearInPrefix })} disabled={isLocked} />
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '0.625rem 0.875rem',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${formData.yearInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    background: formData.yearInPrefix ? '#eff6ff' : '#fafafa',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Checkbox
+                    checked={formData.yearInPrefix}
+                    onChange={() => !isLocked && set({ yearInPrefix: !formData.yearInPrefix })}
+                    disabled={isLocked}
+                  />
                   <div>
-                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('year')}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>2026</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+                      {t('year')}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                      2026
+                    </div>
                   </div>
                 </label>
 
                 {/* Trimester */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: `1.5px solid ${formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`, background: formData.trimesterInPrefix ? '#eff6ff' : '#fafafa', cursor: isLocked ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}>
-                  <Checkbox checked={formData.trimesterInPrefix} onChange={() => !isLocked && set({ trimesterInPrefix: !formData.trimesterInPrefix, monthInPrefix: formData.trimesterInPrefix ? formData.monthInPrefix : false })} disabled={isLocked} />
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '0.625rem 0.875rem',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    background: formData.trimesterInPrefix ? '#eff6ff' : '#fafafa',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Checkbox
+                    checked={formData.trimesterInPrefix}
+                    onChange={() =>
+                      !isLocked &&
+                      set({
+                        trimesterInPrefix: !formData.trimesterInPrefix,
+                        monthInPrefix: formData.trimesterInPrefix ? formData.monthInPrefix : false,
+                      })
+                    }
+                    disabled={isLocked}
+                  />
                   <div>
-                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('trimester')}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>T2</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+                      {t('trimester')}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                      T2
+                    </div>
                   </div>
                 </label>
 
                 {/* Month */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: `1.5px solid ${formData.monthInPrefix && !formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`, background: formData.monthInPrefix && !formData.trimesterInPrefix ? '#eff6ff' : '#fafafa', cursor: (isLocked || formData.trimesterInPrefix) ? 'not-allowed' : 'pointer', opacity: formData.trimesterInPrefix ? 0.45 : 1, transition: 'all 0.15s' }}>
-                  <Checkbox checked={formData.monthInPrefix && !formData.trimesterInPrefix} onChange={() => !isLocked && !formData.trimesterInPrefix && set({ monthInPrefix: !formData.monthInPrefix })} disabled={isLocked || formData.trimesterInPrefix} />
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '0.625rem 0.875rem',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${formData.monthInPrefix && !formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    background:
+                      formData.monthInPrefix && !formData.trimesterInPrefix ? '#eff6ff' : '#fafafa',
+                    cursor: isLocked || formData.trimesterInPrefix ? 'not-allowed' : 'pointer',
+                    opacity: formData.trimesterInPrefix ? 0.45 : 1,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Checkbox
+                    checked={formData.monthInPrefix && !formData.trimesterInPrefix}
+                    onChange={() =>
+                      !isLocked &&
+                      !formData.trimesterInPrefix &&
+                      set({ monthInPrefix: !formData.monthInPrefix })
+                    }
+                    disabled={isLocked || formData.trimesterInPrefix}
+                  />
                   <div>
-                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('month')}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>04</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+                      {t('month')}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                      04
+                    </div>
                   </div>
                 </label>
 
                 {/* Day */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: `1.5px solid ${formData.dayInPrefix ? '#3b82f6' : '#e2e8f0'}`, background: formData.dayInPrefix ? '#eff6ff' : '#fafafa', cursor: isLocked ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}>
-                  <Checkbox checked={formData.dayInPrefix} onChange={() => !isLocked && set({ dayInPrefix: !formData.dayInPrefix })} disabled={isLocked} />
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '0.625rem 0.875rem',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${formData.dayInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    background: formData.dayInPrefix ? '#eff6ff' : '#fafafa',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Checkbox
+                    checked={formData.dayInPrefix}
+                    onChange={() => !isLocked && set({ dayInPrefix: !formData.dayInPrefix })}
+                    disabled={isLocked}
+                  />
                   <div>
-                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('day')}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>04</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+                      {t('day')}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                      04
+                    </div>
                   </div>
                 </label>
               </div>
             </div>
 
             {/* ── Active toggle ──────────────────────────────────────────────── */}
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '0.625rem', border: '1.5px solid #e2e8f0', background: '#fafafa', cursor: isLocked ? 'not-allowed' : 'pointer' }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.75rem 1rem',
+                borderRadius: '0.625rem',
+                border: '1.5px solid #e2e8f0',
+                background: '#fafafa',
+                cursor: isLocked ? 'not-allowed' : 'pointer',
+              }}
+            >
               <div>
-                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('active')}</div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('sequenceActiveDescription')}</div>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+                  {t('active')}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                  {t('sequenceActiveDescription')}
+                </div>
               </div>
-              <Checkbox checked={formData.isActive} onChange={() => !isLocked && set({ isActive: !formData.isActive })} disabled={isLocked} />
+              <Checkbox
+                checked={formData.isActive}
+                onChange={() => !isLocked && set({ isActive: !formData.isActive })}
+                disabled={isLocked}
+              />
             </label>
-
           </form>
         </Modal>
       </div>
     </AdminLayout>
   );
 }
-

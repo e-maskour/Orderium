@@ -49,7 +49,7 @@ export interface CreateSequenceDTO {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> { }
+export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> {}
 
 export interface SequencePreview {
   preview: string;

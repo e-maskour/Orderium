@@ -1,5 +1,10 @@
 import { type ReactNode } from 'react';
-import { notify, confirmAction as _confirmAction, alertAction, type ConfirmVariant } from '@orderium/ui';
+import {
+  notify,
+  confirmAction as _confirmAction,
+  alertAction,
+  type ConfirmVariant,
+} from '@orderium/ui';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -125,9 +130,9 @@ function inferVariant(title: string): ConfirmVariant {
     lower.includes('refus') ||
     lower.includes('void') ||
     lower.includes('invalide') ||
-    lower.includes('حذف') ||    // Arabic: delete
-    lower.includes('إلغاء') ||  // Arabic: cancel/annul
-    lower.includes('رفض')       // Arabic: reject
+    lower.includes('حذف') || // Arabic: delete
+    lower.includes('إلغاء') || // Arabic: cancel/annul
+    lower.includes('رفض') // Arabic: reject
   ) {
     return 'destructive';
   }
@@ -138,8 +143,8 @@ function inferVariant(title: string): ConfirmVariant {
     lower.includes('dévalid') ||
     lower.includes('désassign') ||
     lower.includes('unassign') ||
-    lower.includes('تعطيل') ||   // Arabic: disable
-    lower.includes('حظر')        // Arabic: block
+    lower.includes('تعطيل') || // Arabic: disable
+    lower.includes('حظر') // Arabic: block
   ) {
     return 'warning';
   }
@@ -172,10 +177,7 @@ const DELETION_ERROR_CODES = new Set([
   'WAREHOUSE_HAS_PRODUCTS',
 ]);
 
-export function toastDeleteError(
-  error: unknown,
-  t: (key: string) => string,
-): void {
+export function toastDeleteError(error: unknown, t: (key: string) => string): void {
   const code = (error as Error)?.message ?? '';
   if (DELETION_ERROR_CODES.has(code)) {
     void alertAction({

@@ -121,7 +121,10 @@ export default function InventoryAdjustments() {
   });
 
   const validateMutation = useMutation({
-    mutationFn: async (data: { adjustmentId: number; lines: Array<{ productId: number; theoreticalQuantity: number; countedQuantity: number }> }) => {
+    mutationFn: async (data: {
+      adjustmentId: number;
+      lines: Array<{ productId: number; theoreticalQuantity: number; countedQuantity: number }>;
+    }) => {
       const changedLines = data.lines.filter((l) => l.countedQuantity !== l.theoreticalQuantity);
       if (changedLines.length > 0) {
         await inventoryAdjustmentService.update(data.adjustmentId, { lines: changedLines } as any);
@@ -210,9 +213,7 @@ export default function InventoryAdjustments() {
 
       // Build initial lines: start from counting list (all products in warehouse),
       // then overlay any already-saved per-line counts from the adjustment
-      const savedMap = new Map(
-        (fresh.lines || []).map((l) => [l.productId, l]),
-      );
+      const savedMap = new Map((fresh.lines || []).map((l) => [l.productId, l]));
       const items = (listing.data || []).map((item: any) => {
         const saved = savedMap.get(item.productId);
         return {
@@ -368,7 +369,15 @@ export default function InventoryAdjustments() {
             </div>
 
             {/* Status Filter + Create Button — share remaining space */}
-            <div style={{ flex: '1 1 40%', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div
+              style={{
+                flex: '1 1 40%',
+                display: 'flex',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
               {/* Status Filter */}
               <Dropdown
                 value={statusFilter}
@@ -581,10 +590,13 @@ export default function InventoryAdjustments() {
                   label: t('delete'),
                   icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
                   onClick: () =>
-                    toastConfirm(t('confirmDeleteAdjustment') || 'Supprimer cet ajustement ?', () => {
-                      deleteMutation.mutate(adj.id);
-                      clearSelection();
-                    }),
+                    toastConfirm(
+                      t('confirmDeleteAdjustment') || 'Supprimer cet ajustement ?',
+                      () => {
+                        deleteMutation.mutate(adj.id);
+                        clearSelection();
+                      },
+                    ),
                   variant: 'danger' as const,
                 });
               }
@@ -596,10 +608,13 @@ export default function InventoryAdjustments() {
                   label: `${t('delete')} (${draftSelected.length})`,
                   icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
                   onClick: () =>
-                    toastConfirm(t('confirmDeleteAdjustment') || 'Supprimer ces ajustements ?', () => {
-                      draftSelected.forEach((r) => deleteMutation.mutate(r.id));
-                      clearSelection();
-                    }),
+                    toastConfirm(
+                      t('confirmDeleteAdjustment') || 'Supprimer ces ajustements ?',
+                      () => {
+                        draftSelected.forEach((r) => deleteMutation.mutate(r.id));
+                        clearSelection();
+                      },
+                    ),
                   variant: 'danger' as const,
                 });
               }
@@ -616,14 +631,23 @@ export default function InventoryAdjustments() {
         header={
           selectedAdjustment ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                  color: '#64748b',
+                  fontWeight: 500,
+                }}
+              >
                 {selectedAdjustment.reference}
               </span>
               <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>
                 {selectedAdjustment.name}
               </span>
             </div>
-          ) : ''
+          ) : (
+            ''
+          )
         }
         modal
         dismissableMask
@@ -634,111 +658,328 @@ export default function InventoryAdjustments() {
           <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
             <div style={{ fontSize: '0.875rem' }}>{t('adjLoadingDetail')}</div>
           </div>
-        ) : selectedAdjustment && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Meta cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))', gap: '0.75rem' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.625rem', padding: '0.75rem 1rem' }}>
-                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.375rem' }}>
-                  {t('adjInfoWarehouse')}
-                </div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
-                  {getWarehouseName(selectedAdjustment)}
-                </div>
-              </div>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.625rem', padding: '0.75rem 1rem' }}>
-                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.375rem' }}>
-                  {t('adjInfoStatus')}
-                </div>
-                <div>{getStatusBadge(selectedAdjustment.status)}</div>
-              </div>
-              {selectedAdjustment.adjustmentDate && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.625rem', padding: '0.75rem 1rem' }}>
-                  <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.375rem' }}>
-                    {t('adjInfoDate')}
+        ) : (
+          selectedAdjustment && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Meta cards */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))',
+                  gap: '0.75rem',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.625rem',
+                    padding: '0.75rem 1rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    {t('adjInfoWarehouse')}
                   </div>
                   <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
-                    {new Date(selectedAdjustment.adjustmentDate).toLocaleDateString('fr-FR')}
+                    {getWarehouseName(selectedAdjustment)}
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Notes */}
-            {selectedAdjustment.notes && (
-              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.625rem', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#78350f' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem', color: '#92400e' }}>
-                  {t('adjInfoNotes')}
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.625rem',
+                    padding: '0.75rem 1rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    {t('adjInfoStatus')}
+                  </div>
+                  <div>{getStatusBadge(selectedAdjustment.status)}</div>
                 </div>
-                {selectedAdjustment.notes}
+                {selectedAdjustment.adjustmentDate && (
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '0.625rem',
+                      padding: '0.75rem 1rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        color: '#94a3b8',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        marginBottom: '0.375rem',
+                      }}
+                    >
+                      {t('adjInfoDate')}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
+                      {new Date(selectedAdjustment.adjustmentDate).toLocaleDateString('fr-FR')}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Lines */}
-            <div>
-              <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '0.75rem', fontSize: '0.9375rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {t('adjLinesTitle')}
-                <span style={{ background: '#e2e8f0', color: '#475569', borderRadius: '999px', padding: '0.125rem 0.625rem', fontSize: '0.75rem', fontWeight: 700 }}>
-                  {selectedAdjustment.lines?.length || 0}
-                </span>
-              </div>
-              {selectedAdjustment.lines && selectedAdjustment.lines.length > 0 ? (
-                <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.625rem', overflow: 'hidden', maxHeight: '55vh', overflowY: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                    <thead style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
-                      <tr>
-                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0', width: '14rem', maxWidth: '14rem', fontSize: '0.8125rem' }}>{t('adjProduct')}</th>
-                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', fontSize: '0.8125rem' }}>{t('adjTheoreticalQty')}</th>
-                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', fontSize: '0.8125rem' }}>{t('adjCountedQty')}</th>
-                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0', fontSize: '0.8125rem' }}>{t('adjDifference')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedAdjustment.lines.map((line, i) => {
-                        const diff = line.difference ?? (line.countedQuantity - line.theoreticalQuantity);
-                        return (
-                          <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '0.75rem 1rem', color: '#0f172a' }}>
-                              <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{line.productName || `#${line.productId}`}</div>
-                              {line.productCode && (
-                                <div style={{ color: '#94a3b8', fontSize: '0.8125rem', marginTop: '0.125rem' }}>{line.productCode}</div>
-                              )}
-                            </td>
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontSize: '0.875rem' }}>
-                              {line.theoreticalQuantity}
-                              {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
-                            </td>
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontWeight: 500, fontSize: '0.875rem' }}>
-                              {line.countedQuantity}
-                              {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
-                            </td>
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                              <span style={{
-                                display: 'inline-block',
-                                fontWeight: 700,
-                                padding: '0.125rem 0.5rem',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.875rem',
-                                background: diff > 0 ? '#dcfce7' : diff < 0 ? '#fee2e2' : '#f1f5f9',
-                                color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
-                              }}>
-                                {diff > 0 ? `+${diff}` : diff}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.875rem', background: '#f8fafc', borderRadius: '0.625rem', border: '1px dashed #e2e8f0' }}>
-                  <Package style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem', opacity: 0.4 }} />
-                  <p>{t('adjNoLines')}</p>
+              {/* Notes */}
+              {selectedAdjustment.notes && (
+                <div
+                  style={{
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '0.625rem',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.875rem',
+                    color: '#78350f',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: '0.6875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      marginBottom: '0.25rem',
+                      color: '#92400e',
+                    }}
+                  >
+                    {t('adjInfoNotes')}
+                  </div>
+                  {selectedAdjustment.notes}
                 </div>
               )}
+
+              {/* Lines */}
+              <div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    marginBottom: '0.75rem',
+                    fontSize: '0.9375rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {t('adjLinesTitle')}
+                  <span
+                    style={{
+                      background: '#e2e8f0',
+                      color: '#475569',
+                      borderRadius: '999px',
+                      padding: '0.125rem 0.625rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {selectedAdjustment.lines?.length || 0}
+                  </span>
+                </div>
+                {selectedAdjustment.lines && selectedAdjustment.lines.length > 0 ? (
+                  <div
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '0.625rem',
+                      overflow: 'hidden',
+                      maxHeight: '55vh',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <table
+                      style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}
+                    >
+                      <thead style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
+                        <tr>
+                          <th
+                            style={{
+                              padding: '0.75rem 1rem',
+                              textAlign: 'left',
+                              color: '#475569',
+                              fontWeight: 600,
+                              borderBottom: '1px solid #e2e8f0',
+                              width: '14rem',
+                              maxWidth: '14rem',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {t('adjProduct')}
+                          </th>
+                          <th
+                            style={{
+                              padding: '0.75rem 1rem',
+                              textAlign: 'center',
+                              color: '#475569',
+                              fontWeight: 600,
+                              borderBottom: '1px solid #e2e8f0',
+                              whiteSpace: 'nowrap',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {t('adjTheoreticalQty')}
+                          </th>
+                          <th
+                            style={{
+                              padding: '0.75rem 1rem',
+                              textAlign: 'center',
+                              color: '#475569',
+                              fontWeight: 600,
+                              borderBottom: '1px solid #e2e8f0',
+                              whiteSpace: 'nowrap',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {t('adjCountedQty')}
+                          </th>
+                          <th
+                            style={{
+                              padding: '0.75rem 1rem',
+                              textAlign: 'center',
+                              color: '#475569',
+                              fontWeight: 600,
+                              borderBottom: '1px solid #e2e8f0',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {t('adjDifference')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedAdjustment.lines.map((line, i) => {
+                          const diff =
+                            line.difference ?? line.countedQuantity - line.theoreticalQuantity;
+                          return (
+                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '0.75rem 1rem', color: '#0f172a' }}>
+                                <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                                  {line.productName || `#${line.productId}`}
+                                </div>
+                                {line.productCode && (
+                                  <div
+                                    style={{
+                                      color: '#94a3b8',
+                                      fontSize: '0.8125rem',
+                                      marginTop: '0.125rem',
+                                    }}
+                                  >
+                                    {line.productCode}
+                                  </div>
+                                )}
+                              </td>
+                              <td
+                                style={{
+                                  padding: '0.75rem 1rem',
+                                  textAlign: 'center',
+                                  color: '#334155',
+                                  fontSize: '0.875rem',
+                                }}
+                              >
+                                {line.theoreticalQuantity}
+                                {line.uomCode && (
+                                  <span
+                                    style={{
+                                      fontSize: '0.75rem',
+                                      color: '#94a3b8',
+                                      marginLeft: '0.25rem',
+                                    }}
+                                  >
+                                    {line.uomCode}
+                                  </span>
+                                )}
+                              </td>
+                              <td
+                                style={{
+                                  padding: '0.75rem 1rem',
+                                  textAlign: 'center',
+                                  color: '#334155',
+                                  fontWeight: 500,
+                                  fontSize: '0.875rem',
+                                }}
+                              >
+                                {line.countedQuantity}
+                                {line.uomCode && (
+                                  <span
+                                    style={{
+                                      fontSize: '0.75rem',
+                                      color: '#94a3b8',
+                                      marginLeft: '0.25rem',
+                                    }}
+                                  >
+                                    {line.uomCode}
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                                <span
+                                  style={{
+                                    display: 'inline-block',
+                                    fontWeight: 700,
+                                    padding: '0.125rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.875rem',
+                                    background:
+                                      diff > 0 ? '#dcfce7' : diff < 0 ? '#fee2e2' : '#f1f5f9',
+                                    color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
+                                  }}
+                                >
+                                  {diff > 0 ? `+${diff}` : diff}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '3rem',
+                      color: '#94a3b8',
+                      fontSize: '0.875rem',
+                      background: '#f8fafc',
+                      borderRadius: '0.625rem',
+                      border: '1px dashed #e2e8f0',
+                    }}
+                  >
+                    <Package
+                      style={{
+                        width: '2rem',
+                        height: '2rem',
+                        margin: '0 auto 0.5rem',
+                        opacity: 0.4,
+                      }}
+                    />
+                    <p>{t('adjNoLines')}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )
         )}
       </Dialog>
       {/* ─────────────── Validate Dialog ─────────────── */}
@@ -748,7 +989,14 @@ export default function InventoryAdjustments() {
         header={
           selectedAdjustment ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                  color: '#64748b',
+                  fontWeight: 500,
+                }}
+              >
                 {selectedAdjustment.reference}
               </span>
               <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>
@@ -758,7 +1006,9 @@ export default function InventoryAdjustments() {
                 {getWarehouseName(selectedAdjustment)}
               </span>
             </div>
-          ) : ''
+          ) : (
+            ''
+          )
         }
         modal
         dismissableMask
@@ -794,7 +1044,9 @@ export default function InventoryAdjustments() {
         }
       >
         {isLoadingLines ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+          <div
+            style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.875rem' }}
+          >
             {t('adjLoadingProducts')}
           </div>
         ) : (
@@ -835,23 +1087,99 @@ export default function InventoryAdjustments() {
 
             {/* Table */}
             {isSearchFetching ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  color: '#94a3b8',
+                  fontSize: '0.875rem',
+                }}
+              >
                 {t('adjLoadingProducts')}
               </div>
             ) : displayedLines.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.875rem', background: '#f8fafc', borderRadius: '0.625rem', border: '1px dashed #e2e8f0' }}>
-                <Package style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem', opacity: 0.4 }} />
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '3rem',
+                  color: '#94a3b8',
+                  fontSize: '0.875rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.625rem',
+                  border: '1px dashed #e2e8f0',
+                }}
+              >
+                <Package
+                  style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem', opacity: 0.4 }}
+                />
                 <p>{validateSearch ? t('adjNoProductsMatchSearch') : t('adjNoProductsFound')}</p>
               </div>
             ) : (
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.625rem', overflow: 'hidden', maxHeight: '55vh', overflowY: 'auto' }}>
+              <div
+                style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.625rem',
+                  overflow: 'hidden',
+                  maxHeight: '55vh',
+                  overflowY: 'auto',
+                }}
+              >
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
                   <thead style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
                     <tr>
-                      <th style={{ padding: '0.625rem 0.875rem', textAlign: 'left', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', width: '14rem', maxWidth: '14rem' }}>{t('adjProduct')}</th>
-                      <th style={{ padding: '0.625rem 0.875rem', textAlign: 'center', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', width: '9rem' }}>{t('adjTheoreticalQty')}</th>
-                      <th style={{ padding: '0.625rem 0.875rem', textAlign: 'center', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', width: '10rem', borderLeft: '2px solid #e2e8f0', borderRight: '2px solid #e2e8f0' }}>{t('adjCountedQty')} <span style={{ color: '#ef4444' }}>*</span></th>
-                      <th style={{ padding: '0.625rem 0.875rem', textAlign: 'center', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', width: '8rem' }}>{t('adjDifference')}</th>
+                      <th
+                        style={{
+                          padding: '0.625rem 0.875rem',
+                          textAlign: 'left',
+                          color: '#64748b',
+                          fontWeight: 600,
+                          borderBottom: '1px solid #e2e8f0',
+                          width: '14rem',
+                          maxWidth: '14rem',
+                        }}
+                      >
+                        {t('adjProduct')}
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.625rem 0.875rem',
+                          textAlign: 'center',
+                          color: '#64748b',
+                          fontWeight: 600,
+                          borderBottom: '1px solid #e2e8f0',
+                          whiteSpace: 'nowrap',
+                          width: '9rem',
+                        }}
+                      >
+                        {t('adjTheoreticalQty')}
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.625rem 0.875rem',
+                          textAlign: 'center',
+                          color: '#64748b',
+                          fontWeight: 600,
+                          borderBottom: '1px solid #e2e8f0',
+                          whiteSpace: 'nowrap',
+                          width: '10rem',
+                          borderLeft: '2px solid #e2e8f0',
+                          borderRight: '2px solid #e2e8f0',
+                        }}
+                      >
+                        {t('adjCountedQty')} <span style={{ color: '#ef4444' }}>*</span>
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.625rem 0.875rem',
+                          textAlign: 'center',
+                          color: '#64748b',
+                          fontWeight: 600,
+                          borderBottom: '1px solid #e2e8f0',
+                          width: '8rem',
+                        }}
+                      >
+                        {t('adjDifference')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -859,18 +1187,80 @@ export default function InventoryAdjustments() {
                       const diff = line.countedQuantity - line.theoreticalQuantity;
                       return (
                         <tr key={line.productId} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '0.5rem 0.875rem', color: '#1e293b', width: '14rem', maxWidth: '14rem', overflow: 'hidden' }}>
-                            <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{line.productName}</div>
+                          <td
+                            style={{
+                              padding: '0.5rem 0.875rem',
+                              color: '#1e293b',
+                              width: '14rem',
+                              maxWidth: '14rem',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: 500,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {line.productName}
+                            </div>
                             {line.productCode && (
-                              <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.125rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{line.productCode}</div>
+                              <div
+                                style={{
+                                  color: '#94a3b8',
+                                  fontSize: '0.75rem',
+                                  marginTop: '0.125rem',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {line.productCode}
+                              </div>
                             )}
                           </td>
-                          <td style={{ padding: '0.5rem 0.875rem', textAlign: 'center', color: '#94a3b8', fontWeight: 500, width: '9rem' }}>
+                          <td
+                            style={{
+                              padding: '0.5rem 0.875rem',
+                              textAlign: 'center',
+                              color: '#94a3b8',
+                              fontWeight: 500,
+                              width: '9rem',
+                            }}
+                          >
                             {line.theoreticalQuantity}
-                            {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
+                            {line.uomCode && (
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  color: '#94a3b8',
+                                  marginLeft: '0.25rem',
+                                }}
+                              >
+                                {line.uomCode}
+                              </span>
+                            )}
                           </td>
-                          <td style={{ padding: 0, width: '10rem', borderLeft: '2px solid #f1f5f9', borderRight: '2px solid #f1f5f9', background: '#fafbff' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', padding: '0 0.375rem' }}>
+                          <td
+                            style={{
+                              padding: 0,
+                              width: '10rem',
+                              borderLeft: '2px solid #f1f5f9',
+                              borderRight: '2px solid #f1f5f9',
+                              background: '#fafbff',
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.25rem',
+                                padding: '0 0.375rem',
+                              }}
+                            >
                               <InputNumber
                                 value={line.countedQuantity}
                                 onValueChange={(e) => updateLine(line.productId, e.value ?? 0)}
@@ -878,21 +1268,46 @@ export default function InventoryAdjustments() {
                                 minFractionDigits={0}
                                 maxFractionDigits={4}
                                 style={{ flex: 1 }}
-                                inputStyle={{ textAlign: 'center', width: '100%', border: 'none', borderRadius: 0, background: 'transparent', padding: '0.5rem 0.25rem' }}
+                                inputStyle={{
+                                  textAlign: 'center',
+                                  width: '100%',
+                                  border: 'none',
+                                  borderRadius: 0,
+                                  background: 'transparent',
+                                  padding: '0.5rem 0.25rem',
+                                }}
                               />
-                              {line.uomCode && <span style={{ fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{line.uomCode}</span>}
+                              {line.uomCode && (
+                                <span
+                                  style={{
+                                    fontSize: '0.7rem',
+                                    color: '#94a3b8',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {line.uomCode}
+                                </span>
+                              )}
                             </div>
                           </td>
-                          <td style={{ padding: '0.5rem 0.875rem', textAlign: 'center', width: '8rem' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              fontWeight: 700,
-                              padding: '0.125rem 0.5rem',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.8125rem',
-                              background: diff > 0 ? '#dcfce7' : diff < 0 ? '#fee2e2' : '#f1f5f9',
-                              color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
-                            }}>
+                          <td
+                            style={{
+                              padding: '0.5rem 0.875rem',
+                              textAlign: 'center',
+                              width: '8rem',
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                fontWeight: 700,
+                                padding: '0.125rem 0.5rem',
+                                borderRadius: '0.375rem',
+                                fontSize: '0.8125rem',
+                                background: diff > 0 ? '#dcfce7' : diff < 0 ? '#fee2e2' : '#f1f5f9',
+                                color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
+                              }}
+                            >
                               {diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2)}
                             </span>
                           </td>
@@ -906,7 +1321,15 @@ export default function InventoryAdjustments() {
 
             {/* Pagination — only for search results when total > 50 */}
             {debouncedValidateSearch && searchResult && searchResult.total > 50 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center', paddingTop: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  paddingTop: '0.5rem',
+                }}
+              >
                 <Button
                   label={t('previous')}
                   onClick={() => setValidatePage((p) => Math.max(1, p - 1))}
@@ -973,10 +1396,25 @@ export default function InventoryAdjustments() {
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingTop: '0.25rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem',
+            paddingTop: '0.25rem',
+          }}
+        >
           {/* Name */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#334155',
+                marginBottom: '0.375rem',
+              }}
+            >
               {t('adjustmentNameLabel')} <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <InputText
@@ -990,7 +1428,15 @@ export default function InventoryAdjustments() {
 
           {/* Warehouse */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#334155',
+                marginBottom: '0.375rem',
+              }}
+            >
               {t('adjWarehouse')} <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <Dropdown
@@ -1006,7 +1452,15 @@ export default function InventoryAdjustments() {
 
           {/* Notes */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#334155',
+                marginBottom: '0.375rem',
+              }}
+            >
               {t('optionalNotes')}
             </label>
             <InputTextarea

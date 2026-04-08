@@ -462,7 +462,9 @@ export default function SharedDocumentPage() {
                 }}
               >
                 <span style={{ color: '#64748b' }}>TVA</span>
-                <span style={{ fontWeight: 600, color: '#334155' }}>{formatAmount(tax, 2)} {t('currency')}</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>
+                  {formatAmount(tax, 2)} {t('currency')}
+                </span>
               </div>
               <div
                 style={{

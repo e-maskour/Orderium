@@ -112,4 +112,4 @@ export interface CreateOrderDTO {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateOrderDTO extends Partial<CreateOrderDTO> { }
+export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
