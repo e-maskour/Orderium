@@ -26,6 +26,24 @@ import { NOT } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 
+/** Notification types that delivery persons may see */
+const DELIVERY_PORTAL_TYPES = [
+  'ORDER_ASSIGNED_DRIVER',
+  'ORDER_REASSIGNED_DRIVER',
+  'ORDER_CANCELLED_BY_ADMIN_DRIVER',
+];
+
+/** Notification types that client portal users may see */
+const CLIENT_PORTAL_TYPES = [
+  'ORDER_DELIVERED_CLIENT',
+  'ORDER_CANCELLED_BY_ADMIN_CLIENT',
+  'ORDER_ASSIGNED_CLIENT',
+  'ADMIN_CUSTOM_MESSAGE',
+  'DELIVERY_IN_PROGRESS_CLIENT',
+  'DELIVERY_COMPLETED_CLIENT',
+  'DELIVERY_FAILED_CLIENT',
+];
+
 @ApiTags('Notifications')
 @Controller('notifications')
 @PortalRoute()
@@ -66,9 +84,25 @@ export class NotificationsController {
         ? Number(customerId)
         : jwtUserId;
 
+    // Restrict notification types per portal to prevent cross-portal leakage
+    let allowedTypes: string | string[] | undefined = type;
+    if (userType === 'delivery') {
+      allowedTypes = Array.isArray(type)
+        ? type.filter((t) => DELIVERY_PORTAL_TYPES.includes(t))
+        : type && DELIVERY_PORTAL_TYPES.includes(type)
+          ? type
+          : DELIVERY_PORTAL_TYPES;
+    } else if (userType === 'client') {
+      allowedTypes = Array.isArray(type)
+        ? type.filter((t) => CLIENT_PORTAL_TYPES.includes(t))
+        : type && CLIENT_PORTAL_TYPES.includes(type)
+          ? type
+          : CLIENT_PORTAL_TYPES;
+    }
+
     const result = await this.notificationsService.findAll({
       userId: userIdNum,
-      type,
+      type: allowedTypes,
       priority,
       isRead: isRead !== undefined ? isRead === 'true' : undefined,
       isArchived: isArchived !== undefined ? isArchived === 'true' : undefined,
@@ -133,8 +167,14 @@ export class NotificationsController {
         ? Number(customerId)
         : jwtUserId;
 
-    const count: number =
-      await this.notificationsService.getUnreadCount(userIdNum);
+    const count: number = await this.notificationsService.getUnreadCount(
+      userIdNum,
+      userType === 'delivery'
+        ? DELIVERY_PORTAL_TYPES
+        : userType === 'client'
+          ? CLIENT_PORTAL_TYPES
+          : undefined,
+    );
     return ApiRes(NOT.UNREAD_COUNT, { count });
   }
 

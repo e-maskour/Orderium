@@ -112,7 +112,7 @@ export function NotificationBell() {
       const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch(
-        `${API_ROUTES.NOTIFICATIONS.UNREAD_COUNT}?userId=${deliveryPerson?.id}`,
+        `${API_ROUTES.NOTIFICATIONS.UNREAD_COUNT}?userType=delivery&userId=${deliveryPerson?.id}`,
         { headers },
       );
       if (!res.ok) throw new Error('Failed to fetch unread count');

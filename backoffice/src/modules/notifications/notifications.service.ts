@@ -19,6 +19,7 @@ class NotificationsService {
     pagination?: PaginationParams,
   ): Promise<PaginatedResponse<Notification>> {
     const params = new URLSearchParams();
+    params.append('userType', 'backoffice');
     if (pagination?.page) params.append('page', pagination.page.toString());
     if (pagination?.limit) params.append('limit', pagination.limit.toString());
     if (pagination?.sortBy) params.append('sortBy', pagination.sortBy);
@@ -65,7 +66,9 @@ class NotificationsService {
   }
 
   async getUnreadCount(): Promise<{ count: number }> {
-    const response = await apiClient.get<{ count: number }>(API_ROUTES.NOTIFICATIONS.UNREAD_COUNT);
+    const response = await apiClient.get<{ count: number }>(
+      `${API_ROUTES.NOTIFICATIONS.UNREAD_COUNT}?userType=backoffice`,
+    );
     return { count: response.data.count };
   }
 

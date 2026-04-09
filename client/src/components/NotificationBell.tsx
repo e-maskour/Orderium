@@ -103,7 +103,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     queryKey: ['notifications', 'portal-user', userId],
     queryFn: async () => {
       const res = await http<{ data: ApiNotification[] }>(
-        `${API_ROUTES.NOTIFICATIONS.LIST}?userId=${userId}`,
+        `${API_ROUTES.NOTIFICATIONS.LIST}?userType=client&userId=${userId}`,
       );
       return res.data ?? [];
     },
@@ -115,7 +115,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     queryKey: ['notifications', 'portal-user', userId, 'unread-count'],
     queryFn: async () => {
       const res = await http<{ data: { count: number } }>(
-        `${API_ROUTES.NOTIFICATIONS.UNREAD_COUNT}?userId=${userId}`,
+        `${API_ROUTES.NOTIFICATIONS.UNREAD_COUNT}?userType=client&userId=${userId}`,
       );
       return res.data ?? { count: 0 };
     },

@@ -210,9 +210,10 @@ export class NotificationsService {
     return result.affected || 0;
   }
 
-  async getUnreadCount(userId?: number): Promise<number> {
+  async getUnreadCount(userId?: number, types?: string[]): Promise<number> {
     const where: any = { isRead: false, isArchived: false };
     if (userId !== undefined) where.userId = userId;
+    if (types && types.length > 0) where.type = In(types);
     return this.notificationRepository.count({ where });
   }
 }
