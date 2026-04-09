@@ -139,6 +139,7 @@ sketch
 docs
 QA Tests
 playwright
+takin-demo
 scripts.env
 .env.docker
 .env.local

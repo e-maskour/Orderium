@@ -29,14 +29,14 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @ApiTags('Notifications')
 @Controller('notifications')
 @PortalRoute()
-@Serialize(NotificationResponseDto)
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) {}
+  ) { }
 
   @Get()
+  @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })
   @ApiResponse({
     status: 200,
@@ -139,6 +139,7 @@ export class NotificationsController {
   }
 
   @Get('user/:userId')
+  @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Get user notifications' })
   @ApiResponse({
     status: 200,
@@ -189,6 +190,7 @@ export class NotificationsController {
   }
 
   @Get(':id')
+  @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Get notification by ID' })
   @ApiResponse({
     status: 200,
@@ -204,6 +206,7 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
+  @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
   async markAsRead(@Param('id', ParseIntPipe) id: number) {
@@ -236,6 +239,7 @@ export class NotificationsController {
   }
 
   @Patch(':id/archive')
+  @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Archive notification' })
   @ApiResponse({ status: 200, description: 'Notification archived' })
   async archive(@Param('id', ParseIntPipe) id: number) {

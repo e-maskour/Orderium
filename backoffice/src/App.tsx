@@ -30,7 +30,9 @@ function OnboardingGate({ children }: { children: ReactNode }) {
     checked.current = true;
     // Use a relative URL so the request goes through the Vite dev-server proxy
     // (avoids cross-origin CORS issues when accessed via tenant subdomains like demo.localhost:3001)
-    fetch('/api/onboarding/status')
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    fetch('/api/onboarding/status', { signal: controller.signal })
       .then((r) => r.json())
       .then((json) => {
         const isOnboarded = json?.data?.is_onboarded ?? true;
@@ -41,7 +43,10 @@ function OnboardingGate({ children }: { children: ReactNode }) {
       .catch(() => {
         /* fail open — don't block the app */
       })
-      .finally(() => setReady(true));
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setReady(true);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

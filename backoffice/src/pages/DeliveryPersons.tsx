@@ -126,7 +126,7 @@ export default function DeliveryPersons() {
       const updateData: any = {
         name: formData.name,
         phoneNumber: formData.phoneNumber,
-        email: formData.email || undefined,
+        email: formData.email || null,
         isActive: formData.isActive,
       };
       // Only include password if it's provided
@@ -142,7 +142,7 @@ export default function DeliveryPersons() {
       }
       createMutation.mutate({
         ...formData,
-        email: formData.email || '',
+        email: formData.email || null,
       });
     }
   };

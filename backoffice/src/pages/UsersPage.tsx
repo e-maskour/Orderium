@@ -198,7 +198,7 @@ export default function UsersPage() {
       const payload: UpdateUserPayload = {
         name: formName,
         phoneNumber: formPhone,
-        email: formEmail || undefined,
+        email: formEmail || null,
         status: formStatus,
         roleId: formRoleId,
       };
@@ -208,7 +208,7 @@ export default function UsersPage() {
       createMutation.mutate({
         name: formName,
         phoneNumber: formPhone,
-        email: formEmail || undefined,
+        email: formEmail || null,
         password: formPassword,
         status: formStatus,
         userType: currentUserType,
@@ -828,27 +828,27 @@ export default function UsersPage() {
         actions={[
           ...(selectedUsers.length === 1
             ? [
-                {
-                  id: 'edit',
-                  label: t('edit' as any),
-                  icon: <Pencil style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => openEdit(selectedUsers[0]),
-                  variant: 'secondary' as const,
-                },
-                {
-                  id: 'toggle',
-                  label: selectedUsers[0].isActive
-                    ? t('deactivate' as any) || 'Désactiver'
-                    : t('activate' as any) || 'Activer',
-                  icon: selectedUsers[0].isActive ? (
-                    <UserX style={{ width: '0.875rem', height: '0.875rem' }} />
-                  ) : (
-                    <UserCheck style={{ width: '0.875rem', height: '0.875rem' }} />
-                  ),
-                  onClick: () => handleToggleActive(selectedUsers[0]),
-                  variant: 'secondary' as const,
-                },
-              ]
+              {
+                id: 'edit',
+                label: t('edit' as any),
+                icon: <Pencil style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => openEdit(selectedUsers[0]),
+                variant: 'secondary' as const,
+              },
+              {
+                id: 'toggle',
+                label: selectedUsers[0].isActive
+                  ? t('deactivate' as any) || 'Désactiver'
+                  : t('activate' as any) || 'Activer',
+                icon: selectedUsers[0].isActive ? (
+                  <UserX style={{ width: '0.875rem', height: '0.875rem' }} />
+                ) : (
+                  <UserCheck style={{ width: '0.875rem', height: '0.875rem' }} />
+                ),
+                onClick: () => handleToggleActive(selectedUsers[0]),
+                variant: 'secondary' as const,
+              },
+            ]
             : []),
           {
             id: 'delete',
