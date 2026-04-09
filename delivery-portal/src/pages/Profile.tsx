@@ -22,13 +22,13 @@ export default function Profile() {
       deliveryPerson
         ? deliveryService.getMyOrders(deliveryPerson.id, { page: 1, pageSize: 200 })
         : Promise.resolve({
-          success: true,
-          orders: [],
-          total: 0,
-          page: 1,
-          pageSize: 200,
-          totalPages: 0,
-        }),
+            success: true,
+            orders: [],
+            total: 0,
+            page: 1,
+            pageSize: 200,
+            totalPages: 0,
+          }),
     enabled: !!deliveryPerson,
   });
 
