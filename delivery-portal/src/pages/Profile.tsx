@@ -22,13 +22,13 @@ export default function Profile() {
       deliveryPerson
         ? deliveryService.getMyOrders(deliveryPerson.id, { page: 1, pageSize: 200 })
         : Promise.resolve({
-            success: true,
-            orders: [],
-            total: 0,
-            page: 1,
-            pageSize: 200,
-            totalPages: 0,
-          }),
+          success: true,
+          orders: [],
+          total: 0,
+          page: 1,
+          pageSize: 200,
+          totalPages: 0,
+        }),
     enabled: !!deliveryPerson,
   });
 
@@ -342,9 +342,37 @@ export default function Profile() {
         </div>
 
         {/* Version */}
-        <p style={{ textAlign: 'center', color: '#d1d5db', fontSize: '0.8rem', fontWeight: 500 }}>
-          Morocom Delivery · v1.0
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.25rem' }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+              border: '1px solid #bfdbfe',
+              borderRadius: '999px',
+              padding: '0.3rem 0.875rem',
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              color: '#1d4ed8',
+              letterSpacing: '0.01em',
+            }}
+          >
+            Morocom Delivery
+            <span
+              style={{
+                background: '#1d4ed8',
+                color: '#fff',
+                borderRadius: '999px',
+                padding: '0.1rem 0.45rem',
+                fontSize: '0.6875rem',
+                fontWeight: 800,
+              }}
+            >
+              v2.0
+            </span>
+          </span>
+        </div>
       </div>
     </AppLayout>
   );

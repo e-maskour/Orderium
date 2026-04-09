@@ -1,7 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakeDeliveryPersonEmailNullable1744195200000
-  implements MigrationInterface {
+export class MakeDeliveryPersonEmailNullable1744195200000 implements MigrationInterface {
   name = 'MakeDeliveryPersonEmailNullable1744195200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

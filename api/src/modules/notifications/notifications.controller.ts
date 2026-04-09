@@ -33,7 +33,7 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) { }
+  ) {}
 
   @Get()
   @Serialize(NotificationResponseDto)
