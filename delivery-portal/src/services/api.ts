@@ -1,8 +1,6 @@
 import { Order } from '../types';
 import { API_ROUTES } from '../common/api-routes';
 
-const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-
 const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('authToken');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -40,7 +38,7 @@ interface OrderFilters {
 
 export const deliveryService = {
   async login(phoneNumber: string, password: string) {
-    const response = await fetch(`${BASE}${API_ROUTES.DELIVERY.LOGIN}`, {
+    const response = await fetch(API_ROUTES.DELIVERY.LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,7 +61,7 @@ export const deliveryService = {
     if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
 
     const queryString = params.toString();
-    const url = `${BASE}${API_ROUTES.DELIVERY.PERSON_ORDERS(deliveryPersonId)}${queryString ? '?' + queryString : ''}`;
+    const url = `${API_ROUTES.DELIVERY.PERSON_ORDERS(deliveryPersonId)}${queryString ? '?' + queryString : ''}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -97,7 +95,7 @@ export const deliveryService = {
     deliveryPersonId: number,
   ): Promise<void> {
     const response = await fetch(
-      `${BASE}${API_ROUTES.DELIVERY.UPDATE_ORDER_STATUS(deliveryPersonId, orderId)}`,
+      API_ROUTES.DELIVERY.UPDATE_ORDER_STATUS(deliveryPersonId, orderId),
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
