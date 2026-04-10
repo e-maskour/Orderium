@@ -50,7 +50,7 @@ export class TenantConnectionService implements OnModuleDestroy {
    */
   private static readonly MAX_OPEN_CONNECTIONS = 10;
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   // ─── Public API ────────────────────────────────────────────────────────────
 
@@ -76,14 +76,14 @@ export class TenantConnectionService implements OnModuleDestroy {
     if (!ctx) {
       throw new InternalServerErrorException(
         'TenantConnectionService.getCurrentDataSource() called outside a tenant context. ' +
-        'Make sure TenantMiddleware is applied to this route.',
+          'Make sure TenantMiddleware is applied to this route.',
       );
     }
     const ds = this.connections.get(ctx.tenantSlug);
     if (!ds?.isInitialized) {
       throw new InternalServerErrorException(
         `Tenant connection for '${ctx.tenantSlug}' is not initialised. ` +
-        'This should not happen — TenantMiddleware calls getConnection() before route execution.',
+          'This should not happen — TenantMiddleware calls getConnection() before route execution.',
       );
     }
     return ds;
