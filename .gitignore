@@ -140,6 +140,7 @@ docs
 QA Tests
 playwright
 takin-demo
+.github
 scripts.env
 .env.docker
 .env.local

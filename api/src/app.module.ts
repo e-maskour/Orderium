@@ -123,7 +123,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
         ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
-        extra: { max: 5, min: 1 },
+        extra: { max: 3, min: 0 },
       }),
     }),
 

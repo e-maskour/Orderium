@@ -45,10 +45,12 @@ export class TenantConnectionService implements OnModuleDestroy {
   /** Close inactive connection after 60 s */
   private static readonly IDLE_TIMEOUT_MS = 60_000;
 
-  /** Maximum number of simultaneously open tenant connections */
-  private static readonly MAX_OPEN_CONNECTIONS = 15;
+  /** Maximum number of simultaneously open tenant connections.
+   * Keep low on VPS: each slot reserves up to MAX_PER_TENANT_CONNECTIONS pg clients.
+   */
+  private static readonly MAX_OPEN_CONNECTIONS = 10;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   // ─── Public API ────────────────────────────────────────────────────────────
 
@@ -74,14 +76,14 @@ export class TenantConnectionService implements OnModuleDestroy {
     if (!ctx) {
       throw new InternalServerErrorException(
         'TenantConnectionService.getCurrentDataSource() called outside a tenant context. ' +
-          'Make sure TenantMiddleware is applied to this route.',
+        'Make sure TenantMiddleware is applied to this route.',
       );
     }
     const ds = this.connections.get(ctx.tenantSlug);
     if (!ds?.isInitialized) {
       throw new InternalServerErrorException(
         `Tenant connection for '${ctx.tenantSlug}' is not initialised. ` +
-          'This should not happen — TenantMiddleware calls getConnection() before route execution.',
+        'This should not happen — TenantMiddleware calls getConnection() before route execution.',
       );
     }
     return ds;
@@ -157,9 +159,11 @@ export class TenantConnectionService implements OnModuleDestroy {
       synchronize: false,
       logging: this.configService.get<string>('DB_LOGGING') === 'true',
       extra: {
-        // pg pool settings — keep low for VPS environments
-        max: 5,
-        min: 1,
+        // pg pool settings — keep low for VPS environments.
+        // min:0 is critical: do NOT hold idle connections once the pool is quiet.
+        // With MAX_OPEN_CONNECTIONS=10 and max:3, peak tenant usage = 30 conns.
+        max: 3,
+        min: 0,
         idleTimeoutMillis: TenantConnectionService.IDLE_TIMEOUT_MS,
         connectionTimeoutMillis: 5_000,
       },
