@@ -65,10 +65,49 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-router': ['react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
+        manualChunks(id) {
+          // Core React runtime — loaded first, very small
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor-react';
+          }
+          // Router
+          if (
+            id.includes('node_modules/react-router-dom/') ||
+            id.includes('node_modules/react-router/')
+          ) {
+            return 'vendor-router';
+          }
+          // Data fetching
+          if (id.includes('node_modules/@tanstack/')) {
+            return 'vendor-query';
+          }
+          // PrimeReact UI library (large — split out so it's cached independently)
+          if (
+            id.includes('node_modules/primereact/') ||
+            id.includes('node_modules/primeflex/') ||
+            id.includes('node_modules/primeicons/')
+          ) {
+            return 'vendor-prime';
+          }
+          // Firebase SDK (large — only needed for push notifications)
+          if (id.includes('node_modules/firebase/') || id.includes('node_modules/@firebase/')) {
+            return 'vendor-firebase';
+          }
+          // Excel export/import (large — only needed on a few pages)
+          if (id.includes('node_modules/xlsx/')) {
+            return 'vendor-xlsx';
+          }
+          // Charts (large — only needed on dashboard)
+          if (
+            id.includes('node_modules/apexcharts/') ||
+            id.includes('node_modules/react-apexcharts/')
+          ) {
+            return 'vendor-charts';
+          }
+          // Icons
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'vendor-icons';
+          }
         },
       },
     },

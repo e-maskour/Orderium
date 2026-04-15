@@ -19,13 +19,9 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const checked = useRef(false);
-  const [ready, setReady] = useState(location.pathname.startsWith('/onboarding'));
 
   useEffect(() => {
-    if (location.pathname.startsWith('/onboarding')) {
-      setReady(true);
-      return;
-    }
+    if (location.pathname.startsWith('/onboarding')) return;
     if (checked.current) return;
     checked.current = true;
     // Use a relative URL so the request goes through the Vite dev-server proxy
@@ -45,28 +41,10 @@ function OnboardingGate({ children }: { children: ReactNode }) {
       })
       .finally(() => {
         clearTimeout(timeoutId);
-        setReady(true);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!ready) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          fontFamily: 'system-ui, sans-serif',
-          color: '#94a3b8',
-          fontSize: '0.9375rem',
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
   return <>{children}</>;
 }
 
@@ -139,6 +117,7 @@ const queryClient = new QueryClient({
       staleTime: 30_000,
       gcTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
+      retry: 1,
     },
   },
 });
