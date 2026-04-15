@@ -34,6 +34,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Dropdown } from 'primereact/dropdown';
+import { AutoComplete } from 'primereact/autocomplete';
 import { MultiSelect } from 'primereact/multiselect';
 import { toastCreated, toastSuccess, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
@@ -192,6 +193,45 @@ export default function ProductCreate() {
   }));
   const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
   const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
+
+  const [saleUomSuggestions, setSaleUomSuggestions] = useState<{ label: string; value: number }[]>(
+    [],
+  );
+  const [purchaseUomSuggestions, setPurchaseUomSuggestions] = useState<
+    { label: string; value: number }[]
+  >([]);
+  const [saleUomInput, setSaleUomInput] = useState<any>(null);
+  const [purchaseUomInput, setPurchaseUomInput] = useState<any>(null);
+
+  const saleUnitId = watch('saleUnitId');
+  const purchaseUnitId = watch('purchaseUnitId');
+
+  useEffect(() => {
+    const opt = uomOptions.find((o) => o.value === saleUnitId) ?? null;
+    setSaleUomInput(opt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleUnitId, uoms.length]);
+
+  useEffect(() => {
+    const opt = uomOptions.find((o) => o.value === purchaseUnitId) ?? null;
+    setPurchaseUomInput(opt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purchaseUnitId, uoms.length]);
+
+  const searchSaleUoms = (e: { query: string }) => {
+    const q = e.query.toLowerCase();
+    setSaleUomSuggestions(
+      q ? uomOptions.filter((o) => o.label.toLowerCase().includes(q)) : [...uomOptions],
+    );
+  };
+
+  const searchPurchaseUoms = (e: { query: string }) => {
+    const q = e.query.toLowerCase();
+    setPurchaseUomSuggestions(
+      q ? uomOptions.filter((o) => o.label.toLowerCase().includes(q)) : [...uomOptions],
+    );
+  };
+
   const taxOptions = [
     { label: '0%', value: null },
     ...taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name })),
@@ -475,14 +515,23 @@ export default function ProductCreate() {
                     name="saleUnitId"
                     control={control}
                     render={({ field }) => (
-                      <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
+                      <AutoComplete
+                        value={saleUomInput}
+                        suggestions={saleUomSuggestions}
+                        completeMethod={searchSaleUoms}
+                        field="label"
+                        forceSelection
+                        dropdown
+                        onChange={(e) => setSaleUomInput(e.value)}
+                        onSelect={(e) => field.onChange(e.value.value)}
+                        onClear={() => {
+                          setSaleUomInput(null);
+                          field.onChange(null);
+                        }}
                         onBlur={field.onBlur}
-                        options={uomOptions}
                         placeholder={t('selectUnit')}
                         style={{ width: '100%' }}
-                        showClear
+                        inputStyle={{ width: '100%' }}
                       />
                     )}
                   />
@@ -601,14 +650,23 @@ export default function ProductCreate() {
                     name="purchaseUnitId"
                     control={control}
                     render={({ field }) => (
-                      <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
+                      <AutoComplete
+                        value={purchaseUomInput}
+                        suggestions={purchaseUomSuggestions}
+                        completeMethod={searchPurchaseUoms}
+                        field="label"
+                        forceSelection
+                        dropdown
+                        onChange={(e) => setPurchaseUomInput(e.value)}
+                        onSelect={(e) => field.onChange(e.value.value)}
+                        onClear={() => {
+                          setPurchaseUomInput(null);
+                          field.onChange(null);
+                        }}
                         onBlur={field.onBlur}
-                        options={uomOptions}
                         placeholder={t('selectUnit')}
                         style={{ width: '100%' }}
-                        showClear
+                        inputStyle={{ width: '100%' }}
                       />
                     )}
                   />

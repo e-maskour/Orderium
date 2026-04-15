@@ -1970,13 +1970,16 @@ input[type='number'] {
 .caisse-card {
     background: #fff;
     border-radius: 0.875rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     overflow: hidden;
-    transition: box-shadow 0.15s ease;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
     cursor: pointer;
 }
 
 .caisse-card:hover {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
 }
 
 .caisse-card--paid {}
@@ -1996,7 +1999,9 @@ input[type='number'] {
     display: flex;
     align-items: center;
     gap: 0.625rem;
+    flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .caisse-card__avatar {
@@ -2042,6 +2047,11 @@ input[type='number'] {
     background: #fffbeb;
     border-radius: 0.25rem;
     padding: 0.0625rem 0.375rem;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .caisse-card__status {
@@ -2094,9 +2104,13 @@ input[type='number'] {
 }
 
 .caisse-card__amount-value {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .caisse-card__amount-value--total {
@@ -2113,6 +2127,14 @@ input[type='number'] {
 
 .caisse-card__amount-value--remaining-zero {
     color: #10b981;
+}
+
+.caisse-card__amount-currency {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: inherit;
+    opacity: 0.65;
+    margin-left: 0.125rem;
 }
 
 /* ── Card Actions ────────────────────────────────────────────── */

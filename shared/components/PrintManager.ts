@@ -86,7 +86,6 @@ async function viaEpsonEpos(config: PrinterConfig, data: ReceiptData): Promise<v
         throw new Error('Epson SDK non chargé');
 
     const { epson } = window as any;
-    const W = config.paperWidth === 58 ? 32 : 48;
 
     return new Promise((resolve, reject) => {
         const device = new epson.ePOSDevice();
@@ -98,8 +97,10 @@ async function viaEpsonEpos(config: PrinterConfig, data: ReceiptData): Promise<v
                 { crypto: false, buffer: false },
                 (printer: any, code: string) => {
                     if (code !== 'OK') return reject(new Error(`Epson erreur (${code})`));
+                    const W = config.paperWidth === 58 ? 32 : 48;
                     const cmds = buildEscPos(data, W);
-                    cmds.forEach(cmd => printer.addText ? printer.addRaw(cmd) : null);
+                    const encoder = new TextEncoder();
+                    cmds.forEach(cmd => printer.addRaw(encoder.encode(cmd)));
                     printer.addCut(printer.CUT_FEED);
                     printer.send();
                     printer.onreceive = (r: any) => {

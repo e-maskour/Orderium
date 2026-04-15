@@ -118,11 +118,30 @@ export default function Caisse() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+    const controller = new AbortController();
+    let cancelled = false;
+    setLoading(true);
+    orderPaymentsService
+      .getCaisseSummary(controller.signal)
+      .then((data) => {
+        if (!cancelled) setOrders(data);
+      })
+      .catch(() => {
+        if (!cancelled) toastError(t('error'));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ─ Filtering ─ */
   const filtered = orders.filter((o) => {
@@ -421,13 +440,15 @@ export default function Caisse() {
                     <div className="caisse-card__amount-item">
                       <span className="caisse-card__amount-label">{t('orderTotal')}</span>
                       <span className="caisse-card__amount-value caisse-card__amount-value--total">
-                        {formatAmount(order.total, 2)}
+                        {formatAmount(order.total, 2)}{' '}
+                        <span className="caisse-card__amount-currency">{currency}</span>
                       </span>
                     </div>
                     <div className="caisse-card__amount-item">
                       <span className="caisse-card__amount-label">{t('amountPaid')}</span>
                       <span className="caisse-card__amount-value caisse-card__amount-value--paid">
-                        {formatAmount(order.paidAmount, 2)}
+                        {formatAmount(order.paidAmount, 2)}{' '}
+                        <span className="caisse-card__amount-currency">{currency}</span>
                       </span>
                     </div>
                     <div className="caisse-card__amount-item">
@@ -439,7 +460,8 @@ export default function Caisse() {
                             : 'caisse-card__amount-value--remaining-zero'
                         }`}
                       >
-                        {formatAmount(order.remainingAmount, 2)}
+                        {formatAmount(order.remainingAmount, 2)}{' '}
+                        <span className="caisse-card__amount-currency">{currency}</span>
                       </span>
                     </div>
                   </div>

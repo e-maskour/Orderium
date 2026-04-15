@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Language, translations, TranslationKey } from '../lib/i18n';
 
 interface LanguageContextType {
@@ -26,9 +26,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(lang);
   };
 
-  const t = (key: TranslationKey): string => {
-    return translations[language][key] || key;
-  };
+  const t = useCallback(
+    (key: TranslationKey): string => {
+      return translations[language][key] || key;
+    },
+    [language],
+  );
 
   const dir = language === 'ar' ? 'rtl' : 'ltr';
 

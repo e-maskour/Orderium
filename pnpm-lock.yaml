@@ -261,6 +261,12 @@ importers:
       react-router-dom:
         specifier: ^6.20.0
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-simple-keyboard:
+        specifier: ^3.8.191
+        version: 3.8.191(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      simple-keyboard-layouts:
+        specifier: ^3.4.195
+        version: 3.4.195
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
@@ -5288,6 +5294,12 @@ packages:
     peerDependencies:
       react: '>=16.8'
 
+  react-simple-keyboard@3.8.191:
+    resolution: {integrity: sha512-woXsnITLwNq0YG67jRK4VBibLfO/Gpo49tMmH3udkGpx/0ETNGDucNPySshrjHgevzn29xhaGCfvaalr+5fjDQ==}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
     peerDependencies:
@@ -5514,6 +5526,9 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  simple-keyboard-layouts@3.4.195:
+    resolution: {integrity: sha512-p4G+e2Hbdwgo15HMPQrJ6vemwnzUpmBzLQNzVEpKb2yFmAAIK/jBY7zRYCNRSc6/0VU5dP/pr4W2i9WDvGbt/Q==}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -11660,6 +11675,11 @@ snapshots:
       '@remix-run/router': 1.23.2
       react: 18.3.1
 
+  react-simple-keyboard@3.8.191(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   react-transition-group@4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.29.2
@@ -12004,6 +12024,8 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  simple-keyboard-layouts@3.4.195: {}
 
   slash@3.0.0: {}
 

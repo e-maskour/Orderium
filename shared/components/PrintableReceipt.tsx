@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import type { ReceiptData } from './PrintManager';
 
 interface Props {
@@ -7,11 +8,13 @@ interface Props {
 /**
  * Hidden receipt rendered in DOM for window.print() / AirPrint / Mopria fallback.
  * Only visible during @media print.
+ * Rendered via portal directly on <body> so the CSS selector
+ * `body > *:not(#morocom-receipt)` correctly hides the app shell.
  */
 export function PrintableReceipt({ data }: Props) {
     if (!data) return null;
 
-    return (
+    return createPortal(
         <div id="morocom-receipt">
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
                 <strong style={{ fontSize: 16 }}>{data.storeName}</strong>
@@ -61,6 +64,7 @@ export function PrintableReceipt({ data }: Props) {
             <div style={{ textAlign: 'center', marginTop: 12 }}>
                 {data.footer ?? 'Merci pour votre confiance !'}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

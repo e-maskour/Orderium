@@ -156,28 +156,40 @@ export function TenantStatusGuard({ children }: Props) {
     return <BlockedScreen reason={blockedByApi} />;
   }
 
-  // While the proactive check is still in-flight, render children transparently.
-  if (tenantInfo === undefined || tenantInfo === null) {
-    return <>{children}</>;
+  // Proactive blocked states.
+  if (tenantInfo !== undefined && tenantInfo !== null) {
+    const { status, trialDaysRemaining, trialEndsAt } = tenantInfo;
+
+    if (status === 'suspended') return <BlockedScreen reason="suspended" />;
+    if (status === 'disabled') return <BlockedScreen reason="disabled" />;
+    if (status === 'archived' || status === 'deleted') return <BlockedScreen reason="disabled" />;
+    if (status === 'expired') return <BlockedScreen reason="subscription_expired" />;
+
+    const trialEndedNow =
+      status === 'trial' && trialEndsAt != null && new Date(trialEndsAt) < new Date();
+    if (trialEndedNow) return <BlockedScreen reason="trial_expired" />;
   }
 
-  const { status, trialDaysRemaining, trialEndsAt } = tenantInfo;
-
-  if (status === 'suspended') return <BlockedScreen reason="suspended" />;
-  if (status === 'disabled') return <BlockedScreen reason="disabled" />;
-  if (status === 'archived' || status === 'deleted') return <BlockedScreen reason="disabled" />;
-  if (status === 'expired') return <BlockedScreen reason="subscription_expired" />;
-
-  const trialEndedNow =
-    status === 'trial' && trialEndsAt != null && new Date(trialEndsAt) < new Date();
-
-  if (trialEndedNow) return <BlockedScreen reason="trial_expired" />;
+  // Always render children inside ModulesContext.Provider so the React tree
+  // structure is stable. When tenantInfo is still loading (undefined) we fall
+  // back to DEFAULT_MODULES — this avoids unmounting/remounting children when
+  // the proactive status fetch resolves and switches wrapper elements.
+  const modules = (tenantInfo as TenantPublicStatus | null)?.modules ?? DEFAULT_MODULES;
+  const trialBanner =
+    tenantInfo !== undefined &&
+    tenantInfo !== null &&
+    tenantInfo.status === 'trial' &&
+    tenantInfo.trialDaysRemaining != null &&
+    tenantInfo.trialDaysRemaining <= 14 ? (
+      <TrialBanner
+        daysRemaining={tenantInfo.trialDaysRemaining}
+        trialEndsAt={tenantInfo.trialEndsAt}
+      />
+    ) : null;
 
   return (
-    <ModulesContext.Provider value={tenantInfo.modules ?? DEFAULT_MODULES}>
-      {status === 'trial' && trialDaysRemaining != null && trialDaysRemaining <= 14 && (
-        <TrialBanner daysRemaining={trialDaysRemaining} trialEndsAt={trialEndsAt} />
-      )}
+    <ModulesContext.Provider value={modules}>
+      {trialBanner}
       {children}
     </ModulesContext.Provider>
   );

@@ -1,18 +1,18 @@
+# syntax=docker/dockerfile:1
 # ==================================
-# Production-Grade NestJS API Dockerfile (Optimized)
+# Production-Grade NestJS API Dockerfile
 # ==================================
-# Key optimizations:
-#   • Playwright base + browser install cached in early layers
-#   • package.json + lockfile copied BEFORE source (cache pnpm install)
-#   • Dev stage skips full COPY — source is volume-mounted
-#   • Prod stage uses multi-stage for minimal image size
+# Optimizations:
+#   - BuildKit cache mounts: pnpm store persists on the host between deploys,
+#     surviving even --no-cache layer rebuilds (biggest time saver)
+#   - Single builder stage: one pnpm install instead of three
+#   - Playwright browsers installed before source copy -> cached until lockfile changes
+#   - Pinned pnpm@10.5.2: reproducible builds, no surprise upgrades
 
 # ==================================
-# Base image with system dependencies for Playwright
+# Base: system packages for Playwright (rarely changes -> stable cached layer)
 # ==================================
 FROM node:20-bookworm-slim AS playwright-base
-
-WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates fonts-liberation fonts-noto \
@@ -22,71 +22,57 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # ==================================
-# Browser installer — cached unless playwright version changes
+# Builder: one install -> playwright browsers -> compile -> prune
+# Replaces the former browser-installer + builder + dependencies triple-install.
 # ==================================
-FROM playwright-base AS browser-installer
+FROM playwright-base AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
 
-# Only copy what determines the playwright version
+RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
+
+# Lockfile first -- install layer only invalidates when dependencies change
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
 
+# Cache mount: the pnpm content-addressable store lives on the host and is
+# reused across every rebuild, even when Docker layer cache is fully bypassed.
+RUN --mount=type=cache,id=pnpm-api,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Install Playwright browsers BEFORE copying source so this layer is cached
+# independently of source changes (only re-runs when lockfile changes).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN pnpm exec playwright install chromium
 
+# Copy and compile source
+COPY . .
+RUN pnpm run build
+
+# Strip devDependencies for the production image
+RUN pnpm prune --prod
+
 # ==================================
-# Development Stage (optimized for speed)
-# ==================================
-# Key: only package files trigger pnpm install rebuild.
-# Source code is volume-mounted in docker-compose, so we
-# only COPY it as a fallback (when running without compose).
+# Development Stage
 # ==================================
 FROM playwright-base AS development
 
+WORKDIR /app
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV NODE_ENV=development
 
-COPY --from=browser-installer /ms-playwright /ms-playwright
+RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# 1. Copy ONLY package files — this layer is cached until deps change
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-api-dev,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# 2. Copy source AFTER install (cache-friendly order)
-#    In dev, docker-compose mounts ./api/src over /app/src anyway
+RUN pnpm exec playwright install chromium
+
+# In dev, docker-compose mounts ./api/src; COPY is a fallback only.
 COPY . .
 
 EXPOSE 3000 9229
 CMD ["pnpm", "run", "start:dev"]
-
-# ==================================
-# Builder Stage (production build)
-# ==================================
-FROM node:20-bookworm-slim AS builder
-
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
-COPY . .
-RUN pnpm run build
-RUN pnpm prune --prod
-
-# ==================================
-# Dependencies Stage (prod-only modules)
-# ==================================
-FROM node:20-bookworm-slim AS dependencies
-
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
 
 # ==================================
 # Production Stage
@@ -96,20 +82,19 @@ FROM playwright-base AS production
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-COPY --from=browser-installer /ms-playwright /ms-playwright
-
 RUN groupadd -g 1001 nodejs && \
     useradd -m -u 1001 -g nodejs nestjs
 
 WORKDIR /app
 
-COPY --from=dependencies --chown=nestjs:nodejs /app/node_modules ./node_modules
+# Copy pruned node_modules, compiled output, and browser binaries from builder
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nestjs:nodejs /ms-playwright /ms-playwright
 COPY --chown=nestjs:nodejs package.json pnpm-lock.yaml ./
 
 RUN mkdir -p uploads/images && \
-    chown -R nestjs:nodejs uploads && \
-    chown -R nestjs:nodejs /ms-playwright
+    chown -R nestjs:nodejs uploads
 
 USER nestjs
 EXPOSE 3000

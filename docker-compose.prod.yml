@@ -19,6 +19,10 @@ services:
       dockerfile: Dockerfile
       target: production
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
@@ -74,7 +78,6 @@ services:
       - "traefik.http.routers.orderium-api.tls.certresolver=letsencrypt-dns"
       - "traefik.http.services.orderium-api.loadbalancer.server.port=3000"
       # CORS middleware
-      - "traefik.http.routers.orderium-api.middlewares=orderium-cors"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,X-Tenant-ID,X-Super-Admin-Key"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolalloworiginlistregex=^https://([a-z0-9-]+-(admin|app|delivery)|tenants)\\.mar-nova\\.com$$"
@@ -107,6 +110,10 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
@@ -147,6 +154,10 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
@@ -187,6 +198,10 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
@@ -218,6 +233,10 @@ services:
       args:
         VITE_API_URL: https://orderium-api.mar-nova.com
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     deploy:
       resources:
         limits:
@@ -232,6 +251,7 @@ services:
       - "traefik.http.routers.tenant-dashboard.tls.certresolver=letsencrypt-dns"
       - "traefik.http.services.tenant-dashboard.loadbalancer.server.port=80"
       - "traefik.http.routers.tenant-dashboard.middlewares=security-headers@file"
+
 networks:
   default:
     name: dokploy-network

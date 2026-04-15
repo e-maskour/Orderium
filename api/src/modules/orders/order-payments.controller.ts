@@ -18,6 +18,7 @@ import {
   UpdateOrderPaymentDto,
 } from './dto/create-order-payment.dto';
 import { OrderPaymentResponseDto } from './dto/order-payment-response.dto';
+import { CaisseOrderResponseDto } from './dto/caisse-order-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { OPAY } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
@@ -39,6 +40,7 @@ export class OrderPaymentsController {
   }
 
   @Get('caisse')
+  @Serialize(CaisseOrderResponseDto)
   @ApiOperation({ summary: 'Get caisse summary — orders with payment status' })
   @ApiResponse({ status: 200, description: 'Caisse summary retrieved' })
   async getCaisseSummary() {

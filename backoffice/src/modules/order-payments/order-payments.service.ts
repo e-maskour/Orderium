@@ -7,8 +7,10 @@ import { OrderPayment } from './order-payments.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class OrderPaymentsService {
-  async getCaisseSummary(): Promise<ICaisseOrder[]> {
-    const response = await apiClient.get<ICaisseOrder[]>(API_ROUTES.ORDER_PAYMENTS.CAISSE);
+  async getCaisseSummary(signal?: AbortSignal): Promise<ICaisseOrder[]> {
+    const response = await apiClient.get<ICaisseOrder[]>(API_ROUTES.ORDER_PAYMENTS.CAISSE, {
+      signal,
+    });
     return response.data || [];
   }
 

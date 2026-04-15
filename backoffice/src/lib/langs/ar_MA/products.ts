@@ -164,4 +164,17 @@ export default {
   settingsSection: 'الإعدادات',
   behaviorOptions: 'خيارات سلوك المنتج',
   warehouseAndCategories: 'المستودع والتصنيفات',
+
+  // Image upload / camera
+  uploading: 'جاري الرفع...',
+  gallery: 'المعرض',
+  camera: 'الكاميرا',
+  takePhoto: 'التقاط صورة',
+  orChooseFromGallery: 'أو اختر من المعرض',
+  clickOrDragToUpload: 'انقر أو اسحب للرفع',
+  useCamera: 'استخدام الكاميرا',
+  capturePhoto: 'التقاط الصورة',
+  retry: 'إعادة المحاولة',
+  cameraAccessDenied: 'تم رفض الوصول إلى الكاميرا',
+  failedToLoadImage: 'فشل تحميل الصورة',
 };

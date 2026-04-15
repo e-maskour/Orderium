@@ -43,7 +43,7 @@ export class OrderPaymentsService {
     const rows = await this.orderRepo
       .createQueryBuilder('o')
       .leftJoin('o.customer', 'customer')
-      .select('o.id', 'id')
+      .select('"o"."id"', 'id')
       .addSelect(
         'COALESCE("o"."orderNumber", "o"."documentNumber")',
         'orderNumber',
@@ -52,17 +52,17 @@ export class OrderPaymentsService {
         `COALESCE("customer"."name", NULLIF("o"."customerName", ''))`,
         'customerName',
       )
-      .addSelect('o.customerId', 'customerId')
-      .addSelect('o.total', 'total')
-      .addSelect('o.paidAmount', 'paidAmount')
-      .addSelect('o.remainingAmount', 'remainingAmount')
-      .addSelect('o.date', 'date')
-      .addSelect('o.dateCreated', 'dateCreated')
+      .addSelect('"o"."customerId"', 'customerId')
+      .addSelect('"o"."total"', 'total')
+      .addSelect('"o"."paidAmount"', 'paidAmount')
+      .addSelect('"o"."remainingAmount"', 'remainingAmount')
+      .addSelect('"o"."date"', 'date')
+      .addSelect('"o"."dateCreated"', 'dateCreated')
       .where('o.direction = :dir', { dir: 'VENTE' })
       .andWhere('o.originType != :origin', {
         origin: OrderOriginType.BACKOFFICE,
       })
-      .orderBy('o.dateCreated', 'DESC')
+      .orderBy('"o"."dateCreated"', 'DESC')
       .getRawMany();
 
     return rows.map((row) => {

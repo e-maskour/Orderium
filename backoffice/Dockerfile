@@ -1,27 +1,28 @@
+# syntax=docker/dockerfile:1
 # ==================================
-# Production-Grade React/Vite Dockerfile (Backoffice) — Optimized
+# Production-Grade React/Vite Dockerfile (Backoffice)
 # ==================================
-# Dev optimization: package files copied first for max cache hits.
-# Source is volume-mounted via docker-compose, so dev rebuilds are instant.
+# Optimizations:
+#   - BuildKit cache mounts: pnpm store persists between deploys
+#   - Pinned pnpm@10.5.2: reproducible builds
 
 # ============ Stage 1: Development ============
 FROM node:20-alpine AS development
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
-# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
 COPY shared/ui /shared/ui
 COPY shared/components /shared/components
 
-# Copy package files
 COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 
-# Install all dependencies (including devDependencies)
-RUN pnpm install --frozen-lockfile
+# --no-frozen-lockfile: dev stage allows lockfile to be out of sync when
+# packages are added locally (pnpm add) without rebuilding the image first.
+RUN --mount=type=cache,id=pnpm-backoffice-dev,target=/root/.local/share/pnpm/store \
+  pnpm install --no-frozen-lockfile
 
-# Copy source AFTER install (fallback if not volume-mounted)
 COPY backoffice/ .
 
 EXPOSE 3001
@@ -31,26 +32,29 @@ CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM node:20-alpine AS dependencies
 
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
 COPY shared/ui /shared/ui
 COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+
+RUN --mount=type=cache,id=pnpm-backoffice,target=/root/.local/share/pnpm/store \
+  pnpm install --frozen-lockfile
 
 # ============ Stage 3: Build ============
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
 COPY shared/ui /shared/ui
 COPY shared/components /shared/components
-RUN cd /shared/ui && pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-shared-ui,target=/root/.local/share/pnpm/store \
+  cd /shared/ui && pnpm install --frozen-lockfile
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY backoffice/ .
 
-
 ARG VITE_API_BASE_URL=http://localhost:3000
+ARG VITE_MINIO_PUBLIC_URL
 ARG VITE_FIREBASE_API_KEY
 ARG VITE_FIREBASE_AUTH_DOMAIN
 ARG VITE_FIREBASE_PROJECT_ID
@@ -61,6 +65,7 @@ ARG VITE_FIREBASE_MEASUREMENT_ID
 ARG VITE_FIREBASE_VAPID_KEY
 
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_MINIO_PUBLIC_URL=${VITE_MINIO_PUBLIC_URL}
 ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
 ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
 ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}

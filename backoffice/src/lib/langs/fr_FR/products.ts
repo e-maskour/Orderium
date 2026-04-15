@@ -167,4 +167,17 @@ export default {
   settingsSection: 'Paramètres',
   behaviorOptions: 'Options de comportement du produit',
   warehouseAndCategories: 'Entrepôt et catégories',
+
+  // Image upload / camera
+  uploading: 'Téléchargement en cours...',
+  gallery: 'Galerie',
+  camera: 'Caméra',
+  takePhoto: 'Prendre une photo',
+  orChooseFromGallery: 'ou choisir depuis la galerie',
+  clickOrDragToUpload: 'Cliquer ou glisser pour télécharger',
+  useCamera: 'Utiliser la caméra',
+  capturePhoto: 'Capturer la photo',
+  retry: 'Réessayer',
+  cameraAccessDenied: 'Accès à la caméra refusé',
+  failedToLoadImage: "Impossible de charger l'image",
 };

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type Ref } from 'react';
 import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
+import { useVirtualKeyboard } from '../hooks/useVirtualKeyboard';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
 import {
@@ -49,6 +50,14 @@ export default function POS() {
     const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
     return `${minioPublicUrl}/orderium-media/${imageUrl}`;
   };
+
+  // ── Virtual keyboard-managed search input ────────────────────────────────
+  const searchKeyboard = useVirtualKeyboard({
+    autoLayout: 'search',
+    onValueChange: (v) => {
+      setSearchQuery(v);
+    },
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -1121,15 +1130,20 @@ export default function POS() {
                 }}
               />
               <InputText
+                ref={searchKeyboard.ref as Ref<HTMLInputElement>}
                 type="text"
                 placeholder={t('searchProducts')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchKeyboard.value}
+                onChange={(e) => {
+                  searchKeyboard.onChange(e as React.ChangeEvent<HTMLInputElement>);
+                  setSearchQuery(e.target.value);
+                }}
                 className="pos-search-input"
+                {...searchKeyboard.inputProps}
                 style={{
                   width: '100%',
                   paddingLeft: '2.375rem',
-                  paddingRight: searchQuery ? '4rem' : '2.375rem',
+                  paddingRight: searchKeyboard.value ? '4rem' : '2.375rem',
                   height: '2.5rem',
                   borderRadius: '0.625rem',
                   border: '1px solid #e5e7eb',
@@ -1138,10 +1152,13 @@ export default function POS() {
                   transition: 'border-color 0.18s, box-shadow 0.18s',
                 }}
               />
-              {searchQuery && (
+              {searchKeyboard.value && (
                 <Button
                   icon={<X style={{ width: '0.625rem', height: '0.625rem', color: '#6b7280' }} />}
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    searchKeyboard.setValue('');
+                  }}
                   rounded
                   text
                   style={{

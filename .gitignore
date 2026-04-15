@@ -141,6 +141,7 @@ QA Tests
 playwright
 takin-demo
 omaskour
+tifira
 .github
 scripts.env
 .env.docker

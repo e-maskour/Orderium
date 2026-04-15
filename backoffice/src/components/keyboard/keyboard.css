@@ -1,0 +1,542 @@
+/* ─── POS Virtual Keyboard — Custom Styles ─────────────────────────────────── */
+
+/* Overlay container — full screen, pointer-events off so app stays interactive */
+.pos-keyboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Keyboard panel — docked at bottom by default */
+.pos-keyboard-panel {
+  pointer-events: none;
+  /* disabled when closed; re-enabled by .is-open below */
+  width: 100%;
+  max-width: 960px;
+  background: var(--pk-bg, #1e293b);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.45);
+  padding: 6px 12px 16px;
+  will-change: transform;
+  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  transform: translateY(100%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pos-keyboard-panel.is-open {
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* ── Floating / dragged mode ── */
+.pos-keyboard-panel.is-floating {
+  position: fixed;
+  border-radius: 14px;
+  transform: none !important;
+  transition: opacity 200ms ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+}
+
+.pos-keyboard-panel.is-floating.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Light theme overrides */
+.pos-keyboard-panel.theme-light {
+  --pk-bg: #f1f5f9;
+  --pk-key-bg: #ffffff;
+  --pk-key-text: #1e293b;
+  --pk-key-border: #e2e8f0;
+  --pk-key-shadow: 0 2px 0 #cbd5e1;
+  --pk-action-bg: #e2e8f0;
+  --pk-action-text: #475569;
+  --pk-enter-bg: #3b82f6;
+  --pk-enter-text: #ffffff;
+  --pk-backspace-bg: #fca5a5;
+  --pk-backspace-text: #7f1d1d;
+  --pk-tab-active: #3b82f6;
+  --pk-tab-text: #64748b;
+  --pk-tab-active-text: #ffffff;
+  --pk-pressed-bg: #bfdbfe;
+  --pk-header-bg: #e2e8f0;
+  --pk-ctrl-color: #475569;
+  --pk-ctrl-hover: #3b82f6;
+}
+
+/* Dark theme (default) */
+.pos-keyboard-panel {
+  --pk-bg: #0f172a;
+  --pk-key-bg: #1e293b;
+  --pk-key-text: #f1f5f9;
+  --pk-key-border: #334155;
+  --pk-key-shadow: 0 2px 0 #0f172a;
+  --pk-action-bg: #334155;
+  --pk-action-text: #94a3b8;
+  --pk-enter-bg: #2563eb;
+  --pk-enter-text: #ffffff;
+  --pk-backspace-bg: #7f1d1d;
+  --pk-backspace-text: #fca5a5;
+  --pk-tab-active: #3b82f6;
+  --pk-tab-text: #64748b;
+  --pk-tab-active-text: #ffffff;
+  --pk-pressed-bg: #1d4ed8;
+  --pk-header-bg: #0a1122;
+  --pk-ctrl-color: #94a3b8;
+  --pk-ctrl-hover: #60a5fa;
+}
+
+/* ─── Drag header ────────────────────────────────────────────────────────────── */
+
+.pk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 8px;
+  cursor: grab;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.pk-header:active {
+  cursor: grabbing;
+}
+
+.pk-drag-indicator {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.pk-drag-indicator::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pk-key-border);
+  opacity: 0.6;
+}
+
+.pk-header-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pk-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--pk-key-border);
+  background: var(--pk-action-bg);
+  color: var(--pk-ctrl-color);
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+  outline: none;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pk-ctrl-btn:hover {
+  background: var(--pk-tab-active);
+  color: var(--pk-tab-active-text);
+  border-color: var(--pk-tab-active);
+}
+
+.pk-close-btn {
+  color: #ef4444;
+}
+
+.pk-close-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+/* ─── Global Keyboard FAB ────────────────────────────────────────────────────── */
+
+@keyframes pk-fab-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes pk-fab-glow-pulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 4px 18px rgba(37, 99, 235, 0.5),
+      0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+
+  50% {
+    box-shadow:
+      0 4px 18px rgba(37, 99, 235, 0.5),
+      0 0 0 8px rgba(37, 99, 235, 0);
+  }
+}
+
+@keyframes pk-fab-bounce-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+
+  80% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pk-fab-wrapper {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  left: auto;
+  z-index: 10000;
+  /* entrance animation */
+  animation: pk-fab-bounce-in 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* RTL (Arabic): move FAB to bottom-left */
+[dir='rtl'] .pk-fab-wrapper {
+  right: auto;
+  left: 1rem;
+}
+
+/* Idle ping ring — visible when keyboard is closed */
+.pk-fab-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #475569;
+  animation: pk-fab-ping 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Hide the ping when active */
+.pk-fab-wrapper--active::before {
+  display: none;
+}
+
+.pk-fab {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  border: none;
+  background: #1e293b;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  transition:
+    background 200ms ease,
+    color 200ms ease,
+    transform 140ms ease,
+    box-shadow 200ms ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.pk-fab:hover {
+  background: #334155;
+  color: #f1f5f9;
+  transform: scale(1.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+.pk-fab:active {
+  transform: scale(0.9);
+}
+
+.pk-fab--active {
+  background: #2563eb;
+  color: #ffffff;
+  animation: pk-fab-glow-pulse 2s ease-in-out infinite;
+}
+
+.pk-fab--active:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* SVG icon smooth transition */
+.pk-fab svg {
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pk-fab:hover svg {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.pk-fab--active svg {
+  transform: scale(1.1);
+}
+
+
+/* ─── Language switcher tabs ─────────────────────────────────────────────────── */
+
+.pk-lang-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.pk-lang-tab {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--pk-tab-text);
+  transition: background 140ms, color 140ms, border-color 140ms;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.pk-lang-tab:hover {
+  background: var(--pk-action-bg);
+  color: var(--pk-key-text);
+}
+
+.pk-lang-tab.active {
+  background: var(--pk-tab-active);
+  color: var(--pk-tab-active-text);
+  border-color: var(--pk-tab-active);
+}
+
+/* ─── Keyboard rows ──────────────────────────────────────────────────────────── */
+
+.pk-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pk-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* RTL layout flip for Arabic */
+.pk-rows.rtl .pk-row {
+  flex-direction: row-reverse;
+}
+
+/* ─── Individual keys ────────────────────────────────────────────────────────── */
+
+.pk-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 36px;
+  flex: 1;
+  border-radius: 8px;
+  background: var(--pk-key-bg);
+  color: var(--pk-key-text);
+  border: 1px solid var(--pk-key-border);
+  box-shadow: var(--pk-key-shadow);
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 80ms, background 80ms, box-shadow 80ms;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  touch-action: manipulation;
+  font-family: 'Segoe UI', 'Noto Sans Arabic', system-ui, sans-serif;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.pk-key:active,
+.pk-key.is-pressed {
+  transform: translateY(1px);
+  box-shadow: none;
+  background: var(--pk-pressed-bg);
+}
+
+/* Action keys */
+.pk-key.is-action {
+  background: var(--pk-action-bg);
+  color: var(--pk-action-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.pk-key.is-action:active,
+.pk-key.is-action.is-pressed {
+  background: var(--pk-tab-active);
+  color: var(--pk-tab-active-text);
+}
+
+/* Enter key */
+.pk-key.is-enter {
+  background: var(--pk-enter-bg);
+  color: var(--pk-enter-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Backspace key */
+.pk-key.is-backspace {
+  background: var(--pk-backspace-bg);
+  color: var(--pk-backspace-text);
+  font-size: 18px;
+}
+
+/* Shift key (active state) */
+.pk-key.is-shift-active {
+  background: var(--pk-tab-active);
+  color: var(--pk-tab-active-text);
+}
+
+/* Ripple effect on tap */
+.pk-key::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transition: opacity 220ms;
+}
+
+.pk-key:active::after {
+  opacity: 1;
+}
+
+/* ─── Numeric compact keypad ─────────────────────────────────────────────────── */
+
+.pk-rows.compact {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.pk-rows.compact .pk-key {
+  min-height: 64px;
+  font-size: 24px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+/* ─── Long-press popup ───────────────────────────────────────────────────────── */
+
+.pk-longpress-popup {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--pk-bg);
+  border: 1px solid var(--pk-key-border);
+  border-radius: 10px;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  z-index: 10001;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+}
+
+.pk-longpress-option {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--pk-key-text);
+  background: var(--pk-key-bg);
+  transition: background 80ms;
+}
+
+.pk-longpress-option:hover {
+  background: var(--pk-tab-active);
+  color: var(--pk-tab-active-text);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+/* Hide the entire virtual keyboard system on phones (< 768px) */
+@media (max-width: 767px) {
+
+  .pk-fab-wrapper,
+  .pos-keyboard-overlay {
+    display: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .pos-keyboard-panel {
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .pk-key {
+    min-height: 44px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+
+  .pk-lang-tab {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .pk-key {
+    min-height: 46px;
+    font-size: 16px;
+  }
+}
