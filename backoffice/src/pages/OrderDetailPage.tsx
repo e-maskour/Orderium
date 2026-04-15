@@ -8,7 +8,7 @@ import { ordersService } from '../modules/orders';
 import { orderPaymentsService, ORDER_PAYMENT_TYPE_LABELS } from '../modules';
 import { productsService } from '../modules/products';
 import { pdfService } from '../services/pdf.service';
-import { PDFPreviewModal } from '../components/PDFPreviewModal';
+import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
@@ -252,10 +252,13 @@ export default function OrderDetailPage() {
 
   const updateItemsMutation = useMutation({
     mutationFn: (data: any) => ordersService.updateValidated(Number(id), data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orderDetails', Number(id)] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    onSuccess: async () => {
       toastSuccess(t('orderUpdated') || 'Commande mise à jour');
+      // Await the refetch so fresh items are in cache before we exit edit mode.
+      // Without this, cancelEditMode() would switch computedItems back to the
+      // stale cache and the UI would briefly show the old qty/prices.
+      await queryClient.invalidateQueries({ queryKey: ['orderDetails', Number(id)] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
       cancelEditMode();
     },
     onError: (e: Error) => toastError(e.message),
@@ -384,6 +387,13 @@ export default function OrderDetailPage() {
     setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
     setShowPDFPreview(true);
   };
+
+  // Pre-warm blob cache as soon as the order page loads
+  useEffect(() => {
+    if (!id) return;
+    prefetchPDF(pdfService.getPDFUrl('receipt', Number(id), 'preview'));
+    prefetchPDF(pdfService.getPDFUrl('delivery-note', Number(id), 'preview'));
+  }, [id]);
 
   const handleRegeneratePdf = async () => {
     if (!id) return;

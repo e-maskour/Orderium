@@ -39,6 +39,7 @@ export class PDFController {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
+        'Cache-Control': 'private, max-age=300',
       });
 
       res.send(pdfBuffer);
@@ -77,6 +78,7 @@ export class PDFController {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
+        'Cache-Control': 'private, max-age=300',
       });
 
       res.send(pdfBuffer);
@@ -115,6 +117,7 @@ export class PDFController {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
+        'Cache-Control': 'private, max-age=300',
       });
 
       res.send(pdfBuffer);
@@ -152,6 +155,7 @@ export class PDFController {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
+        'Cache-Control': 'private, max-age=300',
       });
 
       res.send(pdfBuffer);

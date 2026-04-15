@@ -224,6 +224,10 @@ input[type='number'] {
 }
 
 /* ── PrimeReact dialog enterprise rounded ── */
+.p-dialog.pdf-preview-dialog .p-dialog-header {
+    padding: 0.375rem 1.5rem !important;
+}
+
 .p-dialog .p-dialog-header {
     border-bottom: 1px solid var(--erp-border) !important;
     border-radius: var(--erp-radius-lg) var(--erp-radius-lg) 0 0 !important;

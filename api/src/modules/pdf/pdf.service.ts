@@ -3,7 +3,9 @@ import {
   Logger,
   NotFoundException,
   OnModuleDestroy,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Repository } from 'typeorm';
 import { chromium, Browser } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
@@ -87,10 +89,14 @@ export class PDFService implements OnModuleDestroy {
   private browser: Browser | null = null;
   private browserLaunchPromise: Promise<Browser> | null = null;
 
+  /** PDF buffer TTL in Redis: 5 minutes */
+  private static readonly PDF_CACHE_TTL_MS = 5 * 60 * 1000;
+
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -188,20 +194,66 @@ export class PDFService implements OnModuleDestroy {
     documentType: DocumentType,
     documentId: number,
   ): Promise<PDFGenerationResult> {
-    const documentData = await this.fetchDocumentData(documentType, documentId);
+    const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
+    const cacheKey = `pdf:${tenantSlug}:${documentType}:${documentId}`;
 
-    if (documentType === 'receipt') {
-      const pdfBuffer = await this.generateReceiptPDF(documentData);
+    // Serve from Redis cache if available (skips Playwright entirely)
+    const cached = await this.cacheManager.get<{
+      pdfBase64: string;
+      fileName: string;
+    }>(cacheKey);
+    if (cached) {
+      this.logger.debug(`PDF cache HIT: ${cacheKey}`);
       return {
-        pdfBuffer,
-        fileName: `Recu_${documentData.documentNumber}.pdf`,
+        pdfBuffer: Buffer.from(cached.pdfBase64, 'base64'),
+        fileName: cached.fileName,
       };
     }
 
-    const pdfBuffer = await this.generateA5PDF(documentType, documentData);
-    const fileName = this.getFileName(documentType, documentData);
+    const documentData = await this.fetchDocumentData(documentType, documentId);
+
+    let pdfBuffer: Buffer;
+    let fileName: string;
+    if (documentType === 'receipt') {
+      pdfBuffer = await this.generateReceiptPDF(documentData);
+      fileName = `Recu_${documentData.documentNumber}.pdf`;
+    } else {
+      pdfBuffer = await this.generateA5PDF(documentType, documentData);
+      fileName = this.getFileName(documentType, documentData);
+    }
+
+    // Store in Redis cache (fire-and-forget — never block the response)
+    this.cacheManager
+      .set(
+        cacheKey,
+        { pdfBase64: pdfBuffer.toString('base64'), fileName },
+        PDFService.PDF_CACHE_TTL_MS,
+      )
+      .catch((err) =>
+        this.logger.warn(`PDF cache SET failed: ${(err as Error).message}`),
+      );
 
     return { pdfBuffer, fileName };
+  }
+
+  /**
+   * Evict cached PDF for a specific document.
+   * Call this when a document is updated so the next preview re-generates.
+   */
+  async invalidatePDFCache(
+    documentType: DocumentType,
+    documentId: number,
+  ): Promise<void> {
+    try {
+      const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
+      await this.cacheManager.del(
+        `pdf:${tenantSlug}:${documentType}:${documentId}`,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `PDF cache invalidation failed: ${(err as Error).message}`,
+      );
+    }
   }
 
   /**
@@ -268,6 +320,9 @@ export class PDFService implements OnModuleDestroy {
     documentType: DocumentType,
     documentId: number,
   ): Promise<string> {
+    // Bust Redis cache so the next preview re-generates fresh
+    await this.invalidatePDFCache(documentType, documentId);
+
     // Fetch current entity to get the old pdfUrl
     const entityRepo = this.getEntityRepository(documentType);
     if (!entityRepo) {

@@ -7,7 +7,7 @@ export interface FloatingAction {
   label: string;
   icon?: ReactNode;
   onClick: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'whatsapp';
   hidden?: boolean;
 }
 
@@ -178,6 +178,8 @@ const FAB_STYLES = `
   .fab-btn--secondary:hover { background: rgba(255,255,255,0.14); opacity: 1; }
   .fab-btn--danger          { background: rgba(239,68,68,0.14); color: #f87171; border: 1px solid rgba(239,68,68,0.22); }
   .fab-btn--danger:hover    { background: rgba(239,68,68,0.22); opacity: 1; }
+  .fab-btn--whatsapp        { background: rgba(37,211,102,0.9); color: #fff; box-shadow: 0 2px 6px rgba(37,211,102,0.35); }
+  .fab-btn--whatsapp:hover  { background: rgba(37,211,102,1); opacity: 1; }
 
   /* close button */
   .fab-close {
@@ -312,6 +314,10 @@ const FAB_STYLES = `
   .fab-tile--danger .fab-tile__icon    { background: linear-gradient(135deg, #ef4444, #f87171); color: #fff; }
   .fab-tile--danger .fab-tile__label   { color: #dc2626; }
   .fab-tile--danger:hover              { background: #fee2e2; }
+  .fab-tile--whatsapp              { background: #f0fdf4; }
+  .fab-tile--whatsapp .fab-tile__icon  { background: linear-gradient(135deg, #16a34a, #25d366); color: #fff; }
+  .fab-tile--whatsapp .fab-tile__label { color: #15803d; }
+  .fab-tile--whatsapp:hover            { background: #dcfce7; }
 
   /* ─── Breakpoint gating ──────────────────────────────── */
   @media (min-width: 640px) { .fab-sheet { display: none !important; } }
@@ -332,12 +338,14 @@ const FAB_STYLES = `
 function pillBtnClass(v?: string) {
   if (v === 'danger') return 'fab-btn fab-btn--danger';
   if (v === 'secondary') return 'fab-btn fab-btn--secondary';
+  if (v === 'whatsapp') return 'fab-btn fab-btn--whatsapp';
   return 'fab-btn fab-btn--default';
 }
 
 function tileClass(v?: string) {
   if (v === 'danger') return 'fab-tile fab-tile--danger';
   if (v === 'secondary') return 'fab-tile fab-tile--secondary';
+  if (v === 'whatsapp') return 'fab-tile fab-tile--whatsapp';
   return 'fab-tile fab-tile--default';
 }
 

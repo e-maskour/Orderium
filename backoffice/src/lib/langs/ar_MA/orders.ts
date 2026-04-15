@@ -70,7 +70,7 @@ export default {
   dateRange: 'نطاق التاريخ',
   deliveryStatus: 'حالة التسليم',
   noDeliveryPersons: 'لا يوجد مندوبي توصيل متاحين',
-  orderSource: 'مصدر الطلب',
+  orderSource: 'المصدر',
   local: 'محلي',
   client: 'العميل',
   reset: 'مسح الفلاتير',
@@ -91,6 +91,7 @@ export default {
   // Additional
   previewReceipt: 'إيصال',
   previewDeliveryNote: 'وصل',
+  share: 'مشاركة',
 
   // Status change
   statusUpdated: 'تم تحديث الحالة',

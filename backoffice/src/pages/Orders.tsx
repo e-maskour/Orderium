@@ -34,6 +34,7 @@ import {
   Filter,
   Plus,
   CreditCard,
+  Share2,
 } from 'lucide-react';
 import {
   toastSuccess,
@@ -57,7 +58,7 @@ import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
-import { PDFPreviewModal } from '../components/PDFPreviewModal';
+import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
 import { MobileList } from '../components/MobileList';
 import { formatAmount } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
@@ -458,6 +459,63 @@ export default function Orders() {
     setShowPDFPreview(true);
   };
 
+  // Pre-warm blob cache when a single order is selected so preview opens instantly
+  useEffect(() => {
+    if (selectedOrders.length !== 1) return;
+    const orderId = selectedOrders[0];
+    prefetchPDF(pdfService.getPDFUrl('receipt', orderId, 'preview'));
+    prefetchPDF(pdfService.getPDFUrl('delivery-note', orderId, 'preview'));
+  }, [selectedOrders]);
+
+  const handleSendWhatsApp = async () => {
+    if (selectedOrders.length !== 1) return;
+    const orderId = selectedOrders[0];
+    const order = orders.find((o: any) => o.id === orderId);
+    const rawPhone = order?.customerPhone ?? '';
+    const phone = rawPhone.replace(/[\s\-()]/g, '').replace(/^\+/, '');
+    const message = `Bonjour, veuillez trouver ci-joint le reçu de votre commande ${order?.displayOrderNumber || `#${orderId}`}.`;
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
+      const tenantId = tenantMatch
+        ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
+        : null;
+      const url = pdfService.getPDFUrl('receipt', orderId, 'download');
+      const response = await fetch(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(tenantId ? { 'X-Tenant-ID': tenantId } : {}),
+        },
+      });
+      if (!response.ok) throw new Error(`${response.status}`);
+      const blob = await response.blob();
+      const fileName = `Recu_${order?.displayOrderNumber || orderId}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      // Mobile: native share sheet — lets user pick WhatsApp (or any app) with PDF attached
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName, text: message });
+        return;
+      }
+
+      // Desktop fallback: open WhatsApp Web with pre-filled text (files can't be sent via URL)
+      if (phone) {
+        window.open(
+          `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+          '_blank',
+          'noopener,noreferrer',
+        );
+      } else {
+        toastWarning('Aucun numéro de téléphone pour ce client.');
+      }
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        toastError(t('pdfDownloadError'));
+      }
+    }
+  };
+
   const getSourceBadge = (order: any) => {
     if (order?.originType === 'CLIENT_POS') {
       return {
@@ -772,9 +830,13 @@ export default function Orders() {
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
                   icon={<Filter style={{ width: 16, height: 16 }} />}
                   label={t('filters')}
-                  severity="secondary"
-                  outlined
                   size="small"
+                  style={{
+                    background: filtersExpanded ? '#235ae4' : '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    color: filtersExpanded ? '#ffffff' : '#1d4ed8',
+                    fontWeight: 600,
+                  }}
                 />
                 {/* New Order */}
                 <Button
@@ -1437,9 +1499,10 @@ export default function Orders() {
             style={{
               flex: 1,
               backgroundColor: '#ffffff',
-              borderRadius: '0.75rem',
+              borderRadius: '0.875rem',
               border: '1px solid #e2e8f0',
               overflow: 'hidden',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
             }}
           >
             <DataTable
@@ -1566,54 +1629,61 @@ export default function Orders() {
                 sortable
                 sortField="customerName"
                 style={{ minWidth: '14rem' }}
-                body={(order: any) => (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div
-                      style={{
-                        width: '2rem',
-                        height: '2rem',
-                        background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)',
-                        borderRadius: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Package style={{ width: '0.75rem', height: '0.75rem', color: '#ffffff' }} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <p
+                body={(order: any) => {
+                  const initial = order.customerName?.trim()?.[0]?.toUpperCase() || '?';
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div
                         style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          color: '#1e293b',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          margin: 0,
-                        }}
-                      >
-                        {order.customerName}
-                      </p>
-                      <a
-                        href={`tel:${order.customerPhone}`}
-                        style={{
-                          fontSize: '0.75rem',
-                          color: '#235ae4',
-                          fontWeight: 500,
+                          width: '2rem',
+                          height: '2rem',
+                          background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)',
+                          borderRadius: '0.5rem',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.125rem',
-                          textDecoration: 'none',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: '#ffffff',
+                          letterSpacing: '0.02em',
                         }}
                       >
-                        <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
-                        {order.customerPhone}
-                      </a>
+                        {initial}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: '#1e293b',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            margin: 0,
+                          }}
+                        >
+                          {order.customerName}
+                        </p>
+                        <a
+                          href={`tel:${order.customerPhone}`}
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#235ae4',
+                            fontWeight: 500,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.125rem',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
+                          {order.customerPhone}
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                }}
               />
               <Column
                 header={t('total')}
@@ -1752,6 +1822,14 @@ export default function Orders() {
             label: t('previewDeliveryNote'),
             icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />,
             onClick: () => handlePreview('delivery-note'),
+            hidden: selectedOrders.length !== 1,
+          },
+          {
+            id: 'send-whatsapp',
+            label: t('share'),
+            icon: <Share2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+            onClick: handleSendWhatsApp,
+            variant: 'whatsapp' as const,
             hidden: selectedOrders.length !== 1,
           },
           {

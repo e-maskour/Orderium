@@ -201,7 +201,7 @@ export default function MyOrders() {
       documentType === 'receipt'
         ? `${apiBaseUrl}${API_ROUTES.PDF.RECEIPT(orderId)}`
         : `${apiBaseUrl}${API_ROUTES.PDF.DELIVERY_NOTE(orderId)}`;
-    const title = `${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber}`;
+    const title = `${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber ?? selectedOrderItems.order.documentNumber}`;
     setSelectedOrderItems(null);
     try {
       const token = localStorage.getItem('orderium_token');
@@ -466,7 +466,7 @@ export default function MyOrders() {
                             fontFamily: 'monospace',
                           }}
                         >
-                          #{order.orderNumber}
+                          #{order.orderNumber ?? order.documentNumber}
                         </span>
                         <div
                           style={{
@@ -550,7 +550,9 @@ export default function MyOrders() {
                       </button>
                       {isActive && (
                         <button
-                          onClick={() => setSelectedOrder(order.orderNumber)}
+                          onClick={() =>
+                            setSelectedOrder(order.orderNumber ?? order.documentNumber)
+                          }
                           style={{
                             flex: 1,
                             display: 'flex',
@@ -793,7 +795,7 @@ export default function MyOrders() {
                 <p
                   style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace' }}
                 >
-                  #{selectedOrderItems.order.orderNumber}
+                  #{selectedOrderItems.order.orderNumber ?? selectedOrderItems.order.documentNumber}
                 </p>
               </div>
               <div>

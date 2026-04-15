@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import {
-  CheckCircle,
-  Home,
-  Download,
-  Printer,
-  Eye,
-  FileText,
-  Receipt as ReceiptIcon,
-  Share2,
-} from 'lucide-react';
+import { CheckCircle, Home, Printer, FileText, Receipt as ReceiptIcon, Share2 } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastError, toastSuccess } from '../services/toast.service';
 import { IOrderSuccessState as SuccessState } from '../modules/pos';
 import { formatCurrency } from '@orderium/ui';
 import { ordersService } from '../modules/orders/orders.service';
 import { ShareDocumentDialog } from '../components/documents/ShareDocumentDialog';
+import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
+import { pdfService } from '../services/pdf.service';
 
 export default function OrderSuccessPage() {
   const navigate = useNavigate();
@@ -24,7 +17,6 @@ export default function OrderSuccessPage() {
   const { t, language } = useLanguage();
   const state = location.state as SuccessState;
 
-  const [isGenerating, setIsGenerating] = useState(false);
   const [resolvedOrderId, setResolvedOrderId] = useState<number | null>(state?.orderId ?? null);
   const [previewType, setPreviewType] = useState<'receipt' | 'delivery-note' | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -63,25 +55,6 @@ export default function OrderSuccessPage() {
     return true;
   };
 
-  const handleDownload = (documentType: 'receipt' | 'delivery-note') => {
-    if (!ensureOrderId()) return;
-    setIsGenerating(true);
-    try {
-      const url =
-        documentType === 'receipt'
-          ? `/api/pdf/receipt/${resolvedOrderId}?mode=download`
-          : `/api/pdf/delivery-note/${resolvedOrderId}?mode=download`;
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const handlePreview = (documentType: 'receipt' | 'delivery-note') => {
     if (!ensureOrderId()) return;
     setPreviewType(documentType);
@@ -89,17 +62,24 @@ export default function OrderSuccessPage() {
 
   const closePreview = () => setPreviewType(null);
 
+  const previewUrl =
+    previewType && resolvedOrderId
+      ? pdfService.getPDFUrl(previewType, resolvedOrderId, 'preview')
+      : '';
+
+  const previewTitle = previewType === 'receipt' ? t('receipt') : t('deliveryNote');
+
   const handleShare = async () => {
     try {
       if (resolvedOrderId && !shareToken) {
         const result = await ordersService.generateShareLink(resolvedOrderId);
         setShareToken(result.shareToken);
         setShareTokenExpiry(result.expiresAt);
-        toastSuccess('Lien de partage généré');
+        toastSuccess(t('shareLinkGenerated'));
       }
       setShowShareDialog(true);
     } catch (error: any) {
-      toastError(error.message || 'Erreur lors de la génération du lien');
+      toastError(error.message || t('error'));
     }
   };
 
@@ -109,12 +89,6 @@ export default function OrderSuccessPage() {
     setShareToken(result.shareToken);
     setShareTokenExpiry(result.expiresAt);
   };
-
-  const previewUrl = previewType
-    ? previewType === 'receipt'
-      ? `/api/pdf/receipt/${resolvedOrderId}?mode=preview`
-      : `/api/pdf/delivery-note/${resolvedOrderId}?mode=preview`
-    : '';
 
   const documents: {
     type: 'receipt' | 'delivery-note';
@@ -252,7 +226,7 @@ export default function OrderSuccessPage() {
                     letterSpacing: '0.06em',
                   }}
                 >
-                  Paid
+                  {t('paidAmount')}
                 </p>
                 <p style={{ fontSize: '1rem', fontWeight: 700, color: '#059669', margin: 0 }}>
                   {formatCurrency(state.paidAmount, language as 'fr' | 'ar')}
@@ -322,37 +296,15 @@ export default function OrderSuccessPage() {
                   <Button
                     text
                     rounded
+                    onMouseEnter={() =>
+                      resolvedOrderId &&
+                      prefetchPDF(pdfService.getPDFUrl(doc.type, resolvedOrderId, 'preview'))
+                    }
                     onClick={() => handlePreview(doc.type)}
-                    icon={<Eye style={{ width: '0.9375rem', height: '0.9375rem' }} />}
-                    tooltip={t('preview')}
-                    tooltipOptions={{ position: 'top' }}
-                    style={{ width: '2.25rem', height: '2.25rem', color: '#6b7280' }}
-                  />
-                  <Button
-                    text
-                    rounded
-                    onClick={() => handlePreview(doc.type)}
-                    disabled={isGenerating}
                     icon={<Printer style={{ width: '0.9375rem', height: '0.9375rem' }} />}
                     tooltip={t('print')}
                     tooltipOptions={{ position: 'top' }}
                     style={{ width: '2.25rem', height: '2.25rem', color: '#6b7280' }}
-                  />
-                  <Button
-                    rounded
-                    onClick={() => handleDownload(doc.type)}
-                    disabled={isGenerating}
-                    loading={isGenerating}
-                    icon={<Download style={{ width: '0.9375rem', height: '0.9375rem' }} />}
-                    tooltip="Download"
-                    tooltipOptions={{ position: 'top' }}
-                    style={{
-                      width: '2.25rem',
-                      height: '2.25rem',
-                      background: doc.accentColor,
-                      border: 'none',
-                      color: '#ffffff',
-                    }}
                   />
                 </div>
               </div>
@@ -363,7 +315,7 @@ export default function OrderSuccessPage() {
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <Button
               onClick={() => navigate('/pos')}
-              label={t('backToPos') || 'New Order'}
+              label={t('backToPOS')}
               icon={<Home style={{ width: '1rem', height: '1rem' }} />}
               style={{
                 flex: 1,
@@ -377,7 +329,7 @@ export default function OrderSuccessPage() {
               onClick={handleShare}
               outlined
               icon={<Share2 style={{ width: '1rem', height: '1rem' }} />}
-              label="Share"
+              label={t('share')}
               style={{
                 height: '2.75rem',
                 paddingInline: '1.25rem',
@@ -390,61 +342,12 @@ export default function OrderSuccessPage() {
         </div>
       </div>
 
-      {/* Preview Drawer */}
-      {previewType && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}
-            onClick={closePreview}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: '100%',
-              maxWidth: '480px',
-              background: '#ffffff',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
-              style={{
-                padding: '1rem',
-                borderBottom: '1px solid #e5e7eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>
-                  {previewType === 'receipt' ? t('receipt') : t('deliveryNote')}
-                </h3>
-                <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('preview')}</p>
-              </div>
-              <Button
-                text
-                rounded
-                onClick={closePreview}
-                label="✕"
-                aria-label="Close preview"
-                style={{ width: '2rem', height: '2rem', background: '#f3f4f6' }}
-              />
-            </div>
-            <div style={{ flex: 1, background: '#f9fafb' }}>
-              <iframe
-                title="PDF Preview"
-                src={previewUrl}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <PDFPreviewModal
+        isOpen={!!previewType}
+        onClose={closePreview}
+        pdfUrl={previewUrl}
+        title={previewTitle}
+      />
 
       {showShareDialog && (
         <ShareDocumentDialog

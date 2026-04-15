@@ -2,7 +2,7 @@ import { FileDown, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { pdfService, DocumentType, PDFMode } from '../services/pdf.service';
 import { toastExported, toastError } from '../services/toast.service';
-import { PDFPreviewModal } from './PDFPreviewModal';
+import { PDFPreviewModal, prefetchPDF } from './PDFPreviewModal';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from 'primereact/button';
 
@@ -46,6 +46,10 @@ export default function PDFActionButtons({
     }
   };
 
+  const handlePreviewMouseEnter = () => {
+    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview'));
+  };
+
   return (
     <>
       <div className={`flex gap-2 ${className}`}>
@@ -54,6 +58,7 @@ export default function PDFActionButtons({
             icon={<Eye size={16} />}
             label="Prévisualiser"
             onClick={() => handlePDFAction('preview')}
+            onMouseEnter={handlePreviewMouseEnter}
             style={{ background: '#2563eb', borderColor: '#2563eb' }}
             size="small"
           />
@@ -109,6 +114,10 @@ export function PDFIconButtons({
     }
   };
 
+  const handlePreviewMouseEnter = () => {
+    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview'));
+  };
+
   return (
     <>
       <div className={`flex gap-1 ${className}`}>
@@ -118,6 +127,7 @@ export function PDFIconButtons({
             text
             rounded
             onClick={() => handlePDFAction('preview')}
+            onMouseEnter={handlePreviewMouseEnter}
             style={{ color: '#2563eb' }}
             tooltip={`Prévisualiser ${pdfService.getDocumentLabel(documentType)}`}
           />

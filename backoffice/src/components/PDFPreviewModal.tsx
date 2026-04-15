@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
 
@@ -13,32 +13,63 @@ function isMobileBrowser(): boolean {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
+/** Session-scoped in-memory cache: pdfUrl → blob URL. Avoids re-downloading within the same session. */
+const blobCache = new Map<string, string>();
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('adminToken');
+  const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
+  const tenantId = tenantMatch
+    ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
+    : null;
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(tenantId ? { 'X-Tenant-ID': tenantId } : {}),
+  };
+}
+
+/** Exported so buttons can call this on mouseenter to pre-warm the blob cache before the modal opens. */
+// eslint-disable-next-line react-refresh/only-export-components
+export function prefetchPDF(pdfUrl: string): void {
+  if (!pdfUrl || blobCache.has(pdfUrl)) return;
+  fetch(pdfUrl, { headers: getAuthHeaders() })
+    .then((res) => {
+      if (!res.ok) return;
+      return res.blob();
+    })
+    .then((blob) => {
+      if (blob && !blobCache.has(pdfUrl)) {
+        blobCache.set(pdfUrl, URL.createObjectURL(blob));
+      }
+    })
+    .catch(() => {
+      /* fail silently — modal will retry */
+    });
+}
+
 export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewModalProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const prevBlobUrl = useRef<string | null>(null);
   const mobile = isMobileBrowser();
 
-  useEffect(() => {
-    if (!isOpen || !pdfUrl) return;
+  const loadPDF = useCallback(() => {
+    if (!pdfUrl) return;
+
+    // Serve from in-memory cache instantly
+    const cached = blobCache.get(pdfUrl);
+    if (cached) {
+      setBlobUrl(cached);
+      setIsLoading(false);
+      return;
+    }
 
     let cancelled = false;
     setIsLoading(true);
     setError(null);
     setBlobUrl(null);
 
-    const token = localStorage.getItem('adminToken');
-    const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
-    const tenantId = tenantMatch
-      ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
-      : null;
-    fetch(pdfUrl, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(tenantId ? { 'X-Tenant-ID': tenantId } : {}),
-      },
-    })
+    fetch(pdfUrl, { headers: getAuthHeaders() })
       .then((res) => {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         return res.blob();
@@ -46,44 +77,40 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       .then((blob) => {
         if (cancelled) return;
         const url = URL.createObjectURL(blob);
-        // Revoke previous blob URL to free memory
-        if (prevBlobUrl.current) URL.revokeObjectURL(prevBlobUrl.current);
-        prevBlobUrl.current = url;
+        blobCache.set(pdfUrl, url);
         setBlobUrl(url);
         setIsLoading(false);
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.message);
+        setError((err as Error).message);
         setIsLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, pdfUrl]);
+  }, [pdfUrl]);
 
-  // Cleanup blob URL when modal closes
   useEffect(() => {
-    if (!isOpen && prevBlobUrl.current) {
-      URL.revokeObjectURL(prevBlobUrl.current);
-      prevBlobUrl.current = null;
-      setBlobUrl(null);
-    }
-  }, [isOpen]);
+    if (!isOpen || !pdfUrl) return;
+    return loadPDF();
+  }, [isOpen, pdfUrl, loadPDF]);
 
   return (
     <Dialog
       visible={isOpen}
       onHide={onClose}
-      header={`Aperçu ${title}`}
+      header={title}
       modal
       dismissableMask
       maximizable
-      style={{ width: '90vw', maxWidth: '80rem' }}
-      breakpoints={{ '960px': '90vw', '640px': '95vw' }}
+      className="pdf-preview-dialog"
+      style={{ width: '92vw', maxWidth: '72rem', height: '82vh', maxHeight: '82vh' }}
+      breakpoints={{ '960px': '96vw', '640px': '100vw' }}
       contentStyle={{
-        height: '80vh',
+        height: 'calc(82vh - 2.75rem)',
+        maxHeight: 'calc(82vh - 2.75rem)',
         padding: 0,
         position: 'relative',
         background: '#f1f5f9',

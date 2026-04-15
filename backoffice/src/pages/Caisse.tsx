@@ -408,7 +408,7 @@ export default function Caisse() {
                       <div className="caisse-card__avatar">{initials(order.customerName)}</div>
                       <div style={{ minWidth: 0 }}>
                         <div className="caisse-card__name">{order.customerName || '—'}</div>
-                        <span className="caisse-card__order-num">{order.orderNumber}</span>
+                        <span className="caisse-card__order-num">{order.orderNumber || '—'}</span>
                       </div>
                     </div>
                     <span className={`caisse-card__status caisse-card__status--${st}`}>

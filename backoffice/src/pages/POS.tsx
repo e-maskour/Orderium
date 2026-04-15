@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ChevronLeft,
   LayoutGrid,
+  Barcode,
 } from 'lucide-react';
 import { toastError, toastConfirm } from '../services/toast.service';
 import { InputText } from 'primereact/inputtext';
@@ -336,6 +337,8 @@ export default function POS() {
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const orderData = {
       customerId: selectedCustomer.id,
+      customerName: selectedCustomer.name,
+      customerPhone: selectedCustomer.phoneNumber || '',
       originType: 'ADMIN_POS',
       deliveryStatus: 'pending',
       date: new Date().toISOString(),
@@ -799,16 +802,14 @@ export default function POS() {
               style={{
                 flex: 1,
                 height: '2.75rem',
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                border: 'none',
+                background: 'transparent',
+                border: '1.5px solid #235ae4',
                 borderRadius: '0.75rem',
                 fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: '#fff',
-                boxShadow:
-                  !selectedCustomer || cart.length === 0
-                    ? 'none'
-                    : '0 4px 12px rgba(34,197,94,0.30)',
+                fontWeight: 600,
+                color: '#235ae4',
+                boxShadow: 'none',
+                opacity: !selectedCustomer || cart.length === 0 ? 0.45 : 1,
               }}
             />
             <Button
@@ -821,16 +822,16 @@ export default function POS() {
               style={{
                 flex: 1,
                 height: '2.75rem',
-                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                background: '#2563EB',
                 border: 'none',
                 borderRadius: '0.75rem',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
+                fontSize: '0.875rem',
+                fontWeight: 800,
                 color: '#fff',
                 boxShadow:
                   !selectedCustomer || cart.length === 0
                     ? 'none'
-                    : '0 4px 12px rgba(35,90,228,0.30)',
+                    : '0 4px 14px rgba(37,99,235,0.40)',
               }}
             />
           </div>
@@ -1128,7 +1129,7 @@ export default function POS() {
                 style={{
                   width: '100%',
                   paddingLeft: '2.375rem',
-                  paddingRight: searchQuery ? '2.375rem' : undefined,
+                  paddingRight: searchQuery ? '4rem' : '2.375rem',
                   height: '2.5rem',
                   borderRadius: '0.625rem',
                   border: '1px solid #e5e7eb',
@@ -1145,7 +1146,7 @@ export default function POS() {
                   text
                   style={{
                     position: 'absolute',
-                    right: '0.625rem',
+                    right: '2.125rem',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     background: '#e5e7eb',
@@ -1155,6 +1156,19 @@ export default function POS() {
                   }}
                 />
               )}
+              <Barcode
+                style={{
+                  width: '1.125rem',
+                  height: '1.125rem',
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#d1d5db',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                }}
+              />
             </div>
           </div>
 
@@ -1394,6 +1408,7 @@ export default function POS() {
                         }}
                       >
                         <p
+                          title={product.name}
                           style={{
                             fontWeight: 600,
                             color: '#111827',

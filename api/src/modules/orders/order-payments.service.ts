@@ -40,47 +40,50 @@ export class OrderPaymentsService {
   }
 
   async getCaisseSummary(): Promise<any[]> {
-    const orders = await this.orderRepo
+    const rows = await this.orderRepo
       .createQueryBuilder('o')
-      .select([
-        'o.id',
-        'o.documentNumber',
-        'o.customerName',
-        'o.customerId',
-        'o.total',
-        'o.paidAmount',
-        'o.remainingAmount',
-        'o.date',
-        'o.dateCreated',
-      ])
       .leftJoin('o.customer', 'customer')
-      .addSelect(['customer.id', 'customer.name', 'customer.phoneNumber'])
+      .select('o.id', 'id')
+      .addSelect(
+        'COALESCE("o"."orderNumber", "o"."documentNumber")',
+        'orderNumber',
+      )
+      .addSelect(
+        `COALESCE("customer"."name", NULLIF("o"."customerName", ''))`,
+        'customerName',
+      )
+      .addSelect('o.customerId', 'customerId')
+      .addSelect('o.total', 'total')
+      .addSelect('o.paidAmount', 'paidAmount')
+      .addSelect('o.remainingAmount', 'remainingAmount')
+      .addSelect('o.date', 'date')
+      .addSelect('o.dateCreated', 'dateCreated')
       .where('o.direction = :dir', { dir: 'VENTE' })
       .andWhere('o.originType != :origin', {
         origin: OrderOriginType.BACKOFFICE,
       })
       .orderBy('o.dateCreated', 'DESC')
-      .getMany();
+      .getRawMany();
 
-    return orders.map((o) => {
-      const total = parseFloat(o.total?.toString() || '0');
-      const paid = parseFloat(o.paidAmount?.toString() || '0');
-      const remaining = parseFloat(o.remainingAmount?.toString() || '0');
+    return rows.map((row) => {
+      const total = parseFloat(row.total?.toString() || '0');
+      const paid = parseFloat(row.paidAmount?.toString() || '0');
+      const remaining = parseFloat(row.remainingAmount?.toString() || '0');
       let paymentStatus: 'paid' | 'partial' | 'unpaid' = 'unpaid';
       if (paid >= total && total > 0) paymentStatus = 'paid';
       else if (paid > 0) paymentStatus = 'partial';
 
       return {
-        id: o.id,
-        orderNumber: o.documentNumber,
-        customerName: o.customer?.name || o.customerName || null,
-        customerId: o.customerId,
+        id: row.id,
+        orderNumber: row.orderNumber || null,
+        customerName: row.customerName || null,
+        customerId: row.customerId,
         total,
         paidAmount: paid,
         remainingAmount: remaining,
         paymentStatus,
-        date: o.date,
-        dateCreated: o.dateCreated,
+        date: row.date,
+        dateCreated: row.dateCreated,
       };
     });
   }

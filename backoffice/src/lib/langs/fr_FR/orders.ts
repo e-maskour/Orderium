@@ -71,7 +71,7 @@ export default {
   dateRange: 'Plage de dates',
   deliveryStatus: 'Statut de livraison',
   noDeliveryPersons: 'Aucun livreur disponible',
-  orderSource: 'Source de la commande',
+  orderSource: 'Source',
   local: 'Local',
   client: 'Client',
   reset: 'Effacer les filtres',
@@ -93,6 +93,7 @@ export default {
   // Additional
   previewReceipt: 'Reçu',
   previewDeliveryNote: 'Bon',
+  share: 'Partager',
 
   // Status change
   statusUpdated: 'Statut mis à jour',
