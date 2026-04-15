@@ -336,7 +336,6 @@ export default function Products() {
                   onClick={() => setFiltersExpanded(true)}
                   outlined
                   severity="secondary"
-                  size="small"
                   icon={<Filter style={{ width: 16, height: 16 }} />}
                   label={t('filters')}
                 />
@@ -369,7 +368,6 @@ export default function Products() {
                 onClick={handleDownloadTemplate}
                 outlined
                 severity="secondary"
-                size="small"
                 icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
                 title={t('downloadTemplate')}
               />
@@ -377,7 +375,6 @@ export default function Products() {
                 onClick={handleImport}
                 outlined
                 severity="secondary"
-                size="small"
                 icon={<Upload style={{ width: 16, height: 16 }} />}
                 title={t('import')}
               />
@@ -385,7 +382,6 @@ export default function Products() {
                 onClick={handleExport}
                 outlined
                 severity="secondary"
-                size="small"
                 icon={<Download style={{ width: 16, height: 16 }} />}
                 title={t('export')}
               />
@@ -393,7 +389,6 @@ export default function Products() {
               {/* Add Product Button */}
               <Button
                 onClick={() => navigate('/products/create')}
-                size="small"
                 icon={<Plus style={{ width: 16, height: 16 }} />}
                 label={t('addProduct')}
               />

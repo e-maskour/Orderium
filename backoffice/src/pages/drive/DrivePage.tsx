@@ -1426,22 +1426,17 @@ export default function DrivePage() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button
               label={t('newFolder') as string}
-              icon={<FolderPlus size={15} style={{ marginRight: '0.375rem' }} />}
+              icon={<FolderPlus size={16} style={{ marginRight: '0.375rem' }} />}
               severity="secondary"
               outlined
-              size="small"
               onClick={() => setShowNewFolder(true)}
-              style={{ fontSize: '0.8125rem', height: '2.25rem' }}
             />
             {activeView !== 'trash' && (
               <Button
                 label={t('uploadFile') as string}
-                icon={<Upload size={15} style={{ marginRight: '0.375rem' }} />}
-                size="small"
+                icon={<Upload size={16} style={{ marginRight: '0.375rem' }} />}
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  fontSize: '0.8125rem',
-                  height: '2.25rem',
                   background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                   border: 'none',
                   boxShadow: '0 2px 8px rgba(35,90,228,0.35)',

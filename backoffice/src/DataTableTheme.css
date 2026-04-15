@@ -156,6 +156,11 @@
     box-shadow: inset 3px 0 0 #235ae4;
 }
 
+/* RTL: first DOM child (checkbox) is visually on the right — flip indicator accordingly */
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr.p-highlight>td:first-child {
+    box-shadow: inset -3px 0 0 #235ae4;
+}
+
 /* Selected + hover */
 .p-datatable.p-component .p-datatable-tbody>tr.p-highlight:hover {
     background: #dbeafe !important;
@@ -948,14 +953,7 @@
     padding-left: 0.75rem;
 }
 
-/* 4. Selected row accent bar — flip from left edge to right edge */
-[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr.p-highlight>td:first-child {
-    box-shadow: none;
-}
-
-[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr.p-highlight>td:last-child {
-    box-shadow: inset -3px 0 0 #235ae4;
-}
+/* 4. Selected row accent bar — flip already handled near line 155 */
 
 /* 5. Paginator — current page report on the right (reading start) */
 [dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-current {

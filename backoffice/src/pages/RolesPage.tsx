@@ -379,9 +379,7 @@ export default function RolesPage() {
                 background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                 border: 'none',
                 borderRadius: '0.625rem',
-                fontSize: '0.8125rem',
                 fontWeight: 600,
-                padding: '0.5rem 1rem',
               }}
             />
           }

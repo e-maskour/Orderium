@@ -234,8 +234,10 @@ async function executeRequest<T>(
         throw processedError;
       }
 
-      // Parse successful response
-      const data: ApiResponseBody<T> = await response.json();
+      // Parse successful response (skip for 204 No Content or empty body)
+      const contentLength = response.headers.get('content-length');
+      const hasBody = response.status !== 204 && contentLength !== '0';
+      const data: ApiResponseBody<T> = hasBody ? await response.json() : (null as any);
 
       // Run response interceptors
       let processedResponse = data;

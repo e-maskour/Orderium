@@ -473,7 +473,12 @@ export default function Orders() {
     const order = orders.find((o: any) => o.id === orderId);
     const rawPhone = order?.customerPhone ?? '';
     const phone = rawPhone.replace(/[\s\-()]/g, '').replace(/^\+/, '');
-    const message = `Bonjour, veuillez trouver ci-joint le reçu de votre commande ${order?.displayOrderNumber || `#${orderId}`}.`;
+    const orderRef = order?.displayOrderNumber || `#${orderId}`;
+    const total = order?.totalAmount != null ? `${Number(order.totalAmount).toFixed(2)} DH` : '';
+    const isAr = language?.startsWith('ar');
+    const message = isAr
+      ? `مرحباً، يرجى الاطلاع على وصل التسليم الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
+      : `Bonjour, veuillez trouver ci-joint le bon de livraison de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
 
     try {
       const token = localStorage.getItem('adminToken');
@@ -481,7 +486,7 @@ export default function Orders() {
       const tenantId = tenantMatch
         ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
         : null;
-      const url = pdfService.getPDFUrl('receipt', orderId, 'download');
+      const url = pdfService.getPDFUrl('delivery-note', orderId, 'download');
       const response = await fetch(url, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -490,7 +495,7 @@ export default function Orders() {
       });
       if (!response.ok) throw new Error(`${response.status}`);
       const blob = await response.blob();
-      const fileName = `Recu_${order?.displayOrderNumber || orderId}.pdf`;
+      const fileName = `BonLivraison_${order?.displayOrderNumber || orderId}.pdf`;
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       // Mobile: native share sheet — lets user pick WhatsApp (or any app) with PDF attached
@@ -830,7 +835,6 @@ export default function Orders() {
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
                   icon={<Filter style={{ width: 16, height: 16 }} />}
                   label={t('filters')}
-                  size="small"
                   style={{
                     background: filtersExpanded ? '#235ae4' : '#eff6ff',
                     border: '1px solid #bfdbfe',
@@ -843,7 +847,6 @@ export default function Orders() {
                   onClick={() => navigate('/pos')}
                   icon={<Plus style={{ width: 16, height: 16 }} />}
                   label={t('newOrder')}
-                  size="small"
                 />
               </>
             }

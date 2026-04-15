@@ -2200,25 +2200,17 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     color: #6b7280;
                     cursor: pointer;
                     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
-                    animation: searchIconBounce 3.5s ease-in-out 2s infinite;
                 }
                 .header-search-icon-btn:hover {
                     background: #f3f4f6;
                     color: #235ae4;
                     transform: scale(1.08);
-                    animation: none;
                 }
                 .header-search-icon-btn:active {
                     transform: scale(0.93);
                 }
                 .header-search-icon-ring {
-                    position: absolute;
-                    inset: 0;
-                    border-radius: 0.5rem;
-                    border: 1.5px solid #235ae4;
-                    opacity: 0;
-                    animation: searchIconPulse 3.5s ease-out 2s infinite;
-                    pointer-events: none;
+                    display: none;
                 }
             `}</style>
     </>

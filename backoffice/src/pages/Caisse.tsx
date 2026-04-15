@@ -468,14 +468,15 @@ export default function Caisse() {
 
                   {/* Actions */}
                   <div className="caisse-card__actions">
-                    <button
-                      className="caisse-action-btn caisse-action-btn--pay"
-                      onClick={() => openPayDrawer(order)}
-                      disabled={order.remainingAmount <= 0}
-                    >
-                      <Plus />
-                      {order.remainingAmount > 0 ? t('addPayment') : t('fullyPaid')}
-                    </button>
+                    {(st === 'partial' || st === 'unpaid') && (
+                      <button
+                        className="caisse-action-btn caisse-action-btn--pay"
+                        onClick={() => openPayDrawer(order)}
+                      >
+                        <Plus />
+                        {t('addPayment')}
+                      </button>
+                    )}
                     <button
                       className="caisse-action-btn caisse-action-btn--history"
                       onClick={() => loadHistory(order)}
@@ -994,22 +995,24 @@ export default function Caisse() {
                         </div>
                       )}
                     </div>
-                    <div className="caisse-timeline-actions">
-                      <button
-                        className="caisse-timeline-action-btn"
-                        onClick={() => openEditDrawer(p)}
-                        title={t('editPayment')}
-                      >
-                        <Edit2 />
-                      </button>
-                      <button
-                        className="caisse-timeline-action-btn caisse-timeline-action-btn--danger"
-                        onClick={() => handleDeletePayment(p.id)}
-                        title={t('deletePayment')}
-                      >
-                        <Trash2 />
-                      </button>
-                    </div>
+                    {historyOrder?.paymentStatus !== 'paid' && (
+                      <div className="caisse-timeline-actions">
+                        <button
+                          className="caisse-timeline-action-btn"
+                          onClick={() => openEditDrawer(p)}
+                          title={t('editPayment')}
+                        >
+                          <Edit2 />
+                        </button>
+                        <button
+                          className="caisse-timeline-action-btn caisse-timeline-action-btn--danger"
+                          onClick={() => handleDeletePayment(p.id)}
+                          title={t('deletePayment')}
+                        >
+                          <Trash2 />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

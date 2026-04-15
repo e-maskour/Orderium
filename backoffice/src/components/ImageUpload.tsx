@@ -14,6 +14,181 @@ import { imagesService } from '../modules/images';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 
+// ── Image processing utilities (module-level, no React deps) ─────────────────
+
+const MAX_OUTPUT_PX = 1600; // max dimension of processed output
+
+/**
+ * Reads the EXIF orientation tag from a JPEG file.
+ * Returns 1 (normal) when absent or on any parse error.
+ * Only reads the first 64 KB — sufficient for the APP1 segment.
+ */
+async function readExifOrientation(file: File): Promise<number> {
+  try {
+    const buf = await file.slice(0, 65536).arrayBuffer();
+    const view = new DataView(buf);
+    if (view.getUint16(0) !== 0xffd8) return 1; // not a JPEG
+    let offset = 2;
+    while (offset + 4 < view.byteLength) {
+      if (view.getUint8(offset) !== 0xff) break;
+      const marker = view.getUint8(offset + 1);
+      const segLen = view.getUint16(offset + 2);
+      if (marker === 0xe1 && offset + 10 < view.byteLength) {
+        // APP1 — verify "Exif" magic
+        if (
+          view.getUint8(offset + 4) === 0x45 &&
+          view.getUint8(offset + 5) === 0x78 &&
+          view.getUint8(offset + 6) === 0x69 &&
+          view.getUint8(offset + 7) === 0x66
+        ) {
+          const tiff = offset + 10;
+          const le = view.getUint16(tiff) === 0x4949; // little-endian?
+          const ifdStart =
+            tiff + (le ? view.getUint32(tiff + 4, true) : view.getUint32(tiff + 4, false));
+          const nEntries = le ? view.getUint16(ifdStart, true) : view.getUint16(ifdStart, false);
+          for (let i = 0; i < nEntries; i++) {
+            const e = ifdStart + 2 + i * 12;
+            if (e + 12 > view.byteLength) break;
+            const tag = le ? view.getUint16(e, true) : view.getUint16(e, false);
+            if (tag === 0x0112 /* Orientation */) {
+              return le ? view.getUint16(e + 8, true) : view.getUint16(e + 8, false);
+            }
+          }
+        }
+      }
+      offset += 2 + segLen;
+    }
+  } catch {
+    /* ignore — return default */
+  }
+  return 1;
+}
+
+/**
+ * Mild unsharp mask (Laplacian sharpening kernel [0,-1,0 / -1,5,-1 / 0,-1,0]).
+ * Operates in-place on a canvas context.
+ */
+function applyUnsharpMask(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const src = new Uint8ClampedArray(imageData.data);
+  const dst = imageData.data;
+  const stride = w * 4;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * stride + x * 4;
+      for (let c = 0; c < 3; c++) {
+        dst[i + c] = Math.min(
+          255,
+          Math.max(
+            0,
+            5 * src[i + c] -
+              src[i - 4 + c] -
+              src[i + 4 + c] -
+              src[i - stride + c] -
+              src[i + stride + c],
+          ),
+        );
+      }
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+/**
+ * Full image processing pipeline:
+ *  1. Reads EXIF orientation — corrects rotated mobile photos
+ *  2. Downscales if longest edge > MAX_OUTPUT_PX
+ *  3. Applies mild unsharp mask for crispness
+ *  4. Outputs as JPEG at quality 0.93 with white background
+ *
+ * The canvas ctx.transform matrices map scaled draw-space (sW×sH) to
+ * oriented canvas-space (outW×outH) for all 8 EXIF orientations.
+ */
+async function processImageFile(file: File): Promise<File> {
+  const orientation = await readExifOrientation(file);
+  const objectUrl = URL.createObjectURL(file);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const swapped = orientation >= 5; // 90° / 270° — canvas w/h are swapped
+
+      // Scale so longest logical edge ≤ MAX_OUTPUT_PX
+      const logW = swapped ? nh : nw;
+      const logH = swapped ? nw : nh;
+      const ratio = Math.min(1, MAX_OUTPUT_PX / Math.max(logW, logH));
+      const sW = Math.round(nw * ratio); // scaled natural width (draw size)
+      const sH = Math.round(nh * ratio); // scaled natural height (draw size)
+      const outW = swapped ? sH : sW; // canvas output width
+      const outH = swapped ? sW : sH; // canvas output height
+
+      const canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // White background prevents dark borders on PNG→JPEG conversion
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outW, outH);
+
+      // 2-D affine transforms that map (sW×sH) draw-space into oriented canvas-space.
+      // Derived from the identity that scaled dimensions follow the same transform
+      // pattern as natural ones with sW/sH substituted for nw/nh.
+      switch (orientation) {
+        case 2:
+          ctx.transform(-1, 0, 0, 1, sW, 0);
+          break;
+        case 3:
+          ctx.transform(-1, 0, 0, -1, sW, sH);
+          break;
+        case 4:
+          ctx.transform(1, 0, 0, -1, 0, sH);
+          break;
+        case 5:
+          ctx.transform(0, 1, 1, 0, 0, 0);
+          break;
+        case 6:
+          ctx.transform(0, 1, -1, 0, sH, 0);
+          break;
+        case 7:
+          ctx.transform(0, -1, -1, 0, sH, sW);
+          break;
+        case 8:
+          ctx.transform(0, -1, 1, 0, 0, sW);
+          break;
+        default:
+          break; // orientation 1 — identity
+      }
+      ctx.drawImage(img, 0, 0, sW, sH);
+      ctx.resetTransform();
+
+      applyUnsharpMask(ctx, outW, outH);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('toBlob failed'));
+            return;
+          }
+          resolve(new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        0.93,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Image load failed'));
+    };
+    img.src = objectUrl;
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
   currentImage?: string;
@@ -85,7 +260,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setCameraReady(false);
     navigator.mediaDevices
       .getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920, max: 3840 },
+          height: { ideal: 1080, max: 2160 },
+        },
       })
       .then((stream) => {
         if (cancelled) {
@@ -105,7 +284,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       streamRef.current = null;
       setCameraReady(false);
     };
-  }, [showCameraModal]);
+  }, [showCameraModal, t]);
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -189,7 +368,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) await handleUpload(files[0]);
+    if (!files?.length) return;
+    // Process: fix EXIF orientation, resize, sharpen — then upload
+    const processed = await processImageFile(files[0]).catch(() => files[0]);
+    await handleUpload(processed);
+    // Reset so the same file can be re-selected
+    e.target.value = '';
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -219,9 +403,22 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    // Scale to MAX_OUTPUT_PX on longest edge
+    const ratio = Math.min(1, MAX_OUTPUT_PX / Math.max(vw, vh));
+    const outW = Math.round(vw * ratio);
+    const outH = Math.round(vh * ratio);
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, outW, outH);
+    ctx.drawImage(video, 0, 0, outW, outH);
+    // Webcam feed has no EXIF — skip orientation fix, apply sharpening only
+    applyUnsharpMask(ctx, outW, outH);
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -230,7 +427,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         handleUpload(file);
       },
       'image/jpeg',
-      0.92,
+      0.93,
     );
   };
 
@@ -635,7 +832,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 label={t('retry')}
                 outlined
                 size="small"
-                onClick={() => setShowCameraModal(false) || setShowCameraModal(true)}
+                onClick={() => {
+                  setShowCameraModal(false);
+                  setTimeout(() => setShowCameraModal(true), 50);
+                }}
               />
             </div>
           ) : (
