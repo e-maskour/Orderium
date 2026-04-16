@@ -200,7 +200,9 @@ export default function Orders() {
       ),
   });
 
-  const { data: orderAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 } } = useQuery({
+  const {
+    data: orderAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0, totalSubtotal: 0 },
+  } = useQuery({
     queryKey: ['orders-aggregates', JSON.stringify(appliedFilters)],
     queryFn: () =>
       ordersService.getAggregates(
@@ -1337,9 +1339,10 @@ export default function Orders() {
         </Sidebar>
 
         {/* Orders Content */}
-        {/* Aggregates summary bar — shown on all screen sizes above both lists */}
+        {/* Aggregates summary bar — mobile only; desktop sees footer row in DataTable */}
         {orders.length > 0 && (
           <div
+            className="responsive-table-mobile"
             style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}
           >
             {[
@@ -1634,6 +1637,27 @@ export default function Orders() {
                   sortable
                   sortField="orderNumber"
                   style={{ minWidth: '10rem' }}
+                  footer={
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        padding: '0.2rem 0.625rem',
+                        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                        borderRadius: '999px',
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        color: '#fff',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        boxShadow: '0 1px 4px rgba(59,130,246,0.35)',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.7rem' }}>Σ</span>
+                      {t('total')}
+                    </span>
+                  }
                   body={(order: any) => (
                     <div>
                       <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
@@ -1773,6 +1797,12 @@ export default function Orders() {
                   sortable
                   sortField="total"
                   style={{ minWidth: '8rem' }}
+                  footer={
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
+                      {formatAmount(orderAggregates.totalAmount, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                    </span>
+                  }
                   body={(order: any) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
                       {formatAmount(order.total, 2)}{' '}
@@ -1783,6 +1813,12 @@ export default function Orders() {
                 <Column
                   header={t('paidAmount')}
                   style={{ minWidth: '9rem' }}
+                  footer={
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
+                      {formatAmount(orderAggregates.totalPaid, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
+                    </span>
+                  }
                   body={(order: any) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
                       {formatAmount(order.paidAmount ?? 0, 2)}{' '}
@@ -1793,6 +1829,18 @@ export default function Orders() {
                 <Column
                   header={t('remainingAmount')}
                   style={{ minWidth: '11rem' }}
+                  footer={
+                    <span
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: orderAggregates.totalRemaining > 0 ? '#dc2626' : '#047857',
+                      }}
+                    >
+                      {formatAmount(orderAggregates.totalRemaining, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
+                    </span>
+                  }
                   body={(order: any) => {
                     const remaining = order.remainingAmount ?? 0;
                     return (

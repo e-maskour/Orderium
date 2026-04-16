@@ -137,9 +137,14 @@ export class DocumentsService {
     type: DocumentType,
     direction: DocumentDirection,
     filters?: DocumentFilters,
-  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+  ): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+    totalSubtotal: number;
+  }> {
     const isVente = direction === 'vente';
-    const empty = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+    const empty = { totalAmount: 0, totalPaid: 0, totalRemaining: 0, totalSubtotal: 0 };
 
     if (type === 'facture') {
       return invoicesService.getAggregates({

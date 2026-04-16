@@ -274,51 +274,55 @@ export class PartnersService {
     });
     if (!partner) throw new NotFoundException('Customer not found');
 
-    const invoices = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .where('invoice.customerId = :customerId', { customerId })
-      .andWhere('EXTRACT(YEAR FROM invoice.date) = :year', { year })
-      .getMany();
+    const [invoicesForChart, allInvoices, allOrders] = await Promise.all([
+      this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.customerId = :customerId', { customerId })
+        .andWhere('EXTRACT(YEAR FROM invoice.date) = :year', { year })
+        .getMany(),
+      this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.customerId = :customerId', { customerId })
+        .getMany(),
+      this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.customerId = :customerId', { customerId })
+        .andWhere('order.status != :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .getMany(),
+    ]);
 
-    const orders = await this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.customerId = :customerId', { customerId })
-      .andWhere('EXTRACT(YEAR FROM order.date) = :year', { year })
-      .andWhere('order.status != :cancelled', {
-        cancelled: OrderStatus.CANCELLED,
-      })
-      .getMany();
-
-    const totalRevenue = invoices.reduce(
+    const totalRevenue = allInvoices.reduce(
       (sum, inv) => sum + Number(inv.total),
       0,
     );
 
-    const paidAmount = invoices
+    const paidAmount = allInvoices
       // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       .filter((inv) => inv.status === 'paid')
       .reduce((sum, inv) => sum + Number(inv.total), 0);
-    const unpaidAmount = invoices
+    const unpaidAmount = allInvoices
       // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       .filter((inv) => inv.status === 'unpaid' || inv.status === 'partial')
       .reduce((sum, inv) => sum + Number(inv.remainingAmount || inv.total), 0);
 
     return {
       year,
-      chartData: computeMonthlyData(invoices),
+      chartData: computeMonthlyData(invoicesForChart),
       kpis: {
-        totalInvoices: invoices.length,
+        totalInvoices: allInvoices.length,
         totalRevenue,
         paidAmount,
         unpaidAmount,
         averagePerInvoice:
-          invoices.length > 0 ? totalRevenue / invoices.length : 0,
-        totalOrders: orders.length,
-        totalOrderRevenue: orders.reduce(
+          allInvoices.length > 0 ? totalRevenue / allInvoices.length : 0,
+        totalOrders: allOrders.length,
+        totalOrderRevenue: allOrders.reduce(
           (sum, ord) => sum + Number(ord.total),
           0,
         ),
-        unpaidOrderAmount: orders.reduce(
+        unpaidOrderAmount: allOrders.reduce(
           (sum, ord) => sum + Number(ord.remainingAmount),
           0,
         ),
@@ -332,51 +336,55 @@ export class PartnersService {
     });
     if (!partner) throw new NotFoundException('Supplier not found');
 
-    const invoices = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .where('invoice.supplierId = :supplierId', { supplierId })
-      .andWhere('EXTRACT(YEAR FROM invoice.date) = :year', { year })
-      .getMany();
+    const [invoicesForChart, allInvoices, allOrders] = await Promise.all([
+      this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.supplierId = :supplierId', { supplierId })
+        .andWhere('EXTRACT(YEAR FROM invoice.date) = :year', { year })
+        .getMany(),
+      this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.supplierId = :supplierId', { supplierId })
+        .getMany(),
+      this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.supplierId = :supplierId', { supplierId })
+        .andWhere('order.status != :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .getMany(),
+    ]);
 
-    const orders = await this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.supplierId = :supplierId', { supplierId })
-      .andWhere('EXTRACT(YEAR FROM order.date) = :year', { year })
-      .andWhere('order.status != :cancelled', {
-        cancelled: OrderStatus.CANCELLED,
-      })
-      .getMany();
-
-    const totalExpenses = invoices.reduce(
+    const totalExpenses = allInvoices.reduce(
       (sum, inv) => sum + Number(inv.total),
       0,
     );
 
-    const paidAmount = invoices
+    const paidAmount = allInvoices
       // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       .filter((inv) => inv.status === 'paid')
       .reduce((sum, inv) => sum + Number(inv.total), 0);
-    const unpaidAmount = invoices
+    const unpaidAmount = allInvoices
       // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       .filter((inv) => inv.status === 'unpaid' || inv.status === 'partial')
       .reduce((sum, inv) => sum + Number(inv.remainingAmount || inv.total), 0);
 
     return {
       year,
-      chartData: computeMonthlyData(invoices),
+      chartData: computeMonthlyData(invoicesForChart),
       kpis: {
-        totalInvoices: invoices.length,
+        totalInvoices: allInvoices.length,
         totalExpenses,
         paidAmount,
         unpaidAmount,
         averagePerInvoice:
-          invoices.length > 0 ? totalExpenses / invoices.length : 0,
-        totalOrders: orders.length,
-        totalOrderExpenses: orders.reduce(
+          allInvoices.length > 0 ? totalExpenses / allInvoices.length : 0,
+        totalOrders: allOrders.length,
+        totalOrderExpenses: allOrders.reduce(
           (sum, ord) => sum + Number(ord.total),
           0,
         ),
-        unpaidOrderAmount: orders.reduce(
+        unpaidOrderAmount: allOrders.reduce(
           (sum, ord) => sum + Number(ord.remainingAmount),
           0,
         ),

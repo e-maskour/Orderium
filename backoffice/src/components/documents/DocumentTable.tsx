@@ -78,7 +78,12 @@ interface DocumentTableProps {
   onPageSizeChange: (size: number) => void;
   onShare?: (id: number) => void;
   onWhatsApp?: (id: number) => void;
-  aggregates?: { totalAmount: number; totalPaid: number; totalRemaining: number };
+  aggregates?: {
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+    totalSubtotal: number;
+  };
 }
 
 export function DocumentTable({
@@ -111,7 +116,11 @@ export function DocumentTable({
   const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
   const selectedDocuments = selectedRows.map((r) => r.id);
-  const visibleColumns = { tax: false, paidAmount: false, remainingAmount: false };
+  const visibleColumns = {
+    tax: false,
+    paidAmount: showPaymentColumns,
+    remainingAmount: showPaymentColumns,
+  };
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
@@ -365,9 +374,10 @@ export function DocumentTable({
         })()}
       />
 
-      {/* Aggregates summary bar */}
+      {/* Aggregates summary bar — mobile only; desktop sees footer row in DataTable */}
       {aggregates && (
         <div
+          className="responsive-table-mobile"
           style={{
             display: 'flex',
             gap: '0.75rem',
@@ -375,6 +385,14 @@ export function DocumentTable({
           }}
         >
           {[
+            {
+              label: t('amountHT'),
+              value: aggregates.totalSubtotal,
+              color: '#334155',
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              bold: false,
+            },
             {
               label: t('totalAmount'),
               value: aggregates.totalAmount,
@@ -483,6 +501,29 @@ export function DocumentTable({
             field="number"
             header={t('number')}
             sortable
+            footer={
+              aggregates ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    padding: '0.2rem 0.625rem',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                    borderRadius: '999px',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    color: '#fff',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    boxShadow: '0 1px 4px rgba(59,130,246,0.35)',
+                  }}
+                >
+                  <span style={{ fontSize: '0.7rem' }}>Σ</span>
+                  {t('total')}
+                </span>
+              ) : undefined
+            }
             body={(doc: Document) => (
               <Button
                 label={doc.number}
@@ -575,6 +616,13 @@ export function DocumentTable({
             field="subtotal"
             header={t('amountHT')}
             sortable
+            footer={
+              aggregates ? (
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
+                  {formatAmount(aggregates.totalSubtotal, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              ) : undefined
+            }
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
                 {formatAmount(doc.subtotal, 2)} {language === 'ar' ? 'د.م' : 'DH'}
@@ -597,6 +645,13 @@ export function DocumentTable({
             field="total"
             header={t('amountTTC')}
             sortable
+            footer={
+              aggregates ? (
+                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
+                  {formatAmount(aggregates.totalAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              ) : undefined
+            }
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
                 {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
@@ -608,6 +663,13 @@ export function DocumentTable({
               field="paidAmount"
               header={t('alreadyPaid')}
               sortable
+              footer={
+                aggregates ? (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
+                    {formatAmount(aggregates.totalPaid, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
+                ) : undefined
+              }
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
                   {formatAmount(doc.paidAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
@@ -620,6 +682,19 @@ export function DocumentTable({
               field="remainingAmount"
               header={t('remainingToPay')}
               sortable
+              footer={
+                aggregates ? (
+                  <span
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: aggregates.totalRemaining > 0 ? '#b91c1c' : '#64748b',
+                    }}
+                  >
+                    {formatAmount(aggregates.totalRemaining, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
+                ) : undefined
+              }
               body={(doc: Document) => (
                 <span
                   style={{

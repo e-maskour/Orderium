@@ -73,7 +73,12 @@ export class OrdersService {
     orderNumber?: string,
     direction?: 'ACHAT' | 'VENTE',
     status?: string[],
-  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+  ): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+    totalSubtotal: number;
+  }> {
     const filters: any = {};
     let remainingSearch = search || '';
     if (search) {
@@ -105,7 +110,14 @@ export class OrdersService {
     const response = await apiClient.post<any>(API_ROUTES.ORDERS.FILTER_AGGREGATES, body, {
       params: queryParams,
     });
-    return (response.data as any) || { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+    return (
+      (response.data as any) || {
+        totalAmount: 0,
+        totalPaid: 0,
+        totalRemaining: 0,
+        totalSubtotal: 0,
+      }
+    );
   }
 
   async getById(orderId: number): Promise<OrderWithDetails> {

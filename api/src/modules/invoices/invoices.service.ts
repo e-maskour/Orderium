@@ -202,6 +202,7 @@ export class InvoicesService {
     totalAmount: number;
     totalPaid: number;
     totalRemaining: number;
+    totalSubtotal: number;
   }> {
     const aggQb = this.invoiceRepository
       .createQueryBuilder('invoice')
@@ -209,7 +210,8 @@ export class InvoicesService {
       .leftJoin('invoice.supplier', 'supplier')
       .select('COALESCE(SUM(invoice.total), 0)', 'totalAmount')
       .addSelect('COALESCE(SUM(invoice.paidAmount), 0)', 'totalPaid')
-      .addSelect('COALESCE(SUM(invoice.remainingAmount), 0)', 'totalRemaining');
+      .addSelect('COALESCE(SUM(invoice.remainingAmount), 0)', 'totalRemaining')
+      .addSelect('COALESCE(SUM(invoice.subtotal), 0)', 'totalSubtotal');
 
     if (search) {
       aggQb.andWhere(
@@ -231,12 +233,14 @@ export class InvoicesService {
       totalAmount: string;
       totalPaid: string;
       totalRemaining: string;
+      totalSubtotal: string;
     }>();
 
     return {
       totalAmount: parseFloat(aggResult?.totalAmount || '0'),
       totalPaid: parseFloat(aggResult?.totalPaid || '0'),
       totalRemaining: parseFloat(aggResult?.totalRemaining || '0'),
+      totalSubtotal: parseFloat(aggResult?.totalSubtotal || '0'),
     };
   }
 

@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  SetMetadata,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
@@ -20,6 +21,7 @@ import { ApiRes } from '../../common/api-response';
 import { PTR } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { SERIALIZE_KEY } from '../../common/interceptors/serialize.interceptor';
 
 @ApiTags('Partners')
 @PortalRoute()
@@ -125,6 +127,7 @@ export class PartnersController {
   }
 
   @Get(':id/customer-analytics')
+  @SetMetadata(SERIALIZE_KEY, null)
   @ApiOperation({ summary: 'Get customer analytics with chart data and KPIs' })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiResponse({
@@ -144,6 +147,7 @@ export class PartnersController {
   }
 
   @Get(':id/supplier-analytics')
+  @SetMetadata(SERIALIZE_KEY, null)
   @ApiOperation({ summary: 'Get supplier analytics with chart data and KPIs' })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiResponse({

@@ -325,7 +325,7 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
                 t('legalAndTaxNumbers'),
               )}
 
-              <div className="partner-id-grid">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="p-field">
                   <label className="p-label">{t('tvaNumber')}</label>
                   <InputText
@@ -353,33 +353,33 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
                     style={{ width: '100%', fontFamily: 'monospace' }}
                   />
                 </div>
-              </div>
-              <div className="p-field">
-                <label className="p-label">{t('cnss')}</label>
-                <InputText
-                  id="cnss"
-                  {...register('cnss')}
-                  placeholder={t('enterCNSS')}
-                  style={{ width: '100%', fontFamily: 'monospace' }}
-                />
-              </div>
-              <div className="p-field">
-                <label className="p-label">{t('rc')}</label>
-                <InputText
-                  id="rc"
-                  {...register('rc')}
-                  placeholder={t('enterRC')}
-                  style={{ width: '100%', fontFamily: 'monospace' }}
-                />
-              </div>
-              <div className="p-field">
-                <label className="p-label">{t('patente')}</label>
-                <InputText
-                  id="patente"
-                  {...register('patente')}
-                  placeholder={t('enterPatente')}
-                  style={{ width: '100%', fontFamily: 'monospace' }}
-                />
+                <div className="p-field">
+                  <label className="p-label">{t('cnss')}</label>
+                  <InputText
+                    id="cnss"
+                    {...register('cnss')}
+                    placeholder={t('enterCNSS')}
+                    style={{ width: '100%', fontFamily: 'monospace' }}
+                  />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('rc')}</label>
+                  <InputText
+                    id="rc"
+                    {...register('rc')}
+                    placeholder={t('enterRC')}
+                    style={{ width: '100%', fontFamily: 'monospace' }}
+                  />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('patente')}</label>
+                  <InputText
+                    id="patente"
+                    {...register('patente')}
+                    placeholder={t('enterPatente')}
+                    style={{ width: '100%', fontFamily: 'monospace' }}
+                  />
+                </div>
               </div>
             </div>
           )}

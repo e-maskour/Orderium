@@ -150,12 +150,14 @@ export class QuotesService {
     totalAmount: number;
     totalPaid: number;
     totalRemaining: number;
+    totalSubtotal: number;
   }> {
     const aggQb = this.quoteRepository
       .createQueryBuilder('quote')
       .leftJoin('quote.customer', 'customer')
       .leftJoin('quote.supplier', 'supplier')
-      .select('COALESCE(SUM(quote.total), 0)', 'totalAmount');
+      .select('COALESCE(SUM(quote.total), 0)', 'totalAmount')
+      .addSelect('COALESCE(SUM(quote.subtotal), 0)', 'totalSubtotal');
 
     if (search) {
       aggQb.andWhere(
@@ -173,11 +175,16 @@ export class QuotesService {
     if (dateFrom) aggQb.andWhere('quote.date >= :dateFrom', { dateFrom });
     if (dateTo) aggQb.andWhere('quote.date <= :dateTo', { dateTo });
 
-    const aggResult = await aggQb.getRawOne<{ totalAmount: string }>();
+    const aggResult = await aggQb.getRawOne<{
+      totalAmount: string;
+      totalSubtotal: string;
+    }>();
     const totalAmount = parseFloat(aggResult?.totalAmount || '0');
+    const totalSubtotal = parseFloat(aggResult?.totalSubtotal || '0');
 
     return {
       totalAmount,
+      totalSubtotal,
       totalPaid: 0,
       totalRemaining: totalAmount,
     };

@@ -35,9 +35,12 @@ export class InvoicesService {
     };
   }
 
-  async getAggregates(
-    filters?: InvoiceFilters,
-  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+  async getAggregates(filters?: InvoiceFilters): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+    totalSubtotal: number;
+  }> {
     const body: any = {};
     if (filters?.status) body.status = filters.status;
     if (filters?.customerId) body.customerId = filters.customerId;
@@ -52,7 +55,14 @@ export class InvoicesService {
     const response = await apiClient.post<any>(API_ROUTES.INVOICES.AGGREGATES, body, {
       params: queryParams,
     });
-    return (response.data as any) || { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+    return (
+      (response.data as any) || {
+        totalAmount: 0,
+        totalPaid: 0,
+        totalRemaining: 0,
+        totalSubtotal: 0,
+      }
+    );
   }
 
   async getById(id: number): Promise<InvoiceWithDetails> {
