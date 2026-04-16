@@ -64,6 +64,50 @@ export class OrdersService {
     return { orders: [], count: 0, totalCount: 0, statusCounts: {}, orderStatusCounts: {} };
   }
 
+  async getAggregates(
+    search?: string,
+    startDate?: Date,
+    endDate?: Date,
+    originType?: string | string[],
+    deliveryStatus?: string[],
+    orderNumber?: string,
+    direction?: 'ACHAT' | 'VENTE',
+    status?: string[],
+  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+    const filters: any = {};
+    let remainingSearch = search || '';
+    if (search) {
+      search.split(' ').forEach((part) => {
+        if (part.startsWith('customerId:')) {
+          filters.customerId = parseInt(part.split(':')[1]);
+          remainingSearch = remainingSearch.replace(part, '').trim();
+        } else if (part.startsWith('deliveryPersonId:')) {
+          filters.deliveryPersonId = parseInt(part.split(':')[1]);
+          remainingSearch = remainingSearch.replace(part, '').trim();
+        }
+      });
+    }
+
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    if (direction) queryParams.direction = direction;
+
+    const body: any = {};
+    if (remainingSearch) body.search = remainingSearch;
+    if (startDate) body.startDate = startDate.toISOString();
+    if (endDate) body.endDate = endDate.toISOString();
+    if (deliveryStatus) body.deliveryStatus = deliveryStatus;
+    if (status) body.status = status;
+    if (orderNumber) body.orderNumber = orderNumber;
+    if (filters.customerId) body.customerId = filters.customerId;
+    if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
+    if (originType !== undefined) body.originType = originType;
+
+    const response = await apiClient.post<any>(API_ROUTES.ORDERS.FILTER_AGGREGATES, body, {
+      params: queryParams,
+    });
+    return (response.data as any) || { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+  }
+
   async getById(orderId: number): Promise<OrderWithDetails> {
     const response = await apiClient.get<any>(API_ROUTES.ORDERS.DETAIL(orderId));
     return OrderWithDetails.fromApiResponse(response.data);

@@ -78,6 +78,7 @@ interface DocumentTableProps {
   onPageSizeChange: (size: number) => void;
   onShare?: (id: number) => void;
   onWhatsApp?: (id: number) => void;
+  aggregates?: { totalAmount: number; totalPaid: number; totalRemaining: number };
 }
 
 export function DocumentTable({
@@ -104,6 +105,7 @@ export function DocumentTable({
   onPageSizeChange,
   onShare,
   onWhatsApp,
+  aggregates,
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -362,6 +364,76 @@ export function DocumentTable({
           ];
         })()}
       />
+
+      {/* Aggregates summary bar */}
+      {aggregates && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          {[
+            {
+              label: t('totalAmount'),
+              value: aggregates.totalAmount,
+              color: '#1e293b',
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              bold: true,
+            },
+            ...(showPaymentColumns
+              ? [
+                  {
+                    label: t('alreadyPaid'),
+                    value: aggregates.totalPaid,
+                    color: '#15803d',
+                    bg: '#f0fdf4',
+                    border: '#bbf7d0',
+                    bold: false,
+                  },
+                  {
+                    label: t('remainingToPay'),
+                    value: aggregates.totalRemaining,
+                    color: aggregates.totalRemaining > 0 ? '#b91c1c' : '#64748b',
+                    bg: aggregates.totalRemaining > 0 ? '#fef2f2' : '#f8fafc',
+                    border: aggregates.totalRemaining > 0 ? '#fecaca' : '#e2e8f0',
+                    bold: false,
+                  },
+                ]
+              : []),
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.875rem',
+                background: stat.bg,
+                border: `1.5px solid ${stat.border}`,
+                borderRadius: '0.625rem',
+                minWidth: '10rem',
+              }}
+            >
+              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                {stat.label}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: stat.bold ? 700 : 600,
+                  color: stat.color,
+                  marginLeft: 'auto',
+                }}
+              >
+                {formatAmount(stat.value, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* DataTable — desktop only */}
       <div

@@ -507,8 +507,8 @@
 
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 
-/* Hide the entire virtual keyboard system on phones (< 768px) */
-@media (max-width: 767px) {
+/* Hide the entire virtual keyboard system on phones and tablets (< 1024px) */
+@media (max-width: 1023px) {
 
   .pk-fab-wrapper,
   .pos-keyboard-overlay {

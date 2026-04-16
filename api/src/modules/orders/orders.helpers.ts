@@ -30,7 +30,7 @@ export interface OrderResponseDto {
   status: string;
   direction: string;
   isValidated: boolean;
-  note: string;
+  notes: string;
   originType: string;
   deliveryStatus: string | null;
   pendingAt: Date | null;
@@ -129,7 +129,7 @@ export function formatOrderDetail(
     status: order.status || 'draft',
     direction: order.direction,
     isValidated: order.isValidated || false,
-    note: order.notes,
+    notes: order.notes,
     originType: order.originType || 'BACKOFFICE',
     deliveryStatus: order.deliveryStatus || null,
     pendingAt: order.pendingAt,
@@ -178,7 +178,7 @@ export function formatOrderListItem(order: Order): OrderResponseDto {
     status: order.status || 'draft',
     direction: order.direction,
     isValidated: order.isValidated || false,
-    note: order.notes,
+    notes: order.notes,
     originType: order.originType || 'BACKOFFICE',
     deliveryStatus: order.deliveryStatus || null,
     pendingAt: order.pendingAt,

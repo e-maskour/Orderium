@@ -13,8 +13,8 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
+COPY shared/ui/package.json /shared/ui/package.json
 COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./
-COPY shared/ui /shared/ui
 
 RUN --mount=type=cache,id=pnpm-delivery,target=/root/.local/share/pnpm/store \
   pnpm install --frozen-lockfile
@@ -64,8 +64,7 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
-COPY shared/ui /shared/ui
-COPY shared/components /shared/components
+COPY shared/ui/package.json /shared/ui/package.json
 
 COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./
 
@@ -73,6 +72,10 @@ COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./
 # packages are added locally (pnpm add) without rebuilding the image first.
 RUN --mount=type=cache,id=pnpm-delivery-dev,target=/root/.local/share/pnpm/store \
   pnpm install --no-frozen-lockfile
+
+# Copy source AFTER install so changes to shared code don't bust the install layer
+COPY shared/ui /shared/ui
+COPY shared/components /shared/components
 
 COPY delivery-portal/ .
 

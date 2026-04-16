@@ -76,6 +76,33 @@ export class InvoicesController {
     });
   }
 
+  @Post('aggregates')
+  @ApiOperation({ summary: 'Get financial aggregates for filtered invoices' })
+  @ApiResponse({ status: 200, description: 'Invoice aggregates retrieved' })
+  async getAggregates(
+    @Body() filterDto: FilterInvoicesDto,
+    @Query('direction') direction?: string,
+  ) {
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+
+    const aggregates = await this.invoicesService.getAggregates(
+      filterDto.search,
+      filterDto.status,
+      filterDto.customerId,
+      filterDto.supplierId,
+      filterDto.dateFrom,
+      filterDto.dateTo,
+      directionValue,
+    );
+
+    return ApiRes(INV.AGGREGATES, aggregates);
+  }
+
   @Get()
   @Serialize(InvoiceListResponseDto)
   @ApiOperation({

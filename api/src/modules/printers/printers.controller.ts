@@ -17,8 +17,10 @@ import { CreatePrinterDto } from './dto/create-printer.dto';
 import { UpdatePrinterDto } from './dto/update-printer.dto';
 import { ApiRes } from '../../common/api-response';
 import { PRI } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Printers')
+@PortalRoute()
 @Controller('printers')
 export class PrintersController {
   private readonly logger = new Logger(PrintersController.name);

@@ -338,4 +338,22 @@ export default {
   platformDetection: 'Détection de la plateforme',
   recommendedSetup: 'Configuration recommandée',
   setupGuides: 'Guides de configuration',
+  // Printer network discovery
+  scanNetwork: 'Scan réseau',
+  networkSubnet: 'Sous-réseau (ex : 192.168.1)',
+  startScan: 'Lancer le scan',
+  scanning: 'Scan en cours...',
+  scanningNetwork: 'Recherche en cours…',
+  noDiscoveredPrinters: 'Aucune imprimante trouvée. Lancez le scan.',
+  connectPrinter: 'Connecter',
+  qztrayDiscoveryNote: '(si installé) : liste tous les pilotes USB/réseau du système.',
+  httpProbeNote:
+    ': détecte les imprimantes Epson ePOS (port 8008) et Star WebPRNT (port 80) sur le sous-réseau.',
+  // Printer card
+  printerDefault: 'Par défaut',
+  printerLastSeen: 'Vu',
+  // Form
+  saving: 'Enregistrement...',
+  // Delete
+  deletePrinter: 'Supprimer',
 };

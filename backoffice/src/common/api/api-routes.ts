@@ -45,6 +45,7 @@ export const API_ROUTES = {
   ORDERS: {
     LIST: '/api/orders',
     FILTER: '/api/orders/filter',
+    FILTER_AGGREGATES: '/api/orders/filter/aggregates',
     CREATE: '/api/orders',
     DETAIL: (id: number) => `/api/orders/${id}`,
     UPDATE: (id: number) => `/api/orders/${id}`,
@@ -67,6 +68,7 @@ export const API_ROUTES = {
   // ─── Invoices ──────────────────────────────────────────────
   INVOICES: {
     LIST: '/api/invoices/list',
+    AGGREGATES: '/api/invoices/aggregates',
     CREATE: '/api/invoices',
     DETAIL: (id: number) => `/api/invoices/${id}`,
     UPDATE: (id: number) => `/api/invoices/${id}`,
@@ -84,6 +86,7 @@ export const API_ROUTES = {
   // ─── Quotes ────────────────────────────────────────────────
   QUOTES: {
     LIST: '/api/quotes/list',
+    AGGREGATES: '/api/quotes/aggregates',
     CREATE: '/api/quotes',
     DETAIL: (id: number) => `/api/quotes/${id}`,
     UPDATE: (id: number) => `/api/quotes/${id}`,

@@ -329,4 +329,22 @@ export default {
   platformDetection: 'كشف المنصة',
   recommendedSetup: 'الإعداد الموصى به',
   setupGuides: 'أدلة الإعداد',
+  // Printer network discovery
+  scanNetwork: 'فحص الشبكة',
+  networkSubnet: 'الشبكة الفرعية (مثال: 192.168.1)',
+  startScan: 'بدء الفحص',
+  scanning: 'جارٍ الفحص...',
+  scanningNetwork: 'جارٍ البحث…',
+  noDiscoveredPrinters: 'لم يتم العثور على طابعات. ابدأ الفحص.',
+  connectPrinter: 'توصيل',
+  qztrayDiscoveryNote: '(إذا كان مثبتاً): يسرد جميع طابعات USB والشبكة في النظام.',
+  httpProbeNote:
+    ': يكتشف طابعات Epson ePOS (المنفذ 8008) و Star WebPRNT (المنفذ 80) على الشبكة الفرعية.',
+  // Printer card
+  printerDefault: 'افتراضي',
+  printerLastSeen: 'آخر ظهور',
+  // Form
+  saving: 'جارٍ الحفظ...',
+  // Delete
+  deletePrinter: 'حذف',
 };

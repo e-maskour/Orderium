@@ -32,6 +32,7 @@ export function usePrinter() {
             ip: def.ip ?? undefined,
             port: def.port,
             paperWidth: def.paperWidth,
+            name: def.name,
           });
         }
       })

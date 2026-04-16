@@ -15,6 +15,9 @@ import {
   XCircle,
   Clock,
   Info,
+  ScanLine,
+  Loader2,
+  Plug,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -22,7 +25,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { Modal } from '../../components/Modal';
 import { Button } from 'primereact/button';
 import { useLanguage } from '../../context/LanguageContext';
-import { toastError, toastConfirm } from '../../services/toast.service';
+import { toastError, toastConfirm, toastSuccess } from '../../services/toast.service';
 import {
   printersService,
   type IPrinter,
@@ -31,9 +34,11 @@ import {
 } from '../../modules/printers';
 import {
   printReceipt,
+  discoverPrinters,
   detectPlatform,
   type PrinterConfig,
   type ReceiptData,
+  type DiscoveredPrinter,
 } from '@shared-print/PrintManager';
 
 const BRAND_OPTIONS = [
@@ -52,9 +57,8 @@ const CONNECTION_OPTIONS = [
 ];
 
 const PAPER_WIDTHS = [
-  { value: 58, label: '58mm (ticket)' },
   { value: 80, label: '80mm (ticket)' },
-  { value: 210, label: '210mm (A4)' },
+  { value: 148, label: '148mm (A5)' },
 ];
 
 const DOC_TYPE_OPTIONS = [
@@ -83,21 +87,25 @@ const DUMMY_RECEIPT: ReceiptData = {
 
 function PrinterForm({
   printer,
+  seed,
   onSubmit,
   isLoading,
 }: {
   printer?: IPrinter;
+  seed?: DiscoveredPrinter | null;
   onSubmit: (data: CreatePrinterDTO) => void;
   isLoading: boolean;
 }) {
   const { t } = useLanguage();
   const [form, setForm] = useState<CreatePrinterDTO>({
-    name: printer?.name ?? '',
-    brand: (printer?.brand as CreatePrinterDTO['brand']) ?? 'epson',
-    connectionType: (printer?.connectionType as CreatePrinterDTO['connectionType']) ?? 'wifi',
+    name: printer?.name ?? seed?.name ?? '',
+    brand: (printer?.brand ?? seed?.brand ?? 'epson') as CreatePrinterDTO['brand'],
+    connectionType: (printer?.connectionType ??
+      seed?.connectionType ??
+      'wifi') as CreatePrinterDTO['connectionType'],
     model: printer?.model ?? undefined,
-    ip: printer?.ip ?? undefined,
-    port: printer?.port ?? 8008,
+    ip: printer?.ip ?? seed?.ip ?? undefined,
+    port: printer?.port ?? seed?.port ?? 8008,
     paperWidth: (printer?.paperWidth as CreatePrinterDTO['paperWidth']) ?? 80,
     isDefault: printer?.isDefault ?? false,
     documentTypes: printer?.documentTypes ?? ['receipt'],
@@ -291,7 +299,7 @@ function PrinterForm({
           opacity: isLoading ? 0.6 : 1,
         }}
       >
-        {isLoading ? 'Enregistrement...' : printer ? t('editPrinter') : t('addPrinter')}
+        {isLoading ? t('saving') : printer ? t('editPrinter') : t('addPrinter')}
       </button>
     </form>
   );
@@ -307,6 +315,33 @@ export default function Printers() {
   const [editingPrinter, setEditingPrinter] = useState<IPrinter | null>(null);
   const [activeTab, setActiveTab] = useState<'printers' | 'history'>('printers');
   const [jobsPage, setJobsPage] = useState(1);
+
+  // ── Network discovery ──────────────────────────────────
+  const [showDiscovery, setShowDiscovery] = useState(false);
+  const [discoverySubnet, setDiscoverySubnet] = useState('192.168.1');
+  const [isScanning, setIsScanning] = useState(false);
+  const [discovered, setDiscovered] = useState<DiscoveredPrinter[]>([]);
+
+  const handleScan = async () => {
+    setIsScanning(true);
+    setDiscovered([]);
+    try {
+      await discoverPrinters(discoverySubnet, (p) => setDiscovered((prev) => [...prev, p]));
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleAddDiscovered = (p: DiscoveredPrinter) => {
+    setEditingPrinter(null);
+    // Pre-fill the create form with discovered data by opening the modal
+    // We pass defaults through editingPrinter = null but seed the form externally
+    setDiscoveredSeed(p);
+    setShowDiscovery(false);
+    setShowModal(true);
+  };
+
+  const [discoveredSeed, setDiscoveredSeed] = useState<DiscoveredPrinter | null>(null);
 
   const { data: printers = [], isLoading } = useQuery({
     queryKey: ['printers'],
@@ -351,8 +386,17 @@ export default function Printers() {
       ip: printer.ip ?? undefined,
       port: printer.port,
       paperWidth: printer.paperWidth,
+      name: printer.name,
     };
     const result = await printReceipt(config, DUMMY_RECEIPT);
+
+    if (result.status === 'failed') {
+      toastError(`Échec impression (${result.error ?? result.method})`);
+    } else if (result.method === 'browser') {
+      toastSuccess('Impression via le navigateur');
+    } else {
+      toastSuccess(`Impression envoyée → ${result.method} (${result.durationMs}ms)`);
+    }
 
     printersService
       .logPrintJob({
@@ -373,17 +417,19 @@ export default function Printers() {
     toastConfirm(
       t('deletePrinterConfirm') || 'Supprimer cette imprimante ?',
       () => deleteMutation.mutate(printer.id),
-      { variant: 'destructive', confirmLabel: t('delete') || 'Supprimer' },
+      { variant: 'destructive', confirmLabel: t('deletePrinter') },
     );
   };
 
   const openEdit = (printer: IPrinter) => {
     setEditingPrinter(printer);
+    setDiscoveredSeed(null);
     setShowModal(true);
   };
 
   const openCreate = () => {
     setEditingPrinter(null);
+    setDiscoveredSeed(null);
     setShowModal(true);
   };
 
@@ -421,6 +467,16 @@ export default function Printers() {
           }
           actions={
             <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => {
+                  setDiscovered([]);
+                  setShowDiscovery(true);
+                }}
+                style={btnSecondary}
+              >
+                <ScanLine style={{ width: 16, height: 16 }} />
+                {t('scanNetwork') ?? 'Scan réseau'}
+              </button>
               <button onClick={openCreate} style={btnPrimary}>
                 <Plus style={{ width: 16, height: 16 }} />
                 {t('addPrinter')}
@@ -570,7 +626,7 @@ export default function Printers() {
                                 fontWeight: 600,
                               }}
                             >
-                              Par défaut
+                              {t('printerDefault')}
                             </span>
                           )}
                         </div>
@@ -588,7 +644,8 @@ export default function Printers() {
                           {printer.documentTypes.join(', ')}
                           {printer.lastSeenAt && (
                             <span style={{ marginLeft: 8 }}>
-                              · Vu {new Date(printer.lastSeenAt).toLocaleDateString('fr-FR')}
+                              · {t('printerLastSeen')}{' '}
+                              {new Date(printer.lastSeenAt).toLocaleDateString('fr-FR')}
                             </span>
                           )}
                         </div>
@@ -613,7 +670,7 @@ export default function Printers() {
                       <button
                         onClick={() => handleDelete(printer)}
                         style={btnIcon}
-                        title="Supprimer"
+                        title={t('deletePrinter')}
                       >
                         <Trash2 style={{ width: 16, height: 16, color: '#ef4444' }} />
                       </button>
@@ -783,7 +840,193 @@ export default function Printers() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Network Discovery Modal */}
+      {showDiscovery && (
+        <Modal
+          isOpen={showDiscovery}
+          title={t('scanNetwork')}
+          onClose={() => {
+            setShowDiscovery(false);
+            setIsScanning(false);
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Subnet input + scan button */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontWeight: 600,
+                    marginBottom: 4,
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {t('networkSubnet')}
+                </label>
+                <input
+                  type="text"
+                  value={discoverySubnet}
+                  onChange={(e) => setDiscoverySubnet(e.target.value)}
+                  placeholder="192.168.1"
+                  disabled={isScanning}
+                  style={inputStyle}
+                />
+              </div>
+              <button
+                onClick={handleScan}
+                disabled={isScanning}
+                style={{ ...btnPrimary, opacity: isScanning ? 0.6 : 1, whiteSpace: 'nowrap' }}
+              >
+                {isScanning ? (
+                  <Loader2
+                    style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }}
+                  />
+                ) : (
+                  <ScanLine style={{ width: 16, height: 16 }} />
+                )}
+                {isScanning ? t('scanning') : t('startScan')}
+              </button>
+            </div>
+
+            {/* Info note */}
+            <div
+              style={{
+                fontSize: '0.8125rem',
+                color: '#64748b',
+                background: '#f8fafc',
+                borderRadius: '0.5rem',
+                padding: '0.625rem 0.75rem',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <strong>QZ Tray</strong> {t('qztrayDiscoveryNote')} <strong>HTTP probe</strong>{' '}
+              {t('httpProbeNote')}
+            </div>
+
+            {/* Results */}
+            {isScanning && discovered.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>
+                <Loader2
+                  style={{
+                    width: 32,
+                    height: 32,
+                    margin: '0 auto 0.5rem',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                />
+                <div>{t('scanningNetwork')}</div>
+              </div>
+            )}
+
+            {!isScanning && discovered.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>
+                <Printer style={{ width: 36, height: 36, margin: '0 auto 0.5rem', opacity: 0.4 }} />
+                <div>{t('noDiscoveredPrinters')}</div>
+              </div>
+            )}
+
+            {discovered.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  maxHeight: 340,
+                  overflowY: 'auto',
+                }}
+              >
+                {discovered.map((p, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.75rem 1rem',
+                      background: '#fff',
+                      borderRadius: '0.625rem',
+                      border: '1px solid #e2e8f0',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '0.5rem',
+                          background:
+                            p.discoveryMethod === 'qztray'
+                              ? '#f0fdf4'
+                              : p.discoveryMethod === 'webusb'
+                                ? '#eff6ff'
+                                : '#fefce8',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {p.connectionType === 'usb' ? (
+                          <Usb
+                            style={{
+                              width: 18,
+                              height: 18,
+                              color: p.discoveryMethod === 'webusb' ? '#3b82f6' : '#22c55e',
+                            }}
+                          />
+                        ) : (
+                          <Wifi style={{ width: 18, height: 18, color: '#f59e0b' }} />
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}>
+                          {p.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          {BRAND_OPTIONS.find((b) => b.value === p.brand)?.label ?? p.brand}
+                          {p.ip ? ` · ${p.ip}:${p.port}` : ''}
+                          {' · '}
+                          <span
+                            style={{
+                              padding: '1px 6px',
+                              borderRadius: 8,
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              background:
+                                p.discoveryMethod === 'qztray'
+                                  ? '#dcfce7'
+                                  : p.discoveryMethod === 'webusb'
+                                    ? '#dbeafe'
+                                    : '#fef9c3',
+                              color:
+                                p.discoveryMethod === 'qztray'
+                                  ? '#16a34a'
+                                  : p.discoveryMethod === 'webusb'
+                                    ? '#2563eb'
+                                    : '#b45309',
+                            }}
+                          >
+                            {p.discoveryMethod}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleAddDiscovered(p)}
+                      style={{ ...btnPrimary, padding: '0.375rem 0.875rem', fontSize: '0.8125rem' }}
+                    >
+                      <Plug style={{ width: 14, height: 14 }} />
+                      {t('connectPrinter')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Add / Edit Modal */}
       {showModal && (
         <Modal
           isOpen={showModal}
@@ -795,6 +1038,7 @@ export default function Printers() {
         >
           <PrinterForm
             printer={editingPrinter ?? undefined}
+            seed={discoveredSeed}
             isLoading={createMutation.isPending || updateMutation.isPending}
             onSubmit={(data) => {
               if (editingPrinter) {

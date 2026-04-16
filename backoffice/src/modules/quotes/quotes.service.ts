@@ -30,6 +30,26 @@ export class QuotesService {
     };
   }
 
+  async getAggregates(
+    filters?: QuoteFilters,
+  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+    const body: any = {};
+    if (filters?.status) body.status = filters.status;
+    if (filters?.customerId) body.customerId = filters.customerId;
+    if (filters?.supplierId) body.supplierId = filters.supplierId;
+    if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
+    if (filters?.dateTo) body.dateTo = filters.dateTo;
+    if (filters?.search) body.search = filters.search;
+
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    if (filters?.direction) queryParams.direction = filters.direction;
+
+    const response = await apiClient.post<any>(API_ROUTES.QUOTES.AGGREGATES, body, {
+      params: queryParams,
+    });
+    return (response.data as any) || { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+  }
+
   async getById(id: number): Promise<QuoteWithDetails> {
     const response = await apiClient.get<any>(API_ROUTES.QUOTES.DETAIL(id));
     return QuoteWithDetails.fromApiResponse(response.data);

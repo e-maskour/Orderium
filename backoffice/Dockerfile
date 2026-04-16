@@ -13,8 +13,10 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
-COPY shared/ui /shared/ui
-COPY shared/components /shared/components
+# Copy only the package.json of the local workspace dep — pnpm needs it for
+# resolution but NOT the source files. This keeps the install layer cached
+# even when shared/ source code changes.
+COPY shared/ui/package.json /shared/ui/package.json
 
 COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 
@@ -22,6 +24,10 @@ COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 # packages are added locally (pnpm add) without rebuilding the image first.
 RUN --mount=type=cache,id=pnpm-backoffice-dev,target=/root/.local/share/pnpm/store \
   pnpm install --no-frozen-lockfile
+
+# Copy source AFTER install so changes to shared code don't bust the install layer
+COPY shared/ui /shared/ui
+COPY shared/components /shared/components
 
 COPY backoffice/ .
 
@@ -34,7 +40,7 @@ FROM node:20-alpine AS dependencies
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.5.2 --activate
 
-COPY shared/ui /shared/ui
+COPY shared/ui/package.json /shared/ui/package.json
 COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 
 RUN --mount=type=cache,id=pnpm-backoffice,target=/root/.local/share/pnpm/store \

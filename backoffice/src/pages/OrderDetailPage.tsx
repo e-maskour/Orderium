@@ -764,7 +764,7 @@ export default function OrderDetailPage() {
         <div className="ord-detail-grid">
           {/* ═══ LEFT COLUMN ═══════════════════════════════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Note */}
+            {/* Client Note */}
             {order.notes && (
               <div
                 style={{
@@ -774,13 +774,24 @@ export default function OrderDetailPage() {
                   padding: '0.75rem 1rem',
                   fontSize: '0.875rem',
                   color: '#92400e',
-                  display: 'flex',
-                  gap: '0.5rem',
-                  alignItems: 'flex-start',
                 }}
               >
-                <span style={{ fontSize: '1rem', flexShrink: 0 }}>📝</span>
-                <span>{order.notes}</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                    marginBottom: '0.375rem',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <span style={{ fontSize: '0.875rem' }}>📝</span>
+                  {isAr ? 'ملاحظة العميل' : 'Note du client'}
+                </div>
+                <span style={{ lineHeight: 1.5 }}>{order.notes}</span>
               </div>
             )}
 

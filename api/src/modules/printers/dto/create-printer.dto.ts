@@ -28,7 +28,7 @@ const BRANDS: PrinterBrand[] = [
   'browser',
 ];
 const CONN: ConnectionType[] = ['wifi', 'usb', 'network', 'browser'];
-const WIDTHS: PaperWidth[] = [58, 80, 210];
+const WIDTHS: PaperWidth[] = [80, 148];
 const DOC_TYPES: DocumentType[] = [
   'receipt',
   'bl',

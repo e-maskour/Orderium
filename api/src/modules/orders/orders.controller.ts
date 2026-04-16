@@ -105,6 +105,43 @@ export class OrdersController {
     });
   }
 
+  @Post('filter/aggregates')
+  @ApiOperation({ summary: 'Get financial aggregates for filtered orders' })
+  @ApiResponse({ status: 200, description: 'Order aggregates retrieved' })
+  async getFilterAggregates(
+    @Body() filterDto: FilterOrdersDto,
+    @Query('direction') direction?: string,
+  ) {
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const startDateObj = filterDto.startDate
+      ? new Date(filterDto.startDate)
+      : undefined;
+    const endDateObj = filterDto.endDate
+      ? new Date(filterDto.endDate)
+      : undefined;
+
+    const aggregates = await this.ordersService.getOrderAggregates(
+      startDateObj,
+      endDateObj,
+      filterDto.deliveryStatus,
+      filterDto.orderNumber,
+      filterDto.customerId,
+      filterDto.deliveryPersonId,
+      filterDto.originType,
+      filterDto.supplierId,
+      directionValue,
+      filterDto.status,
+      filterDto.search,
+    );
+
+    return ApiRes(ORD.AGGREGATES, aggregates);
+  }
+
   @Get()
   @Serialize(OrderListResponseDto)
   @ApiOperation({ summary: 'Get all orders with filtering' })

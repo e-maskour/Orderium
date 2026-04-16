@@ -13,8 +13,10 @@ import { LogPrintJobDto } from './dto/log-print-job.dto';
 import { QueryPrintJobsDto } from './dto/query-print-jobs.dto';
 import { ApiRes } from '../../common/api-response';
 import { PJB } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Print Jobs')
+@PortalRoute()
 @Controller('print-jobs')
 export class PrintJobsController {
   private readonly logger = new Logger(PrintJobsController.name);

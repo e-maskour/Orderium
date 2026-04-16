@@ -106,7 +106,7 @@ export default function DocumentListPage({
   // Fetch partners for autocomplete
   const { data: partnersData } = useQuery({
     queryKey: ['partners'],
-    queryFn: partnersService.getAll,
+    queryFn: () => partnersService.getAll(),
   });
 
   const isVente = direction === 'vente';
@@ -141,6 +141,23 @@ export default function DocumentListPage({
         pageSize: pageSize,
       }),
   });
+
+  const { data: documentAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 } } =
+    useQuery({
+      queryKey: ['documents-aggregates', documentType, direction, JSON.stringify(appliedFilters)],
+      queryFn: () =>
+        documentsService.getAggregates(documentType, direction, {
+          search: appliedFilters.search,
+          status: appliedFilters.status,
+          partnerId: appliedFilters.partnerId,
+          dateFrom: appliedFilters.dateRange.start
+            ? appliedFilters.dateRange.start.toISOString().split('T')[0]
+            : undefined,
+          dateTo: appliedFilters.dateRange.end
+            ? appliedFilters.dateRange.end.toISOString().split('T')[0]
+            : undefined,
+        }),
+    });
 
   const documents = documentsData.documents || [];
   const totalCount = documentsData.totalCount || 0;
@@ -209,7 +226,7 @@ export default function DocumentListPage({
           await refetch();
         } catch (error: any) {
           console.error('Error deleting document:', error);
-          toastDeleteError(error, t);
+          toastDeleteError(error, t as (key: string) => string);
         }
       },
       {
@@ -734,6 +751,7 @@ export default function DocumentListPage({
             setPageSize(newSize);
             setCurrentPage(1);
           }}
+          aggregates={documentAggregates}
         />
       </div>
 

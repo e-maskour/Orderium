@@ -76,6 +76,33 @@ export class QuotesController {
     });
   }
 
+  @Post('aggregates')
+  @ApiOperation({ summary: 'Get financial aggregates for filtered quotes' })
+  @ApiResponse({ status: 200, description: 'Quote aggregates retrieved' })
+  async getAggregates(
+    @Body() filterDto: FilterQuotesDto,
+    @Query('direction') direction?: string,
+  ) {
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+
+    const aggregates = await this.quotesService.getAggregates(
+      filterDto.search,
+      filterDto.status,
+      filterDto.customerId,
+      filterDto.dateFrom,
+      filterDto.dateTo,
+      filterDto.supplierId,
+      directionValue,
+    );
+
+    return ApiRes(QUO.AGGREGATES, aggregates);
+  }
+
   @Get()
   @Serialize(QuoteListResponseDto)
   @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })

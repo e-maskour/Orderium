@@ -56,6 +56,7 @@ export function usePrinter() {
         ip: printer?.ip,
         port: printer?.port ?? 8008,
         paperWidth: (printer?.paperWidth ?? 80) as PrinterConfig['paperWidth'],
+        name: printer?.name,
       };
 
       const result = await printReceipt(config, data);

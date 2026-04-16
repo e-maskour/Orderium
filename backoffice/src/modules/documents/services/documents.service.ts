@@ -133,6 +133,50 @@ export class DocumentsService {
     return { documents: [], count: 0, totalCount: 0 };
   }
 
+  async getAggregates(
+    type: DocumentType,
+    direction: DocumentDirection,
+    filters?: DocumentFilters,
+  ): Promise<{ totalAmount: number; totalPaid: number; totalRemaining: number }> {
+    const isVente = direction === 'vente';
+    const empty = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 };
+
+    if (type === 'facture') {
+      return invoicesService.getAggregates({
+        search: filters?.search,
+        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
+        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
+        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
+        dateFrom: filters?.dateFrom,
+        dateTo: filters?.dateTo,
+      });
+    } else if (type === 'devis') {
+      return quotesService.getAggregates({
+        search: filters?.search,
+        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
+        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
+        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
+        dateFrom: filters?.dateFrom,
+        dateTo: filters?.dateTo,
+      });
+    } else if (type === 'bon_livraison') {
+      return ordersService.getAggregates(
+        filters?.search,
+        filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
+        filters?.dateTo ? new Date(filters.dateTo) : undefined,
+        'BACKOFFICE',
+        undefined,
+        undefined,
+        isVente ? 'VENTE' : 'ACHAT',
+        filters?.status !== 'all' ? (filters?.status as string[] | undefined) : undefined,
+      );
+    }
+
+    return empty;
+  }
+
   async validateDocument(type: DocumentType, id: number): Promise<void> {
     if (type === 'facture') {
       await invoicesService.validate(id);

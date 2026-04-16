@@ -200,6 +200,23 @@ export default function Orders() {
       ),
   });
 
+  const { data: orderAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 } } = useQuery({
+    queryKey: ['orders-aggregates', JSON.stringify(appliedFilters)],
+    queryFn: () =>
+      ordersService.getAggregates(
+        appliedFilters.search,
+        getDateRange.start,
+        getDateRange.end,
+        appliedFilters.originType === 'all'
+          ? ['CLIENT_POS', 'ADMIN_POS']
+          : appliedFilters.originType,
+        appliedFilters.deliveryStatus?.length > 0 ? appliedFilters.deliveryStatus : undefined,
+        appliedFilters.orderNumber,
+        undefined,
+        appliedFilters.orderStatus?.length > 0 ? appliedFilters.orderStatus : undefined,
+      ),
+  });
+
   const orders = ordersData.orders || [];
   const orderStatusCounts = ordersData.orderStatusCounts || {};
   const totalCount = ordersData.totalCount || 0;
@@ -1320,6 +1337,68 @@ export default function Orders() {
         </Sidebar>
 
         {/* Orders Content */}
+        {/* Aggregates summary bar — shown on all screen sizes above both lists */}
+        {orders.length > 0 && (
+          <div
+            style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}
+          >
+            {[
+              {
+                label: t('totalAmount'),
+                value: orderAggregates.totalAmount,
+                color: '#1e293b',
+                bg: '#f8fafc',
+                border: '#e2e8f0',
+                bold: true,
+              },
+              {
+                label: t('alreadyPaid'),
+                value: orderAggregates.totalPaid,
+                color: '#15803d',
+                bg: '#f0fdf4',
+                border: '#bbf7d0',
+                bold: false,
+              },
+              {
+                label: t('remainingToPay'),
+                value: orderAggregates.totalRemaining,
+                color: orderAggregates.totalRemaining > 0 ? '#b91c1c' : '#64748b',
+                bg: orderAggregates.totalRemaining > 0 ? '#fef2f2' : '#f8fafc',
+                border: orderAggregates.totalRemaining > 0 ? '#fecaca' : '#e2e8f0',
+                bold: false,
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 0.875rem',
+                  background: stat.bg,
+                  border: `1.5px solid ${stat.border}`,
+                  borderRadius: '0.625rem',
+                  minWidth: '10rem',
+                }}
+              >
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                  {stat.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: stat.bold ? 700 : 600,
+                    color: stat.color,
+                    marginLeft: 'auto',
+                  }}
+                >
+                  {formatAmount(stat.value, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Mobile card list — always rendered, handles loading internally */}
         <div className="responsive-table-mobile">
           <MobileList
@@ -1497,269 +1576,271 @@ export default function Orders() {
             </div>
           </div>
         ) : (
-          <div
-            className="responsive-table-desktop"
-            style={{
-              flex: 1,
-              backgroundColor: '#ffffff',
-              borderRadius: '0.875rem',
-              border: '1px solid #e2e8f0',
-              overflow: 'hidden',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
-            }}
-          >
-            <DataTable
-              className="ord-datatable"
-              value={orders}
-              lazy
-              scrollable
-              totalRecords={totalCount}
-              first={(currentPage - 1) * pageSize}
-              onPage={(e: DataTablePageEvent) => {
-                setCurrentPage(Math.floor(e.first / e.rows) + 1);
-                setPageSize(e.rows);
+          <>
+            <div
+              className="responsive-table-desktop"
+              style={{
+                flex: 1,
+                backgroundColor: '#ffffff',
+                borderRadius: '0.875rem',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
               }}
-              selection={orders.filter((o: any) => selectedOrders.includes(o.id))}
-              onSelectionChange={(e) => setSelectedOrders((e.value as any[]).map((o) => o.id))}
-              selectionMode="checkbox"
-              onRowClick={(e) => {
-                const target = e.originalEvent.target as HTMLElement;
-                if (
-                  target.closest('button') ||
-                  target.closest('a') ||
-                  target.closest('.p-checkbox')
-                )
-                  return;
-                navigate(`/orders/${e.data.id}`);
-              }}
-              rowClassName={() => 'ord-row-clickable'}
-              dataKey="id"
-              paginator
-              paginatorPosition="top"
-              rows={pageSize}
-              rowsPerPageOptions={[10, 25, 50, 100]}
-              removableSort
-              loading={ordersLoading}
-              emptyMessage={t('noOrdersFound')}
-              paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-              currentPageReportTemplate={t('pageReportTemplate')}
             >
-              <Column
-                selectionMode="multiple"
-                headerStyle={{ width: '2.5rem' }}
-                style={{ width: '2.5rem', minWidth: '2.5rem' }}
-              />
-              <Column
-                header={t('orderNumber')}
-                sortable
-                sortField="orderNumber"
-                style={{ minWidth: '10rem' }}
-                body={(order: any) => (
-                  <div>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
-                      {order.displayOrderNumber}
-                    </span>
-                    {order.receiptNumber && (
-                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
-                        {order.receiptNumber}
-                      </p>
-                    )}
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
-                      {formatOrderDate(order.dateCreated)}
-                    </p>
-                  </div>
-                )}
-              />
-              <Column
-                header={t('status')}
-                style={{ minWidth: '9rem' }}
-                body={(order: any) => {
-                  const osb = getOrderStatusBadge(order.status);
-                  const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                      <span
-                        style={{
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '0.5rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: osb.bg,
-                          color: osb.color,
-                          border: `1px solid ${osb.border}`,
-                          whiteSpace: 'nowrap',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                        }}
-                      >
-                        <span style={{ fontSize: '0.8rem' }}>{osb.icon}</span>
-                        {osb.label}
+              <DataTable
+                className="ord-datatable"
+                value={orders}
+                lazy
+                scrollable
+                totalRecords={totalCount}
+                first={(currentPage - 1) * pageSize}
+                onPage={(e: DataTablePageEvent) => {
+                  setCurrentPage(Math.floor(e.first / e.rows) + 1);
+                  setPageSize(e.rows);
+                }}
+                selection={orders.filter((o: any) => selectedOrders.includes(o.id))}
+                onSelectionChange={(e) => setSelectedOrders((e.value as any[]).map((o) => o.id))}
+                selectionMode="checkbox"
+                onRowClick={(e) => {
+                  const target = e.originalEvent.target as HTMLElement;
+                  if (
+                    target.closest('button') ||
+                    target.closest('a') ||
+                    target.closest('.p-checkbox')
+                  )
+                    return;
+                  navigate(`/orders/${e.data.id}`);
+                }}
+                rowClassName={() => 'ord-row-clickable'}
+                dataKey="id"
+                paginator
+                paginatorPosition="top"
+                rows={pageSize}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                removableSort
+                loading={ordersLoading}
+                emptyMessage={t('noOrdersFound')}
+                paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate={t('pageReportTemplate')}
+              >
+                <Column
+                  selectionMode="multiple"
+                  headerStyle={{ width: '2.5rem' }}
+                  style={{ width: '2.5rem', minWidth: '2.5rem' }}
+                />
+                <Column
+                  header={t('orderNumber')}
+                  sortable
+                  sortField="orderNumber"
+                  style={{ minWidth: '10rem' }}
+                  body={(order: any) => (
+                    <div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
+                        {order.displayOrderNumber}
                       </span>
-                    </div>
-                  );
-                }}
-              />
-              <Column
-                header={t('orderSource')}
-                style={{ minWidth: '8rem' }}
-                body={(order: any) => {
-                  const sb = getSourceBadge(order);
-                  return (
-                    <span
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        backgroundColor: sb.bg,
-                        color: sb.color,
-                        border: `1px solid ${sb.border}`,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {sb.icon}
-                      {sb.label}
-                    </span>
-                  );
-                }}
-              />
-              <Column
-                header={t('customer')}
-                sortable
-                sortField="customerName"
-                style={{ minWidth: '14rem' }}
-                body={(order: any) => {
-                  const initial = order.customerName?.trim()?.[0]?.toUpperCase() || '?';
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div
-                        style={{
-                          width: '2rem',
-                          height: '2rem',
-                          background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)',
-                          borderRadius: '0.5rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          color: '#ffffff',
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        {initial}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            color: '#1e293b',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            margin: 0,
-                          }}
-                        >
-                          {order.customerName}
+                      {order.receiptNumber && (
+                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                          {order.receiptNumber}
                         </p>
-                        <a
-                          href={`tel:${order.customerPhone}`}
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#235ae4',
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.125rem',
-                            textDecoration: 'none',
-                          }}
-                        >
-                          <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
-                          {order.customerPhone}
-                        </a>
-                      </div>
+                      )}
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                        {formatOrderDate(order.dateCreated)}
+                      </p>
                     </div>
-                  );
-                }}
-              />
-              <Column
-                header={t('total')}
-                sortable
-                sortField="total"
-                style={{ minWidth: '8rem' }}
-                body={(order: any) => (
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
-                    {formatAmount(order.total, 2)}{' '}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
-                  </span>
-                )}
-              />
-              <Column
-                header={t('paidAmount')}
-                style={{ minWidth: '9rem' }}
-                body={(order: any) => (
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
-                    {formatAmount(order.paidAmount ?? 0, 2)}{' '}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
-                  </span>
-                )}
-              />
-              <Column
-                header={t('remainingAmount')}
-                style={{ minWidth: '11rem' }}
-                body={(order: any) => {
-                  const remaining = order.remainingAmount ?? 0;
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span
-                        style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: remaining > 0 ? '#dc2626' : '#047857',
-                        }}
-                      >
-                        {formatAmount(remaining, 2)}{' '}
-                        <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>
-                          {t('currency')}
-                        </span>
-                      </span>
-                      {remaining > 0 && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openPaymentModal(order.id);
-                          }}
+                  )}
+                />
+                <Column
+                  header={t('status')}
+                  style={{ minWidth: '9rem' }}
+                  body={(order: any) => {
+                    const osb = getOrderStatusBadge(order.status);
+                    const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <span
                           style={{
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.7rem',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '0.5rem',
+                            fontSize: '0.75rem',
                             fontWeight: 600,
-                            cursor: 'pointer',
-                            backgroundColor: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
+                            backgroundColor: osb.bg,
+                            color: osb.color,
+                            border: `1px solid ${osb.border}`,
+                            whiteSpace: 'nowrap',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.25rem',
                           }}
                         >
-                          <CreditCard style={{ width: '0.7rem', height: '0.7rem' }} />
-                          {t('pay')}
-                        </button>
-                      )}
-                    </div>
-                  );
-                }}
-              />
-            </DataTable>
-          </div>
+                          <span style={{ fontSize: '0.8rem' }}>{osb.icon}</span>
+                          {osb.label}
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('orderSource')}
+                  style={{ minWidth: '8rem' }}
+                  body={(order: any) => {
+                    const sb = getSourceBadge(order);
+                    return (
+                      <span
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          backgroundColor: sb.bg,
+                          color: sb.color,
+                          border: `1px solid ${sb.border}`,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {sb.icon}
+                        {sb.label}
+                      </span>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('customer')}
+                  sortable
+                  sortField="customerName"
+                  style={{ minWidth: '14rem' }}
+                  body={(order: any) => {
+                    const initial = order.customerName?.trim()?.[0]?.toUpperCase() || '?';
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div
+                          style={{
+                            width: '2rem',
+                            height: '2rem',
+                            background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)',
+                            borderRadius: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          {initial}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <p
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              color: '#1e293b',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              margin: 0,
+                            }}
+                          >
+                            {order.customerName}
+                          </p>
+                          <a
+                            href={`tel:${order.customerPhone}`}
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#235ae4',
+                              fontWeight: 500,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.125rem',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
+                            {order.customerPhone}
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('total')}
+                  sortable
+                  sortField="total"
+                  style={{ minWidth: '8rem' }}
+                  body={(order: any) => (
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
+                      {formatAmount(order.total, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                    </span>
+                  )}
+                />
+                <Column
+                  header={t('paidAmount')}
+                  style={{ minWidth: '9rem' }}
+                  body={(order: any) => (
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
+                      {formatAmount(order.paidAmount ?? 0, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
+                    </span>
+                  )}
+                />
+                <Column
+                  header={t('remainingAmount')}
+                  style={{ minWidth: '11rem' }}
+                  body={(order: any) => {
+                    const remaining = order.remainingAmount ?? 0;
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: remaining > 0 ? '#dc2626' : '#047857',
+                          }}
+                        >
+                          {formatAmount(remaining, 2)}{' '}
+                          <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>
+                            {t('currency')}
+                          </span>
+                        </span>
+                        {remaining > 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPaymentModal(order.id);
+                            }}
+                            style={{
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              backgroundColor: '#eff6ff',
+                              color: '#1d4ed8',
+                              border: '1px solid #bfdbfe',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                          >
+                            <CreditCard style={{ width: '0.7rem', height: '0.7rem' }} />
+                            {t('pay')}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+              </DataTable>
+            </div>
+          </>
         )}
       </div>
 

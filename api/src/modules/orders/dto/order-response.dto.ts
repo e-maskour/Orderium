@@ -141,6 +141,10 @@ export class OrderListResponseDto {
   @Expose()
   isValidated: boolean;
 
+  @ApiPropertyOptional()
+  @Expose()
+  notes: string | null;
+
   @ApiProperty()
   @Expose()
   dateCreated: Date;
@@ -181,10 +185,6 @@ export class OrderDetailResponseDto extends OrderListResponseDto {
   @ApiPropertyOptional()
   @Expose()
   amountDueDate: Date | null;
-
-  @ApiPropertyOptional()
-  @Expose()
-  notes: string | null;
 
   @ApiPropertyOptional()
   @Expose()

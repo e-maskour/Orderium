@@ -8,7 +8,7 @@ export class Printer implements IPrinter {
   model: string | null;
   ip: string | null;
   port: number;
-  paperWidth: 58 | 80 | 210;
+  paperWidth: 80 | 148;
   isDefault: boolean;
   documentTypes: string[];
   lastSeenAt: string | null;

@@ -11,7 +11,7 @@ import { PrintJob } from './print-job.entity';
 
 export type PrinterBrand = 'epson' | 'star' | 'generic' | 'qztray' | 'browser';
 export type ConnectionType = 'wifi' | 'usb' | 'network' | 'browser';
-export type PaperWidth = 58 | 80 | 210;
+export type PaperWidth = 80 | 148;
 export type DocumentType =
   | 'receipt'
   | 'bl'

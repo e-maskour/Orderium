@@ -9,11 +9,11 @@
 
 export interface PrinterConfig {
     id?: string;
-    brand: 'epson' | 'star' | 'qztray' | 'browser';
+    brand: 'epson' | 'star' | 'generic' | 'qztray' | 'browser';
     ip?: string;
     port?: number;
     name?: string;
-    paperWidth?: 58 | 80 | 210;
+    paperWidth?: 80 | 148;
 }
 
 export interface ReceiptLine {
@@ -97,7 +97,7 @@ async function viaEpsonEpos(config: PrinterConfig, data: ReceiptData): Promise<v
                 { crypto: false, buffer: false },
                 (printer: any, code: string) => {
                     if (code !== 'OK') return reject(new Error(`Epson erreur (${code})`));
-                    const W = config.paperWidth === 58 ? 32 : 48;
+                    const W = config.paperWidth === 148 ? 64 : 48;
                     const cmds = buildEscPos(data, W);
                     const encoder = new TextEncoder();
                     cmds.forEach(cmd => printer.addRaw(encoder.encode(cmd)));
@@ -117,7 +117,7 @@ async function viaStarWebPRNT(config: PrinterConfig, data: ReceiptData): Promise
         throw new Error('Star SDK non chargé');
 
     const { StarWebPRNT } = window as any;
-    const W = config.paperWidth === 58 ? 32 : 48;
+    const W = config.paperWidth === 148 ? 64 : 48;
     const b = new StarWebPRNT.StarWebPRNTBuilder();
 
     let req = b.createInitializationElement();
@@ -150,7 +150,7 @@ async function viaQzTray(config: PrinterConfig, data: ReceiptData): Promise<void
     if (!qz) throw new Error('QZ Tray non disponible');
     if (!qz.websocket.isActive()) await qz.websocket.connect();
 
-    const W = config.paperWidth === 58 ? 32 : 48;
+    const W = config.paperWidth === 148 ? 64 : 48;
     const name = config.name ?? (await qz.printers.getDefault());
     const cfg = qz.configs.create(name);
     const cmds = buildEscPos(data, W).map(d => ({ type: 'raw', format: 'plain', data: d }));
@@ -172,7 +172,7 @@ export async function printReceipt(
     if (config.brand === 'star' && config.ip)
         strategies.push({ name: 'star-webprnt', fn: () => viaStarWebPRNT(config, data) });
 
-    if (config.brand === 'qztray')
+    if (config.brand === 'qztray' || config.brand === 'generic')
         strategies.push({ name: 'qztray', fn: () => viaQzTray(config, data) });
 
     // Always add browser as final fallback
@@ -197,6 +197,150 @@ export async function printReceipt(
     }
 
     return { method: 'none', status: 'failed', durationMs: Date.now() - started };
+}
+
+// ── Network discovery ─────────────────────────────────────
+export interface DiscoveredPrinter {
+    /** Display name */
+    name: string;
+    /** Detected brand */
+    brand: PrinterConfig['brand'];
+    /** Connection type inferred from discovery method */
+    connectionType: 'wifi' | 'usb' | 'network';
+    /** IP address (wifi/network printers) */
+    ip?: string;
+    /** Port the printer was found on */
+    port?: number;
+    /** How this printer was found */
+    discoveryMethod: 'qztray' | 'webusb' | 'http-probe';
+    /** Raw metadata */
+    meta?: Record<string, string | number>;
+}
+
+/**
+ * Probe a single IP+port with a short timeout.
+ * Returns true if the server responded (HTTP 2xx/4xx — anything that isn't a network error).
+ */
+async function probeHttp(ip: string, port: number, path: string, timeoutMs = 1500): Promise<boolean> {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        await fetch(`http://${ip}:${port}${path}`, {
+            method: 'GET',
+            signal: controller.signal,
+            mode: 'no-cors', // avoids CORS rejection — we just need to know it's alive
+        });
+        return true; // 'no-cors' opaque response = server responded
+    } catch {
+        return false;
+    } finally {
+        clearTimeout(tid);
+    }
+}
+
+/**
+ * Discover printers on the local network.
+ *
+ * Three strategies run in parallel:
+ *   1. QZ Tray   — lists all system printers (USB, network, etc.) if installed
+ *   2. WebUSB    — enumerate already-permitted USB devices (no dialog)
+ *   3. HTTP probe — try to reach Epson ePOS (port 8008) and Star WebPRNT (port 80)
+ *                   on the provided `subnet` (e.g. "192.168.1") for hosts .1–.254
+ *
+ * @param subnet  e.g. "192.168.1"  — only used for HTTP probing
+ * @param onProgress  called with each newly discovered printer in real-time
+ */
+export async function discoverPrinters(
+    subnet = '',
+    onProgress?: (printer: DiscoveredPrinter) => void,
+): Promise<DiscoveredPrinter[]> {
+    const results: DiscoveredPrinter[] = [];
+
+    const emit = (p: DiscoveredPrinter) => {
+        results.push(p);
+        onProgress?.(p);
+    };
+
+    // ── 1. QZ Tray ──
+    try {
+        const qz = (window as any).qz;
+        if (qz) {
+            if (!qz.websocket.isActive()) await qz.websocket.connect();
+            const names: string[] = await qz.printers.find();
+            for (const name of names) {
+                emit({
+                    name,
+                    brand: 'qztray',
+                    connectionType: 'usb',
+                    discoveryMethod: 'qztray',
+                });
+            }
+        }
+    } catch {
+        // QZ Tray not available — continue
+    }
+
+    // ── 2. WebUSB (already-permitted devices, no dialog) ──
+    try {
+        if (typeof navigator !== 'undefined' && 'usb' in navigator) {
+            const devices = await (navigator as any).usb.getDevices();
+            for (const dev of devices) {
+                emit({
+                    name: dev.productName || `USB ${dev.vendorId}:${dev.productId}`,
+                    brand: 'generic',
+                    connectionType: 'usb',
+                    discoveryMethod: 'webusb',
+                    meta: { vendorId: dev.vendorId, productId: dev.productId },
+                });
+            }
+        }
+    } catch {
+        // WebUSB not available
+    }
+
+    // ── 3. HTTP probe on subnet ──
+    if (subnet) {
+        // Probe Epson ePOS (8008) and Star WebPRNT (80) in parallel batches
+        const EPSON_PATH = '/cgi-bin/epos/service';
+        const STAR_PATH = '/StarWebPRNT/GetStatus';
+        const BATCH = 20; // concurrent probes
+
+        const hosts = Array.from({ length: 254 }, (_, i) => `${subnet}.${i + 1}`);
+
+        for (let i = 0; i < hosts.length; i += BATCH) {
+            const batch = hosts.slice(i, i + BATCH);
+            await Promise.all(
+                batch.map(async (ip) => {
+                    const [epsonOk, starOk] = await Promise.all([
+                        probeHttp(ip, 8008, EPSON_PATH),
+                        probeHttp(ip, 80, STAR_PATH),
+                    ]);
+                    if (epsonOk) {
+                        emit({
+                            name: `Epson @ ${ip}`,
+                            brand: 'epson',
+                            connectionType: 'wifi',
+                            ip,
+                            port: 8008,
+                            discoveryMethod: 'http-probe',
+                        });
+                    }
+                    if (starOk) {
+                        emit({
+                            name: `Star @ ${ip}`,
+                            brand: 'star',
+                            connectionType: 'wifi',
+                            ip,
+                            port: 80,
+                            discoveryMethod: 'http-probe',
+                        });
+                    }
+                }),
+            );
+        }
+    }
+
+    return results;
 }
 
 // ── Platform detection ────────────────────────────────────

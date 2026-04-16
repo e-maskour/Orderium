@@ -1,94 +1,51 @@
-import { type ReactNode, useCallback, createElement, useSyncExternalStore } from 'react';
-import {
-    CheckCircle,
-    XCircle,
-    AlertTriangle,
-    Info,
-    Loader2,
-    X,
-} from 'lucide-react';
+import { type ReactNode } from 'react';
+import { Toast as PrimeToast } from 'primereact/toast';
+import type { ToastMessage } from 'primereact/toast';
 
 /* ================================================================
-   Toast State Manager (framework-agnostic singleton)
+   Types — kept identical to preserve all callers
    ================================================================ */
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading';
 
+/** Kept for back-compat — not used internally by PrimeReact implementation */
 export interface Toast {
     id: string;
     type: ToastType;
     title: string;
     description?: ReactNode;
-    icon?: ReactNode;
-    duration: number | null;
-    button?: { title: string; onClick: () => void };
-    createdAt: number;
-    removing?: boolean;
 }
 
-type Listener = () => void;
+export type ToasterPosition =
+    | 'top-left' | 'top-center' | 'top-right'
+    | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
-let toasts: Toast[] = [];
-const listeners = new Set<Listener>();
-let counter = 0;
+/* ================================================================
+   Singleton PrimeReact Toast ref
+   ================================================================ */
 
-function emit() {
-    listeners.forEach((l) => l());
+let _prime: PrimeToast | null = null;
+const _msgMap = new Map<string, ToastMessage>();
+let _ctr = 0;
+
+function _register(el: PrimeToast | null) {
+    _prime = el;
 }
 
-function generateId(): string {
-    return `toast-${++counter}-${Date.now()}`;
+function _nextId(): string {
+    return `t${++_ctr}`;
 }
 
-function addToast(toast: Toast): string {
-    // Enforce max 3 visible non-error toasts: evict the oldest non-error if over limit
-    const nonErrors = toasts.filter((t) => t.type !== 'error' && !t.removing);
-    if (toast.type !== 'error' && nonErrors.length >= 3) {
-        const oldest = nonErrors[nonErrors.length - 1];
-        toasts = toasts.filter((t) => t.id !== oldest.id);
-    }
-    toasts = [toast, ...toasts];
-    emit();
-
-    if (toast.duration !== null && toast.duration > 0) {
-        setTimeout(() => dismissToast(toast.id), toast.duration);
-    }
-
-    return toast.id;
-}
-
-function dismissToast(id: string) {
-    toasts = toasts.map((t) => (t.id === id ? { ...t, removing: true } : t));
-    emit();
-    setTimeout(() => {
-        toasts = toasts.filter((t) => t.id !== id);
-        emit();
-    }, 300);
-}
-
-function clearAll() {
-    toasts = [];
-    emit();
-}
-
-function updateToast(id: string, updates: Partial<Toast>) {
-    toasts = toasts.map((t) => (t.id === id ? { ...t, ...updates } : t));
-    emit();
-}
-
-/* ── Public Store API ── */
-
-function subscribe(listener: Listener) {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-}
-
-function getSnapshot(): Toast[] {
-    return toasts;
+function _show(msg: ToastMessage): string {
+    const id = msg.id as string;
+    _msgMap.set(id, msg);
+    _prime?.show(msg);
+    return id;
 }
 
 /* ================================================================
-   Imperative toast functions  (the public API)
+   Options — icon kept for back-compat with notify.ts (ignored here,
+   PrimeReact uses its built-in severity icons)
    ================================================================ */
 
 interface ToastOptions {
@@ -107,183 +64,133 @@ interface PromiseMessages<T = unknown> {
     error: string | ((err: unknown) => string);
 }
 
+/* ================================================================
+   Imperative toast API
+   ================================================================ */
+
 export const toast = {
     success(title: string, opts?: ToastOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'success',
-            title,
-            duration: 3000,
-            createdAt: Date.now(),
-            ...opts,
+        const life = opts?.duration === null ? undefined : (opts?.duration ?? 3000);
+        return _show({
+            id: _nextId(),
+            severity: 'success',
+            summary: title,
+            detail: opts?.description,
+            life,
+            sticky: !life,
         });
     },
 
     error(title: string, opts?: ToastOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'error',
-            title,
-            duration: 4000,
-            createdAt: Date.now(),
-            ...opts,
+        const life = opts?.duration === null ? undefined : (opts?.duration ?? 4000);
+        return _show({
+            id: _nextId(),
+            severity: 'error',
+            summary: title,
+            detail: opts?.description,
+            life,
+            sticky: !life,
         });
     },
 
     warning(title: string, opts?: ToastOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'warning',
-            title,
-            duration: 4000,
-            createdAt: Date.now(),
-            ...opts,
+        const life = opts?.duration === null ? undefined : (opts?.duration ?? 4000);
+        return _show({
+            id: _nextId(),
+            severity: 'warn',
+            summary: title,
+            detail: opts?.description,
+            life,
+            sticky: !life,
         });
     },
 
     info(title: string, opts?: ToastOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'info',
-            title,
-            duration: 3000,
-            createdAt: Date.now(),
-            ...opts,
+        const life = opts?.duration === null ? undefined : (opts?.duration ?? 3000);
+        return _show({
+            id: _nextId(),
+            severity: 'info',
+            summary: title,
+            detail: opts?.description,
+            life,
+            sticky: !life,
         });
     },
 
     loading(title: string, opts?: ToastOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'loading',
-            title,
-            duration: null,
-            createdAt: Date.now(),
-            ...opts,
+        return _show({
+            id: _nextId(),
+            severity: 'info',
+            summary: title,
+            detail: opts?.description,
+            sticky: true,
         });
     },
 
     action(title: string, opts: ActionOptions): string {
-        return addToast({
-            id: generateId(),
-            type: 'info',
-            title,
-            duration: null,
-            createdAt: Date.now(),
-            description: opts.description,
-            icon: opts.icon,
-            button: opts.button,
+        return _show({
+            id: _nextId(),
+            severity: 'info',
+            summary: title,
+            detail: opts.description,
+            sticky: true,
         });
     },
 
     promise<T>(promise: Promise<T>, messages: PromiseMessages<T>): Promise<T> {
-        const id = toast.loading(messages.loading);
+        const id = _nextId();
+        const loadingMsg: ToastMessage = { id, severity: 'info', summary: messages.loading, sticky: true };
+        _msgMap.set(id, loadingMsg);
+        _prime?.show(loadingMsg);
+
         return promise.then(
             (data) => {
+                const stored = _msgMap.get(id);
+                if (stored) { _prime?.remove(stored); _msgMap.delete(id); }
                 const msg = typeof messages.success === 'function' ? messages.success(data) : messages.success;
-                updateToast(id, { type: 'success', title: msg, duration: 3000 });
-                setTimeout(() => dismissToast(id), 3000);
+                toast.success(msg);
                 return data;
             },
             (err) => {
+                const stored = _msgMap.get(id);
+                if (stored) { _prime?.remove(stored); _msgMap.delete(id); }
                 const msg = typeof messages.error === 'function' ? messages.error(err) : messages.error;
-                updateToast(id, { type: 'error', title: msg, duration: 4000 });
-                setTimeout(() => dismissToast(id), 4000);
+                toast.error(msg);
                 throw err;
             },
         );
     },
 
-    dismiss: dismissToast,
-    clear: clearAll,
+    dismiss(id: string) {
+        const m = _msgMap.get(id);
+        if (m) {
+            _prime?.remove(m);
+            _msgMap.delete(id);
+        }
+    },
+
+    clear() {
+        _prime?.clear();
+        _msgMap.clear();
+    },
 };
 
 /* ================================================================
-   Default Icons per type
+   <Toaster /> — drop-in replacement, same props as before
    ================================================================ */
-
-const DEFAULT_ICONS: Record<ToastType, ReactNode> = {
-    success: createElement(CheckCircle, { size: 18, strokeWidth: 2 }),
-    error: createElement(XCircle, { size: 18, strokeWidth: 2 }),
-    warning: createElement(AlertTriangle, { size: 18, strokeWidth: 2 }),
-    info: createElement(Info, { size: 18, strokeWidth: 2 }),
-    loading: createElement(Loader2, { size: 18, strokeWidth: 2, className: 'ord-toast-spinner' }),
-};
-
-/* ================================================================
-   <ToastItem /> — single toast card
-   ================================================================ */
-
-function ToastItem({ t, onDismiss }: { t: Toast; onDismiss: (id: string) => void }) {
-    return (
-        <div
-            className={`ord-toast ord-toast--${t.type}${t.removing ? ' ord-toast--removing' : ''}`}
-            role="status"
-            aria-live="polite"
-        >
-            <div className="ord-toast-main">
-                <div className={`ord-toast-icon ord-toast-icon--${t.type}`}>
-                    {t.icon ?? DEFAULT_ICONS[t.type]}
-                </div>
-
-                <div className="ord-toast-content">
-                    <p className="ord-toast-title">{t.title}</p>
-                    {t.description && <p className="ord-toast-desc">{t.description}</p>}
-                </div>
-
-                <div className="ord-toast-actions">
-                    {t.button && (
-                        <button
-                            className={`ord-toast-btn ord-toast-btn--action ord-toast-btn--${t.type}`}
-                            onClick={() => { t.button!.onClick(); onDismiss(t.id); }}
-                            type="button"
-                        >
-                            {t.button.title}
-                        </button>
-                    )}
-                    <button
-                        className="ord-toast-btn ord-toast-btn--close"
-                        onClick={() => onDismiss(t.id)}
-                        aria-label="Dismiss"
-                        type="button"
-                    >
-                        <X size={14} strokeWidth={2.5} />
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-/* ================================================================
-   <Toaster /> — renders all active toasts
-   ================================================================ */
-
-export type ToasterPosition =
-    | 'top-left' | 'top-center' | 'top-right'
-    | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 interface ToasterProps {
     position?: ToasterPosition;
-    maxVisible?: number;
+    maxVisible?: number; // kept for API back-compat, ignored (PrimeReact controls this)
 }
 
-export function Toaster({ position = 'bottom-right', maxVisible = 3 }: ToasterProps) {
-    const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-
-    const handleDismiss = useCallback((id: string) => {
-        dismissToast(id);
-    }, []);
-
-    const visible = items.slice(0, maxVisible);
-
-    if (visible.length === 0) return null;
-
+export function Toaster({ position = 'bottom-right' }: ToasterProps) {
     return (
-        <div className={`ord-toaster ord-toaster--${position}`} aria-label="Notifications">
-            {visible.map((t) => (
-                <ToastItem key={t.id} t={t} onDismiss={handleDismiss} />
-            ))}
-        </div>
+        <PrimeToast
+            ref={(el) => { _register(el); }}
+            position={position}
+            baseZIndex={99999}
+        />
     );
 }
+

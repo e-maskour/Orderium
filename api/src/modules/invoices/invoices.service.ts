@@ -146,7 +146,11 @@ export class InvoicesService {
     page?: number,
     pageSize?: number,
     direction?: 'ACHAT' | 'VENTE',
-  ): Promise<{ invoices: Invoice[]; count: number; totalCount: number }> {
+  ): Promise<{
+    invoices: Invoice[];
+    count: number;
+    totalCount: number;
+  }> {
     const qb = this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.customer', 'customer')
@@ -178,7 +182,62 @@ export class InvoicesService {
     }
 
     const [invoices, totalCount] = await qb.getManyAndCount();
-    return { invoices, count: invoices.length, totalCount };
+
+    return {
+      invoices,
+      count: invoices.length,
+      totalCount,
+    };
+  }
+
+  async getAggregates(
+    search?: string,
+    status?: string,
+    customerId?: number,
+    supplierId?: number,
+    dateFrom?: string,
+    dateTo?: string,
+    direction?: 'ACHAT' | 'VENTE',
+  ): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+  }> {
+    const aggQb = this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoin('invoice.customer', 'customer')
+      .leftJoin('invoice.supplier', 'supplier')
+      .select('COALESCE(SUM(invoice.total), 0)', 'totalAmount')
+      .addSelect('COALESCE(SUM(invoice.paidAmount), 0)', 'totalPaid')
+      .addSelect('COALESCE(SUM(invoice.remainingAmount), 0)', 'totalRemaining');
+
+    if (search) {
+      aggQb.andWhere(
+        '(invoice.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    if (status) aggQb.andWhere('invoice.status = :status', { status });
+    if (customerId)
+      aggQb.andWhere('invoice.customerId = :customerId', { customerId });
+    if (supplierId)
+      aggQb.andWhere('invoice.supplierId = :supplierId', { supplierId });
+    if (direction)
+      aggQb.andWhere('invoice.direction = :direction', { direction });
+    if (dateFrom) aggQb.andWhere('invoice.date >= :dateFrom', { dateFrom });
+    if (dateTo) aggQb.andWhere('invoice.date <= :dateTo', { dateTo });
+
+    const aggResult = await aggQb.getRawOne<{
+      totalAmount: string;
+      totalPaid: string;
+      totalRemaining: string;
+    }>();
+
+    return {
+      totalAmount: parseFloat(aggResult?.totalAmount || '0'),
+      totalPaid: parseFloat(aggResult?.totalPaid || '0'),
+      totalRemaining: parseFloat(aggResult?.totalRemaining || '0'),
+    };
   }
 
   async findOne(id: number): Promise<Invoice | null> {

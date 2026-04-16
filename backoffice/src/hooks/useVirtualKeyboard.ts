@@ -2,6 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useKeyboard } from './useKeyboard';
 import type { UseVirtualKeyboardOptions, UseVirtualKeyboardReturn } from '../types/keyboard.types';
 
+/** Returns true when the virtual keyboard system is active (desktop ≥ 1024px). */
+function useIsVirtualKeyboardEnabled(): boolean {
+  const [enabled, setEnabled] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setEnabled(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return enabled;
+}
+
 /**
  * useVirtualKeyboard — register an input field with the global POS keyboard.
  *
@@ -11,6 +25,7 @@ import type { UseVirtualKeyboardOptions, UseVirtualKeyboardReturn } from '../typ
  */
 export function useVirtualKeyboard(options?: UseVirtualKeyboardOptions): UseVirtualKeyboardReturn {
   const { showKeyboard, currentValue, isVisible, targetRef: contextTargetRef } = useKeyboard();
+  const vkEnabled = useIsVirtualKeyboardEnabled();
 
   const [value, setValueInternal] = useState(options?.defaultValue ?? '');
   const ref = useRef<HTMLInputElement>(null);
@@ -40,6 +55,8 @@ export function useVirtualKeyboard(options?: UseVirtualKeyboardOptions): UseVirt
   );
 
   const handleFocus = useCallback(() => {
+    // On mobile/tablet the virtual keyboard is hidden — let the native keyboard handle input
+    if (!vkEnabled) return;
     showKeyboard(ref as React.RefObject<HTMLInputElement>, value, {
       ...options,
       onValueChange: (v) => {
@@ -47,14 +64,15 @@ export function useVirtualKeyboard(options?: UseVirtualKeyboardOptions): UseVirt
         options?.onValueChange?.(v);
       },
     });
-  }, [showKeyboard, value, options]);
+  }, [vkEnabled, showKeyboard, value, options]);
 
   const handleBlur = useCallback(() => {
     // Intentionally no-op: the keyboard hides on outside click (see KeyboardContext)
   }, []);
 
   const inputProps = {
-    inputMode: 'none' as const,
+    // Suppress native keyboard only when the virtual keyboard is active (desktop)
+    inputMode: (vkEnabled ? 'none' : 'text') as 'none' | 'text',
     readOnly: false,
     onFocus: handleFocus,
     onBlur: handleBlur,

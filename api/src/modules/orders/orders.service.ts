@@ -519,6 +519,64 @@ export class OrdersService {
     };
   }
 
+  async getOrderAggregates(
+    startDate?: Date,
+    endDate?: Date,
+    deliveryStatus?: string[],
+    orderNumber?: string,
+    customerId?: number,
+    deliveryPersonId?: number,
+    originType?: string | string[],
+    supplierId?: number,
+    direction?: 'ACHAT' | 'VENTE',
+    status?: string[],
+    search?: string,
+  ): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+  }> {
+    const filters = {
+      originType,
+      deliveryStatus,
+      status,
+      search,
+      orderNumber,
+      customerId,
+      supplierId,
+      deliveryPersonId,
+      direction,
+      startDate,
+      endDate,
+    };
+
+    const aggQb = this.dataSource
+      .createQueryBuilder(Order, 'order')
+      .leftJoin('order.customer', 'customer')
+      .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
+      .select('COALESCE(SUM(order.total), 0)', 'totalAmount')
+      .addSelect('COALESCE(SUM(order.paidAmount), 0)', 'totalPaid')
+      .addSelect('COALESCE(SUM(order.remainingAmount), 0)', 'totalRemaining');
+
+    applyOrderFilters(aggQb, filters);
+    if (startDate && endDate) {
+      aggQb.andWhere('order.dateCreated >= :startDate', { startDate });
+      aggQb.andWhere('order.dateCreated <= :endDate', { endDate });
+    }
+
+    const aggResult = await aggQb.getRawOne<{
+      totalAmount: string;
+      totalPaid: string;
+      totalRemaining: string;
+    }>();
+
+    return {
+      totalAmount: parseFloat(aggResult?.totalAmount || '0'),
+      totalPaid: parseFloat(aggResult?.totalPaid || '0'),
+      totalRemaining: parseFloat(aggResult?.totalRemaining || '0'),
+    };
+  }
+
   async getOrderById(id: number): Promise<Record<string, unknown>> {
     const cacheKey = `order:${id}`;
     const cached =

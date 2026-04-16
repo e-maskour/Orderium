@@ -93,7 +93,11 @@ export class QuotesService {
     pageSize?: number,
     supplierId?: number,
     direction?: 'ACHAT' | 'VENTE',
-  ): Promise<{ quotes: Quote[]; count: number; totalCount: number }> {
+  ): Promise<{
+    quotes: Quote[];
+    count: number;
+    totalCount: number;
+  }> {
     const qb = this.quoteRepository
       .createQueryBuilder('quote')
       .leftJoinAndSelect('quote.customer', 'customer')
@@ -126,7 +130,57 @@ export class QuotesService {
     }
 
     const [quotes, totalCount] = await qb.getManyAndCount();
-    return { quotes, count: quotes.length, totalCount };
+
+    return {
+      quotes,
+      count: quotes.length,
+      totalCount,
+    };
+  }
+
+  async getAggregates(
+    search?: string,
+    status?: string,
+    customerId?: number,
+    dateFrom?: string,
+    dateTo?: string,
+    supplierId?: number,
+    direction?: 'ACHAT' | 'VENTE',
+  ): Promise<{
+    totalAmount: number;
+    totalPaid: number;
+    totalRemaining: number;
+  }> {
+    const aggQb = this.quoteRepository
+      .createQueryBuilder('quote')
+      .leftJoin('quote.customer', 'customer')
+      .leftJoin('quote.supplier', 'supplier')
+      .select('COALESCE(SUM(quote.total), 0)', 'totalAmount');
+
+    if (search) {
+      aggQb.andWhere(
+        '(quote.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    if (status) aggQb.andWhere('quote.status = :status', { status });
+    if (customerId)
+      aggQb.andWhere('quote.customerId = :customerId', { customerId });
+    if (supplierId)
+      aggQb.andWhere('quote.supplierId = :supplierId', { supplierId });
+    if (direction)
+      aggQb.andWhere('quote.direction = :direction', { direction });
+    if (dateFrom) aggQb.andWhere('quote.date >= :dateFrom', { dateFrom });
+    if (dateTo) aggQb.andWhere('quote.date <= :dateTo', { dateTo });
+
+    const aggResult = await aggQb.getRawOne<{ totalAmount: string }>();
+    const totalAmount = parseFloat(aggResult?.totalAmount || '0');
+
+    return {
+      totalAmount,
+      totalPaid: 0,
+      totalRemaining: totalAmount,
+    };
   }
 
   async findOne(id: number): Promise<Quote | null> {

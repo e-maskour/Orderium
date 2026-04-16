@@ -31,8 +31,26 @@
 }
 
 /* ─── Toast: ensure toasts appear above the sticky header ─── */
-.ord-toaster {
+.p-toast {
   z-index: 99999 !important;
+}
+
+/* ─── Toast: backoffice size overrides ─── */
+.p-toast .p-toast-message .p-toast-message-content {
+  min-height: 72px !important;
+  padding: 18px 16px !important;
+  gap: 14px !important;
+}
+
+.p-toast .p-toast-message .p-toast-summary {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.p-toast .p-toast-message .p-toast-detail {
+  font-size: 13px !important;
+  margin-top: 3px !important;
 }
 
 /* ─── Product page responsive grids ─── */

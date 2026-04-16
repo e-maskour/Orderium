@@ -198,6 +198,12 @@ export const ORD = {
     status: 200,
     message: 'Orders Deleted',
   },
+  /** POST /orders/filter/aggregates       → data: { totalAmount, totalPaid, totalRemaining } | metadata: null */
+  AGGREGATES: {
+    code: 'ORD200_22',
+    status: 200,
+    message: 'Order Aggregates Retrieved',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -249,6 +255,12 @@ export const INV = {
     code: 'INV200_12',
     status: 200,
     message: 'Invoice Share Link Revoked',
+  },
+  /** POST /invoices/aggregates            → data: { totalAmount, totalPaid, totalRemaining } | metadata: null */
+  AGGREGATES: {
+    code: 'INV200_13',
+    status: 200,
+    message: 'Invoice Aggregates Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;
 
@@ -303,6 +315,12 @@ export const QUO = {
     code: 'QUO200_15',
     status: 200,
     message: 'Quote Converted to Invoice',
+  },
+  /** POST /quotes/aggregates              → data: { totalAmount, totalPaid, totalRemaining } | metadata: null */
+  AGGREGATES: {
+    code: 'QUO200_17',
+    status: 200,
+    message: 'Quote Aggregates Retrieved',
   },
   /** GET /quotes/analytics/:direction    → data: analytics          | metadata: null */
   ANALYTICS: {
