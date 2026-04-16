@@ -97,7 +97,7 @@ export class PDFService implements OnModuleDestroy {
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
