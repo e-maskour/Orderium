@@ -14,26 +14,44 @@ interface ReceiptTemplateData {
   hideVAT?: boolean;
   companyName: string;
   companyLines: string[];
+  lang?: 'fr' | 'ar';
 }
 
 export function renderReceiptTemplate(data: ReceiptTemplateData): string {
+  const isRTL = data.lang === 'ar';
+  const L = {
+    receipt: isRTL ? 'إيصال' : 'Reçu',
+    client: isRTL ? 'العميل' : 'Client',
+    designation: isRTL ? 'الوصف' : 'Désignation',
+    total: isRTL ? 'المجموع' : 'Total',
+    articles: isRTL ? 'صنف' : 'article',
+    articlesPl: isRTL ? 'أصناف' : 'articles',
+    totalQty: isRTL ? 'إجمالي الكمية' : 'Qté totale',
+    subtotal: isRTL ? 'المجموع الجزئي' : 'Sous-total',
+    discount: isRTL ? 'الخصم' : 'Remise',
+    discountPct: isRTL ? 'الخصم (%)' : 'Remise (%)',
+    tva20: 'TVA (20%)',
+    thanks: isRTL ? 'شكراً لثقتكم!' : 'Merci pour votre confiance !',
+    seeYouSoon: isRTL ? 'إلى اللقاء' : 'À bientôt',
+  };
+
   const discountRowHtml =
     data.discount && data.discount !== '0.00'
       ? `<tr class="t-sub">
-           <td class="t-label">Remise${data.discountType === 1 ? ' (%)' : ''}</td>
-           <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</td>
+           <td class="t-label">${data.discountType === 1 ? L.discountPct : L.discount}</td>
+           <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ` ${isRTL ? 'د.م' : 'DH'}`}</td>
          </tr>`
       : '';
 
   return `
 <!DOCTYPE html>
-<html>
+<html dir="${isRTL ? 'rtl' : 'ltr'}">
 <head>
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=block" rel="stylesheet">
-  <title>Reçu ${data.documentNumber}</title>
+  <title>${L.receipt} ${data.documentNumber}</title>
   <style>
     @page { size: 80mm auto; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; break-inside: avoid; page-break-inside: avoid; }
@@ -172,6 +190,20 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     }
     .rcp-table th.th-desc  { text-align: left; }
     .rcp-table th.th-total { text-align: right; width: 18mm; }
+${
+  isRTL
+    ? `
+    /* ── Arabic RTL overrides ─────────── */
+    .rcp-customer-label, .rcp-customer-value, .rcp-customer-meta { text-align: right; }
+    .rcp-table th.th-desc  { text-align: right; }
+    .rcp-table th.th-total { text-align: left; }
+    .t-label { text-align: right; }
+    .t-amount { text-align: left; }
+    .t-grand .t-label { text-align: right; }
+    .rcp-summary { direction: rtl; }
+`
+    : ''
+}
 
     .rcp-table tbody tr.t-item td {
       padding: 1.8mm 0 0;
@@ -305,8 +337,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <hr class="sep sep-tight sep-solid" />
 
   <!-- ── Receipt Title Band ── -->
-  <div class="rcp-title-band">
-    <span class="rcp-badge">Reçu</span>
+  <div class="rcp-title-band" dir="ltr">
+    <span class="rcp-badge">${L.receipt}</span>
     <div style="text-align:right;">
       <div class="rcp-doc-num"># ${data.documentNumber}</div>
       <div class="rcp-doc-date">${data.date}</div>
@@ -317,7 +349,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
   <!-- ── Customer ── -->
   <div class="rcp-customer">
-    <div class="rcp-customer-label">Client</div>
+    <div class="rcp-customer-label">${L.client}</div>
     <div class="rcp-customer-value" dir="auto">${data.customerName}</div>
     ${data.customerPhone ? `<div class="rcp-customer-meta">${data.customerPhone}</div>` : ''}
   </div>
@@ -328,8 +360,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <table class="rcp-table">
     <thead>
       <tr>
-        <th class="th-desc">Désignation</th>
-        <th class="th-total">Total</th>
+        <th class="th-desc">${L.designation}</th>
+        <th class="th-total">${L.total}</th>
       </tr>
     </thead>
     <tbody>
@@ -339,8 +371,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
   <!-- ── Summary ── -->
   <div class="rcp-summary">
-    <span><b>${data.totalProducts}</b> article${data.totalProducts > 1 ? 's' : ''}</span>
-    <span>Qté totale : <b>${data.totalQty}</b></span>
+    <span><b>${data.totalProducts}</b> ${data.totalProducts > 1 ? L.articlesPl : L.articles}</span>
+    <span>${L.totalQty} : <b>${data.totalQty}</b></span>
   </div>
 
   <!-- ── Totals ── -->
@@ -349,19 +381,19 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       ${
         !data.hideVAT
           ? `<tr class="t-sub">
-             <td class="t-label">Sous-total</td>
-             <td class="t-amount">${data.subtotal} DH</td>
+             <td class="t-label">${L.subtotal}</td>
+             <td class="t-amount">${data.subtotal} ${isRTL ? 'د.م' : 'DH'}</td>
            </tr>
            ${discountRowHtml}
            <tr class="t-sub">
-             <td class="t-label">TVA (20%)</td>
-             <td class="t-amount">${data.tax} DH</td>
+             <td class="t-label">${L.tva20}</td>
+             <td class="t-amount">${data.tax} ${isRTL ? 'د.م' : 'DH'}</td>
            </tr>`
           : discountRowHtml
       }
       <tr class="t-grand">
-        <td class="t-label">Total</td>
-        <td class="t-amount">${data.total} DH</td>
+        <td class="t-label">${L.total}</td>
+        <td class="t-amount">${data.total} ${isRTL ? 'د.م' : 'DH'}</td>
       </tr>
     </tbody>
   </table>
@@ -370,8 +402,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
   <!-- ── Footer ── -->
   <div class="rcp-footer">
-    <div class="rcp-footer-thanks">Merci pour votre confiance !</div>
-    <div class="rcp-footer-sub">À bientôt · ${data.companyName}</div>
+    <div class="rcp-footer-thanks">${L.thanks}</div>
+    <div class="rcp-footer-sub">${L.seeYouSoon} · ${data.companyName}</div>
     <div class="rcp-footer-num">${data.documentNumber}</div>
   </div>
 

@@ -644,7 +644,7 @@ export default function DocumentEditPage({
       toastSuccess(t('regeneratePdf'));
     } catch (error) {
       console.error('Error regenerating PDF:', error);
-      toastError(t('errorGenerating') || 'Erreur lors de la génération du PDF');
+      toastError(t('errorGeneratingPDF'));
     } finally {
       setRegeneratingPdf(false);
     }
@@ -1794,6 +1794,7 @@ export default function DocumentEditPage({
                   getPDFDocumentType(documentType),
                   Number(id),
                   'preview',
+                  language,
                 );
                 setPdfPreviewUrl(url);
                 setShowPDFPreview(true);

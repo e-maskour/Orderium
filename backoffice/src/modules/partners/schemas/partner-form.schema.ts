@@ -74,3 +74,4 @@ export const partnerFormSchema = z.object({
 });
 
 export type PartnerFormValues = z.infer<typeof partnerFormSchema>;
+export type PartnerFormInput = z.input<typeof partnerFormSchema>;

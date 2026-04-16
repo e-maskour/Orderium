@@ -97,7 +97,7 @@ export class PDFService implements OnModuleDestroy {
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+  ) { }
 
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
@@ -193,9 +193,10 @@ export class PDFService implements OnModuleDestroy {
   async generateDocumentPDF(
     documentType: DocumentType,
     documentId: number,
+    lang: 'fr' | 'ar' = 'fr',
   ): Promise<PDFGenerationResult> {
     const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
-    const cacheKey = `pdf:${tenantSlug}:${documentType}:${documentId}`;
+    const cacheKey = `pdf:${tenantSlug}:${documentType}:${documentId}:${lang}`;
 
     // Serve from Redis cache if available (skips Playwright entirely)
     const cached = await this.cacheManager.get<{
@@ -215,10 +216,10 @@ export class PDFService implements OnModuleDestroy {
     let pdfBuffer: Buffer;
     let fileName: string;
     if (documentType === 'receipt') {
-      pdfBuffer = await this.generateReceiptPDF(documentData);
+      pdfBuffer = await this.generateReceiptPDF(documentData, lang);
       fileName = `Recu_${documentData.documentNumber}.pdf`;
     } else {
-      pdfBuffer = await this.generateA5PDF(documentType, documentData);
+      pdfBuffer = await this.generateA5PDF(documentType, documentData, lang);
       fileName = this.getFileName(documentType, documentData);
     }
 
@@ -246,9 +247,11 @@ export class PDFService implements OnModuleDestroy {
   ): Promise<void> {
     try {
       const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
-      await this.cacheManager.del(
-        `pdf:${tenantSlug}:${documentType}:${documentId}`,
-      );
+      for (const lang of ['fr', 'ar'] as const) {
+        await this.cacheManager.del(
+          `pdf:${tenantSlug}:${documentType}:${documentId}:${lang}`,
+        );
+      }
     } catch (err) {
       this.logger.warn(
         `PDF cache invalidation failed: ${(err as Error).message}`,
@@ -517,6 +520,7 @@ export class PDFService implements OnModuleDestroy {
   private async generateA5PDF(
     documentType: DocumentType,
     data: DocumentData,
+    lang: 'fr' | 'ar' = 'fr',
   ): Promise<Buffer> {
     const page = await this.getNewPage({
       viewport: {
@@ -527,7 +531,7 @@ export class PDFService implements OnModuleDestroy {
     });
 
     try {
-      const htmlContent = this.renderDocumentHTML(documentType, data);
+      const htmlContent = this.renderDocumentHTML(documentType, data, lang);
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
@@ -537,28 +541,36 @@ export class PDFService implements OnModuleDestroy {
       await page.evaluate(() => (document as any).fonts.ready);
 
       const companyConfig = await this.getCompanyConfig();
-      const companyLines = this.buildCompanyLines(companyConfig);
+      const companyLines = this.buildCompanyLines(companyConfig, lang);
       const footerLines = this.buildCompanyFooterLines(companyConfig);
+
+      const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
 
       // Generate header and footer templates
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
         companyLines,
-        documentLabel: this.getDocumentLabel(documentType, data.isDemandePrix),
+        documentLabel: this.getDocumentLabel(
+          documentType,
+          data.isDemandePrix,
+          lang,
+        ),
         documentNumber: data.documentNumber,
-        date: new Date(data.date).toLocaleDateString('fr-FR'),
+        date: new Date(data.date).toLocaleDateString(dateLocale),
         dueDate: data.dueDate
-          ? new Date(data.dueDate).toLocaleDateString('fr-FR')
+          ? new Date(data.dueDate).toLocaleDateString(dateLocale)
           : undefined,
         expirationDate: data.expirationDate
-          ? new Date(data.expirationDate).toLocaleDateString('fr-FR')
+          ? new Date(data.expirationDate).toLocaleDateString(dateLocale)
           : undefined,
+        lang,
       });
 
       const footerTemplate = renderFooterTemplate({
         footerLines,
         hideVAT:
           data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS',
+        lang,
       });
 
       const pdfBuffer = await page.pdf({
@@ -581,7 +593,10 @@ export class PDFService implements OnModuleDestroy {
     }
   }
 
-  private async generateReceiptPDF(data: DocumentData): Promise<Buffer> {
+  private async generateReceiptPDF(
+    data: DocumentData,
+    lang: 'fr' | 'ar' = 'fr',
+  ): Promise<Buffer> {
     const page = await this.getNewPage({
       viewport: {
         width: 302,
@@ -592,7 +607,7 @@ export class PDFService implements OnModuleDestroy {
 
     try {
       const companyConfig = await this.getCompanyConfig();
-      const htmlContent = this.renderReceiptHTML(data, companyConfig);
+      const htmlContent = this.renderReceiptHTML(data, companyConfig, lang);
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
@@ -625,14 +640,17 @@ export class PDFService implements OnModuleDestroy {
   private renderDocumentHTML(
     documentType: DocumentType,
     data: DocumentData,
+    lang: 'fr' | 'ar' = 'fr',
   ): string {
     const documentTitle = this.getDocumentTitle(
       documentType,
       data.isDemandePrix,
+      lang,
     );
     const documentLabel = this.getDocumentLabel(
       documentType,
       data.isDemandePrix,
+      lang,
     );
     const hideVAT =
       data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
@@ -641,6 +659,9 @@ export class PDFService implements OnModuleDestroy {
       (documentType === 'quote' && data.isDemandePrix) || false;
 
     // Generate items HTML
+    const isRTL = lang === 'ar';
+    const totalAlign = 'right'; // total always right in both languages
+    const midAlign = isRTL ? 'center' : 'right'; // qty/price/discount/tva center in RTL
     const itemsHtml = data.items
       .map((item) => {
         if (hidePrices) {
@@ -657,10 +678,10 @@ export class PDFService implements OnModuleDestroy {
               <tr class="table-row">
                 <td class="cell-desc">${item.description}</td>
                 <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
-                <td class="num" style="text-align: right;">${this.formatCurrency(item.unitPrice)}</td>
-                <td class="num" style="text-align: right;">${this.formatCurrency(item.discount)}</td>
-                ${!hideVAT ? `<td class="num" style="text-align: right;">${item.tax}%</td>` : ''}
-                <td class="num" style="text-align: right; font-weight: 600;">${this.formatCurrency(item.total)}</td>
+                <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.unitPrice)}</td>
+                <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.discount)}</td>
+                ${!hideVAT ? `<td class="num" style="text-align: ${midAlign};">${item.tax}%</td>` : ''}
+                <td class="num" style="text-align: ${totalAlign}; font-weight: 600;">${this.formatCurrency(item.total)}</td>
               </tr>
             `;
         }
@@ -672,16 +693,18 @@ export class PDFService implements OnModuleDestroy {
       ? data.items.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
 
+    const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
+
     return renderDocumentTemplate({
       documentTitle,
       documentLabel,
       documentNumber: data.documentNumber,
-      date: new Date(data.date).toLocaleDateString('fr-FR'),
+      date: new Date(data.date).toLocaleDateString(dateLocale),
       dueDate: data.dueDate
-        ? new Date(data.dueDate).toLocaleDateString('fr-FR')
+        ? new Date(data.dueDate).toLocaleDateString(dateLocale)
         : undefined,
       expirationDate: data.expirationDate
-        ? new Date(data.expirationDate).toLocaleDateString('fr-FR')
+        ? new Date(data.expirationDate).toLocaleDateString(dateLocale)
         : undefined,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
@@ -696,28 +719,30 @@ export class PDFService implements OnModuleDestroy {
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
       notes: data.notes,
-      styles: this.getDocumentStyles(),
+      styles: this.getDocumentStyles(lang),
       hideVAT,
       isPurchaseDocument: data.isDemandePrix,
       isDemandePrix: hidePrices,
       totalQuantity: totalQuantity.toString(),
+      lang,
     });
   }
 
   private renderReceiptHTML(
     data: DocumentData,
     company: CompanyConfigData,
+    lang: 'fr' | 'ar' = 'fr',
   ): string {
     const hideVAT =
       data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
-    const companyLines = this.buildCompanyLines(company);
+    const companyLines = this.buildCompanyLines(company, lang);
 
     // Generate items HTML — table rows for the new design
     const itemsHtml = data.items
       .map((item) => {
         const discountSub =
           item.discount > 0
-            ? `Remise: -${this.formatCurrency(item.discount)} DH`
+            ? `${lang === 'ar' ? 'خصم' : 'Remise'}: -${this.formatCurrency(item.discount)} DH`
             : '';
         const taxSub = !hideVAT && item.tax > 0 ? `TVA: ${item.tax}%` : '';
         const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
@@ -737,7 +762,9 @@ export class PDFService implements OnModuleDestroy {
 
     return renderReceiptTemplate({
       documentNumber: data.documentNumber,
-      date: new Date(data.date).toLocaleDateString('fr-FR'),
+      date: new Date(data.date).toLocaleDateString(
+        lang === 'ar' ? 'ar-MA' : 'fr-FR',
+      ),
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       itemsHtml,
@@ -754,17 +781,33 @@ export class PDFService implements OnModuleDestroy {
       hideVAT,
       companyName: company.companyName || 'MOROCOM',
       companyLines,
+      lang,
     });
   }
 
-  private getDocumentStyles(): string {
-    return getDocumentStyles();
+  private getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
+    return getDocumentStyles(lang);
   }
 
   private getDocumentTitle(
     documentType: DocumentType,
     isDemandePrix?: boolean,
+    lang: 'fr' | 'ar' = 'fr',
   ): string {
+    if (lang === 'ar') {
+      if (isDemandePrix) {
+        if (documentType === 'quote') return 'طلب سعر';
+        if (documentType === 'invoice') return 'فاتورة شراء';
+        if (documentType === 'delivery-note') return 'وصل شراء';
+      }
+      const titles: Record<DocumentType, string> = {
+        invoice: 'فاتورة',
+        quote: 'عرض سعر',
+        'delivery-note': 'وصل تسليم',
+        receipt: 'إيصال',
+      };
+      return titles[documentType];
+    }
     if (isDemandePrix) {
       if (documentType === 'quote') {
         return 'Demande de Prix';
@@ -786,7 +829,22 @@ export class PDFService implements OnModuleDestroy {
   private getDocumentLabel(
     documentType: DocumentType,
     isDemandePrix?: boolean,
+    lang: 'fr' | 'ar' = 'fr',
   ): string {
+    if (lang === 'ar') {
+      if (isDemandePrix) {
+        if (documentType === 'quote') return 'طلب سعر';
+        if (documentType === 'invoice') return 'فاتورة شراء';
+        if (documentType === 'delivery-note') return 'وصل شراء';
+      }
+      const labels: Record<DocumentType, string> = {
+        invoice: 'فاتورة',
+        quote: 'عرض سعر',
+        'delivery-note': 'وصل تسليم',
+        receipt: 'إيصال',
+      };
+      return labels[documentType];
+    }
     if (isDemandePrix) {
       if (documentType === 'quote') {
         return 'DEMANDE DE PRIX';
@@ -824,7 +882,10 @@ export class PDFService implements OnModuleDestroy {
     }
   }
 
-  private buildCompanyLines(company: CompanyConfigData): string[] {
+  private buildCompanyLines(
+    company: CompanyConfigData,
+    lang: 'fr' | 'ar' = 'fr',
+  ): string[] {
     const lines: string[] = [];
 
     const addressParts: string[] = [];
@@ -848,11 +909,15 @@ export class PDFService implements OnModuleDestroy {
     }
 
     if (company.phone?.trim()) {
-      lines.push(`Tél: ${company.phone.trim()}`);
+      lines.push(
+        `${lang === 'ar' ? 'الهاتف' : 'Tél'}: ${company.phone.trim()}`,
+      );
     }
 
     if (company.email?.trim()) {
-      lines.push(`Email: ${company.email.trim()}`);
+      lines.push(
+        `${lang === 'ar' ? 'البريد' : 'Email'}: ${company.email.trim()}`,
+      );
     }
 
     return lines;

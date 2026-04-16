@@ -24,18 +24,18 @@ export default function PDFActionButtons({
   showDownload = true,
   className = '',
 }: PDFActionButtonsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
 
   const handlePDFAction = async (mode: PDFMode) => {
     try {
       if (mode === 'preview') {
-        const url = pdfService.getPDFUrl(documentType, documentId, 'preview');
+        const url = pdfService.getPDFUrl(documentType, documentId, 'preview', language);
         setPdfUrl(url);
         setShowPreviewModal(true);
       } else {
-        await pdfService.download({ documentType, documentId, mode });
+        await pdfService.download({ documentType, documentId, mode, lang: language });
         toastExported(
           `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloaded')}`,
         );
@@ -47,7 +47,7 @@ export default function PDFActionButtons({
   };
 
   const handlePreviewMouseEnter = () => {
-    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview'));
+    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview', language));
   };
 
   return (
@@ -92,18 +92,18 @@ export function PDFIconButtons({
   showDownload = true,
   className = '',
 }: PDFActionButtonsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
 
   const handlePDFAction = async (mode: PDFMode) => {
     try {
       if (mode === 'preview') {
-        const url = pdfService.getPDFUrl(documentType, documentId, 'preview');
+        const url = pdfService.getPDFUrl(documentType, documentId, 'preview', language);
         setPdfUrl(url);
         setShowPreviewModal(true);
       } else {
-        await pdfService.download({ documentType, documentId, mode });
+        await pdfService.download({ documentType, documentId, mode, lang: language });
         toastExported(
           `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloadedShort')}`,
         );
@@ -115,7 +115,7 @@ export function PDFIconButtons({
   };
 
   const handlePreviewMouseEnter = () => {
-    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview'));
+    prefetchPDF(pdfService.getPDFUrl(documentType, documentId, 'preview', language));
   };
 
   return (

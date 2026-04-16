@@ -64,7 +64,7 @@ export default function OrderSuccessPage() {
 
   const previewUrl =
     previewType && resolvedOrderId
-      ? pdfService.getPDFUrl(previewType, resolvedOrderId, 'preview')
+      ? pdfService.getPDFUrl(previewType, resolvedOrderId, 'preview', language)
       : '';
 
   const previewTitle = previewType === 'receipt' ? t('receipt') : t('deliveryNote');
@@ -97,13 +97,6 @@ export default function OrderSuccessPage() {
     icon: React.ReactNode;
     accentColor: string;
   }[] = [
-    {
-      type: 'receipt',
-      label: t('receipt'),
-      subtitle: t('thermalReceipt80mm'),
-      icon: <ReceiptIcon style={{ width: '1.125rem', height: '1.125rem', color: '#2563eb' }} />,
-      accentColor: '#2563eb',
-    },
     {
       type: 'delivery-note',
       label: t('deliveryNote'),
@@ -298,7 +291,9 @@ export default function OrderSuccessPage() {
                     rounded
                     onMouseEnter={() =>
                       resolvedOrderId &&
-                      prefetchPDF(pdfService.getPDFUrl(doc.type, resolvedOrderId, 'preview'))
+                      prefetchPDF(
+                        pdfService.getPDFUrl(doc.type, resolvedOrderId, 'preview', language),
+                      )
                     }
                     onClick={() => handlePreview(doc.type)}
                     icon={<Printer style={{ width: '0.9375rem', height: '0.9375rem' }} />}

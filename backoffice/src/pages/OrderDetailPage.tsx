@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { useLanguage } from '../context/LanguageContext';
+import type { TranslationKey } from '../lib/i18n';
 import { formatAmount } from '@orderium/ui';
 import { ordersService } from '../modules/orders';
 import { orderPaymentsService, ORDER_PAYMENT_TYPE_LABELS } from '../modules';
@@ -381,7 +382,7 @@ export default function OrderDetailPage() {
   const [regeneratingPdf, setRegeneratingPdf] = useState(false);
 
   const handlePrint = (type: 'receipt' | 'delivery-note') => {
-    const url = pdfService.getPDFUrl(type, Number(id), 'preview');
+    const url = pdfService.getPDFUrl(type, Number(id), 'preview', language);
     const label = pdfService.getDocumentLabel(type);
     setPdfUrl(url);
     setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
@@ -391,9 +392,9 @@ export default function OrderDetailPage() {
   // Pre-warm blob cache as soon as the order page loads
   useEffect(() => {
     if (!id) return;
-    prefetchPDF(pdfService.getPDFUrl('receipt', Number(id), 'preview'));
-    prefetchPDF(pdfService.getPDFUrl('delivery-note', Number(id), 'preview'));
-  }, [id]);
+    prefetchPDF(pdfService.getPDFUrl('receipt', Number(id), 'preview', language));
+    prefetchPDF(pdfService.getPDFUrl('delivery-note', Number(id), 'preview', language));
+  }, [id, language]);
 
   const handleRegeneratePdf = async () => {
     if (!id) return;
@@ -694,14 +695,6 @@ export default function OrderDetailPage() {
               </span>
             </div>
             {/* Print buttons */}
-            <Button
-              icon={<Receipt style={{ width: '0.875rem', height: '0.875rem' }} />}
-              label={isAr ? 'وصل' : 'Reçu'}
-              onClick={() => handlePrint('receipt')}
-              outlined
-              size="small"
-              style={{ flexShrink: 0 }}
-            />
             <Button
               icon={<Truck style={{ width: '0.875rem', height: '0.875rem' }} />}
               label={isAr ? 'بون التسليم' : 'Bon de livraison'}
@@ -1810,121 +1803,128 @@ export default function OrderDetailPage() {
                   </div>
                 )}
 
-                {/* Add payment form */}
-                <div
-                  style={{
-                    borderTop: '1px solid #f1f5f9',
-                    paddingTop: '0.875rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.625rem',
-                  }}
-                >
-                  <p
-                    style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: '#334155' }}
+                {/* Add payment form — hidden when order is fully paid */}
+                {remainingAmount > 0 && (
+                  <div
+                    style={{
+                      borderTop: '1px solid #f1f5f9',
+                      paddingTop: '0.875rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.625rem',
+                    }}
                   >
-                    {t('addPayment')}
-                  </p>
-                  <div>
-                    <label
+                    <p
                       style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                        display: 'block',
-                        marginBottom: '0.25rem',
+                        margin: 0,
+                        fontSize: '0.8125rem',
+                        fontWeight: 700,
+                        color: '#334155',
                       }}
                     >
-                      {t('amount')}
-                    </label>
-                    <InputNumber
-                      value={paymentAmount}
-                      onValueChange={(e) => setPaymentAmount(e.value ?? 0)}
-                      mode="decimal"
-                      minFractionDigits={2}
-                      maxFractionDigits={2}
-                      min={0}
-                      inputStyle={{ width: '100%' }}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                        display: 'block',
-                        marginBottom: '0.25rem',
-                      }}
-                    >
-                      {t('paymentDate')}
-                    </label>
-                    <InputText
-                      type="date"
-                      value={paymentDate}
-                      onChange={(e) => setPaymentDate(e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                        display: 'block',
-                        marginBottom: '0.25rem',
-                      }}
-                    >
-                      {t('paymentType')}
-                    </label>
-                    <Dropdown
-                      value={paymentType}
-                      onChange={(e) => setPaymentType(e.value)}
-                      options={paymentTypeOptions}
-                      optionLabel="label"
-                      optionValue="value"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                        display: 'block',
-                        marginBottom: '0.25rem',
-                      }}
-                    >
-                      {t('notes')}
-                    </label>
-                    <InputText
-                      value={paymentNote}
-                      onChange={(e) => setPaymentNote(e.target.value)}
-                      placeholder={t('optional')}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <Button
-                    label={t('addPayment')}
-                    icon={
-                      <CreditCard
+                      {t('addPayment')}
+                    </p>
+                    <div>
+                      <label
                         style={{
-                          width: '0.875rem',
-                          height: '0.875rem',
-                          marginInlineEnd: '0.375rem',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: '#64748b',
+                          display: 'block',
+                          marginBottom: '0.25rem',
                         }}
+                      >
+                        {t('amount')}
+                      </label>
+                      <InputNumber
+                        value={paymentAmount}
+                        onValueChange={(e) => setPaymentAmount(e.value ?? 0)}
+                        mode="decimal"
+                        minFractionDigits={2}
+                        maxFractionDigits={2}
+                        min={0}
+                        inputStyle={{ width: '100%' }}
+                        style={{ width: '100%' }}
                       />
-                    }
-                    onClick={() => createPaymentMutation.mutate()}
-                    loading={createPaymentMutation.isPending}
-                    disabled={!paymentAmount || paymentAmount <= 0}
-                    severity="success"
-                    style={{ width: '100%' }}
-                  />
-                </div>
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: '#64748b',
+                          display: 'block',
+                          marginBottom: '0.25rem',
+                        }}
+                      >
+                        {t('paymentDate')}
+                      </label>
+                      <InputText
+                        type="date"
+                        value={paymentDate}
+                        onChange={(e) => setPaymentDate(e.target.value)}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: '#64748b',
+                          display: 'block',
+                          marginBottom: '0.25rem',
+                        }}
+                      >
+                        {t('paymentType')}
+                      </label>
+                      <Dropdown
+                        value={paymentType}
+                        onChange={(e) => setPaymentType(e.value)}
+                        options={paymentTypeOptions}
+                        optionLabel="label"
+                        optionValue="value"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: '#64748b',
+                          display: 'block',
+                          marginBottom: '0.25rem',
+                        }}
+                      >
+                        {t('notes')}
+                      </label>
+                      <InputText
+                        value={paymentNote}
+                        onChange={(e) => setPaymentNote(e.target.value)}
+                        placeholder={t('optional')}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <Button
+                      label={t('addPayment')}
+                      icon={
+                        <CreditCard
+                          style={{
+                            width: '0.875rem',
+                            height: '0.875rem',
+                            marginInlineEnd: '0.375rem',
+                          }}
+                        />
+                      }
+                      onClick={() => createPaymentMutation.mutate()}
+                      loading={createPaymentMutation.isPending}
+                      disabled={!paymentAmount || paymentAmount <= 0}
+                      severity="success"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1961,30 +1961,7 @@ export default function OrderDetailPage() {
                 />
                 {isAr ? 'طباعة المستندات' : 'Documents'}
               </p>
-              <button
-                type="button"
-                onClick={() => handlePrint('receipt')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  cursor: 'pointer',
-                  width: '100%',
-                  textAlign: 'left',
-                  fontFamily: 'inherit',
-                }}
-              >
-                <Receipt
-                  style={{ width: '1.125rem', height: '1.125rem', color: '#235ae4', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                  {isAr ? 'طباعة الوصل' : 'Imprimer le reçu'}
-                </span>
-              </button>
+
               <button
                 type="button"
                 onClick={() => handlePrint('delivery-note')}
@@ -2090,7 +2067,7 @@ export default function OrderDetailPage() {
                     <span style={{ color: '#64748b' }}>{t('deliveryStatus')}</span>
                     <span style={{ fontWeight: 600, color: '#334155' }}>
                       {t(
-                        (
+                        ((
                           {
                             pending: 'pending',
                             assigned: 'assigned',
@@ -2101,7 +2078,7 @@ export default function OrderDetailPage() {
                             delivered: 'delivered',
                             canceled: 'canceled',
                           } as Record<string, string>
-                        )[order.deliveryStatus] || order.deliveryStatus,
+                        )[order.deliveryStatus] || order.deliveryStatus) as TranslationKey,
                       )}
                     </span>
                   </div>

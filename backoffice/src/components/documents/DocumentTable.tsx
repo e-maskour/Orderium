@@ -317,6 +317,7 @@ export function DocumentTable({
                       getPDFDocumentType(documentType),
                       selectedDocuments[0],
                       'preview',
+                      language,
                     );
                     const label = pdfService.getDocumentLabel(getPDFDocumentType(documentType));
                     setPdfUrl(url);

@@ -17,15 +17,22 @@ interface PDFOptions {
   documentType: DocumentType;
   documentId: number;
   mode?: PDFMode;
+  lang?: string;
 }
 
 class PDFService {
   /**
    * Get PDF URL for a document
    */
-  getPDFUrl(documentType: DocumentType, documentId: number, mode: PDFMode = 'download'): string {
+  getPDFUrl(
+    documentType: DocumentType,
+    documentId: number,
+    mode: PDFMode = 'download',
+    lang?: string,
+  ): string {
     const endpoint = this.getEndpoint(documentType);
-    return `${API_URL}/api/pdf/${endpoint}/${documentId}?mode=${mode}`;
+    const langParam = lang && lang !== 'fr' ? `&lang=${lang}` : '';
+    return `${API_URL}/api/pdf/${endpoint}/${documentId}?mode=${mode}${langParam}`;
   }
 
   /**
@@ -45,8 +52,8 @@ class PDFService {
    * Preview PDF in new window
    */
   async preview(options: PDFOptions): Promise<void> {
-    const { documentType, documentId } = options;
-    const url = this.getPDFUrl(documentType, documentId, 'preview');
+    const { documentType, documentId, lang } = options;
+    const url = this.getPDFUrl(documentType, documentId, 'preview', lang);
 
     const win = window.open(url, '_blank');
     if (!win) {
@@ -60,8 +67,8 @@ class PDFService {
    * Download PDF file
    */
   async download(options: PDFOptions): Promise<void> {
-    const { documentType, documentId } = options;
-    const url = this.getPDFUrl(documentType, documentId, 'download');
+    const { documentType, documentId, lang } = options;
+    const url = this.getPDFUrl(documentType, documentId, 'download', lang);
 
     try {
       // Create a temporary link and trigger download

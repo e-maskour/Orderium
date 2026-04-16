@@ -1,4 +1,23 @@
-export function getDocumentStyles(): string {
+export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
+  const rtlOverrides =
+    lang === 'ar'
+      ? `
+      /* ── RTL overrides ─────────────────────────────────────────── */
+      .info-box {
+        border-left: none;
+        border-right: 2pt solid var(--accent);
+        border-radius: 2pt 0 0 2pt;
+        text-align: right;
+      }
+      .table-row .cell-desc { text-align: right; }
+      .table-header th:first-child { border-radius: 0 2pt 0 0; }
+      .table-header th:last-child  { border-radius: 2pt 0 0 0; text-align: right !important; }
+      .table-row td:last-child { text-align: right !important; }
+      .totals-section { margin-left: 0; margin-right: auto; }
+      .section-label { letter-spacing: 0; }
+      `
+      : '';
+
   return `
     <style>
       /* ── Web fonts ─────────────────────────────────────────────────── */
@@ -221,6 +240,7 @@ export function getDocumentStyles(): string {
         unicode-bidi: plaintext;
         text-align: start;
       }
+      ${rtlOverrides}
     </style>
   `;
 }

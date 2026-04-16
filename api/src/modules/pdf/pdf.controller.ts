@@ -22,15 +22,18 @@ export class PDFController {
   @ApiResponse({ status: 200, description: 'Invoice PDF generated' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
+  @ApiQuery({ name: 'lang', required: false, enum: ['fr', 'ar'] })
   async generateInvoicePDF(
     @Param('invoiceId') invoiceId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
+    @Query('lang') lang: 'fr' | 'ar' = 'fr',
     @Res() res: Response,
   ) {
     try {
       const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
         'invoice',
         parseInt(invoiceId),
+        lang,
       );
 
       const disposition = mode === 'preview' ? 'inline' : 'attachment';
@@ -43,7 +46,7 @@ export class PDFController {
       });
 
       res.send(pdfBuffer);
-    } catch (error) {
+    } catch (error: any) {
       res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,
@@ -61,15 +64,18 @@ export class PDFController {
   @ApiResponse({ status: 200, description: 'Quote PDF generated' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
   @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
+  @ApiQuery({ name: 'lang', required: false, enum: ['fr', 'ar'] })
   async generateQuotePDF(
     @Param('quoteId') quoteId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
+    @Query('lang') lang: 'fr' | 'ar' = 'fr',
     @Res() res: Response,
   ) {
     try {
       const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
         'quote',
         parseInt(quoteId),
+        lang,
       );
 
       const disposition = mode === 'preview' ? 'inline' : 'attachment';
@@ -82,7 +88,7 @@ export class PDFController {
       });
 
       res.send(pdfBuffer);
-    } catch (error) {
+    } catch (error: any) {
       res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,
@@ -100,15 +106,18 @@ export class PDFController {
   @ApiResponse({ status: 200, description: 'Delivery note PDF generated' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
+  @ApiQuery({ name: 'lang', required: false, enum: ['fr', 'ar'] })
   async generateDeliveryNotePDF(
     @Param('orderId') orderId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
+    @Query('lang') lang: 'fr' | 'ar' = 'fr',
     @Res() res: Response,
   ) {
     try {
       const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
         'delivery-note',
         parseInt(orderId),
+        lang,
       );
 
       const disposition = mode === 'preview' ? 'inline' : 'attachment';
@@ -121,7 +130,7 @@ export class PDFController {
       });
 
       res.send(pdfBuffer);
-    } catch (error) {
+    } catch (error: any) {
       res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,
@@ -138,15 +147,18 @@ export class PDFController {
   @ApiResponse({ status: 200, description: 'Receipt PDF generated' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
+  @ApiQuery({ name: 'lang', required: false, enum: ['fr', 'ar'] })
   async generateReceipt(
     @Param('orderId') orderId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
+    @Query('lang') lang: 'fr' | 'ar' = 'fr',
     @Res() res: Response,
   ) {
     try {
       const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
         'receipt',
         parseInt(orderId),
+        lang,
       );
 
       const disposition = mode === 'preview' ? 'inline' : 'attachment';
@@ -159,7 +171,7 @@ export class PDFController {
       });
 
       res.send(pdfBuffer);
-    } catch (error) {
+    } catch (error: any) {
       res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,

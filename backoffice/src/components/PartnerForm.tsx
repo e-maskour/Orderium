@@ -21,6 +21,7 @@ import { SelectButton } from 'primereact/selectbutton';
 import {
   partnerFormSchema,
   type PartnerFormValues,
+  type PartnerFormInput,
 } from '../modules/partners/schemas/partner-form.schema';
 import { useApiErrors } from '../hooks/useApiErrors';
 import { notify } from '@orderium/ui';
@@ -36,7 +37,7 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
   const { t } = useLanguage();
   const isEdit = !!partner;
 
-  const form = useForm<PartnerFormValues>({
+  const form = useForm<PartnerFormInput, unknown, PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',

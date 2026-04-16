@@ -23,6 +23,7 @@ interface DocumentTemplateData {
   isPurchaseDocument?: boolean;
   isDemandePrix?: boolean;
   totalQuantity?: string;
+  lang?: 'fr' | 'ar';
 }
 
 interface HeaderTemplateData {
@@ -33,17 +34,26 @@ interface HeaderTemplateData {
   date: string;
   dueDate?: string;
   expirationDate?: string;
+  lang?: 'fr' | 'ar';
 }
 
 interface FooterTemplateData {
   footerLines: string[];
   hideVAT?: boolean;
+  lang?: 'fr' | 'ar';
 }
 
 /* ═══════════════════════════════════════════════════════════════
    A5 HEADER — Playwright displayHeaderFooter template
    ═══════════════════════════════════════════════════════════════ */
 export function renderHeaderTemplate(data: HeaderTemplateData): string {
+  const isRTL = data.lang === 'ar';
+  const L = {
+    num: isRTL ? 'رقم' : 'N°',
+    date: isRTL ? 'التاريخ' : 'Date',
+    dueDate: isRTL ? 'الاستحقاق' : 'Échéance',
+    validUntil: isRTL ? 'صالح حتى' : "Valide jusqu'au",
+  };
   return `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -90,8 +100,8 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         font-size: 11pt;
         font-weight: 700;
         color: #1B5E7B;
-        letter-spacing: 0.6pt;
-        text-transform: uppercase;
+        letter-spacing: ${isRTL ? '0pt' : '0.6pt'};
+        text-transform: ${isRTL ? 'none' : 'uppercase'};
         line-height: 1.15;
       }
       .hdr-doc-meta {
@@ -99,6 +109,8 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         font-size: 6.5pt;
         color: #555555;
         line-height: 1.4;
+        direction: ${isRTL ? 'rtl' : 'ltr'};
+        text-align: ${isRTL ? 'right' : 'right'};
       }
       .hdr-doc-meta .meta-label {
         color: #888888;
@@ -111,7 +123,7 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         color: #1A1A1A;
       }
     </style>
-    <div class="hdr-wrap">
+    <div class="hdr-wrap" dir="ltr">
       <div class="hdr-inner">
         <div class="hdr-company">
           <div class="hdr-company-name" dir="auto">${data.companyName}</div>
@@ -122,10 +134,10 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         <div class="hdr-doc">
           <div class="hdr-doc-label">${data.documentLabel}</div>
           <div class="hdr-doc-meta">
-            <div><span class="meta-label">N°</span> <span class="meta-value">${data.documentNumber}</span></div>
-            <div><span class="meta-label">Date</span> <span class="meta-value">${data.date}</span></div>
-            ${data.dueDate ? `<div><span class="meta-label">Échéance</span> <span class="meta-value">${data.dueDate}</span></div>` : ''}
-            ${data.expirationDate ? `<div><span class="meta-label">Valide jusqu'au</span> <span class="meta-value">${data.expirationDate}</span></div>` : ''}
+            <div><span class="meta-label">${L.num}</span> <span class="meta-value">${data.documentNumber}</span></div>
+            <div><span class="meta-label">${L.date}</span> <span class="meta-value">${data.date}</span></div>
+            ${data.dueDate ? `<div><span class="meta-label">${L.dueDate}</span> <span class="meta-value">${data.dueDate}</span></div>` : ''}
+            ${data.expirationDate ? `<div><span class="meta-label">${L.validUntil}</span> <span class="meta-value">${data.expirationDate}</span></div>` : ''}
           </div>
         </div>
       </div>
@@ -137,6 +149,9 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
    A5 FOOTER — Playwright displayHeaderFooter template
    ═══════════════════════════════════════════════════════════════ */
 export function renderFooterTemplate(data: FooterTemplateData): string {
+  const isRTL = data.lang === 'ar';
+  const thanks = isRTL ? 'شكراً لثقتكم!' : 'Merci pour votre confiance !';
+  const pageLbl = isRTL ? 'صفحة' : 'Page';
   return `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -176,12 +191,12 @@ export function renderFooterTemplate(data: FooterTemplateData): string {
         color: #555555;
       }
     </style>
-    <div class="ftr-wrap">
+    <div class="ftr-wrap" dir="${isRTL ? 'rtl' : 'ltr'}">
       <div class="ftr-inner">
         ${!data.hideVAT ? data.footerLines.map((line) => `<div class="ftr-legal">${line}</div>`).join('') : ''}
         <div class="ftr-bottom">
-          <div class="ftr-thanks">Merci pour votre confiance !</div>
-          <div class="ftr-page">Page <span class="pageNumber"></span> / <span class="totalPages"></span></div>
+          <div class="ftr-thanks">${thanks}</div>
+          <div class="ftr-page">${pageLbl} <span class="pageNumber"></span> / <span class="totalPages"></span></div>
         </div>
       </div>
     </div>
@@ -192,18 +207,48 @@ export function renderFooterTemplate(data: FooterTemplateData): string {
    A5 DOCUMENT BODY
    ═══════════════════════════════════════════════════════════════ */
 export function renderDocumentTemplate(data: DocumentTemplateData): string {
+  const isRTL = data.lang === 'ar';
+
+  // Arabic label dictionary
+  const L = {
+    client: isRTL ? 'العميل' : 'Client',
+    fournisseur: isRTL ? 'المورد' : 'Fournisseur',
+    tel: isRTL ? 'الهاتف' : 'Tél',
+    address: isRTL ? 'العنوان' : 'Adresse',
+    description: isRTL ? 'الوصف' : 'Description',
+    qty: isRTL ? 'الكمية' : 'Qté',
+    unitPrice: isRTL ? 'سعر الوحدة' : 'P.U.',
+    discount: isRTL ? 'الخصم' : 'Remise',
+    discountPct: isRTL ? 'الخصم (%)' : 'Remise (%)',
+    tva: 'TVA',
+    total: isRTL ? 'المجموع' : 'Total',
+    subtotalHT: isRTL ? 'المجموع بدون الضريبة' : 'Sous-total HT',
+    tva20: 'TVA (20%)',
+    totalTTC: isRTL ? 'المجموع الإجمالي' : 'Total TTC',
+    notes: isRTL ? 'ملاحظات' : 'Notes',
+    totalQtyDemandee: isRTL
+      ? 'إجمالي الكمية المطلوبة'
+      : 'Total Quantité Demandée',
+    dh: 'DH',
+  };
+
   // Build discount row if it exists
   const discountRowHtml =
     data.discount && data.discount !== '0.00'
       ? `<div class="totals-row">
-           <span class="totals-label">Remise${data.discountType === 1 ? ' (%)' : ''}</span>
-           <span class="totals-value">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
+           <span class="totals-label">${data.discountType === 1 ? L.discountPct : L.discount}</span>
+           <span class="totals-value">${data.discountType === 1 ? `-${data.discount}%` : `-${data.discount} DH`}</span>
          </div>`
       : '';
 
+  const descAlign = isRTL ? 'right' : 'left';
+  const numAlign = isRTL ? 'left' : 'right';
+  const thNumAlign = isRTL ? 'center' : numAlign;
+  const thTotalAlign = 'right'; // total th always right in both languages
+
   return `
         <!DOCTYPE html>
-        <html lang="ar">
+        <html lang="${data.lang ?? 'fr'}" dir="${isRTL ? 'rtl' : 'ltr'}">
         <head>
         <meta charset="UTF-8">
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -219,11 +264,11 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                 <section class="customer-section">
                     <div class="customer-grid">
                         <div class="bill-to">
-                            <div class="section-label">${data.isPurchaseDocument ? 'Fournisseur' : 'Client'}</div>
+                            <div class="section-label">${data.isPurchaseDocument ? L.fournisseur : L.client}</div>
                             <div class="info-box">
                                 <div dir="auto" class="customer-name">${data.customerName}</div>
-                                ${data.customerPhone ? `<div dir="auto" class="customer-detail"><strong>Tél:</strong> ${data.customerPhone}</div>` : ''}
-                                ${data.customerAddress ? `<div dir="auto" class="customer-detail"><strong>Adresse:</strong> ${data.customerAddress}</div>` : ''}
+                                ${data.customerPhone ? `<div dir="auto" class="customer-detail"><strong>${L.tel}:</strong> ${data.customerPhone}</div>` : ''}
+                                ${data.customerAddress ? `<div dir="auto" class="customer-detail"><strong>${L.address}:</strong> ${data.customerAddress}</div>` : ''}
                                 ${data.customerIce ? `<div dir="auto" class="customer-detail"><strong>ICE:</strong> ${data.customerIce}</div>` : ''}
                             </div>
                         </div>
@@ -238,16 +283,16 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                                 ${
                                   data.isDemandePrix
                                     ? `
-                                <th style="text-align: left; width: 70%;">Description</th>
-                                <th style="text-align: center; width: 30%;">Qté</th>
+                                <th style="text-align: ${descAlign}; width: 70%;">${L.description}</th>
+                                <th style="text-align: center; width: 30%;">${L.qty}</th>
                                 `
                                     : `
-                                <th style="text-align: left; width: ${data.hideVAT ? '48%' : '40%'};">Description</th>
-                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">Qté</th>
-                                <th style="text-align: right; width: ${data.hideVAT ? '13%' : '12%'};">P.U.</th>
-                                <th style="text-align: right; width: ${data.hideVAT ? '13%' : '12%'};">Remise</th>
-                                ${!data.hideVAT ? '<th style="text-align: right; width: 12%;">TVA</th>' : ''}
-                                <th style="text-align: right; width: ${data.hideVAT ? '13%' : '14%'};">Total</th>
+                                <th style="text-align: ${descAlign}; width: ${data.hideVAT ? '48%' : '40%'};">${L.description}</th>
+                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">${L.qty}</th>
+                                <th style="text-align: ${thNumAlign}; width: ${data.hideVAT ? '13%' : '12%'};">${L.unitPrice}</th>
+                                <th style="text-align: ${thNumAlign}; width: ${data.hideVAT ? '13%' : '12%'};">${L.discount}</th>
+                                ${!data.hideVAT ? `<th style="text-align: ${thNumAlign}; width: 12%;">${L.tva}</th>` : ''}
+                                <th style="text-align: ${thTotalAlign}; width: ${data.hideVAT ? '13%' : '14%'};">${L.total}</th>
                                 `
                                 }
                             </tr>
@@ -263,30 +308,30 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                         data.isDemandePrix
                           ? `
                       <div class="totals-row totals-grand">
-                        <span class="totals-label">Total Quantité Demandée</span>
+                        <span class="totals-label">${L.totalQtyDemandee}</span>
                         <span class="totals-value">${data.totalQuantity || '0'}</span>
                       </div>
                       `
                           : !data.hideVAT
                             ? `
                       <div class="totals-row">
-                        <span class="totals-label">Sous-total HT</span>
+                        <span class="totals-label">${L.subtotalHT}</span>
                         <span class="totals-value">${data.subtotal} DH</span>
                       </div>
                       ${discountRowHtml}
                       <div class="totals-row">
-                        <span class="totals-label">TVA (20%)</span>
+                        <span class="totals-label">${L.tva20}</span>
                         <span class="totals-value">${data.tax} DH</span>
                       </div>
                       <div class="totals-row totals-grand">
-                        <span class="totals-label">Total TTC</span>
+                        <span class="totals-label">${L.totalTTC}</span>
                         <span class="totals-value">${data.total} DH</span>
                       </div>
                       `
                             : `
                       ${discountRowHtml}
                       <div class="totals-row totals-grand">
-                        <span class="totals-label">Total</span>
+                        <span class="totals-label">${L.total}</span>
                         <span class="totals-value">${data.total} DH</span>
                       </div>
                       `
@@ -298,7 +343,7 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                       data.notes
                         ? `
                     <div class="notes-block">
-                      <div class="notes-title">Notes</div>
+                      <div class="notes-title">${L.notes}</div>
                       <div dir="auto" class="notes-body">${data.notes}</div>
                     </div>
                     `

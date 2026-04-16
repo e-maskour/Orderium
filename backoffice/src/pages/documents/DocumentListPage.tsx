@@ -142,22 +142,28 @@ export default function DocumentListPage({
       }),
   });
 
-  const { data: documentAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0 } } =
-    useQuery({
-      queryKey: ['documents-aggregates', documentType, direction, JSON.stringify(appliedFilters)],
-      queryFn: () =>
-        documentsService.getAggregates(documentType, direction, {
-          search: appliedFilters.search,
-          status: appliedFilters.status,
-          partnerId: appliedFilters.partnerId,
-          dateFrom: appliedFilters.dateRange.start
-            ? appliedFilters.dateRange.start.toISOString().split('T')[0]
-            : undefined,
-          dateTo: appliedFilters.dateRange.end
-            ? appliedFilters.dateRange.end.toISOString().split('T')[0]
-            : undefined,
-        }),
-    });
+  const {
+    data: documentAggregates = {
+      totalAmount: 0,
+      totalPaid: 0,
+      totalRemaining: 0,
+      totalSubtotal: 0,
+    },
+  } = useQuery({
+    queryKey: ['documents-aggregates', documentType, direction, JSON.stringify(appliedFilters)],
+    queryFn: () =>
+      documentsService.getAggregates(documentType, direction, {
+        search: appliedFilters.search,
+        status: appliedFilters.status,
+        partnerId: appliedFilters.partnerId,
+        dateFrom: appliedFilters.dateRange.start
+          ? appliedFilters.dateRange.start.toISOString().split('T')[0]
+          : undefined,
+        dateTo: appliedFilters.dateRange.end
+          ? appliedFilters.dateRange.end.toISOString().split('T')[0]
+          : undefined,
+      }),
+  });
 
   const documents = documentsData.documents || [];
   const totalCount = documentsData.totalCount || 0;

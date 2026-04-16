@@ -277,7 +277,7 @@ export default function Orders() {
       clearSelection();
     },
     onError: (error: Error) => {
-      toastDeleteError(error, t);
+      toastDeleteError(error, t as (key: string) => string);
     },
   });
 
@@ -472,7 +472,7 @@ export default function Orders() {
     const orderId = selectedOrders[0];
     const order = orders.find((o: any) => o.id === orderId);
     const label = pdfService.getDocumentLabel(documentType);
-    const url = pdfService.getPDFUrl(documentType, orderId, 'preview');
+    const url = pdfService.getPDFUrl(documentType, orderId, 'preview', language);
     setPdfUrl(url);
     setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
     setShowPDFPreview(true);
@@ -482,9 +482,9 @@ export default function Orders() {
   useEffect(() => {
     if (selectedOrders.length !== 1) return;
     const orderId = selectedOrders[0];
-    prefetchPDF(pdfService.getPDFUrl('receipt', orderId, 'preview'));
-    prefetchPDF(pdfService.getPDFUrl('delivery-note', orderId, 'preview'));
-  }, [selectedOrders]);
+    prefetchPDF(pdfService.getPDFUrl('receipt', orderId, 'preview', language));
+    prefetchPDF(pdfService.getPDFUrl('delivery-note', orderId, 'preview', language));
+  }, [selectedOrders, language]);
 
   const handleSendWhatsApp = async () => {
     if (selectedOrders.length !== 1) return;
@@ -505,7 +505,7 @@ export default function Orders() {
       const tenantId = tenantMatch
         ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
         : null;
-      const url = pdfService.getPDFUrl('delivery-note', orderId, 'download');
+      const url = pdfService.getPDFUrl('delivery-note', orderId, 'download', language);
       const response = await fetch(url, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -535,7 +535,7 @@ export default function Orders() {
       }
     } catch (err: unknown) {
       if ((err as { name?: string })?.name !== 'AbortError') {
-        toastError(t('pdfDownloadError'));
+        toastError(t('errorGeneratingPDF'));
       }
     }
   };
@@ -1947,7 +1947,7 @@ export default function Orders() {
             label: t('previewReceipt'),
             icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />,
             onClick: () => handlePreview('receipt'),
-            hidden: selectedOrders.length !== 1,
+            hidden: true,
           },
           {
             id: 'preview-delivery-note',
