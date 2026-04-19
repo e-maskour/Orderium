@@ -168,6 +168,11 @@ export function applyOrderFilters(
     });
     qb.andWhere('order.dateCreated <= :endDate', { endDate: filters.endDate });
   }
+  if (filters.direction) {
+    qb.andWhere('order.direction = :direction', {
+      direction: filters.direction,
+    });
+  }
 
   return qb;
 }

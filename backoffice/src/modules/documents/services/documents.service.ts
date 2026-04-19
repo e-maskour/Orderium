@@ -108,11 +108,12 @@ export class DocumentsService {
         filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
         filters?.dateTo ? new Date(filters.dateTo) : undefined,
         'BACKOFFICE',
-        filters?.status !== 'all' ? filters?.status : undefined,
+        undefined,
         undefined,
         filters?.page,
         filters?.pageSize,
         isVente ? 'VENTE' : 'ACHAT',
+        filters?.status !== 'all' ? [filters.status as string] : undefined,
       );
 
       // Filter orders based on direction

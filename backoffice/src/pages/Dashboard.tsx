@@ -290,7 +290,6 @@ export default function Dashboard() {
         undefined,
         undefined,
         undefined,
-        undefined,
         1,
         8,
         'VENTE',
