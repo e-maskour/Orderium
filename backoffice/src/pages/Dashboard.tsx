@@ -38,8 +38,8 @@ const L = {
     greeting: (h: number, name: string) =>
       `${h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'}, ${name} 👋`,
     today: "Aujourd'hui",
-    moneyEarned: "Argent gagné aujourd'hui",
-    ordersToday: "Commandes aujourd'hui",
+    moneyEarned: "Chiffre d'affaires cette semaine",
+    ordersToday: 'Commandes cette semaine',
     waiting: 'En attente',
     weekRevenue: 'Recettes cette semaine',
     topItems: 'Les 5 articles les plus commandés',
@@ -70,8 +70,8 @@ const L = {
     greeting: (h: number, name: string) =>
       `${h < 12 ? 'صباح الخير' : h < 18 ? 'مساء الخير' : 'مساء النور'}، ${name} 👋`,
     today: 'اليوم',
-    moneyEarned: 'المال المكسوب اليوم',
-    ordersToday: 'الطلبات اليوم',
+    moneyEarned: 'رقم الأعمال هذا الأسبوع',
+    ordersToday: 'طلبات هذا الأسبوع',
     waiting: 'في الانتظار',
     weekRevenue: 'إيرادات هذا الأسبوع',
     topItems: 'أكثر 5 مواد طلباً',
@@ -276,8 +276,8 @@ export default function Dashboard() {
   } = useQuery({
     queryKey: ['statistics', 'comprehensive'],
     queryFn: () => statisticsService.getComprehensiveStats(7),
-    staleTime: 60_000,
-    refetchInterval: 120_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 
   const { data: recentOrdersData } = useQuery({
@@ -303,10 +303,15 @@ export default function Dashboard() {
   const topProducts = comprehensiveStats?.topProducts ?? [];
   const recentOrders = recentOrdersData?.orders ?? [];
 
-  // Today = last entry in dailyStats
-  const today = dailyStats[dailyStats.length - 1];
-  const todayRevenue = today?.revenue ?? 0;
-  const todayOrders = today?.orders ?? 0;
+  // Weekly totals from dailyStats (7 days)
+  const weekRevenue = useMemo(
+    () => dailyStats.reduce((sum, d) => sum + (d.revenue ?? 0), 0),
+    [dailyStats],
+  );
+  const weekOrders = useMemo(
+    () => dailyStats.reduce((sum, d) => sum + (d.orders ?? 0), 0),
+    [dailyStats],
+  );
 
   const pendingOrders = statistics?.PendingOrders ?? 0;
   const inDeliveryOrders = statistics?.InDeliveryOrders ?? 0;
@@ -510,7 +515,7 @@ export default function Dashboard() {
             <BigCard
               icon={DollarSign}
               label={tx.moneyEarned}
-              value={formatCurrency(todayRevenue, language)}
+              value={formatCurrency(weekRevenue, language)}
               bg="linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
               iconBg="#bbf7d0"
               iconColor="#16a34a"
@@ -520,7 +525,7 @@ export default function Dashboard() {
             <BigCard
               icon={ShoppingCart}
               label={tx.ordersToday}
-              value={todayOrders}
+              value={weekOrders}
               bg="linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)"
               iconBg="#bfdbfe"
               iconColor="#2563eb"
@@ -780,7 +785,7 @@ export default function Dashboard() {
                     >
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0f172a' }}>
-                          #{order.orderNumber}
+                          #{order.displayOrderNumber}
                         </div>
                         <div
                           style={{
@@ -905,7 +910,7 @@ export default function Dashboard() {
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            #{order.orderNumber}
+                            #{order.displayOrderNumber}
                           </td>
                           <td
                             style={{
