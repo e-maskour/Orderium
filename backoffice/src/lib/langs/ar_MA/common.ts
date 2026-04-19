@@ -124,6 +124,7 @@ export default {
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',
+  currentLanguageName: 'العربية',
 
   // Error Messages
   error: 'حدث خطأ',

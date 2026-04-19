@@ -1,5 +1,4 @@
 import { useLanguage } from '../context/LanguageContext';
-import { Globe } from 'lucide-react';
 
 export const LanguageToggle = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -17,9 +16,11 @@ export const LanguageToggle = () => {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '2.75rem',
+        gap: '0.3rem',
+        width: 'auto',
         height: '2.75rem',
-        borderRadius: '50%',
+        paddingInline: '0.625rem',
+        borderRadius: '0.75rem',
         border: '2px solid rgba(99,102,241,0.25)',
         background: 'rgba(99,102,241,0.07)',
         cursor: 'pointer',
@@ -37,7 +38,17 @@ export const LanguageToggle = () => {
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
       }}
     >
-      <Globe style={{ width: '1.375rem', height: '1.375rem', color: '#6366f1' }} />
+      <span style={{ fontSize: '1.375rem', lineHeight: 1 }}>{language === 'ar' ? '🇲🇦' : '🇫🇷'}</span>
+      <span
+        style={{
+          fontSize: '0.8125rem',
+          fontWeight: 600,
+          color: '#6366f1',
+          lineHeight: 1,
+        }}
+      >
+        {t('currentLanguageName')}
+      </span>
     </button>
   );
 };

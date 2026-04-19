@@ -208,8 +208,8 @@ export function MobileList<T>({
                   {isSelected && (
                     <Check
                       style={{
-                        width: '0.625rem',
-                        height: '0.625rem',
+                        width: '1rem',
+                        height: '1rem',
                         color: '#fff',
                         strokeWidth: 3,
                       }}

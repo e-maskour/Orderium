@@ -481,7 +481,17 @@ export default function UsersPage() {
           selectionMode="checkbox"
           selection={selectedUsers}
           onSelectionChange={(e) => setSelectedUsers(e.value as User[])}
-          onRowClick={(e) => openEdit(e.data as User)}
+          onRowClick={(e) => {
+            const target = e.originalEvent.target as HTMLElement;
+            if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox'))
+              return;
+            const selCol = target.closest('.p-selection-column');
+            if (selCol) {
+              (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+              return;
+            }
+            openEdit(e.data as User);
+          }}
           rowClassName={() => 'cursor-pointer'}
         >
           <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />

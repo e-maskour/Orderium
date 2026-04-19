@@ -1036,7 +1036,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               />
             )}
 
-            {/* Search trigger — animated icon */}
+            {/* Search trigger — 9-dot grid icon */}
+            <NotificationBell />
             <button
               onClick={openSearch}
               aria-label="Search (⌘K)"
@@ -1044,13 +1045,22 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               className="header-search-icon-btn"
             >
               <span className="header-search-icon-ring" />
-              <Search
-                style={{ width: '1.0625rem', height: '1.0625rem', position: 'relative', zIndex: 1 }}
-                strokeWidth={1.75}
-              />
+              <svg
+                viewBox="0 0 18 18"
+                fill="currentColor"
+                style={{ width: '1.375rem', height: '1.375rem', position: 'relative', zIndex: 1 }}
+              >
+                <circle cx="3" cy="3" r="1.5" />
+                <circle cx="9" cy="3" r="1.5" />
+                <circle cx="15" cy="3" r="1.5" />
+                <circle cx="3" cy="9" r="1.5" />
+                <circle cx="9" cy="9" r="1.5" />
+                <circle cx="15" cy="9" r="1.5" />
+                <circle cx="3" cy="15" r="1.5" />
+                <circle cx="9" cy="15" r="1.5" />
+                <circle cx="15" cy="15" r="1.5" />
+              </svg>
             </button>
-
-            <NotificationBell />
             <LanguageToggle />
 
             <Divider
@@ -2191,8 +2201,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    width: 2.25rem;
-                    height: 2.25rem;
+                    width: 2.75rem;
+                    height: 2.75rem;
                     padding: 0;
                     border: none;
                     border-radius: 0.5rem;

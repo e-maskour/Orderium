@@ -460,6 +460,8 @@ export default function Products() {
               emptyMessage={t('noProductsFound')}
               hasMore={currentPage < totalPages}
               onLoadMore={() => setCurrentPage((prev) => prev + 1)}
+              selectedKeys={new Set(selectedProducts)}
+              onToggleSelect={(key) => toggleSelectProduct(key as number)}
               config={{
                 topLeft: (p: IProduct) => p.name,
                 topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)} ${t('currency')}`,
@@ -580,6 +582,11 @@ export default function Products() {
                     target.closest('.p-checkbox')
                   )
                     return;
+                  const selCol = target.closest('.p-selection-column');
+                  if (selCol) {
+                    (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                    return;
+                  }
                   handleViewProduct((e.data as IProduct).id);
                 }}
                 rowClassName={() => 'ord-row-clickable'}

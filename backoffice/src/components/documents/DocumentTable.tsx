@@ -482,6 +482,11 @@ export function DocumentTable({
             const target = e.originalEvent.target as HTMLElement;
             if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox'))
               return;
+            const selCol = target.closest('.p-selection-column');
+            if (selCol) {
+              (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+              return;
+            }
             onEdit?.((e.data as Document).id);
           }}
           rowClassName={() => 'ord-row-clickable'}

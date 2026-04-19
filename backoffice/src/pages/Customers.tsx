@@ -285,6 +285,11 @@ export default function Customers() {
                       target.closest('.p-checkbox')
                     )
                       return;
+                    const selCol = target.closest('.p-selection-column');
+                    if (selCol) {
+                      (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                      return;
+                    }
                     handleViewCustomer(e.data as Partner);
                   }}
                   rowClassName={() => 'ord-row-clickable'}

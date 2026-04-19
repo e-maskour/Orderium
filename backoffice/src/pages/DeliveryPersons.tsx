@@ -375,7 +375,21 @@ export default function DeliveryPersons() {
                     }
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                     currentPageReportTemplate={t('pageReportTemplate')}
-                    onRowClick={(e) => openEditModal(e.data as DeliveryPerson)}
+                    onRowClick={(e) => {
+                      const target = e.originalEvent.target as HTMLElement;
+                      if (
+                        target.closest('button') ||
+                        target.closest('a') ||
+                        target.closest('.p-checkbox')
+                      )
+                        return;
+                      const selCol = target.closest('.p-selection-column');
+                      if (selCol) {
+                        (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                        return;
+                      }
+                      openEditModal(e.data as DeliveryPerson);
+                    }}
                     rowClassName={() => 'cursor-pointer'}
                   >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />

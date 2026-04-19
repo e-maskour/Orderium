@@ -1613,6 +1613,11 @@ export default function Orders() {
                     target.closest('.p-checkbox')
                   )
                     return;
+                  const selCol = target.closest('.p-selection-column');
+                  if (selCol) {
+                    (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                    return;
+                  }
                   navigate(`/orders/${e.data.id}`);
                 }}
                 rowClassName={() => 'ord-row-clickable'}
