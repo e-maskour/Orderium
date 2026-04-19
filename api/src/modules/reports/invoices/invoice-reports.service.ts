@@ -26,7 +26,7 @@ export class InvoiceReportsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) { }
+  ) {}
 
   private get invoiceRepo() {
     return this.tenantConnService.getRepository(Invoice);
@@ -378,9 +378,9 @@ export class InvoiceReportsService {
           daysOverdue:
             inv.dueDate && new Date(inv.dueDate) < today
               ? Math.floor(
-                (today.getTime() - new Date(inv.dueDate).getTime()) /
-                86400000,
-              )
+                  (today.getTime() - new Date(inv.dueDate).getTime()) /
+                    86400000,
+                )
               : 0,
         })),
         meta: { total, page, perPage },

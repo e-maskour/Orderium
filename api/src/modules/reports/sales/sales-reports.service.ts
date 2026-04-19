@@ -18,7 +18,7 @@ export class SalesReportsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) { }
+  ) {}
 
   private get orderRepo() {
     return this.tenantConnService.getRepository(Order);

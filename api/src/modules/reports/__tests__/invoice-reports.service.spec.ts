@@ -135,7 +135,7 @@ describe('InvoiceReportsService', () => {
       expect(result.kpis.totalRemaining).toBe(20000);
       expect(result.kpis.count).toBe(15);
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0].customer).toBe('Client A');
+      expect(result.rows[0].customerName).toBe('Client A');
     });
   });
 
@@ -165,7 +165,7 @@ describe('InvoiceReportsService', () => {
 
       // Morocco has 5 TVA rates: 20, 14, 10, 7, 0
       expect(result.rows).toHaveLength(5);
-      expect(result.rows.every((r) => r.venteHT === 0 && r.achatHT === 0)).toBe(
+      expect(result.rows.every((r) => r.baseHt === 0 && r.achatHT === 0)).toBe(
         true,
       );
       expect(result.kpis.tvaAVerser).toBe(0);
@@ -194,11 +194,11 @@ describe('InvoiceReportsService', () => {
 
       const result = await service.getTvaSummary(defaultFilter);
 
-      const rate20 = result.rows.find((r) => r.taxRate === 20);
+      const rate20 = result.rows.find((r) => r.tvaRate === 20);
       expect(rate20).toBeDefined();
-      expect(rate20!.venteTVA).toBe(2000);
-      expect(rate20!.achatTVA).toBe(1000);
-      expect(rate20!.netTVA).toBe(1000);
+      expect(rate20!.tvaCollected).toBe(2000);
+      expect(rate20!.tvaDeductible).toBe(1000);
+      expect(rate20!.tvaDue).toBe(1000);
       expect(result.kpis.tvaAVerser).toBe(1000);
     });
   });
@@ -264,7 +264,7 @@ describe('InvoiceReportsService', () => {
       const result = await service.getOutstanding(filter);
 
       expect(result.kpis.overdueCount).toBe(1);
-      expect(result.rows[0].reference).toBe('FAC-002');
+      expect(result.rows[0].invoiceNumber).toBe('FAC-002');
     });
   });
 
