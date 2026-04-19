@@ -10,7 +10,8 @@ import { analyticsService } from '../../../modules/analytics/analytics.service';
 import { API_ROUTES } from '../../../common/api/api-routes';
 import type { StockReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const MAD = (row: Record<string, unknown>, field: string) => Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+const MAD = (row: Record<string, unknown>, field: string) =>
+  Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
 
 const COLUMNS = [
   { field: 'warehouseName', header: 'Entrepôt' },
@@ -21,8 +22,13 @@ const COLUMNS = [
 
 const StockByWarehousePage: React.FC = () => {
   const [filter, setFilter] = useState<StockReportFilter>({});
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getStockByWarehouse(filter));
-  const handleFilterChange = (f: StockReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getStockByWarehouse(filter),
+  );
+  const handleFilterChange = (f: StockReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -34,7 +40,15 @@ const StockByWarehousePage: React.FC = () => {
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.STOCK.BY_WAREHOUSE + '/xlsx', filter)} xlsxFilename="stock-entrepot.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(
+            API_ROUTES.REPORTS.STOCK.BY_WAREHOUSE + '/xlsx',
+            filter,
+          )}
+          xlsxFilename="stock-entrepot.xlsx"
+        />
+      }
     />
   );
 };

@@ -10,25 +10,50 @@ import { analyticsService } from '../../../modules/analytics/analytics.service';
 import { API_ROUTES } from '../../../common/api/api-routes';
 import type { StockReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const MAD = (row: Record<string, unknown>, field: string) => Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+const MAD = (row: Record<string, unknown>, field: string) =>
+  Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
 
 const COLUMNS = [
   { field: 'productName', header: 'Produit' },
   { field: 'sku', header: 'SKU' },
   { field: 'quantity', header: 'Qté en stock' },
-  { field: 'cost', header: 'Coût unitaire (MAD)', body: (row: Record<string, unknown>) => MAD(row, 'cost') },
-  { field: 'totalValue', header: 'Valeur totale (MAD)', body: (row: Record<string, unknown>) => MAD(row, 'totalValue') },
+  {
+    field: 'cost',
+    header: 'Coût unitaire (MAD)',
+    body: (row: Record<string, unknown>) => MAD(row, 'cost'),
+  },
+  {
+    field: 'totalValue',
+    header: 'Valeur totale (MAD)',
+    body: (row: Record<string, unknown>) => MAD(row, 'totalValue'),
+  },
 ];
 
 const StockValuationPage: React.FC = () => {
   const [filter, setFilter] = useState<StockReportFilter>({});
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getStockValuation(filter));
-  const handleFilterChange = (f: StockReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getStockValuation(filter),
+  );
+  const handleFilterChange = (f: StockReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
-  const kpis = data ? [
-    { label: 'Valeur totale du stock', value: Number(data.kpis.totalValuation ?? 0), suffix: 'MAD', color: 'blue' as const },
-    { label: 'Nb références', value: Number(data.kpis.productCount ?? 0), color: 'green' as const },
-  ] : [];
+  const kpis = data
+    ? [
+        {
+          label: 'Valeur totale du stock',
+          value: Number(data.kpis.totalValuation ?? 0),
+          suffix: 'MAD',
+          color: 'blue' as const,
+        },
+        {
+          label: 'Nb références',
+          value: Number(data.kpis.productCount ?? 0),
+          color: 'green' as const,
+        },
+      ]
+    : [];
 
   return (
     <ReportLayout
@@ -40,7 +65,12 @@ const StockValuationPage: React.FC = () => {
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.STOCK.VALUATION + '/xlsx', filter)} xlsxFilename="valorisation-stock.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.STOCK.VALUATION + '/xlsx', filter)}
+          xlsxFilename="valorisation-stock.xlsx"
+        />
+      }
     />
   );
 };

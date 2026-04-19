@@ -7,13 +7,25 @@ import { DatePreset, SalesReportFilterDto } from '../dto/report-filter.dto';
 // ─── Chainable QB mock ─────────────────────────────────────────────────────────
 function makeQb(overrides: Record<string, jest.Mock> = {}) {
   const methods = [
-    'where', 'andWhere', 'orWhere', 'select', 'addSelect',
-    'innerJoin', 'leftJoin', 'leftJoinAndSelect',
-    'groupBy', 'addGroupBy', 'orderBy', 'addOrderBy',
-    'skip', 'take',
+    'where',
+    'andWhere',
+    'orWhere',
+    'select',
+    'addSelect',
+    'innerJoin',
+    'leftJoin',
+    'leftJoinAndSelect',
+    'groupBy',
+    'addGroupBy',
+    'orderBy',
+    'addOrderBy',
+    'skip',
+    'take',
   ];
   const qb: Record<string, jest.Mock> = {};
-  methods.forEach((m) => { qb[m] = jest.fn().mockReturnThis(); });
+  methods.forEach((m) => {
+    qb[m] = jest.fn().mockReturnThis();
+  });
   qb.getRawOne = jest.fn().mockResolvedValue(null);
   qb.getRawMany = jest.fn().mockResolvedValue([]);
   qb.getManyAndCount = jest.fn().mockResolvedValue([[], 0]);
@@ -53,16 +65,22 @@ describe('SalesReportsService', () => {
     mockTenantConnService.getCurrentTenantSlug.mockReturnValue('test-tenant');
   });
 
-  const defaultFilter: SalesReportFilterDto = { preset: DatePreset.THIS_MONTH, page: 1, perPage: 50 };
+  const defaultFilter: SalesReportFilterDto = {
+    preset: DatePreset.THIS_MONTH,
+    page: 1,
+    perPage: 50,
+  };
 
   // ─── getRevenueReport ────────────────────────────────────────────────────────
   describe('getRevenueReport', () => {
     it('returns correct shape with empty DB', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawOne: jest.fn().mockResolvedValue(null),
-        getRawMany: jest.fn().mockResolvedValue([]),
-        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawOne: jest.fn().mockResolvedValue(null),
+          getRawMany: jest.fn().mockResolvedValue([]),
+          getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+        }),
+      );
 
       const result = await service.getRevenueReport(defaultFilter);
 
@@ -78,20 +96,41 @@ describe('SalesReportsService', () => {
     });
 
     it('maps DB rows to correct shape', async () => {
-      const kpiRaw = { totalRevenue: '12500.00', totalOrders: '5', avgOrder: '2500.00' };
+      const kpiRaw = {
+        totalRevenue: '12500.00',
+        totalOrders: '5',
+        avgOrder: '2500.00',
+      };
       const dailyRaw = [
         { day: '2025-03-01', revenue: '5000.00', orders: '2' },
         { day: '2025-03-02', revenue: '7500.00', orders: '3' },
       ];
       const orderRows = [
-        { id: 1, documentNumber: 'CMD-001', orderNumber: null, date: '2025-03-02', total: 7500, customerName: 'Client A', status: 'CONFIRMED', originType: 'BACKOFFICE' },
+        {
+          id: 1,
+          documentNumber: 'CMD-001',
+          orderNumber: null,
+          date: '2025-03-02',
+          total: 7500,
+          customerName: 'Client A',
+          status: 'CONFIRMED',
+          originType: 'BACKOFFICE',
+        },
       ];
 
       // createQueryBuilder is called 3 times: kpi, daily, table
       mockOrderRepo.createQueryBuilder
-        .mockReturnValueOnce(makeQb({ getRawOne: jest.fn().mockResolvedValue(kpiRaw) }))
-        .mockReturnValueOnce(makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }))
-        .mockReturnValueOnce(makeQb({ getManyAndCount: jest.fn().mockResolvedValue([orderRows, 1]) }));
+        .mockReturnValueOnce(
+          makeQb({ getRawOne: jest.fn().mockResolvedValue(kpiRaw) }),
+        )
+        .mockReturnValueOnce(
+          makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }),
+        )
+        .mockReturnValueOnce(
+          makeQb({
+            getManyAndCount: jest.fn().mockResolvedValue([orderRows, 1]),
+          }),
+        );
 
       const result = await service.getRevenueReport(defaultFilter);
 
@@ -105,7 +144,12 @@ describe('SalesReportsService', () => {
     });
 
     it('returns cached result without hitting the DB', async () => {
-      const cached = { kpis: { totalRevenue: 999 }, chart: {}, rows: [], meta: {} };
+      const cached = {
+        kpis: { totalRevenue: 999 },
+        chart: {},
+        rows: [],
+        meta: {},
+      };
       mockCacheManager.get.mockResolvedValue(cached);
 
       const result = await service.getRevenueReport(defaultFilter);
@@ -115,11 +159,17 @@ describe('SalesReportsService', () => {
     });
 
     it('works with originType filter', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawOne: jest.fn().mockResolvedValue({ totalRevenue: '100', totalOrders: '1', avgOrder: '100' }),
-        getRawMany: jest.fn().mockResolvedValue([]),
-        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawOne: jest.fn().mockResolvedValue({
+            totalRevenue: '100',
+            totalOrders: '1',
+            avgOrder: '100',
+          }),
+          getRawMany: jest.fn().mockResolvedValue([]),
+          getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+        }),
+      );
 
       const filter = { ...defaultFilter, originType: 'CLIENT_POS' };
       await expect(service.getRevenueReport(filter)).resolves.not.toThrow();
@@ -140,9 +190,11 @@ describe('SalesReportsService', () => {
   // ─── getTopProducts ──────────────────────────────────────────────────────────
   describe('getTopProducts', () => {
     it('returns correct shape with empty result', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getTopProducts(defaultFilter);
 
@@ -155,12 +207,28 @@ describe('SalesReportsService', () => {
 
     it('maps product rows correctly', async () => {
       const rawRows = [
-        { productId: 10, productName: 'Widget A', productCode: 'WGT-A', totalQty: '50', totalRevenue: '2500.00', orderCount: '8' },
-        { productId: 11, productName: 'Widget B', productCode: 'WGT-B', totalQty: '30', totalRevenue: '1500.00', orderCount: '5' },
+        {
+          productId: 10,
+          productName: 'Widget A',
+          productCode: 'WGT-A',
+          totalQty: '50',
+          totalRevenue: '2500.00',
+          orderCount: '8',
+        },
+        {
+          productId: 11,
+          productName: 'Widget B',
+          productCode: 'WGT-B',
+          totalQty: '30',
+          totalRevenue: '1500.00',
+          orderCount: '5',
+        },
       ];
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue(rawRows),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue(rawRows),
+        }),
+      );
 
       const result = await service.getTopProducts(defaultFilter);
 
@@ -173,14 +241,24 @@ describe('SalesReportsService', () => {
 
     it('applies pagination correctly', async () => {
       const rawRows = Array.from({ length: 5 }, (_, i) => ({
-        productId: i + 1, productName: `P${i}`, productCode: `C${i}`,
-        totalQty: '10', totalRevenue: `${(5 - i) * 100}.00`, orderCount: '1',
+        productId: i + 1,
+        productName: `P${i}`,
+        productCode: `C${i}`,
+        totalQty: '10',
+        totalRevenue: `${(5 - i) * 100}.00`,
+        orderCount: '1',
       }));
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue(rawRows),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue(rawRows),
+        }),
+      );
 
-      const result = await service.getTopProducts({ ...defaultFilter, page: 2, perPage: 2 });
+      const result = await service.getTopProducts({
+        ...defaultFilter,
+        page: 2,
+        perPage: 2,
+      });
       expect(result.rows).toHaveLength(2);
       expect(result.meta.total).toBe(5);
       expect(result.meta.page).toBe(2);
@@ -190,9 +268,11 @@ describe('SalesReportsService', () => {
   // ─── getSalesByCustomer ──────────────────────────────────────────────────────
   describe('getSalesByCustomer', () => {
     it('returns correct shape with empty result', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getSalesByCustomer(defaultFilter);
 
@@ -204,11 +284,19 @@ describe('SalesReportsService', () => {
 
     it('maps customer rows correctly', async () => {
       const rawRows = [
-        { customerId: 1, customerName: 'Client X', orderCount: '5', totalRevenue: '10000.00', avgOrder: '2000.00' },
+        {
+          customerId: 1,
+          customerName: 'Client X',
+          orderCount: '5',
+          totalRevenue: '10000.00',
+          avgOrder: '2000.00',
+        },
       ];
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue(rawRows),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue(rawRows),
+        }),
+      );
 
       const result = await service.getSalesByCustomer(defaultFilter);
 
@@ -221,9 +309,11 @@ describe('SalesReportsService', () => {
   // ─── getSalesByCategory ──────────────────────────────────────────────────────
   describe('getSalesByCategory', () => {
     it('returns correct shape', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getSalesByCategory(defaultFilter);
       expect(result).toHaveProperty('rows');
@@ -234,9 +324,11 @@ describe('SalesReportsService', () => {
   // ─── getSalesByPos ───────────────────────────────────────────────────────────
   describe('getSalesByPos', () => {
     it('returns correct shape', async () => {
-      mockOrderRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockOrderRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getSalesByPos(defaultFilter);
       expect(result).toHaveProperty('rows');

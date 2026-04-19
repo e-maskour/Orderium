@@ -76,7 +76,11 @@ describe('resolveDateRange', () => {
 
   describe('preset: CUSTOM', () => {
     it('uses provided startDate and endDate', () => {
-      const { from, to } = resolveDateRange(DatePreset.CUSTOM, '2025-03-01', '2025-03-31');
+      const { from, to } = resolveDateRange(
+        DatePreset.CUSTOM,
+        '2025-03-01',
+        '2025-03-31',
+      );
       expect(from.getFullYear()).toBe(2025);
       expect(from.getMonth()).toBe(2); // 0-indexed
       expect(from.getDate()).toBe(1);
@@ -84,7 +88,11 @@ describe('resolveDateRange', () => {
     });
 
     it('falls back to this_month when dates are missing', () => {
-      const { from } = resolveDateRange(DatePreset.CUSTOM, undefined, undefined);
+      const { from } = resolveDateRange(
+        DatePreset.CUSTOM,
+        undefined,
+        undefined,
+      );
       // Should fall through to default (this_month)
       expect(from.getDate()).toBe(1);
     });

@@ -1,7 +1,11 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { TenantConnectionService } from '../../tenant/tenant-connection.service';
-import { Order, OrderStatus, OrderOriginType } from '../../orders/entities/order.entity';
+import {
+  Order,
+  OrderStatus,
+  OrderOriginType,
+} from '../../orders/entities/order.entity';
 import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
 import { SalesReportFilterDto } from '../dto/report-filter.dto';
 
@@ -37,10 +41,21 @@ export class SalesReportsService {
   async getRevenueReport(filter: SalesReportFilterDto) {
     const key = this.cacheKey('revenue', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
-      const params: Record<string, unknown> = { from: toSqlDate(from), to: toSqlDate(to), cancelled: [OrderStatus.CANCELLED] };
-      const baseWhere = 'o.date >= :from AND o.date <= :to AND o.status NOT IN (:...cancelled) AND o.customerId IS NOT NULL';
-      const originFilter = filter.originType ? 'AND o.originType = :originType' : '';
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
+      const params: Record<string, unknown> = {
+        from: toSqlDate(from),
+        to: toSqlDate(to),
+        cancelled: [OrderStatus.CANCELLED],
+      };
+      const baseWhere =
+        'o.date >= :from AND o.date <= :to AND o.status NOT IN (:...cancelled) AND o.customerId IS NOT NULL';
+      const originFilter = filter.originType
+        ? 'AND o.originType = :originType'
+        : '';
       if (filter.originType) params.originType = filter.originType;
 
       // KPIs — separate QB
@@ -50,7 +65,11 @@ export class SalesReportsService {
         .select('SUM(o.total)', 'totalRevenue')
         .addSelect('COUNT(o.id)', 'totalOrders')
         .addSelect('AVG(o.total)', 'avgOrder')
-        .getRawOne<{ totalRevenue: string; totalOrders: string; avgOrder: string }>();
+        .getRawOne<{
+          totalRevenue: string;
+          totalOrders: string;
+          avgOrder: string;
+        }>();
 
       // Time series (daily) — separate QB
       const dailyRaw = await this.orderRepo
@@ -69,7 +88,16 @@ export class SalesReportsService {
       const [rows, total] = await this.orderRepo
         .createQueryBuilder('o')
         .where(`${baseWhere} ${originFilter}`, params)
-        .select(['o.id', 'o.documentNumber', 'o.orderNumber', 'o.date', 'o.total', 'o.customerName', 'o.status', 'o.originType'])
+        .select([
+          'o.id',
+          'o.documentNumber',
+          'o.orderNumber',
+          'o.date',
+          'o.total',
+          'o.customerName',
+          'o.status',
+          'o.originType',
+        ])
         .orderBy('o.date', 'DESC')
         .skip((page - 1) * perPage)
         .take(perPage)
@@ -85,7 +113,10 @@ export class SalesReportsService {
           type: 'line',
           labels: dailyRaw.map((r) => r.day),
           series: [
-            { name: 'Chiffre d\'affaires (MAD)', data: dailyRaw.map((r) => Number(r.revenue)) },
+            {
+              name: "Chiffre d'affaires (MAD)",
+              data: dailyRaw.map((r) => Number(r.revenue)),
+            },
             { name: 'Commandes', data: dailyRaw.map((r) => Number(r.orders)) },
           ],
         },
@@ -107,7 +138,11 @@ export class SalesReportsService {
   async getTopProducts(filter: SalesReportFilterDto) {
     const key = this.cacheKey('top-products', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
@@ -115,8 +150,13 @@ export class SalesReportsService {
         .createQueryBuilder('o')
         .innerJoin('o.items', 'item')
         .leftJoin('item.product', 'p')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('item.productId', 'productId')
         .addSelect('p.name', 'productName')
@@ -129,12 +169,18 @@ export class SalesReportsService {
         .addGroupBy('p.code');
 
       if (filter.categoryId) {
-        qb.innerJoin('p.categories', 'cat').andWhere('cat.id = :catId', { catId: filter.categoryId });
+        qb.innerJoin('p.categories', 'cat').andWhere('cat.id = :catId', {
+          catId: filter.categoryId,
+        });
       }
 
       const allRows = await qb.orderBy('SUM(item.total)', 'DESC').getRawMany<{
-        productId: number; productName: string; productCode: string;
-        totalQty: string; totalRevenue: string; orderCount: string;
+        productId: number;
+        productName: string;
+        productCode: string;
+        totalQty: string;
+        totalRevenue: string;
+        orderCount: string;
       }>();
 
       const total = allRows.length;
@@ -152,8 +198,14 @@ export class SalesReportsService {
           type: 'bar',
           labels: topRevenue.map((r) => r.productName ?? `#${r.productId}`),
           series: [
-            { name: 'CA (MAD)', data: topRevenue.map((r) => Number(r.totalRevenue)) },
-            { name: 'Quantité', data: topRevenue.map((r) => Number(r.totalQty)) },
+            {
+              name: 'CA (MAD)',
+              data: topRevenue.map((r) => Number(r.totalRevenue)),
+            },
+            {
+              name: 'Quantité',
+              data: topRevenue.map((r) => Number(r.totalQty)),
+            },
           ],
         },
         rows: rows.map((r) => ({
@@ -173,14 +225,23 @@ export class SalesReportsService {
   async getSalesByCustomer(filter: SalesReportFilterDto) {
     const key = this.cacheKey('by-customer', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const allRows = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('o.customerId', 'customerId')
         .addSelect('o.customerName', 'customerName')
@@ -190,7 +251,13 @@ export class SalesReportsService {
         .groupBy('o.customerId')
         .addGroupBy('o.customerName')
         .orderBy('SUM(o.total)', 'DESC')
-        .getRawMany<{ customerId: number; customerName: string; orderCount: string; totalRevenue: string; avgOrder: string }>();
+        .getRawMany<{
+          customerId: number;
+          customerName: string;
+          orderCount: string;
+          totalRevenue: string;
+          avgOrder: string;
+        }>();
 
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
@@ -205,7 +272,12 @@ export class SalesReportsService {
         chart: {
           type: 'bar',
           labels: top10.map((r) => r.customerName ?? `#${r.customerId}`),
-          series: [{ name: 'CA (MAD)', data: top10.map((r) => Number(r.totalRevenue)) }],
+          series: [
+            {
+              name: 'CA (MAD)',
+              data: top10.map((r) => Number(r.totalRevenue)),
+            },
+          ],
         },
         rows: rows.map((r) => ({
           customerId: r.customerId,
@@ -223,7 +295,11 @@ export class SalesReportsService {
   async getSalesByCategory(filter: SalesReportFilterDto) {
     const key = this.cacheKey('by-category', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
@@ -232,8 +308,13 @@ export class SalesReportsService {
         .innerJoin('o.items', 'item')
         .leftJoin('item.product', 'p')
         .leftJoin('p.categories', 'cat')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('cat.id', 'categoryId')
         .addSelect('cat.name', 'categoryName')
@@ -245,7 +326,11 @@ export class SalesReportsService {
         .orderBy('SUM(item.total)', 'DESC');
 
       const allRows = await qb.getRawMany<{
-        categoryId: number; categoryName: string; totalRevenue: string; totalQty: string; orderCount: string;
+        categoryId: number;
+        categoryName: string;
+        totalRevenue: string;
+        totalQty: string;
+        orderCount: string;
       }>();
 
       const total = allRows.length;
@@ -259,7 +344,9 @@ export class SalesReportsService {
         },
         chart: {
           type: 'pie',
-          labels: allRows.slice(0, 8).map((r) => r.categoryName ?? 'Sans catégorie'),
+          labels: allRows
+            .slice(0, 8)
+            .map((r) => r.categoryName ?? 'Sans catégorie'),
           series: allRows.slice(0, 8).map((r) => Number(r.totalRevenue)),
         },
         rows: rows.map((r) => ({
@@ -278,27 +365,45 @@ export class SalesReportsService {
   async getSalesByPos(filter: SalesReportFilterDto) {
     const key = this.cacheKey('by-pos', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const raw = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('o.originType', 'channel')
         .addSelect('COUNT(o.id)', 'orderCount')
         .addSelect('SUM(o.total)', 'totalRevenue')
         .groupBy('o.originType')
         .orderBy('SUM(o.total)', 'DESC')
-        .getRawMany<{ channel: string; orderCount: string; totalRevenue: string }>();
+        .getRawMany<{
+          channel: string;
+          orderCount: string;
+          totalRevenue: string;
+        }>();
 
       // Daily breakdown per channel (last 30 days)
       const daily = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('o.date', 'day')
         .addSelect('o.originType', 'channel')
@@ -308,12 +413,18 @@ export class SalesReportsService {
         .orderBy('o.date', 'ASC')
         .getRawMany<{ day: string; channel: string; revenue: string }>();
 
-      const channels = [OrderOriginType.BACKOFFICE, OrderOriginType.CLIENT_POS, OrderOriginType.ADMIN_POS];
+      const channels = [
+        OrderOriginType.BACKOFFICE,
+        OrderOriginType.CLIENT_POS,
+        OrderOriginType.ADMIN_POS,
+      ];
       const days = [...new Set(daily.map((d) => d.day))].sort();
       const series = channels.map((ch) => ({
         name: ch,
         data: days.map((day) => {
-          const match = daily.find((d) => d.day === day && d.channel === ch);
+          const match = daily.find(
+            (d) => d.day === day && (d.channel as OrderOriginType) === ch,
+          );
           return Number(match?.revenue ?? 0);
         }),
       }));
@@ -340,20 +451,31 @@ export class SalesReportsService {
 
   /** Get XLSX buffer for revenue report */
   async getRevenueXlsx(filter: SalesReportFilterDto): Promise<Buffer> {
-    const data = await this.getRevenueReport({ ...filter, page: 1, perPage: 10_000 });
+    const data = await this.getRevenueReport({
+      ...filter,
+      page: 1,
+      perPage: 10_000,
+    });
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(
       data.rows.map((r) => ({
-        'Référence': r.reference,
-        'Date': r.date,
-        'Client': r.customer,
+        Référence: r.reference,
+        Date: r.date,
+        Client: r.customer,
         'Montant (MAD)': r.total,
-        'Statut': r.status,
-        'Canal': r.channel,
+        Statut: r.status,
+        Canal: r.channel,
       })),
     );
-    ws['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 30 }, { wch: 16 }, { wch: 14 }, { wch: 16 }];
+    ws['!cols'] = [
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 16 },
+    ];
     XLSX.utils.book_append_sheet(wb, ws, 'CA Ventes');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

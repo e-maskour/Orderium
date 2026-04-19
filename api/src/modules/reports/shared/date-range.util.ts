@@ -29,7 +29,10 @@ export function resolveDateRange(
   };
 
   if (preset === DatePreset.CUSTOM && startDate && endDate) {
-    return { from: startOfDay(new Date(startDate)), to: endOfDay(new Date(endDate)) };
+    return {
+      from: startOfDay(new Date(startDate)),
+      to: endOfDay(new Date(endDate)),
+    };
   }
 
   switch (preset) {
@@ -90,7 +93,9 @@ export function toSqlDate(d: Date): string {
  * Groups a list of { date: string, value: number } items into monthly buckets,
  * returning an array of { month: string (YYYY-MM), total: number }.
  */
-export function groupByMonth(rows: Array<{ date: string; value: number }>): Array<{ month: string; total: number }> {
+export function groupByMonth(
+  rows: Array<{ date: string; value: number }>,
+): Array<{ month: string; total: number }> {
   const map = new Map<string, number>();
   for (const row of rows) {
     const month = row.date.slice(0, 7); // YYYY-MM

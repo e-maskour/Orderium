@@ -14,7 +14,7 @@ export class PaymentReportsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) { }
+  ) {}
 
   private get paymentRepo() {
     return this.tenantConnService.getRepository(Payment);
@@ -37,14 +37,27 @@ export class PaymentReportsService {
   async getCashflow(filter: ReportFilterDto) {
     const key = this.cacheKey('cashflow', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
 
       const daily = await this.paymentRepo
         .createQueryBuilder('p')
-        .where('p.paymentDate >= :from AND p.paymentDate <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('p.paymentDate >= :from AND p.paymentDate <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .select('p.paymentDate', 'day')
-        .addSelect('SUM(CASE WHEN p.customerId IS NOT NULL THEN p.amount ELSE 0 END)', 'inflow')
-        .addSelect('SUM(CASE WHEN p.supplierId IS NOT NULL THEN p.amount ELSE 0 END)', 'outflow')
+        .addSelect(
+          'SUM(CASE WHEN p.customerId IS NOT NULL THEN p.amount ELSE 0 END)',
+          'inflow',
+        )
+        .addSelect(
+          'SUM(CASE WHEN p.supplierId IS NOT NULL THEN p.amount ELSE 0 END)',
+          'outflow',
+        )
         .groupBy('p.paymentDate')
         .orderBy('p.paymentDate', 'ASC')
         .getRawMany<{ day: string; inflow: string; outflow: string }>();
@@ -62,8 +75,14 @@ export class PaymentReportsService {
           type: 'bar',
           labels: daily.map((r) => r.day),
           series: [
-            { name: 'Encaissements (MAD)', data: daily.map((r) => Number(r.inflow)) },
-            { name: 'Décaissements (MAD)', data: daily.map((r) => Number(r.outflow)) },
+            {
+              name: 'Encaissements (MAD)',
+              data: daily.map((r) => Number(r.inflow)),
+            },
+            {
+              name: 'Décaissements (MAD)',
+              data: daily.map((r) => Number(r.outflow)),
+            },
           ],
         },
         rows: daily.map((r) => ({
@@ -81,11 +100,18 @@ export class PaymentReportsService {
   async getByMethod(filter: ReportFilterDto) {
     const key = this.cacheKey('by-method', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
 
       const raw = await this.paymentRepo
         .createQueryBuilder('p')
-        .where('p.paymentDate >= :from AND p.paymentDate <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('p.paymentDate >= :from AND p.paymentDate <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .select('p.paymentType', 'method')
         .addSelect('COUNT(p.id)', 'count')
         .addSelect('SUM(p.amount)', 'total')
@@ -110,7 +136,10 @@ export class PaymentReportsService {
           method: r.method,
           count: Number(r.count),
           total: Number(r.total),
-          percentage: grandTotal > 0 ? Math.round((Number(r.total) / grandTotal) * 100) : 0,
+          percentage:
+            grandTotal > 0
+              ? Math.round((Number(r.total) / grandTotal) * 100)
+              : 0,
         })),
         meta: null,
       };
@@ -123,13 +152,21 @@ export class PaymentReportsService {
   }
 
   async getCashflowXlsx(filter: ReportFilterDto): Promise<Buffer> {
-    const data = await this.getCashflow({ ...filter, page: 1, perPage: 10_000 });
+    const data = await this.getCashflow({
+      ...filter,
+      page: 1,
+      perPage: 10_000,
+    });
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data.rows.map((r) => ({
-      'Période': r.period, 'Encaissements (MAD)': r.inflow,
-      'Décaissements (MAD)': r.outflow, 'Net (MAD)': r.net,
-    })));
+    const ws = XLSX.utils.json_to_sheet(
+      data.rows.map((r) => ({
+        Période: r.period,
+        'Encaissements (MAD)': r.inflow,
+        'Décaissements (MAD)': r.outflow,
+        'Net (MAD)': r.net,
+      })),
+    );
     XLSX.utils.book_append_sheet(wb, ws, 'Cashflow');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

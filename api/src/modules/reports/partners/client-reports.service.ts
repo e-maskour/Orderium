@@ -7,7 +7,11 @@ import { Invoice, InvoiceStatus } from '../../invoices/entities/invoice.entity';
 import { Payment } from '../../payments/payment.entity';
 import { DocumentDirection } from '../../../common/entities/base-document.entity';
 import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
-import { ReportFilterDto, PartnerStatementFilterDto, AgingReportFilterDto } from '../dto/report-filter.dto';
+import {
+  ReportFilterDto,
+  PartnerStatementFilterDto,
+  AgingReportFilterDto,
+} from '../dto/report-filter.dto';
 
 const TTL = 300_000;
 
@@ -18,12 +22,20 @@ export class ClientReportsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) { }
+  ) {}
 
-  private get partnerRepo() { return this.tenantConnService.getRepository(Partner); }
-  private get orderRepo() { return this.tenantConnService.getRepository(Order); }
-  private get invoiceRepo() { return this.tenantConnService.getRepository(Invoice); }
-  private get paymentRepo() { return this.tenantConnService.getRepository(Payment); }
+  private get partnerRepo() {
+    return this.tenantConnService.getRepository(Partner);
+  }
+  private get orderRepo() {
+    return this.tenantConnService.getRepository(Order);
+  }
+  private get invoiceRepo() {
+    return this.tenantConnService.getRepository(Invoice);
+  }
+  private get paymentRepo() {
+    return this.tenantConnService.getRepository(Payment);
+  }
 
   private cacheKey(suffix: string, filter: object): string {
     const slug = this.tenantConnService.getCurrentTenantSlug();
@@ -42,14 +54,23 @@ export class ClientReportsService {
   async getTopCustomers(filter: ReportFilterDto) {
     const key = this.cacheKey('top', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const allRows = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.customerId IS NOT NULL')
         .select('o.customerId', 'customerId')
         .addSelect('o.customerName', 'customerName')
@@ -60,7 +81,14 @@ export class ClientReportsService {
         .groupBy('o.customerId')
         .addGroupBy('o.customerName')
         .orderBy('SUM(o.total)', 'DESC')
-        .getRawMany<{ customerId: number; customerName: string; orderCount: string; totalRevenue: string; avgOrder: string; lastOrderDate: string }>();
+        .getRawMany<{
+          customerId: number;
+          customerName: string;
+          orderCount: string;
+          totalRevenue: string;
+          avgOrder: string;
+          lastOrderDate: string;
+        }>();
 
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
@@ -75,7 +103,12 @@ export class ClientReportsService {
         chart: {
           type: 'bar',
           labels: top10.map((r) => r.customerName ?? `#${r.customerId}`),
-          series: [{ name: 'CA (MAD)', data: top10.map((r) => Number(r.totalRevenue)) }],
+          series: [
+            {
+              name: 'CA (MAD)',
+              data: top10.map((r) => Number(r.totalRevenue)),
+            },
+          ],
         },
         rows: rows.map((r, i) => ({
           rank: (page - 1) * perPage + i + 1,
@@ -104,23 +137,53 @@ export class ClientReportsService {
         .where('inv.remainingAmount > 0')
         .andWhere('inv.isValidated = true')
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.VENTE })
-        .andWhere('inv.status IN (:...statuses)', { statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL] })
-        .select(['inv.id', 'inv.customerId', 'inv.customerName', 'inv.dueDate', 'inv.date', 'inv.remainingAmount'])
+        .andWhere('inv.status IN (:...statuses)', {
+          statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL],
+        })
+        .select([
+          'inv.id',
+          'inv.customerId',
+          'inv.customerName',
+          'inv.dueDate',
+          'inv.date',
+          'inv.remainingAmount',
+        ])
         .getMany();
 
-      const customerMap = new Map<number | string, {
-        customerId: number | null; customerName: string;
-        current: number; d1_30: number; d31_60: number; d61_90: number; d90plus: number; total: number;
-      }>();
+      const customerMap = new Map<
+        number | string,
+        {
+          customerId: number | null;
+          customerName: string;
+          current: number;
+          d1_30: number;
+          d31_60: number;
+          d61_90: number;
+          d90plus: number;
+          total: number;
+        }
+      >();
 
       for (const inv of raw) {
         const key2 = inv.customerId ?? inv.customerName;
         if (!customerMap.has(key2)) {
-          customerMap.set(key2, { customerId: inv.customerId, customerName: inv.customerName ?? '-', current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90plus: 0, total: 0 });
+          customerMap.set(key2, {
+            customerId: inv.customerId,
+            customerName: inv.customerName ?? '-',
+            current: 0,
+            d1_30: 0,
+            d31_60: 0,
+            d61_90: 0,
+            d90plus: 0,
+            total: 0,
+          });
         }
         const entry = customerMap.get(key2)!;
         const ref = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.date);
-        const daysLate = Math.max(0, Math.floor((asOf.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)));
+        const daysLate = Math.max(
+          0,
+          Math.floor((asOf.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)),
+        );
         const amount = Number(inv.remainingAmount);
         entry.total += amount;
         if (daysLate === 0) entry.current += amount;
@@ -130,7 +193,9 @@ export class ClientReportsService {
         else entry.d90plus += amount;
       }
 
-      const allRows = Array.from(customerMap.values()).sort((a, b) => b.total - a.total);
+      const allRows = Array.from(customerMap.values()).sort(
+        (a, b) => b.total - a.total,
+      );
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
 
@@ -143,16 +208,18 @@ export class ClientReportsService {
         chart: {
           type: 'bar',
           labels: ['À échéance', '1-30j', '31-60j', '61-90j', '+90j'],
-          series: [{
-            name: 'Créances (MAD)',
-            data: [
-              allRows.reduce((s, r) => s + r.current, 0),
-              allRows.reduce((s, r) => s + r.d1_30, 0),
-              allRows.reduce((s, r) => s + r.d31_60, 0),
-              allRows.reduce((s, r) => s + r.d61_90, 0),
-              allRows.reduce((s, r) => s + r.d90plus, 0),
-            ],
-          }],
+          series: [
+            {
+              name: 'Créances (MAD)',
+              data: [
+                allRows.reduce((s, r) => s + r.current, 0),
+                allRows.reduce((s, r) => s + r.d1_30, 0),
+                allRows.reduce((s, r) => s + r.d31_60, 0),
+                allRows.reduce((s, r) => s + r.d61_90, 0),
+                allRows.reduce((s, r) => s + r.d90plus, 0),
+              ],
+            },
+          ],
         },
         rows: rows.map((r) => ({
           customerId: r.customerId,
@@ -164,7 +231,12 @@ export class ClientReportsService {
           over90: r.d90plus,
           total: r.total,
         })),
-        meta: { total, page, perPage, asOfDate: asOf.toISOString().slice(0, 10) },
+        meta: {
+          total,
+          page,
+          perPage,
+          asOfDate: asOf.toISOString().slice(0, 10),
+        },
       };
     });
   }
@@ -197,9 +269,16 @@ export class ClientReportsService {
         .addSelect('COUNT(o.id)', 'totalOrders')
         .addSelect('SUM(o.total)', 'totalRevenue')
         .groupBy('o.customerId')
-        .getRawMany<{ customerId: number; lastOrderDate: string; totalOrders: string; totalRevenue: string }>();
+        .getRawMany<{
+          customerId: number;
+          lastOrderDate: string;
+          totalOrders: string;
+          totalRevenue: string;
+        }>();
 
-      const inactiveOrders = lastOrders.filter((r) => !activeSet.has(r.customerId));
+      const inactiveOrders = lastOrders.filter(
+        (r) => !activeSet.has(r.customerId),
+      );
 
       // Match partner names
       const allPartners = await this.partnerRepo
@@ -210,18 +289,27 @@ export class ClientReportsService {
 
       const partnerMap = new Map(allPartners.map((p) => [p.id, p]));
 
-      const allRows = inactiveOrders.map((r) => {
-        const partner = partnerMap.get(r.customerId);
-        return {
-          customerId: r.customerId,
-          customerName: partner?.name ?? '-',
-          phone: partner?.phoneNumber ?? '-',
-          lastOrderDate: r.lastOrderDate,
-          totalOrders: Number(r.totalOrders),
-          totalRevenue: Number(r.totalRevenue),
-          daysSinceLastOrder: r.lastOrderDate ? Math.floor((Date.now() - new Date(r.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24)) : null,
-        };
-      }).sort((a, b) => (b.daysSinceLastOrder ?? 0) - (a.daysSinceLastOrder ?? 0));
+      const allRows = inactiveOrders
+        .map((r) => {
+          const partner = partnerMap.get(r.customerId);
+          return {
+            customerId: r.customerId,
+            customerName: partner?.name ?? '-',
+            phone: partner?.phoneNumber ?? '-',
+            lastOrderDate: r.lastOrderDate,
+            totalOrders: Number(r.totalOrders),
+            totalRevenue: Number(r.totalRevenue),
+            daysSinceLastOrder: r.lastOrderDate
+              ? Math.floor(
+                  (Date.now() - new Date(r.lastOrderDate).getTime()) /
+                    (1000 * 60 * 60 * 24),
+                )
+              : null,
+          };
+        })
+        .sort(
+          (a, b) => (b.daysSinceLastOrder ?? 0) - (a.daysSinceLastOrder ?? 0),
+        );
 
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
@@ -229,8 +317,17 @@ export class ClientReportsService {
       return {
         kpis: {
           inactiveCount: total,
-          avgDaysSinceOrder: total > 0 ? Math.round(allRows.reduce((s, r) => s + (r.daysSinceLastOrder ?? 0), 0) / total) : 0,
-          totalLostRevenuePotential: allRows.reduce((s, r) => s + r.totalRevenue, 0),
+          avgDaysSinceOrder:
+            total > 0
+              ? Math.round(
+                  allRows.reduce((s, r) => s + (r.daysSinceLastOrder ?? 0), 0) /
+                    total,
+                )
+              : 0,
+          totalLostRevenuePotential: allRows.reduce(
+            (s, r) => s + r.totalRevenue,
+            0,
+          ),
         },
         chart: null,
         rows,
@@ -243,30 +340,61 @@ export class ClientReportsService {
   async getCustomerStatement(filter: PartnerStatementFilterDto) {
     const key = this.cacheKey('statement', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       if (!filter.partnerId) {
-        return { kpis: { openBalance: 0, totalInvoiced: 0, totalPaid: 0 }, chart: null, rows: [], meta: { total: 0, page, perPage } };
+        return {
+          kpis: { openBalance: 0, totalInvoiced: 0, totalPaid: 0 },
+          chart: null,
+          rows: [],
+          meta: { total: 0, page, perPage },
+        };
       }
 
-      const partner = await this.partnerRepo.findOne({ where: { id: filter.partnerId } });
+      const partner = await this.partnerRepo.findOne({
+        where: { id: filter.partnerId },
+      });
 
       const invoices = await this.invoiceRepo
         .createQueryBuilder('inv')
         .where('inv.customerId = :id', { id: filter.partnerId })
-        .andWhere('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .andWhere('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.isValidated = true')
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.VENTE })
-        .select(['inv.id', 'inv.documentNumber', 'inv.date', 'inv.total', 'inv.paidAmount', 'inv.remainingAmount', 'inv.status'])
+        .select([
+          'inv.id',
+          'inv.documentNumber',
+          'inv.date',
+          'inv.total',
+          'inv.paidAmount',
+          'inv.remainingAmount',
+          'inv.status',
+        ])
         .getMany();
 
       const payments = await this.paymentRepo
         .createQueryBuilder('p')
         .where('p.customerId = :id', { id: filter.partnerId })
-        .andWhere('p.paymentDate >= :from AND p.paymentDate <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .select(['p.id', 'p.paymentDate', 'p.amount', 'p.paymentType', 'p.notes'])
+        .andWhere('p.paymentDate >= :from AND p.paymentDate <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .select([
+          'p.id',
+          'p.paymentDate',
+          'p.amount',
+          'p.paymentType',
+          'p.notes',
+        ])
         .getMany();
 
       // Build ledger: merge invoices (debit) + payments (credit) sorted by date
@@ -315,13 +443,21 @@ export class ClientReportsService {
   }
 
   async getTopCustomersXlsx(filter: ReportFilterDto): Promise<Buffer> {
-    const data = await this.getTopCustomers({ ...filter, page: 1, perPage: 10_000 });
+    const data = await this.getTopCustomers({
+      ...filter,
+      page: 1,
+      perPage: 10_000,
+    });
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data.rows.map((r) => ({
-      'Client': r.customerName, 'Commandes': r.orderCount,
-      'CA (MAD)': r.totalRevenue, 'Panier moyen (MAD)': r.avgOrder,
-    })));
+    const ws = XLSX.utils.json_to_sheet(
+      data.rows.map((r) => ({
+        Client: r.customerName,
+        Commandes: r.orderCount,
+        'CA (MAD)': r.totalRevenue,
+        'Panier moyen (MAD)': r.avgOrder,
+      })),
+    );
     XLSX.utils.book_append_sheet(wb, ws, 'Top Clients');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

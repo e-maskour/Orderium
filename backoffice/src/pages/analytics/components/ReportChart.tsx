@@ -21,7 +21,8 @@ const ReportChart: React.FC<ReportChartProps> = ({ chart, height = 320 }) => {
     tooltip: {
       y: {
         formatter: (val: number) =>
-          val.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MAD',
+          val.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+          ' MAD',
       },
     },
     plotOptions: {
@@ -30,7 +31,8 @@ const ReportChart: React.FC<ReportChartProps> = ({ chart, height = 320 }) => {
   };
 
   // For pie charts series is number[], for others it's {name, data}[]
-  const chartSeries = type === 'pie' ? (series as number[]) : (series as { name: string; data: number[] }[]);
+  const chartSeries =
+    type === 'pie' ? (series as number[]) : (series as { name: string; data: number[] }[]);
 
   return (
     <ReactApexChart

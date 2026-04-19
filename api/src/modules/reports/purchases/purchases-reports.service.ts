@@ -14,7 +14,7 @@ export class PurchasesReportsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) { }
+  ) {}
 
   private get orderRepo() {
     return this.tenantConnService.getRepository(Order);
@@ -37,26 +37,44 @@ export class PurchasesReportsService {
   async getPurchasesByPeriod(filter: SalesReportFilterDto) {
     const key = this.cacheKey('by-period', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const baseQb = this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.supplierId IS NOT NULL'); // purchase orders only
 
       const kpiRaw = await baseQb
         .select('SUM(o.total)', 'totalPurchases')
         .addSelect('COUNT(o.id)', 'totalOrders')
         .addSelect('AVG(o.total)', 'avgOrder')
-        .getRawOne<{ totalPurchases: string; totalOrders: string; avgOrder: string }>();
+        .getRawOne<{
+          totalPurchases: string;
+          totalOrders: string;
+          avgOrder: string;
+        }>();
 
       const dailyRaw = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.supplierId IS NOT NULL')
         .select('o.date', 'day')
         .addSelect('SUM(o.total)', 'total')
@@ -67,10 +85,22 @@ export class PurchasesReportsService {
 
       const [rows, total] = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.supplierId IS NOT NULL')
-        .select(['o.id', 'o.documentNumber', 'o.date', 'o.total', 'o.supplierName', 'o.status'])
+        .select([
+          'o.id',
+          'o.documentNumber',
+          'o.date',
+          'o.total',
+          'o.supplierName',
+          'o.status',
+        ])
         .orderBy('o.date', 'DESC')
         .skip((page - 1) * perPage)
         .take(perPage)
@@ -86,7 +116,10 @@ export class PurchasesReportsService {
           type: 'line',
           labels: dailyRaw.map((r) => r.day),
           series: [
-            { name: 'Achats (MAD)', data: dailyRaw.map((r) => Number(r.total)) },
+            {
+              name: 'Achats (MAD)',
+              data: dailyRaw.map((r) => Number(r.total)),
+            },
           ],
         },
         rows: rows.map((o) => ({
@@ -106,14 +139,23 @@ export class PurchasesReportsService {
   async getTopSuppliers(filter: SalesReportFilterDto) {
     const key = this.cacheKey('top-suppliers', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const allRows = await this.orderRepo
         .createQueryBuilder('o')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.supplierId IS NOT NULL')
         .select('o.supplierId', 'supplierId')
         .addSelect('o.supplierName', 'supplierName')
@@ -122,7 +164,12 @@ export class PurchasesReportsService {
         .groupBy('o.supplierId')
         .addGroupBy('o.supplierName')
         .orderBy('SUM(o.total)', 'DESC')
-        .getRawMany<{ supplierId: number; supplierName: string; orderCount: string; totalPurchases: string }>();
+        .getRawMany<{
+          supplierId: number;
+          supplierName: string;
+          orderCount: string;
+          totalPurchases: string;
+        }>();
 
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
@@ -131,13 +178,21 @@ export class PurchasesReportsService {
       return {
         kpis: {
           uniqueSuppliers: total,
-          totalPurchases: allRows.reduce((s, r) => s + Number(r.totalPurchases), 0),
+          totalPurchases: allRows.reduce(
+            (s, r) => s + Number(r.totalPurchases),
+            0,
+          ),
           topSupplier: allRows[0]?.supplierName ?? '-',
         },
         chart: {
           type: 'bar',
           labels: top10.map((r) => r.supplierName ?? `#${r.supplierId}`),
-          series: [{ name: 'Achats (MAD)', data: top10.map((r) => Number(r.totalPurchases)) }],
+          series: [
+            {
+              name: 'Achats (MAD)',
+              data: top10.map((r) => Number(r.totalPurchases)),
+            },
+          ],
         },
         rows: rows.map((r) => ({
           supplierId: r.supplierId,
@@ -154,7 +209,11 @@ export class PurchasesReportsService {
   async getPurchasesByProduct(filter: SalesReportFilterDto) {
     const key = this.cacheKey('by-product', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
@@ -162,8 +221,13 @@ export class PurchasesReportsService {
         .createQueryBuilder('o')
         .innerJoin('o.items', 'item')
         .leftJoin('item.product', 'p')
-        .where('o.date >= :from AND o.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
-        .andWhere('o.status NOT IN (:...cancelled)', { cancelled: [OrderStatus.CANCELLED] })
+        .where('o.date >= :from AND o.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
+        .andWhere('o.status NOT IN (:...cancelled)', {
+          cancelled: [OrderStatus.CANCELLED],
+        })
         .andWhere('o.supplierId IS NOT NULL')
         .select('item.productId', 'productId')
         .addSelect('p.name', 'productName')
@@ -174,7 +238,13 @@ export class PurchasesReportsService {
         .addGroupBy('p.name')
         .addGroupBy('p.code')
         .orderBy('SUM(item.total)', 'DESC')
-        .getRawMany<{ productId: number; productName: string; productCode: string; totalQty: string; totalCost: string }>();
+        .getRawMany<{
+          productId: number;
+          productName: string;
+          productCode: string;
+          totalQty: string;
+          totalCost: string;
+        }>();
 
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
@@ -189,7 +259,9 @@ export class PurchasesReportsService {
         chart: {
           type: 'bar',
           labels: top10.map((r) => r.productName ?? `#${r.productId}`),
-          series: [{ name: 'Coût (MAD)', data: top10.map((r) => Number(r.totalCost)) }],
+          series: [
+            { name: 'Coût (MAD)', data: top10.map((r) => Number(r.totalCost)) },
+          ],
         },
         rows: rows.map((r) => ({
           productId: r.productId,
@@ -204,19 +276,29 @@ export class PurchasesReportsService {
   }
 
   async getPurchasesXlsx(filter: SalesReportFilterDto): Promise<Buffer> {
-    const data = await this.getPurchasesByPeriod({ ...filter, page: 1, perPage: 10_000 });
+    const data = await this.getPurchasesByPeriod({
+      ...filter,
+      page: 1,
+      perPage: 10_000,
+    });
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(
       data.rows.map((r) => ({
-        'Référence': r.reference,
-        'Date': r.date,
-        'Fournisseur': r.supplier,
+        Référence: r.reference,
+        Date: r.date,
+        Fournisseur: r.supplier,
         'Montant (MAD)': r.total,
-        'Statut': r.status,
+        Statut: r.status,
       })),
     );
-    ws['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 30 }, { wch: 16 }, { wch: 14 }];
+    ws['!cols'] = [
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 14 },
+    ];
     XLSX.utils.book_append_sheet(wb, ws, 'Achats');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

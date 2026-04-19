@@ -1419,74 +1419,198 @@ export const SEQ = {
 export const RPT = {
   // ── Sales ──────────────────────────────────────────────────
   /** GET /reports/sales/revenue         → data: SalesRevenueReport   | metadata: PaginationMeta */
-  SALES_REVENUE: { code: 'RPT200_01', status: 200, message: 'Sales Revenue Report Retrieved' },
+  SALES_REVENUE: {
+    code: 'RPT200_01',
+    status: 200,
+    message: 'Sales Revenue Report Retrieved',
+  },
   /** GET /reports/sales/top-products    → data: TopProductsReport    | metadata: PaginationMeta */
-  SALES_TOP_PRODUCTS: { code: 'RPT200_02', status: 200, message: 'Top Products Report Retrieved' },
+  SALES_TOP_PRODUCTS: {
+    code: 'RPT200_02',
+    status: 200,
+    message: 'Top Products Report Retrieved',
+  },
   /** GET /reports/sales/by-customer     → data: SalesByCustomer[]    | metadata: PaginationMeta */
-  SALES_BY_CUSTOMER: { code: 'RPT200_03', status: 200, message: 'Sales By Customer Retrieved' },
+  SALES_BY_CUSTOMER: {
+    code: 'RPT200_03',
+    status: 200,
+    message: 'Sales By Customer Retrieved',
+  },
   /** GET /reports/sales/by-category     → data: SalesByCategory[]    | metadata: PaginationMeta */
-  SALES_BY_CATEGORY: { code: 'RPT200_04', status: 200, message: 'Sales By Category Retrieved' },
+  SALES_BY_CATEGORY: {
+    code: 'RPT200_04',
+    status: 200,
+    message: 'Sales By Category Retrieved',
+  },
   /** GET /reports/sales/by-pos          → data: SalesByPos[]         | metadata: PaginationMeta */
-  SALES_BY_POS: { code: 'RPT200_05', status: 200, message: 'Sales By POS/Channel Retrieved' },
+  SALES_BY_POS: {
+    code: 'RPT200_05',
+    status: 200,
+    message: 'Sales By POS/Channel Retrieved',
+  },
   // ── Purchases ──────────────────────────────────────────────
   /** GET /reports/purchases/by-period   → data: PurchasesByPeriod    | metadata: PaginationMeta */
-  PURCHASES_BY_PERIOD: { code: 'RPT200_06', status: 200, message: 'Purchases By Period Retrieved' },
+  PURCHASES_BY_PERIOD: {
+    code: 'RPT200_06',
+    status: 200,
+    message: 'Purchases By Period Retrieved',
+  },
   /** GET /reports/purchases/top-suppliers → data: TopSuppliers[]     | metadata: PaginationMeta */
-  PURCHASES_TOP_SUPPLIERS: { code: 'RPT200_07', status: 200, message: 'Top Suppliers Retrieved' },
+  PURCHASES_TOP_SUPPLIERS: {
+    code: 'RPT200_07',
+    status: 200,
+    message: 'Top Suppliers Retrieved',
+  },
   /** GET /reports/purchases/by-product  → data: PurchaseByProduct[]  | metadata: PaginationMeta */
-  PURCHASES_BY_PRODUCT: { code: 'RPT200_08', status: 200, message: 'Purchases By Product Retrieved' },
+  PURCHASES_BY_PRODUCT: {
+    code: 'RPT200_08',
+    status: 200,
+    message: 'Purchases By Product Retrieved',
+  },
   // ── Invoices ───────────────────────────────────────────────
   /** GET /reports/invoices/journal-vente   → data: InvoiceJournal[]  | metadata: PaginationMeta */
-  INVOICE_JOURNAL_VENTE: { code: 'RPT200_09', status: 200, message: 'Sales Invoice Journal Retrieved' },
+  INVOICE_JOURNAL_VENTE: {
+    code: 'RPT200_09',
+    status: 200,
+    message: 'Sales Invoice Journal Retrieved',
+  },
   /** GET /reports/invoices/journal-achat   → data: InvoiceJournal[]  | metadata: PaginationMeta */
-  INVOICE_JOURNAL_ACHAT: { code: 'RPT200_10', status: 200, message: 'Purchase Invoice Journal Retrieved' },
+  INVOICE_JOURNAL_ACHAT: {
+    code: 'RPT200_10',
+    status: 200,
+    message: 'Purchase Invoice Journal Retrieved',
+  },
   /** GET /reports/invoices/tva-summary     → data: TvaSummary        | metadata: null */
-  INVOICE_TVA_SUMMARY: { code: 'RPT200_11', status: 200, message: 'TVA Summary Retrieved' },
+  INVOICE_TVA_SUMMARY: {
+    code: 'RPT200_11',
+    status: 200,
+    message: 'TVA Summary Retrieved',
+  },
   /** GET /reports/invoices/outstanding     → data: OutstandingInvoice[] | metadata: PaginationMeta */
-  INVOICE_OUTSTANDING: { code: 'RPT200_12', status: 200, message: 'Outstanding Invoices Retrieved' },
+  INVOICE_OUTSTANDING: {
+    code: 'RPT200_12',
+    status: 200,
+    message: 'Outstanding Invoices Retrieved',
+  },
   /** GET /reports/invoices/aging-balance   → data: AgingBalance      | metadata: null */
-  INVOICE_AGING: { code: 'RPT200_13', status: 200, message: 'Aging Balance Retrieved' },
+  INVOICE_AGING: {
+    code: 'RPT200_13',
+    status: 200,
+    message: 'Aging Balance Retrieved',
+  },
   // ── Payments ───────────────────────────────────────────────
   /** GET /reports/payments/cashflow        → data: CashflowReport    | metadata: null */
-  PAYMENTS_CASHFLOW: { code: 'RPT200_14', status: 200, message: 'Cashflow Report Retrieved' },
+  PAYMENTS_CASHFLOW: {
+    code: 'RPT200_14',
+    status: 200,
+    message: 'Cashflow Report Retrieved',
+  },
   /** GET /reports/payments/by-method       → data: PaymentsByMethod[]| metadata: null */
-  PAYMENTS_BY_METHOD: { code: 'RPT200_15', status: 200, message: 'Payments By Method Retrieved' },
+  PAYMENTS_BY_METHOD: {
+    code: 'RPT200_15',
+    status: 200,
+    message: 'Payments By Method Retrieved',
+  },
   /** GET /reports/payments/in-out-flow     → data: InOutFlow         | metadata: null */
-  PAYMENTS_IN_OUT: { code: 'RPT200_16', status: 200, message: 'Encaissements/Décaissements Retrieved' },
+  PAYMENTS_IN_OUT: {
+    code: 'RPT200_16',
+    status: 200,
+    message: 'Encaissements/Décaissements Retrieved',
+  },
   // ── Clients ────────────────────────────────────────────────
   /** GET /reports/clients/top              → data: TopCustomers[]    | metadata: PaginationMeta */
-  CLIENTS_TOP: { code: 'RPT200_17', status: 200, message: 'Top Customers Retrieved' },
+  CLIENTS_TOP: {
+    code: 'RPT200_17',
+    status: 200,
+    message: 'Top Customers Retrieved',
+  },
   /** GET /reports/clients/aging            → data: ClientAging[]     | metadata: PaginationMeta */
-  CLIENTS_AGING: { code: 'RPT200_18', status: 200, message: 'Client Aging Retrieved' },
+  CLIENTS_AGING: {
+    code: 'RPT200_18',
+    status: 200,
+    message: 'Client Aging Retrieved',
+  },
   /** GET /reports/clients/inactive         → data: InactiveClient[]  | metadata: PaginationMeta */
-  CLIENTS_INACTIVE: { code: 'RPT200_19', status: 200, message: 'Inactive Clients Retrieved' },
+  CLIENTS_INACTIVE: {
+    code: 'RPT200_19',
+    status: 200,
+    message: 'Inactive Clients Retrieved',
+  },
   /** GET /reports/clients/statement/:id    → data: ClientStatement   | metadata: PaginationMeta */
-  CLIENT_STATEMENT: { code: 'RPT200_20', status: 200, message: 'Client Statement Retrieved' },
+  CLIENT_STATEMENT: {
+    code: 'RPT200_20',
+    status: 200,
+    message: 'Client Statement Retrieved',
+  },
   // ── Suppliers ──────────────────────────────────────────────
   /** GET /reports/suppliers/top            → data: TopSupplier[]     | metadata: PaginationMeta */
-  SUPPLIERS_TOP: { code: 'RPT200_21', status: 200, message: 'Top Suppliers Report Retrieved' },
+  SUPPLIERS_TOP: {
+    code: 'RPT200_21',
+    status: 200,
+    message: 'Top Suppliers Report Retrieved',
+  },
   /** GET /reports/suppliers/aging          → data: SupplierAging[]   | metadata: PaginationMeta */
-  SUPPLIERS_AGING: { code: 'RPT200_22', status: 200, message: 'Supplier Aging Retrieved' },
+  SUPPLIERS_AGING: {
+    code: 'RPT200_22',
+    status: 200,
+    message: 'Supplier Aging Retrieved',
+  },
   /** GET /reports/suppliers/statement/:id  → data: SupplierStatement | metadata: PaginationMeta */
-  SUPPLIER_STATEMENT: { code: 'RPT200_23', status: 200, message: 'Supplier Statement Retrieved' },
+  SUPPLIER_STATEMENT: {
+    code: 'RPT200_23',
+    status: 200,
+    message: 'Supplier Statement Retrieved',
+  },
   // ── Stock ──────────────────────────────────────────────────
   /** GET /reports/stock/valuation          → data: StockValuation[]  | metadata: PaginationMeta */
-  STOCK_VALUATION: { code: 'RPT200_24', status: 200, message: 'Stock Valuation Retrieved' },
+  STOCK_VALUATION: {
+    code: 'RPT200_24',
+    status: 200,
+    message: 'Stock Valuation Retrieved',
+  },
   /** GET /reports/stock/low-stock          → data: LowStock[]        | metadata: PaginationMeta */
-  STOCK_LOW: { code: 'RPT200_25', status: 200, message: 'Low Stock Alerts Retrieved' },
+  STOCK_LOW: {
+    code: 'RPT200_25',
+    status: 200,
+    message: 'Low Stock Alerts Retrieved',
+  },
   /** GET /reports/stock/movements-journal  → data: MovementRow[]     | metadata: PaginationMeta */
-  STOCK_MOVEMENTS: { code: 'RPT200_26', status: 200, message: 'Stock Movements Journal Retrieved' },
+  STOCK_MOVEMENTS: {
+    code: 'RPT200_26',
+    status: 200,
+    message: 'Stock Movements Journal Retrieved',
+  },
   /** GET /reports/stock/slow-dead          → data: SlowDeadStock[]   | metadata: PaginationMeta */
-  STOCK_SLOW_DEAD: { code: 'RPT200_27', status: 200, message: 'Slow/Dead Stock Retrieved' },
+  STOCK_SLOW_DEAD: {
+    code: 'RPT200_27',
+    status: 200,
+    message: 'Slow/Dead Stock Retrieved',
+  },
   /** GET /reports/stock/by-warehouse       → data: StockByWarehouse[]| metadata: PaginationMeta */
-  STOCK_BY_WAREHOUSE: { code: 'RPT200_28', status: 200, message: 'Stock By Warehouse Retrieved' },
+  STOCK_BY_WAREHOUSE: {
+    code: 'RPT200_28',
+    status: 200,
+    message: 'Stock By Warehouse Retrieved',
+  },
   // ── Products ───────────────────────────────────────────────
   /** GET /reports/products/performance     → data: ProductPerformance[] | metadata: PaginationMeta */
-  PRODUCTS_PERFORMANCE: { code: 'RPT200_29', status: 200, message: 'Product Performance Retrieved' },
+  PRODUCTS_PERFORMANCE: {
+    code: 'RPT200_29',
+    status: 200,
+    message: 'Product Performance Retrieved',
+  },
   /** GET /reports/products/margin          → data: MarginAnalysis[]     | metadata: PaginationMeta */
-  PRODUCTS_MARGIN: { code: 'RPT200_30', status: 200, message: 'Margin Analysis Retrieved' },
+  PRODUCTS_MARGIN: {
+    code: 'RPT200_30',
+    status: 200,
+    message: 'Margin Analysis Retrieved',
+  },
   /** GET /reports/products/never-sold      → data: NeverSoldProduct[]   | metadata: PaginationMeta */
-  PRODUCTS_NEVER_SOLD: { code: 'RPT200_31', status: 200, message: 'Never Sold Products Retrieved' },
+  PRODUCTS_NEVER_SOLD: {
+    code: 'RPT200_31',
+    status: 200,
+    message: 'Never Sold Products Retrieved',
+  },
   // ── Exports ────────────────────────────────────────────────
   // GET /reports/{domain}/xlsx  → binary xlsx stream
   XLSX: { code: 'RPT200_XLSX', status: 200, message: 'Report XLSX Generated' },

@@ -1,4 +1,12 @@
-export type DatePreset = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_month' | 'this_quarter' | 'this_year' | 'custom';
+export type DatePreset =
+  | 'today'
+  | 'yesterday'
+  | 'this_week'
+  | 'this_month'
+  | 'last_month'
+  | 'this_quarter'
+  | 'this_year'
+  | 'custom';
 
 export interface ReportFilter {
   preset?: DatePreset;

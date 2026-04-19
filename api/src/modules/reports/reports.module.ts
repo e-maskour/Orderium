@@ -51,4 +51,4 @@ import { ReportExportService } from './shared/report-export.service';
     ReportExportService,
   ],
 })
-export class ReportsModule { }
+export class ReportsModule {}

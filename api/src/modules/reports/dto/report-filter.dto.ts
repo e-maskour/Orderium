@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsInt, Min, IsEnum, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  IsEnum,
+  IsDateString,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -63,7 +70,9 @@ export class SalesReportFilterDto extends ReportFilterDto {
   @Type(() => Number)
   partnerId?: number;
 
-  @ApiPropertyOptional({ description: 'Origin type: BACKOFFICE | CLIENT_POS | ADMIN_POS' })
+  @ApiPropertyOptional({
+    description: 'Origin type: BACKOFFICE | CLIENT_POS | ADMIN_POS',
+  })
   @IsOptional()
   @IsString()
   originType?: string;
@@ -84,7 +93,10 @@ export class StockReportFilterDto extends ReportFilterDto {
 }
 
 export class AgingReportFilterDto {
-  @ApiPropertyOptional({ example: '2025-12-31', description: 'Reference date for aging buckets' })
+  @ApiPropertyOptional({
+    example: '2025-12-31',
+    description: 'Reference date for aging buckets',
+  })
   @IsOptional()
   @IsDateString()
   asOfDate?: string;
@@ -119,7 +131,9 @@ export class PartnerStatementFilterDto extends ReportFilterDto {
 }
 
 export class InvoiceReportFilterDto extends ReportFilterDto {
-  @ApiPropertyOptional({ description: 'TVA rate filter (e.g. 20, 14, 10, 7, 0)' })
+  @ApiPropertyOptional({
+    description: 'TVA rate filter (e.g. 20, 14, 10, 7, 0)',
+  })
   @IsOptional()
   @IsInt()
   @Type(() => Number)

@@ -12,14 +12,19 @@ import type { ReportFilter, ReportData } from '../../../modules/analytics/analyt
 const COLUMNS = [
   { field: 'customerName', header: 'Client' },
   { field: 'lastOrderDate', header: 'Dernière commande' },
-  { field: 'daysSinceLastOrder', header: 'Jours d\'inactivité' },
+  { field: 'daysSinceLastOrder', header: "Jours d'inactivité" },
   { field: 'totalOrders', header: 'Total commandes' },
 ];
 
 const InactiveClientsPage: React.FC = () => {
   const [filter, setFilter] = useState<ReportFilter>({ preset: 'this_year' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getInactiveClients(filter));
-  const handleFilterChange = (f: ReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getInactiveClients(filter),
+  );
+  const handleFilterChange = (f: ReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -30,7 +35,12 @@ const InactiveClientsPage: React.FC = () => {
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.CLIENTS.INACTIVE + '/xlsx', filter)} xlsxFilename="clients-inactifs.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.CLIENTS.INACTIVE + '/xlsx', filter)}
+          xlsxFilename="clients-inactifs.xlsx"
+        />
+      }
     />
   );
 };

@@ -61,15 +61,14 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
         />
 
         {/* Filter bar */}
-        {filterBar && (
-          <div className="erp-card mb-3">
-            {filterBar}
-          </div>
-        )}
+        {filterBar && <div className="erp-card mb-3">{filterBar}</div>}
 
         {/* Loading */}
         {isLoading && (
-          <div className="erp-card flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+          <div
+            className="erp-card flex justify-content-center align-items-center"
+            style={{ minHeight: '200px' }}
+          >
             <div className="flex flex-column align-items-center gap-3">
               <ProgressSpinner style={{ width: '48px', height: '48px' }} strokeWidth="3" />
               <span className="text-500 text-sm">Chargement du rapport…</span>
@@ -79,7 +78,10 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
 
         {/* Error */}
         {error && !isLoading && (
-          <div className="erp-card flex align-items-center gap-3 p-4" style={{ borderLeft: '4px solid var(--red-500)' }}>
+          <div
+            className="erp-card flex align-items-center gap-3 p-4"
+            style={{ borderLeft: '4px solid var(--red-500)' }}
+          >
             <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
             <div>
               <p className="font-semibold text-900 m-0">Erreur lors du chargement</p>
@@ -95,7 +97,10 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
 
             {chart && (
               <div className="erp-card">
-                <div className="flex align-items-center gap-2 mb-3 pb-3" style={{ borderBottom: '1px solid var(--erp-border)' }}>
+                <div
+                  className="flex align-items-center gap-2 mb-3 pb-3"
+                  style={{ borderBottom: '1px solid var(--erp-border)' }}
+                >
                   <i className="pi pi-chart-line text-primary" />
                   <span className="font-semibold text-800 text-sm">Graphique</span>
                 </div>
@@ -105,15 +110,16 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
 
             {table && (
               <div className="erp-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div className="flex align-items-center justify-content-between px-4 py-3" style={{ borderBottom: '1px solid var(--erp-border)' }}>
+                <div
+                  className="flex align-items-center justify-content-between px-4 py-3"
+                  style={{ borderBottom: '1px solid var(--erp-border)' }}
+                >
                   <div className="flex align-items-center gap-2">
                     <i className="pi pi-table text-primary" />
                     <span className="font-semibold text-800 text-sm">Données détaillées</span>
                   </div>
                 </div>
-                <div className="px-3 pb-3">
-                  {table}
-                </div>
+                <div className="px-3 pb-3">{table}</div>
               </div>
             )}
           </div>

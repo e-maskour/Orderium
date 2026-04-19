@@ -6,11 +6,19 @@ import { DatePreset, ReportFilterDto } from '../dto/report-filter.dto';
 
 function makeQb(overrides: Record<string, jest.Mock> = {}) {
   const methods = [
-    'where', 'andWhere', 'select', 'addSelect',
-    'groupBy', 'orderBy', 'skip', 'take',
+    'where',
+    'andWhere',
+    'select',
+    'addSelect',
+    'groupBy',
+    'orderBy',
+    'skip',
+    'take',
   ];
   const qb: Record<string, jest.Mock> = {};
-  methods.forEach((m) => { qb[m] = jest.fn().mockReturnThis(); });
+  methods.forEach((m) => {
+    qb[m] = jest.fn().mockReturnThis();
+  });
   qb.getRawOne = jest.fn().mockResolvedValue(null);
   qb.getRawMany = jest.fn().mockResolvedValue([]);
   qb.getManyAndCount = jest.fn().mockResolvedValue([[], 0]);
@@ -31,7 +39,11 @@ const mockCacheManager = {
 
 describe('PaymentReportsService', () => {
   let service: PaymentReportsService;
-  const defaultFilter: ReportFilterDto = { preset: DatePreset.THIS_MONTH, page: 1, perPage: 50 };
+  const defaultFilter: ReportFilterDto = {
+    preset: DatePreset.THIS_MONTH,
+    page: 1,
+    perPage: 50,
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -52,10 +64,12 @@ describe('PaymentReportsService', () => {
   // ─── getCashflow ─────────────────────────────────────────────────────────────
   describe('getCashflow', () => {
     it('returns correct shape with empty DB', async () => {
-      mockPaymentRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
-      }));
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+          getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+        }),
+      );
 
       const result = await service.getCashflow(defaultFilter);
 
@@ -73,8 +87,12 @@ describe('PaymentReportsService', () => {
         { day: '2025-03-02', inflow: '5000.00', outflow: '2000.00' },
       ];
       mockPaymentRepo.createQueryBuilder
-        .mockReturnValueOnce(makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }))
-        .mockReturnValueOnce(makeQb({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) }));
+        .mockReturnValueOnce(
+          makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }),
+        )
+        .mockReturnValueOnce(
+          makeQb({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) }),
+        );
 
       const result = await service.getCashflow(defaultFilter);
 
@@ -85,12 +103,34 @@ describe('PaymentReportsService', () => {
 
     it('maps payment rows to direction labels', async () => {
       const paymentRows = [
-        { id: 1, paymentDate: '2025-03-01', amount: 5000, paymentType: 'CASH', notes: null, customerId: 10, supplierId: null },
-        { id: 2, paymentDate: '2025-03-02', amount: 3000, paymentType: 'TRANSFER', notes: 'Wire', customerId: null, supplierId: 5 },
+        {
+          id: 1,
+          paymentDate: '2025-03-01',
+          amount: 5000,
+          paymentType: 'CASH',
+          notes: null,
+          customerId: 10,
+          supplierId: null,
+        },
+        {
+          id: 2,
+          paymentDate: '2025-03-02',
+          amount: 3000,
+          paymentType: 'TRANSFER',
+          notes: 'Wire',
+          customerId: null,
+          supplierId: 5,
+        },
       ];
       mockPaymentRepo.createQueryBuilder
-        .mockReturnValueOnce(makeQb({ getRawMany: jest.fn().mockResolvedValue([]) }))
-        .mockReturnValueOnce(makeQb({ getManyAndCount: jest.fn().mockResolvedValue([paymentRows, 2]) }));
+        .mockReturnValueOnce(
+          makeQb({ getRawMany: jest.fn().mockResolvedValue([]) }),
+        )
+        .mockReturnValueOnce(
+          makeQb({
+            getManyAndCount: jest.fn().mockResolvedValue([paymentRows, 2]),
+          }),
+        );
 
       const result = await service.getCashflow(defaultFilter);
 
@@ -102,9 +142,11 @@ describe('PaymentReportsService', () => {
   // ─── getByMethod ─────────────────────────────────────────────────────────────
   describe('getByMethod', () => {
     it('returns top method as dash when empty', async () => {
-      mockPaymentRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getByMethod(defaultFilter);
 
@@ -118,9 +160,11 @@ describe('PaymentReportsService', () => {
         { method: 'CASH', count: '20', total: '50000.00' },
         { method: 'TRANSFER', count: '5', total: '20000.00' },
       ];
-      mockPaymentRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue(raw),
-      }));
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue(raw),
+        }),
+      );
 
       const result = await service.getByMethod(defaultFilter);
 
@@ -135,9 +179,11 @@ describe('PaymentReportsService', () => {
   // ─── getInOutFlow ─────────────────────────────────────────────────────────────
   describe('getInOutFlow', () => {
     it('returns correct shape', async () => {
-      mockPaymentRepo.createQueryBuilder.mockReturnValue(makeQb({
-        getRawMany: jest.fn().mockResolvedValue([]),
-      }));
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({
+          getRawMany: jest.fn().mockResolvedValue([]),
+        }),
+      );
 
       const result = await service.getInOutFlow(defaultFilter);
       expect(result).toHaveProperty('kpis');

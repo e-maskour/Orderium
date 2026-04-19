@@ -21,8 +21,13 @@ const COLUMNS = [
 
 const StockMovementsPage: React.FC = () => {
   const [filter, setFilter] = useState<StockReportFilter>({ preset: 'this_month' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getStockMovements(filter));
-  const handleFilterChange = (f: StockReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getStockMovements(filter),
+  );
+  const handleFilterChange = (f: StockReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -32,8 +37,23 @@ const StockMovementsPage: React.FC = () => {
       isLoading={isLoading}
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} total={data?.meta?.total} page={filter.page} perPage={filter.perPage} onPageChange={(p, pp) => handleFilterChange({ ...filter, page: p, perPage: pp })} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.STOCK.MOVEMENTS + '/xlsx', filter)} xlsxFilename="mouvements-stock.xlsx" />}
+      table={
+        <ReportTable
+          columns={COLUMNS}
+          rows={data?.rows ?? []}
+          total={data?.meta?.total}
+          page={filter.page}
+          perPage={filter.perPage}
+          onPageChange={(p, pp) => handleFilterChange({ ...filter, page: p, perPage: pp })}
+          loading={isLoading}
+        />
+      }
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.STOCK.MOVEMENTS + '/xlsx', filter)}
+          xlsxFilename="mouvements-stock.xlsx"
+        />
+      }
     />
   );
 };

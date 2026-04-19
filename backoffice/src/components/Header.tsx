@@ -1056,13 +1056,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               >
                 {[0, 1, 2].map((row) =>
                   [0, 1, 2].map((col) => (
-                    <circle
-                      key={`${row}-${col}`}
-                      cx={2.5 + col * 6}
-                      cy={2.5 + row * 6}
-                      r="1.6"
-                    />
-                  ))
+                    <circle key={`${row}-${col}`} cx={2.5 + col * 6} cy={2.5 + row * 6} r="1.6" />
+                  )),
                 )}
               </svg>
             </button>

@@ -12,13 +12,23 @@ import type { SalesReportFilter, ReportData } from '../../../modules/analytics/a
 const COLUMNS = [
   { field: 'channel', header: 'Caisse / POS' },
   { field: 'orderCount', header: 'Nb commandes' },
-  { field: 'totalRevenue', header: 'CA (MAD)', body: (row: Record<string, unknown>) => Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }) },
+  {
+    field: 'totalRevenue',
+    header: 'CA (MAD)',
+    body: (row: Record<string, unknown>) =>
+      Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+  },
 ];
 
 const SalesByPosPage: React.FC = () => {
   const [filter, setFilter] = useState<SalesReportFilter>({ preset: 'this_month' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getSalesByPos(filter));
-  const handleFilterChange = (f: SalesReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getSalesByPos(filter),
+  );
+  const handleFilterChange = (f: SalesReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -29,7 +39,12 @@ const SalesByPosPage: React.FC = () => {
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.SALES.BY_POS + '/xlsx', filter)} xlsxFilename="ventes-caisse.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.SALES.BY_POS + '/xlsx', filter)}
+          xlsxFilename="ventes-caisse.xlsx"
+        />
+      }
     />
   );
 };

@@ -9,7 +9,7 @@ import { SalesReportFilterDto } from '../dto/report-filter.dto';
 @ApiTags('Reports — Sales')
 @Controller('reports/sales')
 export class SalesReportsController {
-  constructor(private readonly service: SalesReportsService) { }
+  constructor(private readonly service: SalesReportsService) {}
 
   @Get('revenue')
   @ApiOperation({ summary: 'Sales revenue by period' })
@@ -54,12 +54,21 @@ export class SalesReportsController {
   // ── XLSX exports ──────────────────────────────────────────────────────────
 
   @Get('revenue/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @ApiOperation({ summary: 'Export sales revenue report as XLSX' })
   @ApiResponse({ status: 200, description: 'XLSX file' })
-  async getRevenueXlsx(@Query() filter: SalesReportFilterDto, @Res() res: Response) {
+  async getRevenueXlsx(
+    @Query() filter: SalesReportFilterDto,
+    @Res() res: Response,
+  ) {
     const buffer = await this.service.getRevenueXlsx(filter);
-    res.setHeader('Content-Disposition', 'attachment; filename="rapport-ventes.xlsx"');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="rapport-ventes.xlsx"',
+    );
     res.end(buffer);
   }
 }

@@ -1,10 +1,18 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { TenantConnectionService } from '../../tenant/tenant-connection.service';
-import { Invoice, InvoiceItem, InvoiceStatus } from '../../invoices/entities/invoice.entity';
+import {
+  Invoice,
+  InvoiceItem,
+  InvoiceStatus,
+} from '../../invoices/entities/invoice.entity';
 import { DocumentDirection } from '../../../common/entities/base-document.entity';
 import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
-import { InvoiceReportFilterDto, ReportFilterDto, AgingReportFilterDto } from '../dto/report-filter.dto';
+import {
+  InvoiceReportFilterDto,
+  ReportFilterDto,
+  AgingReportFilterDto,
+} from '../dto/report-filter.dto';
 
 const TTL = 300_000;
 
@@ -45,13 +53,20 @@ export class InvoiceReportsService {
   async getJournalVente(filter: InvoiceReportFilterDto) {
     const key = this.cacheKey('journal-vente', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const qb = this.invoiceRepo
         .createQueryBuilder('inv')
-        .where('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.VENTE })
         .andWhere('inv.isValidated = true');
 
@@ -61,14 +76,34 @@ export class InvoiceReportsService {
         .addSelect('SUM(inv.paidAmount)', 'totalPaid')
         .addSelect('SUM(inv.remainingAmount)', 'totalRemaining')
         .addSelect('COUNT(inv.id)', 'count')
-        .getRawOne<{ totalHT: string; totalTVA: string; totalPaid: string; totalRemaining: string; count: string }>();
+        .getRawOne<{
+          totalHT: string;
+          totalTVA: string;
+          totalPaid: string;
+          totalRemaining: string;
+          count: string;
+        }>();
 
       const [rows, total] = await this.invoiceRepo
         .createQueryBuilder('inv')
-        .where('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.VENTE })
         .andWhere('inv.isValidated = true')
-        .select(['inv.id', 'inv.documentNumber', 'inv.date', 'inv.customerName', 'inv.subtotal', 'inv.tax', 'inv.total', 'inv.paidAmount', 'inv.remainingAmount', 'inv.status'])
+        .select([
+          'inv.id',
+          'inv.documentNumber',
+          'inv.date',
+          'inv.customerName',
+          'inv.subtotal',
+          'inv.tax',
+          'inv.total',
+          'inv.paidAmount',
+          'inv.remainingAmount',
+          'inv.status',
+        ])
         .orderBy('inv.date', 'DESC')
         .skip((page - 1) * perPage)
         .take(perPage)
@@ -104,13 +139,20 @@ export class InvoiceReportsService {
   async getJournalAchat(filter: InvoiceReportFilterDto) {
     const key = this.cacheKey('journal-achat', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
       const page = filter.page ?? 1;
       const perPage = filter.perPage ?? 50;
 
       const qb = this.invoiceRepo
         .createQueryBuilder('inv')
-        .where('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.ACHAT })
         .andWhere('inv.isValidated = true');
 
@@ -120,14 +162,34 @@ export class InvoiceReportsService {
         .addSelect('SUM(inv.paidAmount)', 'totalPaid')
         .addSelect('SUM(inv.remainingAmount)', 'totalRemaining')
         .addSelect('COUNT(inv.id)', 'count')
-        .getRawOne<{ totalTTC: string; totalTVA: string; totalPaid: string; totalRemaining: string; count: string }>();
+        .getRawOne<{
+          totalTTC: string;
+          totalTVA: string;
+          totalPaid: string;
+          totalRemaining: string;
+          count: string;
+        }>();
 
       const [rows, total] = await this.invoiceRepo
         .createQueryBuilder('inv')
-        .where('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.direction = :dir', { dir: DocumentDirection.ACHAT })
         .andWhere('inv.isValidated = true')
-        .select(['inv.id', 'inv.documentNumber', 'inv.date', 'inv.supplierName', 'inv.subtotal', 'inv.tax', 'inv.total', 'inv.paidAmount', 'inv.remainingAmount', 'inv.status'])
+        .select([
+          'inv.id',
+          'inv.documentNumber',
+          'inv.date',
+          'inv.supplierName',
+          'inv.subtotal',
+          'inv.tax',
+          'inv.total',
+          'inv.paidAmount',
+          'inv.remainingAmount',
+          'inv.status',
+        ])
         .orderBy('inv.date', 'DESC')
         .skip((page - 1) * perPage)
         .take(perPage)
@@ -163,13 +225,20 @@ export class InvoiceReportsService {
   async getTvaSummary(filter: InvoiceReportFilterDto) {
     const key = this.cacheKey('tva-summary', filter);
     return this.withCache(key, async () => {
-      const { from, to } = resolveDateRange(filter.preset, filter.startDate, filter.endDate);
+      const { from, to } = resolveDateRange(
+        filter.preset,
+        filter.startDate,
+        filter.endDate,
+      );
 
       // Aggregate invoice items by tax rate and direction
       const rawItems = await this.invoiceItemRepo
         .createQueryBuilder('item')
         .innerJoin('item.invoice', 'inv')
-        .where('inv.date >= :from AND inv.date <= :to', { from: toSqlDate(from), to: toSqlDate(to) })
+        .where('inv.date >= :from AND inv.date <= :to', {
+          from: toSqlDate(from),
+          to: toSqlDate(to),
+        })
         .andWhere('inv.isValidated = true')
         .select('item.tax', 'taxRate')
         .addSelect('inv.direction', 'direction')
@@ -178,12 +247,25 @@ export class InvoiceReportsService {
         .groupBy('item.tax')
         .addGroupBy('inv.direction')
         .orderBy('item.tax', 'DESC')
-        .getRawMany<{ taxRate: string; direction: string; totalHT: string; totalTVA: string }>();
+        .getRawMany<{
+          taxRate: string;
+          direction: string;
+          totalHT: string;
+          totalTVA: string;
+        }>();
 
       // Pivot: one row per rate, columns for VENTE and ACHAT
       const pivot = TVA_RATES.map((rate) => {
-        const vente = rawItems.find((r) => Number(r.taxRate) === rate && r.direction === DocumentDirection.VENTE);
-        const achat = rawItems.find((r) => Number(r.taxRate) === rate && r.direction === DocumentDirection.ACHAT);
+        const vente = rawItems.find(
+          (r) =>
+            Number(r.taxRate) === rate &&
+            (r.direction as DocumentDirection) === DocumentDirection.VENTE,
+        );
+        const achat = rawItems.find(
+          (r) =>
+            Number(r.taxRate) === rate &&
+            (r.direction as DocumentDirection) === DocumentDirection.ACHAT,
+        );
         return {
           tvaRate: rate,
           baseHt: Number(vente?.totalHT ?? 0),
@@ -207,8 +289,14 @@ export class InvoiceReportsService {
           type: 'bar',
           labels: TVA_RATES.map((r) => `TVA ${r}%`),
           series: [
-            { name: 'TVA Collectée (Ventes)', data: pivot.map((r) => r.tvaCollected) },
-            { name: 'TVA Déductible (Achats)', data: pivot.map((r) => r.tvaDeductible) },
+            {
+              name: 'TVA Collectée (Ventes)',
+              data: pivot.map((r) => r.tvaCollected),
+            },
+            {
+              name: 'TVA Déductible (Achats)',
+              data: pivot.map((r) => r.tvaDeductible),
+            },
           ],
         },
         rows: pivot,
@@ -228,8 +316,22 @@ export class InvoiceReportsService {
         .createQueryBuilder('inv')
         .where('inv.remainingAmount > 0')
         .andWhere('inv.isValidated = true')
-        .andWhere('inv.status IN (:...statuses)', { statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL] })
-        .select(['inv.id', 'inv.documentNumber', 'inv.date', 'inv.dueDate', 'inv.direction', 'inv.customerName', 'inv.supplierName', 'inv.total', 'inv.paidAmount', 'inv.remainingAmount', 'inv.status'])
+        .andWhere('inv.status IN (:...statuses)', {
+          statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL],
+        })
+        .select([
+          'inv.id',
+          'inv.documentNumber',
+          'inv.date',
+          'inv.dueDate',
+          'inv.direction',
+          'inv.customerName',
+          'inv.supplierName',
+          'inv.total',
+          'inv.paidAmount',
+          'inv.remainingAmount',
+          'inv.status',
+        ])
         .orderBy('inv.dueDate', 'ASC')
         .skip((page - 1) * perPage)
         .take(perPage)
@@ -239,13 +341,17 @@ export class InvoiceReportsService {
         .createQueryBuilder('inv')
         .where('inv.remainingAmount > 0')
         .andWhere('inv.isValidated = true')
-        .andWhere('inv.status IN (:...statuses)', { statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL] })
+        .andWhere('inv.status IN (:...statuses)', {
+          statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL],
+        })
         .select('SUM(inv.remainingAmount)', 'totalRemaining')
         .addSelect('COUNT(inv.id)', 'count')
         .getRawOne<{ totalRemaining: string; count: string }>();
 
       const today = new Date();
-      const overdueCount = rows.filter((inv) => inv.dueDate && new Date(inv.dueDate) < today).length;
+      const overdueCount = rows.filter(
+        (inv) => inv.dueDate && new Date(inv.dueDate) < today,
+      ).length;
 
       return {
         kpis: {
@@ -260,13 +366,22 @@ export class InvoiceReportsService {
           date: inv.date,
           dueDate: inv.dueDate,
           direction: inv.direction,
-          partnerName: inv.direction === DocumentDirection.VENTE ? inv.customerName : inv.supplierName,
+          partnerName:
+            inv.direction === DocumentDirection.VENTE
+              ? inv.customerName
+              : inv.supplierName,
           total: inv.total,
           paid: inv.paidAmount,
           amountDue: inv.remainingAmount,
           status: inv.status,
           isOverdue: inv.dueDate ? new Date(inv.dueDate) < today : false,
-          daysOverdue: inv.dueDate && new Date(inv.dueDate) < today ? Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / 86400000) : 0,
+          daysOverdue:
+            inv.dueDate && new Date(inv.dueDate) < today
+              ? Math.floor(
+                (today.getTime() - new Date(inv.dueDate).getTime()) /
+                86400000,
+              )
+              : 0,
         })),
         meta: { total, page, perPage },
       };
@@ -285,27 +400,65 @@ export class InvoiceReportsService {
         .createQueryBuilder('inv')
         .where('inv.remainingAmount > 0')
         .andWhere('inv.isValidated = true')
-        .andWhere('inv.status IN (:...statuses)', { statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL] })
-        .select(['inv.id', 'inv.documentNumber', 'inv.date', 'inv.dueDate', 'inv.direction', 'inv.customerId', 'inv.customerName', 'inv.supplierId', 'inv.supplierName', 'inv.remainingAmount'])
+        .andWhere('inv.status IN (:...statuses)', {
+          statuses: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIAL],
+        })
+        .select([
+          'inv.id',
+          'inv.documentNumber',
+          'inv.date',
+          'inv.dueDate',
+          'inv.direction',
+          'inv.customerId',
+          'inv.customerName',
+          'inv.supplierId',
+          'inv.supplierName',
+          'inv.remainingAmount',
+        ])
         .getMany();
 
       // Group by partner
-      const partnerMap = new Map<string, {
-        partnerId: number | null; partnerName: string; direction: string;
-        current: number; d1_30: number; d31_60: number; d61_90: number; d90plus: number; total: number;
-      }>();
+      const partnerMap = new Map<
+        string,
+        {
+          partnerId: number | null;
+          partnerName: string;
+          direction: string;
+          current: number;
+          d1_30: number;
+          d31_60: number;
+          d61_90: number;
+          d90plus: number;
+          total: number;
+        }
+      >();
 
       for (const inv of raw) {
         const isVente = inv.direction === DocumentDirection.VENTE;
         const partnerId = isVente ? inv.customerId : inv.supplierId;
-        const partnerName = isVente ? (inv.customerName ?? '-') : (inv.supplierName ?? '-');
+        const partnerName = isVente
+          ? (inv.customerName ?? '-')
+          : (inv.supplierName ?? '-');
         const mapKey = `${inv.direction}:${partnerId ?? partnerName}`;
         if (!partnerMap.has(mapKey)) {
-          partnerMap.set(mapKey, { partnerId, partnerName, direction: inv.direction, current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90plus: 0, total: 0 });
+          partnerMap.set(mapKey, {
+            partnerId,
+            partnerName,
+            direction: inv.direction,
+            current: 0,
+            d1_30: 0,
+            d31_60: 0,
+            d61_90: 0,
+            d90plus: 0,
+            total: 0,
+          });
         }
         const entry = partnerMap.get(mapKey)!;
         const ref = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.date);
-        const daysLate = Math.max(0, Math.floor((asOf.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)));
+        const daysLate = Math.max(
+          0,
+          Math.floor((asOf.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)),
+        );
         const amount = Number(inv.remainingAmount);
         entry.total += amount;
         if (daysLate === 0) entry.current += amount;
@@ -315,7 +468,9 @@ export class InvoiceReportsService {
         else entry.d90plus += amount;
       }
 
-      const allRows = Array.from(partnerMap.values()).sort((a, b) => b.total - a.total);
+      const allRows = Array.from(partnerMap.values()).sort(
+        (a, b) => b.total - a.total,
+      );
       const total = allRows.length;
       const rows = allRows.slice((page - 1) * perPage, page * perPage);
 
@@ -327,17 +482,25 @@ export class InvoiceReportsService {
         },
         chart: {
           type: 'bar',
-          labels: ['À l\'échéance', '1-30 jours', '31-60 jours', '61-90 jours', '+90 jours'],
-          series: [{
-            name: 'Solde (MAD)',
-            data: [
-              allRows.reduce((s, r) => s + r.current, 0),
-              allRows.reduce((s, r) => s + r.d1_30, 0),
-              allRows.reduce((s, r) => s + r.d31_60, 0),
-              allRows.reduce((s, r) => s + r.d61_90, 0),
-              allRows.reduce((s, r) => s + r.d90plus, 0),
-            ],
-          }],
+          labels: [
+            "À l'échéance",
+            '1-30 jours',
+            '31-60 jours',
+            '61-90 jours',
+            '+90 jours',
+          ],
+          series: [
+            {
+              name: 'Solde (MAD)',
+              data: [
+                allRows.reduce((s, r) => s + r.current, 0),
+                allRows.reduce((s, r) => s + r.d1_30, 0),
+                allRows.reduce((s, r) => s + r.d31_60, 0),
+                allRows.reduce((s, r) => s + r.d61_90, 0),
+                allRows.reduce((s, r) => s + r.d90plus, 0),
+              ],
+            },
+          ],
         },
         rows: rows.map((r) => ({
           partnerId: r.partnerId,
@@ -350,20 +513,37 @@ export class InvoiceReportsService {
           over90: r.d90plus,
           total: r.total,
         })),
-        meta: { total, page, perPage, asOfDate: asOf.toISOString().slice(0, 10) },
+        meta: {
+          total,
+          page,
+          perPage,
+          asOfDate: asOf.toISOString().slice(0, 10),
+        },
       };
     });
   }
 
   async getJournalVenteXlsx(filter: InvoiceReportFilterDto): Promise<Buffer> {
-    const data = await this.getJournalVente({ ...filter, page: 1, perPage: 10_000 });
+    const data = await this.getJournalVente({
+      ...filter,
+      page: 1,
+      perPage: 10_000,
+    });
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data.rows.map((r) => ({
-      'Numéro': r.invoiceNumber, 'Date': r.invoiceDate, 'Client': r.customerName,
-      'HT (MAD)': r.ht, 'TVA (MAD)': r.tva, 'TTC (MAD)': r.ttc,
-      'Payé (MAD)': r.paid, 'Reste (MAD)': r.remaining, 'Statut': r.status,
-    })));
+    const ws = XLSX.utils.json_to_sheet(
+      data.rows.map((r) => ({
+        Numéro: r.invoiceNumber,
+        Date: r.invoiceDate,
+        Client: r.customerName,
+        'HT (MAD)': r.ht,
+        'TVA (MAD)': r.tva,
+        'TTC (MAD)': r.ttc,
+        'Payé (MAD)': r.paid,
+        'Reste (MAD)': r.remaining,
+        Statut: r.status,
+      })),
+    );
     XLSX.utils.book_append_sheet(wb, ws, 'Journal Ventes');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }
@@ -372,14 +552,16 @@ export class InvoiceReportsService {
     const data = await this.getTvaSummary(filter);
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data.rows.map((r) => ({
-      'Taux TVA (%)': r.tvaRate,
-      'Ventes HT (MAD)': r.baseHt,
-      'TVA Collectée (MAD)': r.tvaCollected,
-      'Achats HT (MAD)': r.achatHT,
-      'TVA Déductible (MAD)': r.tvaDeductible,
-      'TVA Nette (MAD)': r.tvaDue,
-    })));
+    const ws = XLSX.utils.json_to_sheet(
+      data.rows.map((r) => ({
+        'Taux TVA (%)': r.tvaRate,
+        'Ventes HT (MAD)': r.baseHt,
+        'TVA Collectée (MAD)': r.tvaCollected,
+        'Achats HT (MAD)': r.achatHT,
+        'TVA Déductible (MAD)': r.tvaDeductible,
+        'TVA Nette (MAD)': r.tvaDue,
+      })),
+    );
     XLSX.utils.book_append_sheet(wb, ws, 'Récap TVA');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

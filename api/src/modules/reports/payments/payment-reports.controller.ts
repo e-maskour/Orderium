@@ -9,20 +9,26 @@ import { ReportFilterDto } from '../dto/report-filter.dto';
 @ApiTags('Reports — Payments')
 @Controller('reports/payments')
 export class PaymentReportsController {
-  constructor(private readonly service: PaymentReportsService) { }
+  constructor(private readonly service: PaymentReportsService) {}
 
   @Get('cashflow')
   @ApiOperation({ summary: 'Cashflow — daily inflows vs outflows' })
   @ApiResponse({ status: 200 })
   async getCashflow(@Query() filter: ReportFilterDto) {
-    return ApiRes(RPT.PAYMENTS_CASHFLOW, await this.service.getCashflow(filter));
+    return ApiRes(
+      RPT.PAYMENTS_CASHFLOW,
+      await this.service.getCashflow(filter),
+    );
   }
 
   @Get('by-method')
   @ApiOperation({ summary: 'Payments grouped by payment method' })
   @ApiResponse({ status: 200 })
   async getByMethod(@Query() filter: ReportFilterDto) {
-    return ApiRes(RPT.PAYMENTS_BY_METHOD, await this.service.getByMethod(filter));
+    return ApiRes(
+      RPT.PAYMENTS_BY_METHOD,
+      await this.service.getByMethod(filter),
+    );
   }
 
   @Get('in-out-flow')
@@ -33,11 +39,20 @@ export class PaymentReportsController {
   }
 
   @Get('cashflow/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @ApiOperation({ summary: 'Export cashflow as XLSX' })
-  async getCashflowXlsx(@Query() filter: ReportFilterDto, @Res() res: Response) {
+  async getCashflowXlsx(
+    @Query() filter: ReportFilterDto,
+    @Res() res: Response,
+  ) {
     const buffer = await this.service.getCashflowXlsx(filter);
-    res.setHeader('Content-Disposition', 'attachment; filename="cashflow.xlsx"');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="cashflow.xlsx"',
+    );
     res.end(buffer);
   }
 }

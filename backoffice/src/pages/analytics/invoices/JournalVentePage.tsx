@@ -9,7 +9,8 @@ import { analyticsService } from '../../../modules/analytics/analytics.service';
 import { API_ROUTES } from '../../../common/api/api-routes';
 import type { ReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const MAD = (row: Record<string, unknown>, field: string) => Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+const MAD = (row: Record<string, unknown>, field: string) =>
+  Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
 
 const COLUMNS = [
   { field: 'invoiceDate', header: 'Date' },
@@ -23,8 +24,13 @@ const COLUMNS = [
 
 const JournalVentePage: React.FC = () => {
   const [filter, setFilter] = useState<ReportFilter>({ preset: 'this_month' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getJournalVente(filter));
-  const handleFilterChange = (f: ReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getJournalVente(filter),
+  );
+  const handleFilterChange = (f: ReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -34,8 +40,26 @@ const JournalVentePage: React.FC = () => {
       isLoading={isLoading}
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} total={data?.meta?.total} page={filter.page} perPage={filter.perPage} onPageChange={(p, pp) => handleFilterChange({ ...filter, page: p, perPage: pp })} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.INVOICES.JOURNAL_VENTE + '/xlsx', filter)} xlsxFilename="journal-vente.xlsx" />}
+      table={
+        <ReportTable
+          columns={COLUMNS}
+          rows={data?.rows ?? []}
+          total={data?.meta?.total}
+          page={filter.page}
+          perPage={filter.perPage}
+          onPageChange={(p, pp) => handleFilterChange({ ...filter, page: p, perPage: pp })}
+          loading={isLoading}
+        />
+      }
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(
+            API_ROUTES.REPORTS.INVOICES.JOURNAL_VENTE + '/xlsx',
+            filter,
+          )}
+          xlsxFilename="journal-vente.xlsx"
+        />
+      }
     />
   );
 };

@@ -12,14 +12,24 @@ import type { ReportFilter, ReportData } from '../../../modules/analytics/analyt
 const COLUMNS = [
   { field: 'productName', header: 'Produit' },
   { field: 'sku', header: 'SKU' },
-  { field: 'price', header: 'Prix (MAD)', body: (row: Record<string, unknown>) => Number(row.price).toLocaleString('fr-MA', { minimumFractionDigits: 2 }) },
+  {
+    field: 'price',
+    header: 'Prix (MAD)',
+    body: (row: Record<string, unknown>) =>
+      Number(row.price).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+  },
   { field: 'stock', header: 'Stock actuel' },
 ];
 
 const NeverSoldProductsPage: React.FC = () => {
   const [filter, setFilter] = useState<ReportFilter>({ preset: 'this_year' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getNeverSoldProducts(filter));
-  const handleFilterChange = (f: ReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getNeverSoldProducts(filter),
+  );
+  const handleFilterChange = (f: ReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -30,7 +40,15 @@ const NeverSoldProductsPage: React.FC = () => {
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.PRODUCTS.NEVER_SOLD + '/xlsx', filter)} xlsxFilename="produits-jamais-vendus.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(
+            API_ROUTES.REPORTS.PRODUCTS.NEVER_SOLD + '/xlsx',
+            filter,
+          )}
+          xlsxFilename="produits-jamais-vendus.xlsx"
+        />
+      }
     />
   );
 };

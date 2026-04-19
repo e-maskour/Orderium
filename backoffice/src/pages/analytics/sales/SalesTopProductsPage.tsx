@@ -14,18 +14,38 @@ import type { SalesReportFilter, ReportData } from '../../../modules/analytics/a
 const COLUMNS = [
   { field: 'productName', header: 'Produit' },
   { field: 'totalQty', header: 'Qté vendue' },
-  { field: 'totalRevenue', header: 'CA (MAD)', body: (row: Record<string, unknown>) => Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }) },
+  {
+    field: 'totalRevenue',
+    header: 'CA (MAD)',
+    body: (row: Record<string, unknown>) =>
+      Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+  },
 ];
 
 const SalesTopProductsPage: React.FC = () => {
   const [filter, setFilter] = useState<SalesReportFilter>({ preset: 'this_month' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getSalesTopProducts(filter));
-  const handleFilterChange = (f: SalesReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getSalesTopProducts(filter),
+  );
+  const handleFilterChange = (f: SalesReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
-  const kpis = data ? [
-    { label: 'Produits uniques vendus', value: Number(data.kpis.uniqueProducts ?? 0), color: 'blue' as const },
-    { label: 'Quantité totale', value: Number(data.kpis.totalQty ?? 0), color: 'green' as const },
-  ] : [];
+  const kpis = data
+    ? [
+        {
+          label: 'Produits uniques vendus',
+          value: Number(data.kpis.uniqueProducts ?? 0),
+          color: 'blue' as const,
+        },
+        {
+          label: 'Quantité totale',
+          value: Number(data.kpis.totalQty ?? 0),
+          color: 'green' as const,
+        },
+      ]
+    : [];
 
   return (
     <ReportLayout
@@ -38,7 +58,15 @@ const SalesTopProductsPage: React.FC = () => {
       kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.SALES.TOP_PRODUCTS + '/xlsx', filter)} xlsxFilename="top-produits.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(
+            API_ROUTES.REPORTS.SALES.TOP_PRODUCTS + '/xlsx',
+            filter,
+          )}
+          xlsxFilename="top-produits.xlsx"
+        />
+      }
     />
   );
 };

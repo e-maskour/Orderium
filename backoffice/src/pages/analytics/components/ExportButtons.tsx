@@ -7,7 +7,11 @@ interface ExportButtonsProps {
   onPdf?: () => void;
 }
 
-const ExportButtons: React.FC<ExportButtonsProps> = ({ xlsxUrl, xlsxFilename = 'rapport.xlsx', onPdf }) => {
+const ExportButtons: React.FC<ExportButtonsProps> = ({
+  xlsxUrl,
+  xlsxFilename = 'rapport.xlsx',
+  onPdf,
+}) => {
   const [downloading, setDownloading] = useState(false);
 
   const handleXlsx = async () => {

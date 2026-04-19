@@ -11,22 +11,36 @@ describe('ReportExportService', () => {
     it('returns a Buffer', () => {
       const buf = service.buildXlsx(
         'Test Sheet',
-        [{ header: 'Name', key: 'name', width: 20 }, { header: 'Total', key: 'total', width: 15 }],
-        [{ name: 'Product A', total: 100 }, { name: 'Product B', total: 200 }],
+        [
+          { header: 'Name', key: 'name', width: 20 },
+          { header: 'Total', key: 'total', width: 15 },
+        ],
+        [
+          { name: 'Product A', total: 100 },
+          { name: 'Product B', total: 200 },
+        ],
       );
       expect(Buffer.isBuffer(buf)).toBe(true);
       expect(buf.length).toBeGreaterThan(0);
     });
 
     it('handles empty rows array', () => {
-      const buf = service.buildXlsx('Empty', [{ header: 'Col', key: 'col' }], []);
+      const buf = service.buildXlsx(
+        'Empty',
+        [{ header: 'Col', key: 'col' }],
+        [],
+      );
       expect(Buffer.isBuffer(buf)).toBe(true);
     });
 
     it('uses empty string for missing row keys', () => {
       // Should not throw even if row is missing a key
       expect(() =>
-        service.buildXlsx('S', [{ header: 'X', key: 'missingKey' }], [{ other: 'val' }]),
+        service.buildXlsx(
+          'S',
+          [{ header: 'X', key: 'missingKey' }],
+          [{ other: 'val' }],
+        ),
       ).not.toThrow();
     });
 

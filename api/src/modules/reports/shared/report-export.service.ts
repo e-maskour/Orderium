@@ -15,7 +15,11 @@ export class ReportExportService {
    * @param columns    Column definitions (header label + data key + optional width)
    * @param rows       Array of plain objects containing the data
    */
-  buildXlsx(sheetName: string, columns: XlsxColumn[], rows: Record<string, unknown>[]): Buffer {
+  buildXlsx(
+    sheetName: string,
+    columns: XlsxColumn[],
+    rows: Record<string, unknown>[],
+  ): Buffer {
     const wb = XLSX.utils.book_new();
 
     // Build data rows from column keys

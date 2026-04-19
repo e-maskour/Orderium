@@ -140,13 +140,21 @@ const SalesTopProductsPage = lazy(() => import('./pages/analytics/sales/SalesTop
 const SalesByCustomerPage = lazy(() => import('./pages/analytics/sales/SalesByCustomerPage'));
 const SalesByCategoryPage = lazy(() => import('./pages/analytics/sales/SalesByCategoryPage'));
 const SalesByPosPage = lazy(() => import('./pages/analytics/sales/SalesByPosPage'));
-const PurchasesByPeriodPage = lazy(() => import('./pages/analytics/purchases/PurchasesByPeriodPage'));
-const PurchasesTopSuppliersPage = lazy(() => import('./pages/analytics/purchases/PurchasesTopSuppliersPage'));
-const PurchasesByProductPage = lazy(() => import('./pages/analytics/purchases/PurchasesByProductPage'));
+const PurchasesByPeriodPage = lazy(
+  () => import('./pages/analytics/purchases/PurchasesByPeriodPage'),
+);
+const PurchasesTopSuppliersPage = lazy(
+  () => import('./pages/analytics/purchases/PurchasesTopSuppliersPage'),
+);
+const PurchasesByProductPage = lazy(
+  () => import('./pages/analytics/purchases/PurchasesByProductPage'),
+);
 const JournalVentePage = lazy(() => import('./pages/analytics/invoices/JournalVentePage'));
 const JournalAchatPage = lazy(() => import('./pages/analytics/invoices/JournalAchatPage'));
 const TvaSummaryPage = lazy(() => import('./pages/analytics/invoices/TvaSummaryPage'));
-const OutstandingInvoicesPage = lazy(() => import('./pages/analytics/invoices/OutstandingInvoicesPage'));
+const OutstandingInvoicesPage = lazy(
+  () => import('./pages/analytics/invoices/OutstandingInvoicesPage'),
+);
 const InvoiceAgingPage = lazy(() => import('./pages/analytics/invoices/InvoiceAgingPage'));
 const CashflowPage = lazy(() => import('./pages/analytics/payments/CashflowPage'));
 const PaymentsByMethodPage = lazy(() => import('./pages/analytics/payments/PaymentsByMethodPage'));
@@ -157,15 +165,21 @@ const InactiveClientsPage = lazy(() => import('./pages/analytics/clients/Inactiv
 const ClientStatementPage = lazy(() => import('./pages/analytics/clients/ClientStatementPage'));
 const TopSuppliersPage = lazy(() => import('./pages/analytics/suppliers/TopSuppliersPage'));
 const SupplierAgingPage = lazy(() => import('./pages/analytics/suppliers/SupplierAgingPage'));
-const SupplierStatementPage = lazy(() => import('./pages/analytics/suppliers/SupplierStatementPage'));
+const SupplierStatementPage = lazy(
+  () => import('./pages/analytics/suppliers/SupplierStatementPage'),
+);
 const StockValuationPage = lazy(() => import('./pages/analytics/stock/StockValuationPage'));
 const LowStockPage = lazy(() => import('./pages/analytics/stock/LowStockPage'));
 const StockMovementsPage = lazy(() => import('./pages/analytics/stock/StockMovementsPage'));
 const SlowDeadStockPage = lazy(() => import('./pages/analytics/stock/SlowDeadStockPage'));
 const StockByWarehousePage = lazy(() => import('./pages/analytics/stock/StockByWarehousePage'));
-const ProductPerformancePage = lazy(() => import('./pages/analytics/products/ProductPerformancePage'));
+const ProductPerformancePage = lazy(
+  () => import('./pages/analytics/products/ProductPerformancePage'),
+);
 const MarginAnalysisPage = lazy(() => import('./pages/analytics/products/MarginAnalysisPage'));
-const NeverSoldProductsPage = lazy(() => import('./pages/analytics/products/NeverSoldProductsPage'));
+const NeverSoldProductsPage = lazy(
+  () => import('./pages/analytics/products/NeverSoldProductsPage'),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -705,38 +719,262 @@ function App() {
                             }
                           />
                           {/* Analytics & Reports */}
-                          <Route path="/analytics" element={<ProtectedRoute><AnalyticsHub /></ProtectedRoute>} />
-                          <Route path="/analytics/sales/revenue" element={<ProtectedRoute><SalesRevenuePage /></ProtectedRoute>} />
-                          <Route path="/analytics/sales/top-products" element={<ProtectedRoute><SalesTopProductsPage /></ProtectedRoute>} />
-                          <Route path="/analytics/sales/by-customer" element={<ProtectedRoute><SalesByCustomerPage /></ProtectedRoute>} />
-                          <Route path="/analytics/sales/by-category" element={<ProtectedRoute><SalesByCategoryPage /></ProtectedRoute>} />
-                          <Route path="/analytics/sales/by-pos" element={<ProtectedRoute><SalesByPosPage /></ProtectedRoute>} />
-                          <Route path="/analytics/purchases/by-period" element={<ProtectedRoute><PurchasesByPeriodPage /></ProtectedRoute>} />
-                          <Route path="/analytics/purchases/top-suppliers" element={<ProtectedRoute><PurchasesTopSuppliersPage /></ProtectedRoute>} />
-                          <Route path="/analytics/purchases/by-product" element={<ProtectedRoute><PurchasesByProductPage /></ProtectedRoute>} />
-                          <Route path="/analytics/invoices/journal-vente" element={<ProtectedRoute><JournalVentePage /></ProtectedRoute>} />
-                          <Route path="/analytics/invoices/journal-achat" element={<ProtectedRoute><JournalAchatPage /></ProtectedRoute>} />
-                          <Route path="/analytics/invoices/tva" element={<ProtectedRoute><TvaSummaryPage /></ProtectedRoute>} />
-                          <Route path="/analytics/invoices/outstanding" element={<ProtectedRoute><OutstandingInvoicesPage /></ProtectedRoute>} />
-                          <Route path="/analytics/invoices/aging" element={<ProtectedRoute><InvoiceAgingPage /></ProtectedRoute>} />
-                          <Route path="/analytics/payments/cashflow" element={<ProtectedRoute><CashflowPage /></ProtectedRoute>} />
-                          <Route path="/analytics/payments/by-method" element={<ProtectedRoute><PaymentsByMethodPage /></ProtectedRoute>} />
-                          <Route path="/analytics/payments/in-out" element={<ProtectedRoute><InOutFlowPage /></ProtectedRoute>} />
-                          <Route path="/analytics/clients/top" element={<ProtectedRoute><TopClientsPage /></ProtectedRoute>} />
-                          <Route path="/analytics/clients/aging" element={<ProtectedRoute><ClientAgingPage /></ProtectedRoute>} />
-                          <Route path="/analytics/clients/inactive" element={<ProtectedRoute><InactiveClientsPage /></ProtectedRoute>} />
-                          <Route path="/analytics/clients/statement" element={<ProtectedRoute><ClientStatementPage /></ProtectedRoute>} />
-                          <Route path="/analytics/suppliers/top" element={<ProtectedRoute><TopSuppliersPage /></ProtectedRoute>} />
-                          <Route path="/analytics/suppliers/aging" element={<ProtectedRoute><SupplierAgingPage /></ProtectedRoute>} />
-                          <Route path="/analytics/suppliers/statement" element={<ProtectedRoute><SupplierStatementPage /></ProtectedRoute>} />
-                          <Route path="/analytics/stock/valuation" element={<ProtectedRoute><StockValuationPage /></ProtectedRoute>} />
-                          <Route path="/analytics/stock/low-stock" element={<ProtectedRoute><LowStockPage /></ProtectedRoute>} />
-                          <Route path="/analytics/stock/movements" element={<ProtectedRoute><StockMovementsPage /></ProtectedRoute>} />
-                          <Route path="/analytics/stock/slow-dead" element={<ProtectedRoute><SlowDeadStockPage /></ProtectedRoute>} />
-                          <Route path="/analytics/stock/by-warehouse" element={<ProtectedRoute><StockByWarehousePage /></ProtectedRoute>} />
-                          <Route path="/analytics/products/performance" element={<ProtectedRoute><ProductPerformancePage /></ProtectedRoute>} />
-                          <Route path="/analytics/products/margin" element={<ProtectedRoute><MarginAnalysisPage /></ProtectedRoute>} />
-                          <Route path="/analytics/products/never-sold" element={<ProtectedRoute><NeverSoldProductsPage /></ProtectedRoute>} />
+                          <Route
+                            path="/analytics"
+                            element={
+                              <ProtectedRoute>
+                                <AnalyticsHub />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/sales/revenue"
+                            element={
+                              <ProtectedRoute>
+                                <SalesRevenuePage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/sales/top-products"
+                            element={
+                              <ProtectedRoute>
+                                <SalesTopProductsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/sales/by-customer"
+                            element={
+                              <ProtectedRoute>
+                                <SalesByCustomerPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/sales/by-category"
+                            element={
+                              <ProtectedRoute>
+                                <SalesByCategoryPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/sales/by-pos"
+                            element={
+                              <ProtectedRoute>
+                                <SalesByPosPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/purchases/by-period"
+                            element={
+                              <ProtectedRoute>
+                                <PurchasesByPeriodPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/purchases/top-suppliers"
+                            element={
+                              <ProtectedRoute>
+                                <PurchasesTopSuppliersPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/purchases/by-product"
+                            element={
+                              <ProtectedRoute>
+                                <PurchasesByProductPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/invoices/journal-vente"
+                            element={
+                              <ProtectedRoute>
+                                <JournalVentePage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/invoices/journal-achat"
+                            element={
+                              <ProtectedRoute>
+                                <JournalAchatPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/invoices/tva"
+                            element={
+                              <ProtectedRoute>
+                                <TvaSummaryPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/invoices/outstanding"
+                            element={
+                              <ProtectedRoute>
+                                <OutstandingInvoicesPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/invoices/aging"
+                            element={
+                              <ProtectedRoute>
+                                <InvoiceAgingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/payments/cashflow"
+                            element={
+                              <ProtectedRoute>
+                                <CashflowPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/payments/by-method"
+                            element={
+                              <ProtectedRoute>
+                                <PaymentsByMethodPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/payments/in-out"
+                            element={
+                              <ProtectedRoute>
+                                <InOutFlowPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/clients/top"
+                            element={
+                              <ProtectedRoute>
+                                <TopClientsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/clients/aging"
+                            element={
+                              <ProtectedRoute>
+                                <ClientAgingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/clients/inactive"
+                            element={
+                              <ProtectedRoute>
+                                <InactiveClientsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/clients/statement"
+                            element={
+                              <ProtectedRoute>
+                                <ClientStatementPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/suppliers/top"
+                            element={
+                              <ProtectedRoute>
+                                <TopSuppliersPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/suppliers/aging"
+                            element={
+                              <ProtectedRoute>
+                                <SupplierAgingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/suppliers/statement"
+                            element={
+                              <ProtectedRoute>
+                                <SupplierStatementPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/stock/valuation"
+                            element={
+                              <ProtectedRoute>
+                                <StockValuationPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/stock/low-stock"
+                            element={
+                              <ProtectedRoute>
+                                <LowStockPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/stock/movements"
+                            element={
+                              <ProtectedRoute>
+                                <StockMovementsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/stock/slow-dead"
+                            element={
+                              <ProtectedRoute>
+                                <SlowDeadStockPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/stock/by-warehouse"
+                            element={
+                              <ProtectedRoute>
+                                <StockByWarehousePage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/products/performance"
+                            element={
+                              <ProtectedRoute>
+                                <ProductPerformancePage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/products/margin"
+                            element={
+                              <ProtectedRoute>
+                                <MarginAnalysisPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/analytics/products/never-sold"
+                            element={
+                              <ProtectedRoute>
+                                <NeverSoldProductsPage />
+                              </ProtectedRoute>
+                            }
+                          />
 
                           <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Routes>

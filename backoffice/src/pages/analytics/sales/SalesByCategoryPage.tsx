@@ -13,13 +13,23 @@ import type { SalesReportFilter, ReportData } from '../../../modules/analytics/a
 const COLUMNS = [
   { field: 'categoryName', header: 'Catégorie' },
   { field: 'totalQty', header: 'Qté vendue' },
-  { field: 'totalRevenue', header: 'CA (MAD)', body: (row: Record<string, unknown>) => Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }) },
+  {
+    field: 'totalRevenue',
+    header: 'CA (MAD)',
+    body: (row: Record<string, unknown>) =>
+      Number(row.totalRevenue).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+  },
 ];
 
 const SalesByCategoryPage: React.FC = () => {
   const [filter, setFilter] = useState<SalesReportFilter>({ preset: 'this_month' });
-  const { data, isLoading, error, refetch } = useReport<ReportData>(() => analyticsService.getSalesByCategory(filter));
-  const handleFilterChange = (f: SalesReportFilter) => { setFilter(f); setTimeout(refetch, 0); };
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
+    analyticsService.getSalesByCategory(filter),
+  );
+  const handleFilterChange = (f: SalesReportFilter) => {
+    setFilter(f);
+    setTimeout(refetch, 0);
+  };
 
   return (
     <ReportLayout
@@ -31,7 +41,12 @@ const SalesByCategoryPage: React.FC = () => {
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
-      exportButtons={<ExportButtons xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.SALES.BY_CATEGORY + '/xlsx', filter)} xlsxFilename="ventes-categorie.xlsx" />}
+      exportButtons={
+        <ExportButtons
+          xlsxUrl={analyticsService.xlsxUrl(API_ROUTES.REPORTS.SALES.BY_CATEGORY + '/xlsx', filter)}
+          xlsxFilename="ventes-categorie.xlsx"
+        />
+      }
     />
   );
 };

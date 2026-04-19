@@ -3,7 +3,10 @@ import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import type { DatePreset, ReportFilter } from '../../../modules/analytics/analytics.interface';
 
-interface Preset { label: string; value: DatePreset }
+interface Preset {
+  label: string;
+  value: DatePreset;
+}
 
 const PRESETS: Preset[] = [
   { label: "Aujourd'hui", value: 'today' },
@@ -35,7 +38,12 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
   const handleCustomRange = (dates: Date[] | null) => {
     setCustomRange(dates);
     if (dates && dates.length === 2 && dates[0] && dates[1]) {
-      onChange({ ...filter, preset: 'custom', startDate: toDateStr(dates[0]), endDate: toDateStr(dates[1]) });
+      onChange({
+        ...filter,
+        preset: 'custom',
+        startDate: toDateStr(dates[0]),
+        endDate: toDateStr(dates[1]),
+      });
     }
   };
 
@@ -44,7 +52,12 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
       {/* Label row */}
       <div className="flex align-items-center gap-2 mb-1">
         <i className="pi pi-filter text-500" style={{ fontSize: '0.8125rem' }} />
-        <span className="text-500 text-xs font-semibold uppercase" style={{ letterSpacing: '0.06em' }}>Période</span>
+        <span
+          className="text-500 text-xs font-semibold uppercase"
+          style={{ letterSpacing: '0.06em' }}
+        >
+          Période
+        </span>
       </div>
 
       {/* Preset buttons + optional custom picker */}
@@ -64,7 +77,9 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
                 fontSize: '0.8125rem',
                 fontWeight: isActive ? 600 : 400,
                 cursor: 'pointer',
-                border: isActive ? '1.5px solid var(--primary-color)' : '1px solid var(--erp-border)',
+                border: isActive
+                  ? '1.5px solid var(--primary-color)'
+                  : '1px solid var(--erp-border)',
                 background: isActive ? 'var(--primary-50)' : '#ffffff',
                 color: isActive ? 'var(--primary-700)' : 'var(--text-secondary)',
                 transition: 'all 0.15s ease',
