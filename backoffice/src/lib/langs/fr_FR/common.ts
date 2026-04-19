@@ -400,6 +400,7 @@ export default {
   navCollapse: 'Réduire',
   navTeam: 'Équipe',
   navPos: 'Point de vente',
+  analytics: 'Analytiques',
   rolesPermissions: 'Rôles & Permissions',
 
   // Stock / inventory

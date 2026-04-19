@@ -1036,7 +1036,10 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               />
             )}
 
-            {/* Search trigger — animated icon */}
+            <NotificationBell />
+            <LanguageToggle />
+
+            {/* Search trigger — 9-dots icon */}
             <button
               onClick={openSearch}
               aria-label="Search (⌘K)"
@@ -1044,14 +1047,25 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               className="header-search-icon-btn"
             >
               <span className="header-search-icon-ring" />
-              <Search
-                style={{ width: '1.0625rem', height: '1.0625rem', position: 'relative', zIndex: 1 }}
-                strokeWidth={1.75}
-              />
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 17 17"
+                fill="currentColor"
+                style={{ position: 'relative', zIndex: 1 }}
+              >
+                {[0, 1, 2].map((row) =>
+                  [0, 1, 2].map((col) => (
+                    <circle
+                      key={`${row}-${col}`}
+                      cx={2.5 + col * 6}
+                      cy={2.5 + row * 6}
+                      r="1.6"
+                    />
+                  ))
+                )}
+              </svg>
             </button>
-
-            <NotificationBell />
-            <LanguageToggle />
 
             <Divider
               layout="vertical"

@@ -399,6 +399,7 @@ export default {
   navCollapse: 'طي',
   navTeam: 'الفريق',
   navPos: 'نقطة البيع',
+  analytics: 'التحليلات',
   rolesPermissions: 'الأدوار والصلاحيات',
 
   // Stock / inventory
