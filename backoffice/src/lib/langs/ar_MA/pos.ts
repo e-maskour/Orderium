@@ -24,6 +24,8 @@ export default {
   pieces: 'قطع',
   perUnit: '/ وحدة',
   clear: 'مسح',
+  confirmClearCart: 'تفريغ السلة؟',
+  clearCart: 'تفريغ',
   addToCart: 'أضف للسلة',
   updateQty: 'تحديث الكمية',
   confirmPrice: 'تأكيد السعر',
@@ -44,4 +46,11 @@ export default {
   deliveryNoteA5: 'سند تسليم A5',
   preview: 'معاينة',
   print: 'طباعة',
+
+  // Image upload (POS)
+  addPhoto: 'صورة',
+  takePhoto: 'التقاط صورة',
+  orChooseFromGallery: 'اختر من المعرض',
+  uploading: 'جارٍ الرفع',
+  imageUploadedSuccess: 'تم تحديث الصورة بنجاح',
 };

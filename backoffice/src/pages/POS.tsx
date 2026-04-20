@@ -3,7 +3,7 @@ import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
 import { useVirtualKeyboard } from '../hooks/useVirtualKeyboard';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   ShoppingBag,
@@ -18,8 +18,10 @@ import {
   ChevronLeft,
   LayoutGrid,
   Barcode,
+  Camera,
+  Upload,
 } from 'lucide-react';
-import { toastError, toastConfirm } from '../services/toast.service';
+import { toastError, toastConfirm, toastSuccess } from '../services/toast.service';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Badge } from 'primereact/badge';
@@ -28,6 +30,9 @@ import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 import { DiscountModal } from '../components/DiscountModal';
+import { ImageUpload } from '../components/ImageUpload';
+import { Dialog } from 'primereact/dialog';
+import { useAuth } from '../context/AuthContext';
 import {
   posService,
   IPosProduct as Product,
@@ -36,11 +41,15 @@ import {
 } from '../modules/pos';
 import { categoriesService } from '../modules/categories';
 import { orderPaymentsService } from '../modules';
+import { productsService } from '../modules/products';
 import { formatCurrency } from '@orderium/ui';
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
   const navigate = useNavigate();
+  const { admin } = useAuth();
+  const queryClient = useQueryClient();
+  const isAdmin = admin?.isAdmin === true;
 
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
@@ -90,6 +99,16 @@ export default function POS() {
   const sidebarWidth = 320;
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [uploadImageProduct, setUploadImageProduct] = useState<Product | null>(null);
+  // Mobile upload — bottom sheet with inline getUserMedia camera
+  const [mobileUploadProduct, setMobileUploadProduct] = useState<Product | null>(null);
+  const [mobileUploading, setMobileUploading] = useState(false);
+  const [mobileCameraActive, setMobileCameraActive] = useState(false);
+  const [mobileCameraError, setMobileCameraError] = useState<string | null>(null);
+  const mobileStreamRef = useRef<MediaStream | null>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileCanvasRef = useRef<HTMLCanvasElement>(null);
+  const mobileGalleryRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -134,9 +153,14 @@ export default function POS() {
   }, [searchQuery]);
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
-    queryKey: ['pos-products', currentPage, perPage, debouncedSearch],
+    queryKey: ['pos-products', currentPage, perPage, debouncedSearch, selectedCategoryId],
     queryFn: () =>
-      posService.getProducts({ page: currentPage, perPage, search: debouncedSearch || undefined }),
+      posService.getProducts({
+        page: currentPage,
+        perPage,
+        search: debouncedSearch || undefined,
+        categoryId: selectedCategoryId ?? undefined,
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -179,11 +203,7 @@ export default function POS() {
   const categories = categoriesData || [];
 
   const filteredProducts = products.filter(
-    (p: Product) =>
-      p.isEnabled !== false &&
-      p.isService !== true &&
-      (selectedCategoryId === null ||
-        (Array.isArray(p.categories) && p.categories.some((c) => c.id === selectedCategoryId))),
+    (p: Product) => p.isEnabled !== false && p.isService !== true,
   );
 
   const openQuantityModal = (product: Product) => {
@@ -370,6 +390,81 @@ export default function POS() {
 
   const handleSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
+  };
+
+  const handleMobileImageFile = async (file: File) => {
+    if (!mobileUploadProduct) return;
+    setMobileUploading(true);
+    try {
+      await productsService.uploadImage(mobileUploadProduct.id, file);
+      queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+      toastSuccess(t('imageUploadedSuccess'));
+    } catch (err: any) {
+      toastError(err.message || t('error'));
+    } finally {
+      setMobileUploading(false);
+      setMobileUploadProduct(null);
+      setMobileCameraActive(false);
+    }
+  };
+
+  const stopMobileStream = () => {
+    mobileStreamRef.current?.getTracks().forEach((tr) => tr.stop());
+    mobileStreamRef.current = null;
+  };
+
+  const closeMobileUploadSheet = () => {
+    stopMobileStream();
+    setMobileCameraActive(false);
+    setMobileCameraError(null);
+    setMobileUploadProduct(null);
+  };
+
+  const startMobileCamera = async () => {
+    setMobileCameraError(null);
+    setMobileCameraActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+      mobileStreamRef.current = stream;
+      if (mobileVideoRef.current) {
+        mobileVideoRef.current.srcObject = stream;
+        mobileVideoRef.current.play();
+      }
+    } catch (err: any) {
+      setMobileCameraError(err.message || 'Camera access denied');
+    }
+  };
+
+  const captureMobilePhoto = () => {
+    const video = mobileVideoRef.current;
+    const canvas = mobileCanvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(video, 0, 0);
+    stopMobileStream();
+    setMobileCameraActive(false);
+    canvas.toBlob(
+      async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        await handleMobileImageFile(file);
+      },
+      'image/jpeg',
+      0.93,
+    );
+  };
+
+  const openUploadForProduct = (product: Product) => {
+    if (isMobile) {
+      setMobileUploadProduct(product);
+    } else {
+      setUploadImageProduct(product);
+    }
   };
 
   // ── Shared Cart Panel Content (used by desktop aside + mobile overlay) ──
@@ -896,6 +991,7 @@ export default function POS() {
         .pos-keypad-btn { transition: transform 0.1s ease, background 0.1s ease; }
         .pos-keypad-btn:active { transform: scale(0.95); }
         .pos-search-input:focus { border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.14) !important; }
+
         .pos-mobile-overlay { animation: slideUp 0.28s cubic-bezier(0.34,1.36,0.64,1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (max-width: 767px) {
@@ -1346,10 +1442,24 @@ export default function POS() {
                   const quantity = cartItem?.quantity || 0;
                   const inCart = quantity > 0;
 
+                  // Long-press to change image (admin only)
+                  const holdRef = { timer: undefined as ReturnType<typeof setTimeout> | undefined };
+                  const startHold = () => {
+                    if (!isAdmin) return;
+                    holdRef.timer = setTimeout(() => openUploadForProduct(product), 600);
+                  };
+                  const cancelHold = () => clearTimeout(holdRef.timer);
+
                   return (
                     <div
                       key={product.id}
                       onClick={() => openQuantityModal(product)}
+                      onMouseDown={startHold}
+                      onMouseUp={cancelHold}
+                      onMouseLeave={cancelHold}
+                      onTouchStart={startHold}
+                      onTouchEnd={cancelHold}
+                      onTouchMove={cancelHold}
                       className="pos-product-card"
                       style={{
                         position: 'relative',
@@ -1383,16 +1493,48 @@ export default function POS() {
                           />
                         ) : (
                           <div
+                            onClick={
+                              isAdmin
+                                ? (e) => {
+                                    e.stopPropagation();
+                                    openUploadForProduct(product);
+                                  }
+                                : undefined
+                            }
                             style={{
                               width: '100%',
                               height: '100%',
                               display: 'flex',
+                              flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'center',
+                              gap: '0.375rem',
                               background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                              cursor: isAdmin ? 'pointer' : 'default',
                             }}
                           >
-                            <Package style={{ width: '2rem', height: '2rem', color: '#cbd5e1' }} />
+                            {isAdmin ? (
+                              <>
+                                <Camera
+                                  style={{ width: '1.75rem', height: '1.75rem', color: '#94a3b8' }}
+                                />
+                                <span
+                                  style={{
+                                    fontSize: '0.5625rem',
+                                    fontWeight: 600,
+                                    color: '#94a3b8',
+                                    textAlign: 'center',
+                                    lineHeight: 1.2,
+                                  }}
+                                >
+                                  {t('addPhoto')}
+                                </span>
+                              </>
+                            ) : (
+                              <Package
+                                style={{ width: '2rem', height: '2rem', color: '#cbd5e1' }}
+                              />
+                            )}
                           </div>
                         )}
                         {inCart && (
@@ -1587,6 +1729,302 @@ export default function POS() {
             boxShadow: '0 6px 20px rgba(35,90,228,0.45)',
           }}
         />
+      )}
+
+      {/* ═══ ADMIN: Hidden gallery file input (page DOM, not a portal) ═══ */}
+      {isAdmin && (
+        <input
+          ref={mobileGalleryRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) await handleMobileImageFile(file);
+          }}
+        />
+      )}
+
+      {/* ═══ ADMIN: Mobile image upload bottom sheet ═══ */}
+      {isAdmin && mobileUploadProduct !== null && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+          }}
+          onClick={() => {
+            if (!mobileCameraActive && !mobileUploading) closeMobileUploadSheet();
+          }}
+        >
+          {/* ── Live camera view (bottom sheet, 80vh tall) ── */}
+          {mobileCameraActive && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                height: '80vh',
+                background: '#000',
+                borderRadius: '1.25rem 1.25rem 0 0',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 -8px 40px rgba(0,0,0,0.4)',
+              }}
+            >
+              {mobileCameraError ? (
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    gap: '1rem',
+                    padding: '2rem',
+                  }}
+                >
+                  <Camera style={{ width: '3rem', height: '3rem', opacity: 0.5 }} />
+                  <p style={{ textAlign: 'center', fontSize: '0.9rem' }}>{mobileCameraError}</p>
+                  <button
+                    onClick={() => {
+                      setMobileCameraActive(false);
+                      setMobileCameraError(null);
+                    }}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.75rem',
+                      background: '#fff',
+                      color: '#0f172a',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {t('cancel')}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <video
+                    ref={mobileVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{ flex: 1, width: '100%', objectFit: 'cover', background: '#000' }}
+                  />
+                  {/* hidden canvas for capture */}
+                  <canvas ref={mobileCanvasRef} style={{ display: 'none' }} />
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px))',
+                      background: 'rgba(0,0,0,0.6)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        stopMobileStream();
+                        setMobileCameraActive(false);
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.15)',
+                        border: 'none',
+                        borderRadius: '2rem',
+                        padding: '0.625rem 1.25rem',
+                        color: '#fff',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t('cancel')}
+                    </button>
+                    <button
+                      onClick={captureMobilePhoto}
+                      style={{
+                        width: '4rem',
+                        height: '4rem',
+                        borderRadius: '50%',
+                        background: '#fff',
+                        border: '4px solid rgba(255,255,255,0.4)',
+                        cursor: 'pointer',
+                        boxShadow: '0 0 0 2px #235ae4',
+                      }}
+                    />
+                    <div style={{ width: '5rem' }} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Options sheet ── */}
+          {!mobileCameraActive && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                background: '#fff',
+                borderRadius: '1.25rem 1.25rem 0 0',
+                padding: '1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px))',
+                boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '2.5rem',
+                    height: '0.25rem',
+                    borderRadius: 2,
+                    background: '#d1d5db',
+                  }}
+                />
+              </div>
+              <p
+                style={{
+                  margin: '0 0 1rem',
+                  fontWeight: 700,
+                  fontSize: '0.9375rem',
+                  color: '#0f172a',
+                  textAlign: 'center',
+                }}
+              >
+                {mobileUploadProduct.name}
+              </p>
+              {mobileUploading ? (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '1rem 0',
+                    color: '#64748b',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {t('uploading')}…
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                  {/* Camera — getUserMedia, guaranteed to open real camera */}
+                  <button
+                    onClick={startMobileCamera}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.625rem',
+                      padding: '0.875rem',
+                      background: '#235ae4',
+                      borderRadius: '0.875rem',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: '0.9375rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Camera style={{ width: '1.25rem', height: '1.25rem' }} />
+                    {t('takePhoto')}
+                  </button>
+                  {/* Gallery — file input for photo library */}
+                  <label
+                    style={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.625rem',
+                      padding: '0.875rem',
+                      background: '#f1f5f9',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '0.875rem',
+                      color: '#374151',
+                      fontWeight: 600,
+                      fontSize: '0.9375rem',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        opacity: 0,
+                        width: '100%',
+                        height: '100%',
+                        cursor: 'pointer',
+                      }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = '';
+                        if (file) await handleMobileImageFile(file);
+                      }}
+                    />
+                    <Upload
+                      style={{ width: '1.125rem', height: '1.125rem', pointerEvents: 'none' }}
+                    />
+                    <span style={{ pointerEvents: 'none' }}>{t('orChooseFromGallery')}</span>
+                  </label>
+                  <button
+                    onClick={closeMobileUploadSheet}
+                    style={{
+                      padding: '0.75rem',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '0.75rem',
+                      color: '#94a3b8',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {t('cancel')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ ADMIN: Product Image Upload Dialog (desktop only) ═══ */}
+      {isAdmin && !isMobile && (
+        <Dialog
+          visible={uploadImageProduct !== null}
+          onHide={() => setUploadImageProduct(null)}
+          header={uploadImageProduct?.name || ''}
+          style={{ width: '22rem' }}
+          modal
+          draggable={false}
+          resizable={false}
+        >
+          {uploadImageProduct && (
+            <ImageUpload
+              productId={uploadImageProduct.id}
+              currentImage={uploadImageProduct.imageUrl}
+              onImageUpload={() => {
+                queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+                toastSuccess(t('imageUploadedSuccess'));
+                setUploadImageProduct(null);
+              }}
+              onImageRemove={() => {
+                queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+                setUploadImageProduct(null);
+              }}
+            />
+          )}
+        </Dialog>
       )}
 
       {/* ═══ MOBILE: Cart Overlay ═══ */}

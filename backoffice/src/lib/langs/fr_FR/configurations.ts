@@ -352,8 +352,6 @@ export default {
   // Printer card
   printerDefault: 'Par défaut',
   printerLastSeen: 'Vu',
-  // Form
-  saving: 'Enregistrement...',
   // Delete
   deletePrinter: 'Supprimer',
 };

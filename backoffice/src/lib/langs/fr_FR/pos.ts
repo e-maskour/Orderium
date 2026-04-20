@@ -24,6 +24,8 @@ export default {
   pieces: 'pièces',
   perUnit: '/ unité',
   clear: 'Effacer',
+  confirmClearCart: 'Vider le panier ?',
+  clearCart: 'Vider',
   addToCart: 'Ajouter au panier',
   updateQty: 'Modifier la quantité',
   confirmPrice: 'Confirmer le prix',
@@ -44,4 +46,11 @@ export default {
   deliveryNoteA5: 'Bon de livraison A5',
   preview: 'Aperçu',
   print: 'Imprimer',
+
+  // Image upload (POS)
+  addPhoto: 'Photo',
+  takePhoto: 'Prendre une photo',
+  orChooseFromGallery: 'Choisir depuis la galerie',
+  uploading: 'Envoi en cours',
+  imageUploadedSuccess: 'Image mise à jour avec succès',
 };

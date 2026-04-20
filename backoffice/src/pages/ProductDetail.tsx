@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
@@ -31,7 +31,13 @@ import {
   CheckCircle,
   Lock,
 } from 'lucide-react';
-import { toastSuccess, toastUpdated, toastDeleted, toastError } from '../services/toast.service';
+import {
+  toastSuccess,
+  toastUpdated,
+  toastDeleted,
+  toastError,
+  toastConfirm,
+} from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
 import { useApiErrors } from '../hooks/useApiErrors';
@@ -94,7 +100,7 @@ export default function ProductDetail() {
     watch,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = form;
   const { handleApiErrors } = useApiErrors(form);
 
@@ -301,6 +307,33 @@ export default function ProductDetail() {
   const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
   const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
 
+  // ── EAN-13 real-time validation ──────────────────────────
+  const watchedCode = watch('code');
+  const ean13Valid = useMemo<boolean | null>(() => {
+    const code = watchedCode ?? '';
+    if (!code) return null;
+    if (code.length !== 13 || !/^\d{13}$/.test(code)) return false;
+    const d = code.split('').map(Number);
+    const sum = d.slice(0, 12).reduce((acc, n, i) => acc + n * (i % 2 === 0 ? 1 : 3), 0);
+    return (10 - (sum % 10)) % 10 === d[12];
+  }, [watchedCode]);
+
+  // ── Description character count ──────────────────────────
+  const watchedDescription = watch('description');
+  const descCharCount = (watchedDescription ?? '').length;
+
+  // ── Unsaved changes guard (beforeunload covers browser refresh/close) ──────
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
   const [saleUomSuggestions, setSaleUomSuggestions] = useState<{ label: string; value: number }[]>(
     [],
   );
@@ -339,10 +372,7 @@ export default function ProductDetail() {
     );
   };
 
-  const taxOptions = [
-    { label: '0%', value: null },
-    ...taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name })),
-  ];
+  const taxOptions = taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name }));
   const warehouseDropdownOptions = warehouses.map((w: any) => ({
     label: w.name,
     value: w.id.toString(),
@@ -528,9 +558,19 @@ export default function ProductDetail() {
           {product.isService && <PTag value="Service" severity="info" style={{ flexShrink: 0 }} />}
           <Button
             text
-            onClick={() => navigate('/products')}
+            severity="secondary"
+            onClick={() => {
+              if (isDirty) {
+                toastConfirm(t('unsavedChangesConfirm' as any), () => navigate('/products'), {
+                  confirmLabel: 'Quitter',
+                  variant: 'warning',
+                } as any);
+              } else {
+                navigate('/products');
+              }
+            }}
             label={t('cancel')}
-            style={{ color: '#64748b', flexShrink: 0 }}
+            style={{ flexShrink: 0 }}
           />
           <Button
             onClick={handleSave}
@@ -580,7 +620,7 @@ export default function ProductDetail() {
                       {t('basicInformation')}
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      Name, barcode and description
+                      {t('panelBasicSubtitle')}
                     </p>
                   </div>
                 </div>
@@ -645,6 +685,31 @@ export default function ProductDetail() {
                           tooltip={t('generateNewUniqueCode')}
                           tooltipOptions={{ position: 'top' }}
                         />
+                        {ean13Valid === true && (
+                          <CheckCircle
+                            style={{
+                              width: '1.125rem',
+                              height: '1.125rem',
+                              color: '#22c55e',
+                              alignSelf: 'center',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        {ean13Valid === false && (
+                          <span
+                            style={{
+                              color: '#ef4444',
+                              fontSize: '1.125rem',
+                              lineHeight: 1,
+                              alignSelf: 'center',
+                              flexShrink: 0,
+                              fontWeight: 700,
+                            }}
+                          >
+                            ✕
+                          </span>
+                        )}
                       </div>
                       <FieldError name="code" />
                     </div>
@@ -660,6 +725,17 @@ export default function ProductDetail() {
                     placeholder={t('enterProductDescription')}
                     style={{ width: '100%', resize: 'none' }}
                   />
+                  <small
+                    style={{
+                      color: '#94a3b8',
+                      fontSize: '0.6875rem',
+                      display: 'block',
+                      textAlign: 'right',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    {descCharCount} {descCharCount === 1 ? 'caractère' : 'caractères'}
+                  </small>
                 </div>
               </div>
             </div>
@@ -691,7 +767,7 @@ export default function ProductDetail() {
                       Classification
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      Warehouse and categories
+                      {t('warehouseAndCategories')}
                     </p>
                   </div>
                 </div>
@@ -731,7 +807,7 @@ export default function ProductDetail() {
                         onChange={(e) => field.onChange(e.value)}
                         onBlur={field.onBlur}
                         options={categoryOptions}
-                        placeholder={t('typeToSearchCategories')}
+                        placeholder={t('searchCategoriesShort' as any)}
                         filter
                         display="chip"
                         style={{ width: '100%' }}
@@ -768,7 +844,7 @@ export default function ProductDetail() {
                       Settings
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      Product behavior options
+                      {t('behaviorOptions')}
                     </p>
                   </div>
                 </div>
@@ -862,7 +938,7 @@ export default function ProductDetail() {
                     {t('salePrice')}
                   </h3>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Price shown to customers
+                    {t('panelPriceSubtitle')}
                   </p>
                 </div>
               </div>
@@ -899,23 +975,15 @@ export default function ProductDetail() {
                     name="saleUnitId"
                     control={control}
                     render={({ field }) => (
-                      <AutoComplete
-                        value={saleUomInput}
-                        suggestions={saleUomSuggestions}
-                        completeMethod={searchSaleUoms}
-                        field="label"
-                        forceSelection
-                        dropdown
-                        onChange={(e) => setSaleUomInput(e.value)}
-                        onSelect={(e) => field.onChange(e.value.value)}
-                        onClear={() => {
-                          setSaleUomInput(null);
-                          field.onChange(null);
-                        }}
+                      <Dropdown
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.value)}
                         onBlur={field.onBlur}
-                        placeholder="Select unit"
+                        options={uomOptions}
+                        placeholder={t('selectUnit') || 'Sélectionner une unité'}
+                        filter
+                        showClear
                         style={{ width: '100%' }}
-                        inputStyle={{ width: '100%' }}
                       />
                     )}
                   />
@@ -927,11 +995,12 @@ export default function ProductDetail() {
                     control={control}
                     render={({ field }) => (
                       <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
+                        value={field.value ?? null}
+                        onChange={(e) => field.onChange(e.value ?? null)}
                         onBlur={field.onBlur}
                         options={taxOptions}
-                        placeholder="0%"
+                        placeholder="Aucune taxe"
+                        showClear
                         style={{ width: '100%' }}
                       />
                     )}
@@ -958,7 +1027,17 @@ export default function ProductDetail() {
               )}
 
               <div style={{ marginTop: '1.25rem' }} className="p-field">
-                <label className="p-label">{t('minPrice')}</label>
+                <label
+                  className="p-label"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+                >
+                  {t('minPrice')}
+                  <i
+                    className="pi pi-info-circle"
+                    title={t('minPriceTooltip' as any)}
+                    style={{ fontSize: '0.75rem', color: '#94a3b8', cursor: 'help' }}
+                  />
+                </label>
                 <Controller
                   name="minPrice"
                   control={control}
@@ -1000,7 +1079,9 @@ export default function ProductDetail() {
                   >
                     {t('costPrice')}
                   </h3>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Purchase cost</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                    {t('panelCostSubtitle')}
+                  </p>
                 </div>
               </div>
               <div className="product-pricing-grid">
@@ -1032,23 +1113,15 @@ export default function ProductDetail() {
                     name="purchaseUnitId"
                     control={control}
                     render={({ field }) => (
-                      <AutoComplete
-                        value={purchaseUomInput}
-                        suggestions={purchaseUomSuggestions}
-                        completeMethod={searchPurchaseUoms}
-                        field="label"
-                        forceSelection
-                        dropdown
-                        onChange={(e) => setPurchaseUomInput(e.value)}
-                        onSelect={(e) => field.onChange(e.value.value)}
-                        onClear={() => {
-                          setPurchaseUomInput(null);
-                          field.onChange(null);
-                        }}
+                      <Dropdown
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.value)}
                         onBlur={field.onBlur}
-                        placeholder="Select unit"
+                        options={uomOptions}
+                        placeholder={t('selectUnit') || 'Sélectionner une unité'}
+                        filter
+                        showClear
                         style={{ width: '100%' }}
-                        inputStyle={{ width: '100%' }}
                       />
                     )}
                   />
@@ -1060,11 +1133,12 @@ export default function ProductDetail() {
                     control={control}
                     render={({ field }) => (
                       <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
+                        value={field.value ?? null}
+                        onChange={(e) => field.onChange(e.value ?? null)}
                         onBlur={field.onBlur}
                         options={taxOptions}
-                        placeholder="0%"
+                        placeholder="Aucune taxe"
+                        showClear
                         style={{ width: '100%' }}
                       />
                     )}
@@ -1090,9 +1164,26 @@ export default function ProductDetail() {
                       color: '#94a3b8',
                       textTransform: 'uppercase',
                       letterSpacing: '0.07em',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.375rem',
                     }}
                   >
-                    Margin Analysis
+                    {t('marginAnalysis')}
+                    <span
+                      style={{
+                        background: '#f1f5f9',
+                        color: '#64748b',
+                        fontSize: '0.625rem',
+                        fontWeight: 500,
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '9999px',
+                        letterSpacing: '0.03em',
+                        textTransform: 'none',
+                      }}
+                    >
+                      {t('calculatedAuto' as any)}
+                    </span>
                   </p>
                   <div className="margin-grid-3">
                     {[

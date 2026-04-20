@@ -79,15 +79,10 @@ const Index = () => {
     page: currentPage,
     pageSize: 50,
     search: debouncedSearch,
+    categoryId: filters.categoryId,
   });
 
-  const filteredProducts =
-    filters.categoryId === null
-      ? products
-      : products.filter(
-          (p) =>
-            Array.isArray(p.categories) && p.categories.some((c) => c.id === filters.categoryId),
-        );
+  const filteredProducts = products;
 
   const greeting = user?.customerName
     ? `${t('hello') || 'Bonjour'}, ${user.customerName.split(' ')[0]}! 👋`

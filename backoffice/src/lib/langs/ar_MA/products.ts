@@ -153,6 +153,7 @@ export default {
   positiveStock: 'مخزون موجب',
   inStock: 'في المخزون',
   downloadTemplate: 'تحميل النموذج',
+  templateShort: 'نموذج',
   catalogue: 'كتالوج المنتجات',
   notFound: 'المنتج غير موجود',
 
@@ -164,6 +165,16 @@ export default {
   settingsSection: 'الإعدادات',
   behaviorOptions: 'خيارات سلوك المنتج',
   warehouseAndCategories: 'المستودع والتصنيفات',
+  searchCategoriesShort: 'البحث عن فئات...',
+  minPriceTooltip: 'لا يمكن أن يكون سعر البيع أقل من هذا المبلغ.',
+  calculatedAuto: 'محسوب تلقائياً',
+  unsavedChangesConfirm: 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟',
+  lastModified: 'آخر تعديل',
+  onHandDef: 'الكمية الموجودة فعلياً في المستودع',
+  availableDef: 'الكمية المتاحة للبيع (المتوفرة – المحجوزة)',
+  reservedDef: 'الكمية المحجوزة لطلبات معلقة',
+  incomingDef: 'الكمية المتوقع وصولها من الموردين',
+  outgoingDef: 'الكمية المرتبطة بتسليمات العملاء',
 
   // Image upload / camera
   uploading: 'جاري الرفع...',

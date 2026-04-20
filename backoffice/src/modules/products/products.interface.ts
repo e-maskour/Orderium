@@ -18,6 +18,7 @@ export interface IProduct {
   imageUrl?: string | null;
   saleUnit?: string;
   purchaseUnit?: string;
+  categories?: { id: number; name: string; type?: string }[];
 }
 
 export interface ProductsResponse {

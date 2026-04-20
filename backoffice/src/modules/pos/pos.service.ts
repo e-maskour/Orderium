@@ -12,11 +12,12 @@ class PosService {
    * Fetch paginated enabled, non-service products for POS display.
    */
   async getProducts(
-    params: { page?: number; perPage?: number; search?: string } = {},
+    params: { page?: number; perPage?: number; search?: string; categoryId?: number | null } = {},
   ): Promise<IPosProductsResponse> {
-    const { page = 1, perPage = 50, search } = params;
+    const { page = 1, perPage = 50, search, categoryId } = params;
     const filterBody: Record<string, unknown> = {};
     if (search) filterBody.search = search;
+    if (categoryId != null) filterBody.categoryIds = [categoryId];
 
     const response = await apiClient.post<any[]>(API_ROUTES.PRODUCTS.FILTER, filterBody, {
       params: { page, perPage },

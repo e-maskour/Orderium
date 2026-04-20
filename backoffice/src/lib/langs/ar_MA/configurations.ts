@@ -343,8 +343,6 @@ export default {
   // Printer card
   printerDefault: 'افتراضي',
   printerLastSeen: 'آخر ظهور',
-  // Form
-  saving: 'جارٍ الحفظ...',
   // Delete
   deletePrinter: 'حذف',
 };

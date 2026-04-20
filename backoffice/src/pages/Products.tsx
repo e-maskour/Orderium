@@ -369,6 +369,7 @@ export default function Products() {
                 outlined
                 severity="secondary"
                 icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
+                label={t('templateShort')}
                 title={t('downloadTemplate')}
               />
               <Button
@@ -376,6 +377,7 @@ export default function Products() {
                 outlined
                 severity="secondary"
                 icon={<Upload style={{ width: 16, height: 16 }} />}
+                label={t('import')}
                 title={t('import')}
               />
               <Button
@@ -383,6 +385,7 @@ export default function Products() {
                 outlined
                 severity="secondary"
                 icon={<Download style={{ width: 16, height: 16 }} />}
+                label={t('export')}
                 title={t('export')}
               />
 
@@ -598,7 +601,7 @@ export default function Products() {
                 removableSort
                 loading={isLoading}
                 emptyMessage={t('noProductsFound')}
-                paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 currentPageReportTemplate={t('pageReportTemplate')}
               >
                 <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
@@ -687,12 +690,119 @@ export default function Products() {
                   header={t('stock')}
                   sortable
                   sortField="stock"
+                  body={(product: IProduct) => {
+                    if (product.stock === null || product.stock === undefined) {
+                      return <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>—</span>;
+                    }
+                    if (product.stock < 0) {
+                      return (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            padding: '0.2rem 0.625rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            backgroundColor: '#fee2e2',
+                            color: '#b91c1c',
+                          }}
+                        >
+                          {product.stock}{' '}
+                          {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
+                        </span>
+                      );
+                    }
+                    if (product.stock === 0) {
+                      return (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            padding: '0.2rem 0.625rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            backgroundColor: '#fff7ed',
+                            color: '#c2410c',
+                          }}
+                        >
+                          {t('zeroStock')}
+                        </span>
+                      );
+                    }
+                    return (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          padding: '0.2rem 0.625rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#dcfce7',
+                          color: '#166534',
+                        }}
+                      >
+                        {product.stock}{' '}
+                        {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
+                      </span>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('categories')}
+                  body={(product: IProduct) => {
+                    const cats = product.categories;
+                    if (!cats || cats.length === 0)
+                      return <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>—</span>;
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {cats.map((c) => (
+                          <span
+                            key={c.id}
+                            style={{
+                              display: 'inline-flex',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              backgroundColor: '#eef2ff',
+                              color: '#4338ca',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {c.name}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('status')}
                   body={(product: IProduct) => (
-                    <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
-                      {product.stock !== null && product.stock !== undefined
-                        ? `${product.stock} ${t('per')} ${translateUomCode((product as any).saleUnitOfMeasure?.code, language)}`
-                        : '—'}
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        padding: '0.25rem 0.625rem',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        ...(product.isEnabled
+                          ? { backgroundColor: '#dcfce7', color: '#166534' }
+                          : { backgroundColor: '#fee2e2', color: '#991b1b' }),
+                      }}
+                    >
+                      {product.isEnabled ? t('active') : t('inactive')}
                     </span>
+                  )}
+                />
+                <Column
+                  headerStyle={{ width: '2.5rem' }}
+                  bodyStyle={{ width: '2.5rem', textAlign: 'center' }}
+                  body={() => (
+                    <ChevronRight
+                      className="ord-row-chevron"
+                      style={{ width: '1rem', height: '1rem', color: '#cbd5e1' }}
+                    />
                   )}
                 />
               </DataTable>

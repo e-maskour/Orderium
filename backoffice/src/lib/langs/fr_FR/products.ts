@@ -156,6 +156,7 @@ export default {
   positiveStock: 'Stock positif',
   inStock: 'En stock',
   downloadTemplate: 'Télécharger le modèle',
+  templateShort: 'Modèle',
   catalogue: 'Catalogue des produits',
   notFound: 'Produit introuvable',
 
@@ -167,6 +168,17 @@ export default {
   settingsSection: 'Paramètres',
   behaviorOptions: 'Options de comportement du produit',
   warehouseAndCategories: 'Entrepôt et catégories',
+  searchCategoriesShort: 'Rechercher des catégories...',
+  minPriceTooltip: 'Le prix de vente ne peut pas descendre en dessous de ce montant.',
+  calculatedAuto: 'Calculé automatiquement',
+  unsavedChangesConfirm:
+    'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?',
+  lastModified: 'Dernière modification',
+  onHandDef: 'Quantité physiquement présente en entrepôt',
+  availableDef: 'Quantité disponible à la vente (en main – réservé)',
+  reservedDef: 'Quantité réservée par des commandes en attente',
+  incomingDef: 'Quantité attendue via réceptions fournisseur',
+  outgoingDef: 'Quantité sortante via livraisons clients',
 
   // Image upload / camera
   uploading: 'Téléchargement en cours...',

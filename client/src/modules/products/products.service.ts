@@ -5,14 +5,15 @@ import { API_ROUTES } from '@/common/api-routes';
 
 export class ProductsService {
   async getAll(params?: GetProductsParams): Promise<ProductsResponse> {
-    const { page = 1, pageSize = 50, search } = params ?? {};
+    const { page = 1, pageSize = 50, search, categoryId } = params ?? {};
 
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('perPage', pageSize.toString());
 
-    const filterBody: Record<string, string> = {};
+    const filterBody: Record<string, unknown> = {};
     if (search) filterBody.search = search;
+    if (categoryId != null) filterBody.categoryIds = [categoryId];
 
     const response = await http<{
       code: string;

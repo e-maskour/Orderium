@@ -1084,3 +1084,14 @@
 .p-datatable.p-component .p-datatable-tbody>tr.ord-row-clickable:hover>td {
     background: #f0f4ff !important;
 }
+
+/* Chevron affordance — hidden by default, revealed on row hover */
+.ord-row-chevron {
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.p-datatable.p-component .p-datatable-tbody>tr.ord-row-clickable:hover .ord-row-chevron {
+    opacity: 1;
+    color: #235ae4 !important;
+}
