@@ -284,7 +284,7 @@ export default function UnitsOfMeasure() {
                 compact
               />
             }
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column

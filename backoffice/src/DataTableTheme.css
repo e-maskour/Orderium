@@ -29,12 +29,11 @@
 .p-datatable.p-component .p-datatable-thead>tr>th {
     background: #f8fafc !important;
     padding: 0.625rem 1rem !important;
-    font-size: 0.6875rem !important;
-    /* 11px */
+    font-size: 0.8125rem !important;
     font-weight: 700 !important;
-    color: #64748b !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.055em !important;
+    color: #1e293b !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
     border-bottom: 2px solid #e2e8f0 !important;
     border-top: none !important;
     border-left: none !important;
@@ -894,7 +893,7 @@
 @media (max-width: 768px) {
     .p-datatable.p-component .p-datatable-thead>tr>th {
         padding: 0.75rem 0.875rem !important;
-        font-size: 0.625rem !important;
+        font-size: 0.75rem !important;
     }
 
     .p-datatable.p-component .p-datatable-tbody>tr>td {
@@ -919,12 +918,16 @@
    RTL OVERRIDES — Arabic / right-to-left layout
    ══════════════════════════════════════════════════════════════ */
 
-/* 1. Header & body cell text alignment */
+/* 1. Header, body & footer cell text alignment */
 [dir="rtl"] .p-datatable.p-component .p-datatable-thead>tr>th {
     text-align: right;
 }
 
 [dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr>td {
+    text-align: right;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tfoot>tr>td {
     text-align: right;
 }
 
@@ -968,15 +971,16 @@
     margin-right: auto;
 }
 
-/* 7. Search icon — move from left to right side of input */
+/* 7. Search icon — stays on the left side in RTL (trailing position,
+       consistent with major Arabic UIs: Google, Twitter, WhatsApp) */
 [dir="rtl"] .dt-search-wrapper .dt-search-icon {
-    left: unset;
-    right: 0.75rem;
+    left: 0.75rem;
+    right: unset;
 }
 
 [dir="rtl"] .dt-search-wrapper .dt-search-input {
-    padding-left: 0.875rem;
-    padding-right: 2.25rem;
+    padding-left: 2.25rem !important;
+    padding-right: 0.875rem !important;
 }
 
 /* 8. Frozen column shadow direction */

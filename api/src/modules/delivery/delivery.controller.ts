@@ -52,10 +52,18 @@ export class DeliveryController {
   @Serialize(DeliveryPersonResponseDto)
   @ApiOperation({ summary: 'Get all delivery persons' })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'List of delivery persons' })
-  async getAllDeliveryPersons(@Query('search') search?: string) {
-    const deliveryPersons =
-      await this.deliveryService.getAllDeliveryPersons(search);
+  async getAllDeliveryPersons(
+    @Query('search') search?: string,
+    @Query('isActive') isActive?: string,
+  ) {
+    const isActiveFilter =
+      isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+    const deliveryPersons = await this.deliveryService.getAllDeliveryPersons(
+      search,
+      isActiveFilter,
+    );
     return ApiRes(DLV.PERSONS_LIST, deliveryPersons);
   }
 

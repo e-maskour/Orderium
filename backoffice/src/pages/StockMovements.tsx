@@ -287,7 +287,7 @@ export default function StockMovements() {
             emptyMessage={
               <EmptyState icon={ArrowLeftRight} title={t('noMovementsFound' as any)} compact />
             }
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />

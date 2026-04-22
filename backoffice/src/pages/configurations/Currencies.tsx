@@ -194,7 +194,7 @@ export default function Currencies() {
             emptyMessage={
               <EmptyState icon={DollarSign} title={t('noCurrenciesConfigured')} compact />
             }
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column

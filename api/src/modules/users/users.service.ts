@@ -47,6 +47,9 @@ export class UsersService {
     } else if (dto.status === UserStatus.INACTIVE) {
       baseConditions.isActive = false;
     }
+    if (dto.roleId) {
+      baseConditions.roleId = dto.roleId;
+    }
 
     if (dto.search) {
       const term = dto.search;

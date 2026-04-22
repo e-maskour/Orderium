@@ -3,9 +3,10 @@ import { DeliveryPerson } from './delivery.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class DeliveryPersonService {
-  async getAll(search?: string): Promise<DeliveryPerson[]> {
+  async getAll(search?: string, isActive?: boolean): Promise<DeliveryPerson[]> {
     const params: Record<string, string> = {};
     if (search) params.search = search;
+    if (isActive !== undefined) params.isActive = String(isActive);
     const response = await apiClient.get<any[]>(API_ROUTES.DELIVERY.LIST_PERSONS, { params });
     return (response.data || []).map((d: any) => DeliveryPerson.fromApiResponse(d));
   }

@@ -49,6 +49,8 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [page, setPage] = useState(1);
+  const [roleFilter, setRoleFilter] = useState<number | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -76,13 +78,15 @@ export default function UsersPage() {
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ['users', currentUserType, page, searchQuery],
+    queryKey: ['users', currentUserType, page, searchQuery, roleFilter, statusFilter],
     queryFn: () =>
       usersService.getAll({
         page,
         perPage,
         search: searchQuery || undefined,
         userType: currentUserType,
+        roleId: roleFilter !== 'all' ? (roleFilter as number) : undefined,
+        status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
       }),
   });
 
@@ -397,6 +401,13 @@ export default function UsersPage() {
           emptyMessage="Aucun utilisateur trouvé"
           hasMore={page * perPage < totalRecords}
           onLoadMore={() => setPage((p) => p + 1)}
+          onTap={(u: User) => openEdit(u)}
+          selectedKeys={new Set(selectedUsers.map((u) => u.id))}
+          onToggleSelect={(u: User) =>
+            setSelectedUsers((prev) =>
+              prev.find((x) => x.id === u.id) ? prev.filter((x) => x.id !== u.id) : [...prev, u],
+            )
+          }
           config={{
             topLeft: (u: User) => u.name || u.email || '—',
             topRight: (u: User) => u.phoneNumber || '',
@@ -471,7 +482,7 @@ export default function UsersPage() {
           lazy
           first={(page - 1) * perPage}
           onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
-          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+          paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           currentPageReportTemplate={t('pageReportTemplate')}
           emptyMessage={
             <EmptyState icon={UsersIcon} title={t('noResults' as any) || 'No users found'} />
@@ -559,114 +570,208 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div dir={dir} className="page-container">
-        <PageHeader
-          icon={UsersIcon}
-          title={t('usersManagement' as any)}
-          subtitle={t('usersAndRoles' as any)}
-          actions={
-            <Button
-              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-              label={t('createUser' as any)}
-              onClick={openCreate}
-              style={{
-                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                border: 'none',
-                borderRadius: '0.625rem',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                padding: '0.5rem 1rem',
-              }}
-            />
-          }
-        />
-
-        <div style={{ marginTop: '1rem' }}>
-          {/* Search bar */}
-          <div className="page-quick-search">
-            <Search
-              style={{
-                position: 'absolute',
-                left: '0.875rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#94a3b8',
-                width: '1rem',
-                height: '1rem',
-              }}
-            />
-            <InputText
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={`${t('search' as any)}...`}
-              style={{
-                width: '100%',
-                paddingLeft: '2.5rem',
-                borderRadius: '0.625rem',
-                border: '1.5px solid #e2e8f0',
-                height: '2.5rem',
-                fontSize: '0.8125rem',
-              }}
-            />
-            {searchInput && (
+      <div
+        dir={dir}
+        style={{
+          maxWidth: '1600px',
+          margin: '0 auto',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <PageHeader
+            icon={UsersIcon}
+            title={t('usersManagement' as any)}
+            subtitle={t('usersAndRoles' as any)}
+            actions={
               <Button
-                text
-                rounded
-                icon={<X style={{ width: '1rem', height: '1rem' }} />}
-                onClick={() => {
-                  setSearchInput('');
-                  setSearchQuery('');
-                }}
+                icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+                label={t('createUser' as any)}
+                onClick={openCreate}
+              />
+            }
+          />
+        </div>
+
+        {/* Filter bar */}
+        <div
+          className="page-quick-search products-filter-row"
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+            marginBottom: '1rem',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              minWidth: '12rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t('search' as any)}
+            </span>
+            <div style={{ position: 'relative' }}>
+              <Search
                 style={{
                   position: 'absolute',
-                  right: '0.5rem',
+                  insetInlineStart: '0.875rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   color: '#94a3b8',
-                  zIndex: 10,
-                  padding: '0.25rem',
+                  width: '1rem',
+                  height: '1rem',
+                  pointerEvents: 'none',
                 }}
               />
-            )}
+              <InputText
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={`${t('search' as any)}...`}
+                style={{
+                  width: '100%',
+                  height: '3rem',
+                  fontSize: '0.875rem',
+                  paddingInlineStart: '2.5rem',
+                  paddingInlineEnd: searchInput ? '2.5rem' : '0.875rem',
+                  borderRadius: '0.625rem',
+                  border: '1.5px solid #e2e8f0',
+                  background: '#ffffff',
+                }}
+              />
+              {searchInput && (
+                <button
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearchQuery('');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Tabs */}
-          <TabView
-            activeIndex={activeTab}
-            onTabChange={(e) => {
-              setActiveTab(e.index);
-              setPage(1);
-              setSearchInput('');
-              setSearchQuery('');
-            }}
-            pt={{
-              root: { className: 'product-tabview' },
-              panelContainer: { style: { padding: '0.75rem 0 0', background: 'transparent' } },
-              nav: { style: { background: 'transparent' } },
-            }}
-          >
-            <TabPanel
-              header={
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <i className="pi pi-shield" style={{ fontSize: '0.85rem' }} />
-                  {t('adminUsers' as any)}
-                </span>
-              }
-            >
-              {renderTable()}
-            </TabPanel>
-            <TabPanel
-              header={
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <i className="pi pi-users" style={{ fontSize: '0.85rem' }} />
-                  {t('clientUsers' as any)}
-                </span>
-              }
-            >
-              {renderTable()}
-            </TabPanel>
-          </TabView>
+          <div className="orders-filter-bar">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {t('role' as any)}
+              </span>
+              <Dropdown
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.value);
+                  setPage(1);
+                }}
+                options={[
+                  { label: t('all' as any), value: 'all' },
+                  ...roles.map((r) => ({ label: r.name, value: r.id })),
+                ]}
+                style={{ height: '3rem', minWidth: '9rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {t('status' as any)}
+              </span>
+              <Dropdown
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.value);
+                  setPage(1);
+                }}
+                options={[
+                  { label: t('all' as any), value: 'all' },
+                  { label: t('active' as any), value: 'active' },
+                  { label: t('inactive' as any), value: 'inactive' },
+                ]}
+                style={{ height: '3rem', minWidth: '9rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+          </div>
         </div>
+        <TabView
+          activeIndex={activeTab}
+          onTabChange={(e) => {
+            setActiveTab(e.index);
+            setPage(1);
+            setSearchInput('');
+            setSearchQuery('');
+            setRoleFilter('all');
+            setStatusFilter('all');
+          }}
+          pt={{
+            root: { className: 'product-tabview' },
+            panelContainer: { style: { padding: '0.75rem 0 0', background: 'transparent' } },
+            nav: { style: { background: 'transparent' } },
+          }}
+        >
+          <TabPanel
+            header={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <i className="pi pi-shield" style={{ fontSize: '0.85rem' }} />
+                {t('adminUsers' as any)}
+              </span>
+            }
+          >
+            {renderTable()}
+          </TabPanel>
+          <TabPanel
+            header={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <i className="pi pi-users" style={{ fontSize: '0.85rem' }} />
+                {t('clientUsers' as any)}
+              </span>
+            }
+          >
+            {renderTable()}
+          </TabPanel>
+        </TabView>
 
         {/* ── Create / Edit Modal ── */}
         <Modal

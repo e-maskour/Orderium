@@ -191,7 +191,7 @@ export default function Taxes() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             emptyMessage={<EmptyState icon={Percent} title={t('noTaxRatesConfigured')} compact />}
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column

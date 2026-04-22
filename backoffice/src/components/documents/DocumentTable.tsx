@@ -499,7 +499,7 @@ export function DocumentTable({
           removableSort
           loading={loading}
           emptyMessage={t('noDocumentFound')}
-          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+          paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           currentPageReportTemplate={t('pageReportTemplate')}
         >
           <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />

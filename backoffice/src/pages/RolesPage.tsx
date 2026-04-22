@@ -375,12 +375,6 @@ export default function RolesPage() {
               icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
               label={t('createRole' as any)}
               onClick={openCreate}
-              style={{
-                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                border: 'none',
-                borderRadius: '0.625rem',
-                fontWeight: 600,
-              }}
             />
           }
         />

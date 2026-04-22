@@ -288,7 +288,7 @@ a,
 
 .cl-search-wrap .cl-search-icon {
     position: absolute;
-    inset-inline-start: 1rem;
+    left: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
@@ -297,8 +297,8 @@ a,
 }
 
 .cl-search-wrap .p-inputtext {
-    padding-inline-start: 2.75rem !important;
-    padding-inline-end: 1rem !important;
+    padding-left: 2.75rem !important;
+    padding-right: 1rem !important;
     height: 2.875rem !important;
     border-radius: var(--cl-radius-full) !important;
     border: 1.5px solid var(--cl-border) !important;

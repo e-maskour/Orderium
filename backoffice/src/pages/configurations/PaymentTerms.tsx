@@ -203,7 +203,7 @@ export default function PaymentTerms() {
             emptyMessage={
               <EmptyState icon={Calendar} title={t('noPaymentTermsConfigured')} compact />
             }
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column

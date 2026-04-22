@@ -112,19 +112,36 @@ export class PartnersService {
     limit = 100,
     offset = 0,
     search?: string,
+    type?: 'customer' | 'supplier',
+    isEnabled?: boolean,
   ): Promise<{ partners: Partner[]; total: number }> {
-    const qb = this.partnerRepository
-      .createQueryBuilder('partner')
-      .where('partner.isEnabled = :isEnabled', { isEnabled: true });
+    const qb = this.partnerRepository.createQueryBuilder('partner');
 
-    if (search) {
-      qb.andWhere(
-        '(partner.name ILIKE :search OR partner.phoneNumber ILIKE :search OR partner.email ILIKE :search)',
-        { search: `%${search}%` },
-      );
+    const conditions: string[] = [];
+    const params: Record<string, any> = {};
+
+    if (isEnabled !== undefined) {
+      conditions.push('partner.isEnabled = :isEnabled');
+      params.isEnabled = isEnabled;
     }
-    qb.orderBy('partner.name', 'ASC').skip(offset).take(limit);
+    if (type === 'customer') {
+      conditions.push('partner.isCustomer = :isCustomer');
+      params.isCustomer = true;
+    } else if (type === 'supplier') {
+      conditions.push('partner.isSupplier = :isSupplier');
+      params.isSupplier = true;
+    }
+    if (search) {
+      conditions.push(
+        '(partner.name ILIKE :search OR partner.phoneNumber ILIKE :search OR partner.email ILIKE :search)',
+      );
+      params.search = `%${search}%`;
+    }
+    if (conditions.length > 0) {
+      qb.where(conditions.join(' AND '), params);
+    }
 
+    qb.orderBy('partner.name', 'ASC').skip(offset).take(limit);
     const [partners, total] = await qb.getManyAndCount();
     return { partners, total };
   }

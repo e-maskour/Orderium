@@ -113,7 +113,7 @@ export class DocumentsService {
         filters?.page,
         filters?.pageSize,
         isVente ? 'VENTE' : 'ACHAT',
-        filters?.status !== 'all' ? [filters.status as string] : undefined,
+        filters?.status && filters.status !== 'all' ? [filters.status] : undefined,
       );
 
       // Filter orders based on direction

@@ -6,10 +6,12 @@ export class PartnersService {
   async getAll(params?: {
     search?: string;
     type?: 'customer' | 'supplier';
+    isEnabled?: boolean;
   }): Promise<PartnersResponse> {
     const queryParams: Record<string, string> = {};
     if (params?.search) queryParams.search = params.search;
     if (params?.type) queryParams.type = params.type;
+    if (params?.isEnabled !== undefined) queryParams.isEnabled = String(params.isEnabled);
     const response = await apiClient.get<Partner[]>(API_ROUTES.PARTNERS.LIST, {
       params: queryParams,
     });

@@ -9,6 +9,7 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Dropdown } from 'primereact/dropdown';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryPersonService } from '../modules/delivery';
 import { DeliveryPerson } from '../types';
@@ -40,6 +41,7 @@ export default function DeliveryPersons() {
     };
   }, [searchInput]);
 
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedPersons, setSelectedPersons] = useState<number[]>([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingPerson, setEditingPerson] = useState<DeliveryPerson | null>(null);
@@ -53,9 +55,18 @@ export default function DeliveryPersons() {
 
   const queryClient = useQueryClient();
 
-  const { data: deliveryPersons = [], isLoading } = useQuery({
-    queryKey: ['deliveryPersons', searchTerm],
-    queryFn: () => deliveryPersonService.getAll(searchTerm || undefined),
+  const statusFilterOptions = [
+    { label: t('all'), value: 'all' },
+    { label: t('active'), value: 'active' },
+    { label: t('inactive'), value: 'inactive' },
+  ];
+
+  const isActiveParam =
+    statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined;
+
+  const { data: filteredPersons = [], isLoading } = useQuery({
+    queryKey: ['deliveryPersons', searchTerm, isActiveParam],
+    queryFn: () => deliveryPersonService.getAll(searchTerm || undefined, isActiveParam),
   });
 
   const createMutation = useMutation({
@@ -154,10 +165,10 @@ export default function DeliveryPersons() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedPersons.length === deliveryPersons.length) {
+    if (selectedPersons.length === filteredPersons.length) {
       setSelectedPersons([]);
     } else {
-      setSelectedPersons(deliveryPersons.map((p: DeliveryPerson) => p.id));
+      setSelectedPersons(filteredPersons.map((p: DeliveryPerson) => p.id));
     }
   };
 
@@ -184,7 +195,7 @@ export default function DeliveryPersons() {
   const getFloatingActions = () => {
     const actions: any[] = [];
     if (selectedPersons.length === 1) {
-      const person = deliveryPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
+      const person = filteredPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
       actions.push({
         id: 'edit',
         label: t('edit'),
@@ -200,7 +211,7 @@ export default function DeliveryPersons() {
       icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
       onClick: () => {
         if (selectedPersons.length === 1) {
-          const person = deliveryPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
+          const person = filteredPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
           if (person) handleDeletePerson(person);
         } else {
           toastConfirm(`${t('delete')} ${selectedPersons.length} livreurs?`, () => {
@@ -216,81 +227,279 @@ export default function DeliveryPersons() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        <PageHeader
-          icon={Truck}
-          title={t('deliveryPersons')}
-          subtitle={t('manageDeliveryPersonnel')}
-          actions={
-            <Button
-              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-              label="Nouveau livreur"
-              onClick={openCreateModal}
-            />
-          }
-        />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {/* Search */}
-          <div className="page-quick-search">
-            <Search
-              style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '1rem',
-                height: '1rem',
-                color: '#94a3b8',
-                pointerEvents: 'none',
-              }}
-            />
-            <InputText
-              id="search-delivery-persons"
-              type="text"
-              placeholder={t('searchDeliveryPersons')}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              style={{
-                width: '100%',
-                paddingLeft: '2.5rem',
-                paddingRight: searchInput ? '2.5rem' : '0.875rem',
-              }}
-              aria-label={t('searchDeliveryPersons')}
-            />
-            {searchInput && (
+      <div
+        style={{ maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}
+      >
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <PageHeader
+            icon={Truck}
+            title={t('deliveryPersons')}
+            subtitle={t('manageDeliveryPersonnel')}
+            actions={
               <Button
-                text
-                rounded
-                onClick={() => setSearchInput('')}
-                icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+                label="Nouveau livreur"
+                onClick={openCreateModal}
+              />
+            }
+          />
+        </div>
+
+        <div
+          className="page-quick-search products-filter-row"
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Search */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+              flex: 1,
+              minWidth: '12rem',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t('search')}
+            </span>
+            <div style={{ position: 'relative' }}>
+              <Search
                 style={{
                   position: 'absolute',
-                  right: '0.75rem',
+                  insetInlineStart: '0.875rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
+                  width: '1rem',
+                  height: '1rem',
                   color: '#94a3b8',
-                  zIndex: 10,
+                  pointerEvents: 'none',
                 }}
               />
-            )}
+              <InputText
+                id="search-delivery-persons"
+                type="text"
+                placeholder={t('searchDeliveryPersons')}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '3rem',
+                  fontSize: '0.875rem',
+                  paddingInlineStart: '2.5rem',
+                  paddingInlineEnd: searchInput ? '2.5rem' : '0.875rem',
+                  borderRadius: '0.625rem',
+                  border: '1.5px solid #e2e8f0',
+                  background: '#ffffff',
+                }}
+                aria-label={t('searchDeliveryPersons')}
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => setSearchInput('')}
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Delivery Persons List */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-            <div className="responsive-table-mobile">
-              <MobileList
-                items={deliveryPersons}
-                keyExtractor={(p: DeliveryPerson) => p.id}
-                loading={isLoading}
-                totalCount={deliveryPersons.length}
-                countLabel="livreurs"
-                emptyMessage="Aucun livreur trouvé"
-                config={{
-                  topLeft: (p: DeliveryPerson) => p.name,
-                  topRight: (p: DeliveryPerson) => p.phoneNumber,
-                  bottomLeft: (p: DeliveryPerson) => p.email || '',
-                  bottomRight: (p: DeliveryPerson) => (
+          {/* Status filter */}
+          <div className="orders-filter-bar">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                {t('status')}
+              </span>
+              <Dropdown
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.value)}
+                options={statusFilterOptions}
+                optionLabel="label"
+                optionValue="value"
+                style={{ height: '3rem', minWidth: '9rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Delivery Persons List */}
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={filteredPersons}
+            keyExtractor={(p: DeliveryPerson) => p.id}
+            onTap={(p: DeliveryPerson) => openEditModal(p)}
+            loading={isLoading}
+            totalCount={filteredPersons.length}
+            countLabel="livreurs"
+            emptyMessage="Aucun livreur trouvé"
+            selectedKeys={new Set(selectedPersons)}
+            onToggleSelect={(key) => toggleSelectPerson(key as number)}
+            config={{
+              topLeft: (p: DeliveryPerson) => p.name,
+              topRight: (p: DeliveryPerson) => p.phoneNumber,
+              bottomLeft: (p: DeliveryPerson) => p.email || '',
+              bottomRight: (p: DeliveryPerson) => (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    padding: '0.25rem 0.625rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    ...(p.isActive
+                      ? { background: '#d1fae5', color: '#047857' }
+                      : { background: '#f1f5f9', color: '#475569' }),
+                  }}
+                >
+                  {p.isActive ? 'Actif' : 'Inactif'}
+                </span>
+              ),
+            }}
+          />
+        </div>
+        <div className="responsive-table-desktop">
+          {isLoading ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingTop: '4rem',
+                paddingBottom: '4rem',
+              }}
+            >
+              <div
+                style={{
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  border: '4px solid #235ae4',
+                  borderTopColor: 'transparent',
+                  borderRadius: '9999px',
+                }}
+                className="animate-spin"
+              ></div>
+            </div>
+          ) : filteredPersons.length === 0 ? (
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '0.5rem',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} />
+            </div>
+          ) : (
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+              }}
+            >
+              <DataTable
+                className="dp-datatable"
+                value={filteredPersons}
+                selection={filteredPersons.filter((p: DeliveryPerson) =>
+                  selectedPersons.includes(p.id),
+                )}
+                onSelectionChange={(e) =>
+                  setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))
+                }
+                selectionMode="checkbox"
+                dataKey="id"
+                paginator
+                paginatorPosition="top"
+                rows={25}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                removableSort
+                emptyMessage={
+                  <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} compact />
+                }
+                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate={t('pageReportTemplate')}
+                onRowClick={(e) => {
+                  const target = e.originalEvent.target as HTMLElement;
+                  if (
+                    target.closest('button') ||
+                    target.closest('a') ||
+                    target.closest('.p-checkbox')
+                  )
+                    return;
+                  const selCol = target.closest('.p-selection-column');
+                  if (selCol) {
+                    (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                    return;
+                  }
+                  openEditModal(e.data as DeliveryPerson);
+                }}
+                rowClassName={() => 'cursor-pointer'}
+              >
+                <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                <Column
+                  field="name"
+                  header={t('name')}
+                  sortable
+                  body={(row: DeliveryPerson) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                        {row.name}
+                      </span>
+                    </div>
+                  )}
+                />
+                <Column
+                  field="phoneNumber"
+                  header={t('phone')}
+                  sortable
+                  body={(row: DeliveryPerson) => (
+                    <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                      {row.phoneNumber}
+                    </span>
+                  )}
+                />
+                <Column
+                  field="email"
+                  header={t('email')}
+                  sortable
+                  body={(row: DeliveryPerson) => (
+                    <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                      {row.email || '-'}
+                    </span>
+                  )}
+                />
+                <Column
+                  field="isActive"
+                  header={t('status')}
+                  body={(row: DeliveryPerson) => (
                     <span
                       style={{
                         display: 'inline-flex',
@@ -298,159 +507,18 @@ export default function DeliveryPersons() {
                         borderRadius: '9999px',
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        ...(p.isActive
+                        ...(row.isActive
                           ? { background: '#d1fae5', color: '#047857' }
                           : { background: '#f1f5f9', color: '#475569' }),
                       }}
                     >
-                      {p.isActive ? 'Actif' : 'Inactif'}
+                      {row.isActive ? t('active') : t('inactive')}
                     </span>
-                  ),
-                }}
-              />
+                  )}
+                />
+              </DataTable>
             </div>
-            <div className="responsive-table-desktop">
-              {isLoading ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '4rem',
-                    paddingBottom: '4rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '2.5rem',
-                      height: '2.5rem',
-                      border: '4px solid #235ae4',
-                      borderTopColor: 'transparent',
-                      borderRadius: '9999px',
-                    }}
-                    className="animate-spin"
-                  ></div>
-                </div>
-              ) : deliveryPersons.length === 0 ? (
-                <div
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '0.75rem',
-                    border: '1px solid #e2e8f0',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <DataTable
-                    className="dp-datatable"
-                    value={deliveryPersons}
-                    selection={deliveryPersons.filter((p: DeliveryPerson) =>
-                      selectedPersons.includes(p.id),
-                    )}
-                    onSelectionChange={(e) =>
-                      setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))
-                    }
-                    selectionMode="checkbox"
-                    dataKey="id"
-                    paginator
-                    paginatorPosition="top"
-                    rows={25}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    removableSort
-                    emptyMessage={
-                      <EmptyState
-                        icon={Truck}
-                        title={t('noDeliveryPersonsFound') as string}
-                        compact
-                      />
-                    }
-                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate={t('pageReportTemplate')}
-                    onRowClick={(e) => {
-                      const target = e.originalEvent.target as HTMLElement;
-                      if (
-                        target.closest('button') ||
-                        target.closest('a') ||
-                        target.closest('.p-checkbox')
-                      )
-                        return;
-                      const selCol = target.closest('.p-selection-column');
-                      if (selCol) {
-                        (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
-                        return;
-                      }
-                      openEditModal(e.data as DeliveryPerson);
-                    }}
-                    rowClassName={() => 'cursor-pointer'}
-                  >
-                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column
-                      field="name"
-                      header={t('name')}
-                      sortable
-                      body={(row: DeliveryPerson) => (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
-                            {row.name}
-                          </span>
-                        </div>
-                      )}
-                    />
-                    <Column
-                      field="phoneNumber"
-                      header={t('phone')}
-                      sortable
-                      body={(row: DeliveryPerson) => (
-                        <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                          {row.phoneNumber}
-                        </span>
-                      )}
-                    />
-                    <Column
-                      field="email"
-                      header={t('email')}
-                      sortable
-                      body={(row: DeliveryPerson) => (
-                        <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                          {row.email || '-'}
-                        </span>
-                      )}
-                    />
-                    <Column
-                      field="isActive"
-                      header={t('status')}
-                      body={(row: DeliveryPerson) => (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            padding: '0.25rem 0.625rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            ...(row.isActive
-                              ? { background: '#d1fae5', color: '#047857' }
-                              : { background: '#f1f5f9', color: '#475569' }),
-                          }}
-                        >
-                          {row.isActive ? t('active') : t('inactive')}
-                        </span>
-                      )}
-                    />
-                  </DataTable>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -460,9 +528,9 @@ export default function DeliveryPersons() {
         onClearSelection={clearSelection}
         onSelectAll={toggleSelectAll}
         isAllSelected={
-          selectedPersons.length === deliveryPersons.length && deliveryPersons.length > 0
+          selectedPersons.length === filteredPersons.length && filteredPersons.length > 0
         }
-        totalCount={deliveryPersons.length}
+        totalCount={filteredPersons.length}
         itemLabel="livreur"
         actions={getFloatingActions()}
       />

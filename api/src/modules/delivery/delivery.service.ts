@@ -47,19 +47,25 @@ export class DeliveryService {
     return this.tenantConnService.getRepository(Order);
   }
 
-  async getAllDeliveryPersons(search?: string): Promise<DeliveryPerson[]> {
+  async getAllDeliveryPersons(
+    search?: string,
+    isActive?: boolean,
+  ): Promise<DeliveryPerson[]> {
+    const qb = this.deliveryPersonRepository
+      .createQueryBuilder('dp')
+      .orderBy('dp.name', 'ASC');
+
     if (search) {
-      return this.deliveryPersonRepository
-        .createQueryBuilder('dp')
-        .where('(LOWER(dp.name) LIKE :q OR dp.phoneNumber LIKE :q)', {
-          q: `%${search.toLowerCase()}%`,
-        })
-        .orderBy('dp.name', 'ASC')
-        .getMany();
+      qb.andWhere('(LOWER(dp.name) LIKE :q OR dp.phoneNumber LIKE :q)', {
+        q: `%${search.toLowerCase()}%`,
+      });
     }
-    return this.deliveryPersonRepository.find({
-      order: { name: 'ASC' },
-    });
+
+    if (isActive !== undefined) {
+      qb.andWhere('dp.isActive = :isActive', { isActive });
+    }
+
+    return qb.getMany();
   }
 
   async login(

@@ -446,7 +446,7 @@ export default function InventoryAdjustments() {
             emptyMessage={
               <EmptyState icon={ClipboardCheck} title={t('noAdjustmentsFound')} compact />
             }
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />

@@ -14,6 +14,7 @@ interface ListParams {
   search?: string;
   userType?: UserType;
   status?: UserStatus;
+  roleId?: number;
 }
 
 class UsersService {
@@ -24,6 +25,7 @@ class UsersService {
     if (params.search) query.set('search', params.search);
     if (params.userType) query.set('userType', params.userType);
     if (params.status) query.set('status', params.status);
+    if (params.roleId) query.set('roleId', String(params.roleId));
 
     const qs = query.toString();
     const url = qs ? `${API_ROUTES.USERS.LIST}?${qs}` : API_ROUTES.USERS.LIST;

@@ -214,6 +214,7 @@ input[type='number'] {
     border-radius: 0.5rem !important;
     border-color: var(--erp-border) !important;
     transition: border-color 0.15s, box-shadow 0.15s !important;
+    line-height: 1.25 !important;
 }
 
 .p-inputtext:focus,
@@ -2603,9 +2604,67 @@ input[type='number'] {
     margin-bottom: 1rem;
 }
 
+/* Products page overrides page-quick-search to full-width row */
+.products-filter-row {
+    width: 100% !important;
+}
+
 @media (max-width: 599px) {
     .page-quick-search {
         width: 100%;
     }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ORDERS FILTER BAR — RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+.orders-filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.orders-filter-bar>div {
+    flex: 1 1 auto;
+}
+
+.orders-filter-bar>div>button,
+.orders-filter-bar>div .p-dropdown {
+    width: 100%;
+}
+
+/* Fixed height + vertical centering for filter dropdowns */
+.orders-filter-bar .p-dropdown {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    align-items: center;
+}
+
+.orders-filter-bar .p-dropdown .p-dropdown-label {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+@media (max-width: 599px) {
+    .orders-filter-bar {
+        width: 100%;
+    }
+
+    .orders-filter-bar>div {
+        flex: 1 1 8rem;
+    }
+}
+
+[dir="rtl"] .orders-filter-bar {
+    flex-direction: row-reverse;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RTL — Dropdown label alignment
+   ══════════════════════════════════════════════════════════ */
+[dir="rtl"] .p-dropdown .p-dropdown-label {
+    text-align: right;
 }
 }

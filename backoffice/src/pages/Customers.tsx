@@ -12,6 +12,7 @@ import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { Dropdown } from 'primereact/dropdown';
 import {
   toastDeleted,
   toastError,
@@ -22,7 +23,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
 
 export default function Customers() {
-  const { t, language } = useLanguage();
+  const { t, language, dir } = useLanguage();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -36,18 +37,25 @@ export default function Customers() {
     };
   }, [searchInput]);
 
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingPartnerId, setDeletingPartnerId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
+  const isEnabledParam = statusFilter === 'all' ? undefined : statusFilter === 'active';
   const { data, isLoading } = useQuery({
-    queryKey: ['partners-customers', debouncedSearch],
-    queryFn: () => partnersService.getAll({ search: debouncedSearch || undefined }),
+    queryKey: ['partners-customers', debouncedSearch, statusFilter],
+    queryFn: () =>
+      partnersService.getAll({
+        search: debouncedSearch || undefined,
+        type: 'customer',
+        isEnabled: isEnabledParam,
+      }),
   });
 
-  const customers = data?.partners?.filter((p: Partner) => p.isCustomer) || [];
+  const customers = data?.partners || [];
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => partnersService.delete(id),
@@ -59,7 +67,7 @@ export default function Customers() {
       setSelectedCustomers([]);
     },
     onError: (error: Error) => {
-      toastDeleteError(error, t);
+      toastDeleteError(error, t as (key: string) => string);
     },
   });
 
@@ -148,236 +156,301 @@ export default function Customers() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        <PageHeader
-          icon={Users}
-          title={t('customers')}
-          subtitle={t('manageCustomers')}
-          actions={
-            <Button
-              onClick={() => navigate('/customers/create')}
-              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-              label={t('addCustomer')}
-            />
-          }
-        />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {/* Search */}
-          <div className="page-quick-search">
-            <Search
-              style={{
-                position: 'absolute',
-                left: '0.875rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#94a3b8',
-                width: '1rem',
-                height: '1rem',
-              }}
-            />
-            <InputText
-              id="search-customers"
-              type="text"
-              placeholder={t('searchCustomers')}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              style={{ width: '100%', paddingLeft: '2.5rem' }}
-              aria-label={t('searchCustomers')}
-            />
-            {searchInput && (
+      <div
+        dir={dir}
+        style={{ maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}
+      >
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <PageHeader
+            icon={Users}
+            title={t('customers')}
+            subtitle={t('manageCustomers')}
+            actions={
               <Button
-                icon={<X style={{ width: '1rem', height: '1rem' }} />}
-                onClick={() => setSearchInput('')}
-                text
-                rounded
+                onClick={() => navigate('/customers/create')}
+                icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+                label={t('addCustomer')}
+              />
+            }
+          />
+        </div>
+
+        {/* Filter bar */}
+        <div
+          className="page-quick-search products-filter-row"
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+            marginBottom: '1rem',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              minWidth: '12rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t('search')}
+            </span>
+            <div style={{ position: 'relative' }}>
+              <Search
                 style={{
                   position: 'absolute',
-                  right: '0.5rem',
+                  insetInlineStart: '0.875rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   color: '#94a3b8',
-                  zIndex: 10,
-                  padding: '0.25rem',
+                  width: '1rem',
+                  height: '1rem',
+                  pointerEvents: 'none',
                 }}
               />
-            )}
+              <InputText
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={`${t('search')}...`}
+                style={{
+                  width: '100%',
+                  height: '3rem',
+                  fontSize: '0.875rem',
+                  paddingInlineStart: '2.5rem',
+                  paddingInlineEnd: searchInput ? '2.5rem' : '0.875rem',
+                  borderRadius: '0.625rem',
+                  border: '1.5px solid #e2e8f0',
+                  background: '#ffffff',
+                }}
+              />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput('')}
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Customers List */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-            {/* Mobile cards */}
-            <div className="responsive-table-mobile">
-              <MobileList
-                items={customers}
-                keyExtractor={(c: Partner) => c.id}
-                onTap={(c: Partner) => handleViewCustomer(c)}
-                loading={isLoading}
-                totalCount={customers.length}
-                countLabel={t('customers')}
-                emptyMessage={t('noCustomersFound')}
-                config={{
-                  topLeft: (c: Partner) => c.name,
-                  topRight: (c: Partner) => c.phoneNumber || '',
-                  bottomLeft: (c: Partner) => c.email || '',
-                  bottomRight: (c: Partner) => (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        padding: '0.25rem 0.625rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        ...(c.isEnabled
-                          ? { backgroundColor: '#dcfce7', color: '#166534' }
-                          : { backgroundColor: '#fee2e2', color: '#991b1b' }),
-                      }}
-                    >
-                      {c.isEnabled ? t('active') : t('inactive')}
-                    </span>
-                  ),
+          <div className="orders-filter-bar">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
                 }}
+              >
+                {t('status')}
+              </span>
+              <Dropdown
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.value)}
+                options={[
+                  { label: t('all'), value: 'all' },
+                  { label: t('active'), value: 'active' },
+                  { label: t('inactive'), value: 'inactive' },
+                ]}
+                style={{ height: '3rem', minWidth: '9rem', fontSize: '0.875rem', width: '100%' }}
               />
             </div>
-
-            {/* Desktop DataTable */}
-            {customers.length === 0 ? (
-              <div
-                className="responsive-table-desktop"
-                style={{
-                  textAlign: 'center',
-                  padding: '4rem 0',
-                  backgroundColor: 'white',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #e2e8f0',
-                }}
-              >
-                <Users
-                  style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }}
-                />
-                <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>
-                  {t('noCustomersFound')}
-                </p>
-              </div>
-            ) : (
-              <div
-                className="responsive-table-desktop"
-                style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '0.75rem',
-                  border: '1px solid #e2e8f0',
-                  overflow: 'hidden',
-                }}
-              >
-                <DataTable
-                  className="cust-datatable"
-                  value={customers}
-                  selection={customers.filter((c: Partner) => selectedCustomers.includes(c.id))}
-                  onSelectionChange={(e) =>
-                    setSelectedCustomers((e.value as Partner[]).map((c) => c.id))
-                  }
-                  selectionMode="checkbox"
-                  onRowClick={(e) => {
-                    const target = e.originalEvent.target as HTMLElement;
-                    if (
-                      target.closest('button') ||
-                      target.closest('a') ||
-                      target.closest('.p-checkbox')
-                    )
-                      return;
-                    const selCol = target.closest('.p-selection-column');
-                    if (selCol) {
-                      (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
-                      return;
-                    }
-                    handleViewCustomer(e.data as Partner);
-                  }}
-                  rowClassName={() => 'ord-row-clickable'}
-                  dataKey="id"
-                  paginator
-                  paginatorPosition="top"
-                  rows={25}
-                  rowsPerPageOptions={[10, 25, 50, 100]}
-                  removableSort
-                  emptyMessage={<EmptyState icon={Users} title={t('noCustomersFound')} compact />}
-                  paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                  currentPageReportTemplate={t('pageReportTemplate')}
-                >
-                  <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                  <Column
-                    field="name"
-                    header={t('name')}
-                    sortable
-                    body={(row: Partner) => (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div
-                          style={{
-                            width: '2rem',
-                            height: '2rem',
-                            background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)',
-                            borderRadius: '0.375rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
-                        </div>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                          {row.name}
-                        </span>
-                      </div>
-                    )}
-                  />
-                  <Column
-                    field="phoneNumber"
-                    header={t('phone')}
-                    sortable
-                    body={(row: Partner) => (
-                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                        {row.phoneNumber || '-'}
-                      </span>
-                    )}
-                  />
-                  <Column
-                    field="email"
-                    header={t('email')}
-                    sortable
-                    body={(row: Partner) => (
-                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                        {row.email || '-'}
-                      </span>
-                    )}
-                  />
-                  <Column
-                    field="isEnabled"
-                    header={t('status')}
-                    body={(row: Partner) => (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          padding: '0.25rem 0.625rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          ...(row.isEnabled
-                            ? { backgroundColor: '#dcfce7', color: '#166534' }
-                            : { backgroundColor: '#fee2e2', color: '#991b1b' }),
-                        }}
-                      >
-                        {row.isEnabled ? t('active') : t('inactive')}
-                      </span>
-                    )}
-                  />
-                </DataTable>
-              </div>
-            )}
           </div>
         </div>
+        {/* Mobile cards */}
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={customers}
+            keyExtractor={(c: Partner) => c.id}
+            onTap={(c: Partner) => handleViewCustomer(c)}
+            loading={isLoading}
+            totalCount={customers.length}
+            countLabel={t('customers')}
+            emptyMessage={t('noCustomersFound')}
+            config={{
+              topLeft: (c: Partner) => c.name,
+              topRight: (c: Partner) => c.phoneNumber || '',
+              bottomLeft: (c: Partner) => c.email || '',
+              bottomRight: (c: Partner) => (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    padding: '0.25rem 0.625rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    ...(c.isEnabled
+                      ? { backgroundColor: '#dcfce7', color: '#166534' }
+                      : { backgroundColor: '#fee2e2', color: '#991b1b' }),
+                  }}
+                >
+                  {c.isEnabled ? t('active') : t('inactive')}
+                </span>
+              ),
+            }}
+          />
+        </div>
+
+        {/* Desktop DataTable */}
+        {customers.length === 0 ? (
+          <div
+            className="responsive-table-desktop"
+            style={{
+              textAlign: 'center',
+              padding: '4rem 0',
+              backgroundColor: 'white',
+              borderRadius: '0.5rem',
+              border: '1px solid #e2e8f0',
+            }}
+          >
+            <Users
+              style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }}
+            />
+            <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>
+              {t('noCustomersFound')}
+            </p>
+          </div>
+        ) : (
+          <div
+            className="responsive-table-desktop"
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '0.75rem',
+              border: '1px solid #e2e8f0',
+              overflow: 'hidden',
+            }}
+          >
+            <DataTable
+              className="cust-datatable"
+              value={customers}
+              selection={customers.filter((c: Partner) => selectedCustomers.includes(c.id))}
+              onSelectionChange={(e) =>
+                setSelectedCustomers((e.value as Partner[]).map((c) => c.id))
+              }
+              selectionMode="checkbox"
+              onRowClick={(e) => {
+                const target = e.originalEvent.target as HTMLElement;
+                if (
+                  target.closest('button') ||
+                  target.closest('a') ||
+                  target.closest('.p-checkbox')
+                )
+                  return;
+                const selCol = target.closest('.p-selection-column');
+                if (selCol) {
+                  (selCol.querySelector('.p-checkbox-box') as HTMLElement)?.click();
+                  return;
+                }
+                handleViewCustomer(e.data as Partner);
+              }}
+              rowClassName={() => 'ord-row-clickable'}
+              dataKey="id"
+              paginator
+              paginatorPosition="top"
+              rows={25}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              removableSort
+              emptyMessage={<EmptyState icon={Users} title={t('noCustomersFound')} compact />}
+              paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+              currentPageReportTemplate={t('pageReportTemplate')}
+            >
+              <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+              <Column
+                field="name"
+                header={t('name')}
+                sortable
+                body={(row: Partner) => (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '2rem',
+                        height: '2rem',
+                        background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)',
+                        borderRadius: '0.375rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                      {row.name}
+                    </span>
+                  </div>
+                )}
+              />
+              <Column
+                field="phoneNumber"
+                header={t('phone')}
+                sortable
+                body={(row: Partner) => (
+                  <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                    {row.phoneNumber || '-'}
+                  </span>
+                )}
+              />
+              <Column
+                field="email"
+                header={t('email')}
+                sortable
+                body={(row: Partner) => (
+                  <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>
+                )}
+              />
+              <Column
+                field="isEnabled"
+                header={t('status')}
+                body={(row: Partner) => (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      padding: '0.25rem 0.625rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      ...(row.isEnabled
+                        ? { backgroundColor: '#dcfce7', color: '#166534' }
+                        : { backgroundColor: '#fee2e2', color: '#991b1b' }),
+                    }}
+                  >
+                    {row.isEnabled ? t('active') : t('inactive')}
+                  </span>
+                )}
+              />
+            </DataTable>
+          </div>
+        )}
       </div>
 
-      {/* Floating Action Bar */}
       {selectedCustomers.length > 0 && (
         <FloatingActionBar
           selectedCount={selectedCustomers.length}
@@ -389,7 +462,6 @@ export default function Customers() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div
           style={{

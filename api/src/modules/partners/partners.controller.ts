@@ -59,22 +59,34 @@ export class PartnersController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, enum: ['customer', 'supplier'] })
+  @ApiQuery({ name: 'isEnabled', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Partners retrieved successfully' })
   async findAll(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('isEnabled') isEnabledStr?: string,
   ) {
     const limitNum = Math.min(
       100,
       Math.max(1, parseInt(limit ?? '100', 10) || 100),
     );
     const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
+    const isEnabled =
+      isEnabledStr === 'true'
+        ? true
+        : isEnabledStr === 'false'
+          ? false
+          : undefined;
 
     const { partners, total } = await this.partnersService.findAll(
       limitNum,
       offsetNum,
       search,
+      type as 'customer' | 'supplier' | undefined,
+      isEnabled,
     );
 
     return ApiRes(PTR.LIST, partners, {

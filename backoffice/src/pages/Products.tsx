@@ -13,14 +13,10 @@ import {
   Search,
   Package,
   X,
-  Filter,
-  ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Download,
   Upload,
   FileSpreadsheet,
-  CheckSquare,
 } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -40,8 +36,6 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Sidebar } from 'primereact/sidebar';
-import { AutoComplete } from 'primereact/autocomplete';
 import { formatAmount } from '@orderium/ui';
 
 export default function Products() {
@@ -58,27 +52,19 @@ export default function Products() {
     return `${minioPublicUrl}/orderium-media/${imageUrl}`;
   };
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [quickSearch, setQuickSearch] = useState('');
   const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
-  const [nameFilter, setNameFilter] = useState('');
-  const [codeFilter, setCodeFilter] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
-  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
-  const [isServiceFilter, setIsServiceFilter] = useState<boolean | undefined>(undefined);
-  const [categorySearchSuggestions, setCategorySearchSuggestions] = useState<any[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
 
   const [appliedFilters, setAppliedFilters] = useState({
     name: '',
-    code: '',
     stockFilter: undefined as 'negative' | 'zero' | 'positive' | undefined,
     categoryIds: [] as number[],
-    isService: undefined as boolean | undefined,
   });
 
   useEffect(() => {
@@ -104,10 +90,8 @@ export default function Products() {
     queryFn: () =>
       productsService.getProducts({
         search: appliedFilters.name,
-        code: appliedFilters.code,
         stockFilter: appliedFilters.stockFilter,
         categoryIds: appliedFilters.categoryIds,
-        isService: appliedFilters.isService,
         page: currentPage,
         limit: pageSize,
       }),
@@ -135,15 +119,6 @@ export default function Products() {
       toastDeleteError(error, t);
     },
   });
-
-  const searchCategories = (event: { query: string }) => {
-    const query = event.query.toLowerCase();
-    setCategorySearchSuggestions(
-      query
-        ? (categoriesList as any[]).filter((c: any) => c.name.toLowerCase().includes(query))
-        : [...(categoriesList as any[])],
-    );
-  };
 
   const toggleSelectProduct = (id: number) => {
     setSelectedProducts((prev) =>
@@ -192,42 +167,6 @@ export default function Products() {
   const handleViewProduct = (id: number) => {
     navigate(`/products/${id}`);
   };
-
-  const handleApplyFilters = () => {
-    setAppliedFilters({
-      name: nameFilter,
-      code: codeFilter,
-      stockFilter: stockFilter === 'all' ? undefined : stockFilter,
-      categoryIds: selectedCategories.map((c: any) => c.id),
-      isService: isServiceFilter,
-    });
-    setCurrentPage(1);
-    setFiltersExpanded(false);
-  };
-
-  const handleClearFilters = () => {
-    setNameFilter('');
-    setCodeFilter('');
-    setStockFilter('all');
-    setSelectedCategories([]);
-    setIsServiceFilter(undefined);
-    setAppliedFilters({
-      name: '',
-      code: '',
-      stockFilter: undefined,
-      categoryIds: [],
-      isService: undefined,
-    });
-    setCurrentPage(1);
-  };
-
-  const activeFiltersCount = [
-    appliedFilters.name,
-    appliedFilters.code,
-    appliedFilters.stockFilter,
-    appliedFilters.categoryIds.length > 0,
-    appliedFilters.isService !== undefined,
-  ].filter(Boolean).length;
 
   const handleExport = async () => {
     try {
@@ -324,129 +263,182 @@ export default function Products() {
         style={{ display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto' }}
       >
         {/* Page Header */}
-        <PageHeader
-          icon={Package}
-          title={t('products')}
-          subtitle={t('manageProducts')}
-          actions={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {/* Filters Button */}
-              <div style={{ position: 'relative' }}>
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <PageHeader
+            icon={Package}
+            title={t('products')}
+            subtitle={t('manageProducts')}
+            actions={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {/* Import/Export Buttons */}
                 <Button
-                  onClick={() => setFiltersExpanded(true)}
+                  onClick={handleDownloadTemplate}
                   outlined
                   severity="secondary"
-                  icon={<Filter style={{ width: 16, height: 16 }} />}
-                  label={t('filters')}
+                  icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
+                  label={t('templateShort')}
+                  title={t('downloadTemplate')}
                 />
-                {activeFiltersCount > 0 && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-0.35rem',
-                      right: '-0.35rem',
-                      backgroundColor: '#235ae4',
-                      color: 'white',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      borderRadius: '9999px',
-                      width: '1.2rem',
-                      height: '1.2rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    {activeFiltersCount}
-                  </span>
-                )}
+                <Button
+                  onClick={handleImport}
+                  outlined
+                  severity="secondary"
+                  icon={<Upload style={{ width: 16, height: 16 }} />}
+                  label={t('import')}
+                  title={t('import')}
+                />
+                <Button
+                  onClick={handleExport}
+                  outlined
+                  severity="secondary"
+                  icon={<Download style={{ width: 16, height: 16 }} />}
+                  label={t('export')}
+                  title={t('export')}
+                />
+
+                {/* Add Product Button */}
+                <Button
+                  onClick={() => navigate('/products/create')}
+                  icon={<Plus style={{ width: 16, height: 16 }} />}
+                  label={t('addProduct')}
+                />
               </div>
+            }
+          />
+        </div>
 
-              {/* Import/Export Buttons */}
-              <Button
-                onClick={handleDownloadTemplate}
-                outlined
-                severity="secondary"
-                icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
-                label={t('templateShort')}
-                title={t('downloadTemplate')}
-              />
-              <Button
-                onClick={handleImport}
-                outlined
-                severity="secondary"
-                icon={<Upload style={{ width: 16, height: 16 }} />}
-                label={t('import')}
-                title={t('import')}
-              />
-              <Button
-                onClick={handleExport}
-                outlined
-                severity="secondary"
-                icon={<Download style={{ width: 16, height: 16 }} />}
-                label={t('export')}
-                title={t('export')}
-              />
-
-              {/* Add Product Button */}
-              <Button
-                onClick={() => navigate('/products/create')}
-                icon={<Plus style={{ width: 16, height: 16 }} />}
-                label={t('addProduct')}
-              />
-            </div>
-          }
-        />
-
-        {/* Quick Search Bar */}
-        <div className="page-quick-search">
-          <span
+        {/* Quick Search Bar + Inline Filters */}
+        <div
+          className="page-quick-search products-filter-row"
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Search input */}
+          <div
             style={{
-              position: 'absolute',
-              left: '0.875rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              pointerEvents: 'none',
-              color: '#94a3b8',
               display: 'flex',
-              alignItems: 'center',
+              flexDirection: 'column',
+              gap: '0.25rem',
+              flex: 1,
+              minWidth: '12rem',
             }}
           >
-            <Search style={{ width: '1rem', height: '1rem' }} />
-          </span>
-          <InputText
-            type="text"
-            value={quickSearch}
-            onChange={(e) => setQuickSearch(e.target.value)}
-            placeholder={t('searchProducts')}
-            style={{
-              width: '100%',
-              paddingLeft: '2.25rem',
-              paddingRight: quickSearch ? '2.5rem' : '0.875rem',
-            }}
-          />
-          {quickSearch && (
-            <button
-              type="button"
-              onClick={() => setQuickSearch('')}
+            <span
               style={{
-                position: 'absolute',
-                right: '0.5rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#94a3b8',
-                padding: '0.25rem',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
-              <X style={{ width: '1rem', height: '1rem' }} />
-            </button>
-          )}
+              {t('search')}
+            </span>
+            <div style={{ position: 'relative' }}>
+              <Search
+                style={{
+                  position: 'absolute',
+                  insetInlineStart: '0.875rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '1rem',
+                  height: '1rem',
+                  color: '#94a3b8',
+                  pointerEvents: 'none',
+                }}
+              />
+              <InputText
+                type="text"
+                value={quickSearch}
+                onChange={(e) => setQuickSearch(e.target.value)}
+                placeholder={t('searchProducts')}
+                style={{
+                  width: '100%',
+                  height: '3rem',
+                  fontSize: '0.875rem',
+                  paddingInlineStart: '2.5rem',
+                  paddingInlineEnd: quickSearch ? '2.5rem' : '0.875rem',
+                  borderRadius: '0.625rem',
+                  border: '1.5px solid #e2e8f0',
+                  background: '#ffffff',
+                }}
+              />
+              {quickSearch && (
+                <button
+                  type="button"
+                  onClick={() => setQuickSearch('')}
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#94a3b8',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Category + Stock filters */}
+          <div className="orders-filter-bar">
+            {/* Category dropdown */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                {t('categories')}
+              </span>
+              <Dropdown
+                value={selectedCategoryIds[0] ?? null}
+                onChange={(e) => {
+                  const ids = e.value != null ? [e.value as number] : [];
+                  setSelectedCategoryIds(ids);
+                  setAppliedFilters((prev) => ({ ...prev, categoryIds: ids }));
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { label: t('all'), value: null },
+                  ...(categoriesList as any[]).map((c: any) => ({ label: c.name, value: c.id })),
+                ]}
+                optionLabel="label"
+                optionValue="value"
+                style={{ height: '3rem', minWidth: '10rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+
+            {/* Stock dropdown */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                {t('stock')}
+              </span>
+              <Dropdown
+                value={stockFilter}
+                onChange={(e) => {
+                  setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive');
+                  setAppliedFilters((prev) => ({
+                    ...prev,
+                    stockFilter: e.value === 'all' ? undefined : e.value,
+                  }));
+                  setCurrentPage(1);
+                }}
+                options={stockFilterOptions}
+                optionLabel="label"
+                optionValue="value"
+                style={{ height: '3rem', minWidth: '9rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Products View */}
@@ -841,274 +833,6 @@ export default function Products() {
       />
 
       {/* Filters Overlay Panel */}
-      <Sidebar
-        visible={filtersExpanded}
-        onHide={() => setFiltersExpanded(false)}
-        position="right"
-        className="sidebar-bottom-sheet"
-        style={{ width: '560px' }}
-        showCloseIcon={false}
-        blockScroll
-        pt={{
-          header: { style: { display: 'none' } },
-          content: {
-            style: {
-              padding: 0,
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-            },
-          },
-        }}
-      >
-        {/* Panel Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingLeft: '1.5rem',
-            paddingRight: '1.5rem',
-            paddingTop: 'calc(1rem + env(safe-area-inset-top, 0))',
-            paddingBottom: '1rem',
-            borderBottom: '1px solid #e2e8f0',
-            background: 'linear-gradient(to right, #235ae4, #1a47b8)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>
-              {t('filters')}
-            </h2>
-            {activeFiltersCount > 0 && (
-              <span
-                style={{
-                  backgroundColor: 'white',
-                  color: '#235ae4',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  borderRadius: '9999px',
-                  width: '1.25rem',
-                  height: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {activeFiltersCount}
-              </span>
-            )}
-          </div>
-          <Button
-            onClick={() => setFiltersExpanded(false)}
-            text
-            rounded
-            icon={<X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />}
-            style={{ padding: '0.5rem' }}
-          />
-        </div>
-
-        {/* Panel Content */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem',
-          }}
-        >
-          {/* Search Filters Section */}
-          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#334155',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-                display: 'block',
-              }}
-            >
-              {t('search')}
-            </label>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: '#475569',
-                    marginBottom: '0.5rem',
-                    display: 'block',
-                  }}
-                >
-                  {t('name')}
-                </label>
-                <InputText
-                  type="text"
-                  value={nameFilter}
-                  onChange={(e) => setNameFilter(e.target.value)}
-                  placeholder={t('search')}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: '#475569',
-                    marginBottom: '0.5rem',
-                    display: 'block',
-                  }}
-                >
-                  {t('code')}
-                </label>
-                <InputText
-                  type="text"
-                  value={codeFilter}
-                  onChange={(e) => setCodeFilter(e.target.value)}
-                  placeholder={t('search')}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Stock Filter */}
-          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#334155',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-                display: 'block',
-              }}
-            >
-              {t('stock')}
-            </label>
-            <Dropdown
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive')}
-              options={stockFilterOptions}
-              optionLabel="label"
-              optionValue="value"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#334155',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-                display: 'block',
-              }}
-            >
-              {t('categories')}
-            </label>
-            <AutoComplete
-              multiple
-              value={selectedCategories}
-              suggestions={categorySearchSuggestions}
-              completeMethod={searchCategories}
-              field="name"
-              onChange={(e) => setSelectedCategories(e.value)}
-              placeholder={t('categories')}
-              dropdown
-              style={{ width: '100%' }}
-              inputStyle={{ width: '100%' }}
-              pt={{ container: { style: { width: '100%' } } }}
-            />
-          </div>
-
-          {/* Is Service Filter */}
-          <div>
-            <label
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#334155',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-                display: 'block',
-              }}
-            >
-              Type
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {[
-                { key: undefined, label: t('all') },
-                { key: true, label: 'Service' },
-                { key: false, label: t('product') },
-              ].map((filter) => (
-                <Button
-                  key={String(filter.key)}
-                  onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
-                  label={filter.label}
-                  style={
-                    isServiceFilter === filter.key
-                      ? {
-                          paddingLeft: '0.75rem',
-                          paddingRight: '0.75rem',
-                          paddingTop: '0.5rem',
-                          paddingBottom: '0.5rem',
-                          borderRadius: '0.5rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: '#235ae4',
-                          color: 'white',
-                          boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)',
-                          border: 'none',
-                        }
-                      : {
-                          paddingLeft: '0.75rem',
-                          paddingRight: '0.75rem',
-                          paddingTop: '0.5rem',
-                          paddingBottom: '0.5rem',
-                          borderRadius: '0.5rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: '#f8fafc',
-                          color: '#334155',
-                          border: '2px solid #e2e8f0',
-                        }
-                  }
-                  text={isServiceFilter !== filter.key}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Panel Footer */}
-        <div
-          style={{
-            borderTop: '1px solid #e2e8f0',
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            display: 'flex',
-            gap: '0.75rem',
-          }}
-        >
-          <Button outlined onClick={handleClearFilters} label={t('reset')} style={{ flex: 1 }} />
-          <Button onClick={handleApplyFilters} label={t('apply')} style={{ flex: 1 }} />
-        </div>
-      </Sidebar>
     </AdminLayout>
   );
 }

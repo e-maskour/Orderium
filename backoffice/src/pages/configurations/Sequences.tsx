@@ -249,7 +249,7 @@ export default function Sequences() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             emptyMessage={<EmptyState icon={Hash} title={t('noSequencesConfigured')} compact />}
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column
