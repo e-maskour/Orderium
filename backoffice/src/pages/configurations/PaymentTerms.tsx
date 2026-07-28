@@ -21,6 +21,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
+import { StatusBadge } from '../../components/ui';
 
 export default function PaymentTerms() {
   const { t } = useLanguage();
@@ -122,7 +123,7 @@ export default function PaymentTerms() {
             height: '16rem',
           }}
         >
-          <div style={{ color: '#475569' }}>{t('loading')}</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('loading')}</div>
         </div>
       </AdminLayout>
     );
@@ -143,9 +144,9 @@ export default function PaymentTerms() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -177,7 +178,7 @@ export default function PaymentTerms() {
               bottomLeft: (term: PaymentTerm) => term.key,
               bottomRight: (term: PaymentTerm) =>
                 term.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null,
             }}
           />
@@ -185,9 +186,9 @@ export default function PaymentTerms() {
         <div
           className="responsive-table-desktop"
           style={{
-            background: '#ffffff',
+            background: 'var(--erp-surface)',
             borderRadius: '0.75rem',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--erp-border)',
             overflow: 'hidden',
           }}
         >
@@ -211,7 +212,7 @@ export default function PaymentTerms() {
               header={t('label')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                   {row.label}
                 </span>
               )}
@@ -221,7 +222,7 @@ export default function PaymentTerms() {
               header={t('key')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.key}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.key}</span>
               )}
             />
             <Column
@@ -229,7 +230,7 @@ export default function PaymentTerms() {
               header={t('days')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                   {row.days} {t('daysLabel')}
                 </span>
               )}
@@ -239,7 +240,7 @@ export default function PaymentTerms() {
               header={t('status')}
               body={(row) =>
                 row.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null
               }
             />
@@ -295,11 +296,11 @@ export default function PaymentTerms() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
-                {t('label')} <span style={{ color: '#ef4444' }}>*</span>
+                {t('label')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
               </label>
               <InputText
                 type="text"
@@ -324,12 +325,12 @@ export default function PaymentTerms() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
-                {t('key')} <span style={{ color: '#ef4444' }}>*</span>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>
+                {t('key')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-label)', marginLeft: '0.5rem' }}>
                   {editingIndex === null
                     ? t('autoGeneratedFromLabel')
                     : t('lowercaseWithUnderscores')}
@@ -344,7 +345,7 @@ export default function PaymentTerms() {
                 required
                 style={{
                   width: '100%',
-                  ...(editingIndex === null ? { background: '#f8fafc' } : {}),
+                  ...(editingIndex === null ? { background: 'var(--erp-border-light)' } : {}),
                 }}
               />
             </div>
@@ -355,12 +356,12 @@ export default function PaymentTerms() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
-                {t('days')} <span style={{ color: '#ef4444' }}>*</span>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>
+                {t('days')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-label)', marginLeft: '0.5rem' }}>
                   {t('numberOfDaysUntilDue')}
                 </span>
               </label>
@@ -379,7 +380,7 @@ export default function PaymentTerms() {
                 checked={formData.isDefault}
                 onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
               />
-              <label style={{ fontSize: '0.875rem', color: '#334155' }}>
+              <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 {t('setAsDefaultPaymentTerm')}
               </label>
             </div>

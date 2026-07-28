@@ -259,10 +259,10 @@ function PrinterForm({
                 gap: 4,
                 padding: '0.25rem 0.75rem',
                 borderRadius: '0.375rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--erp-border)',
                 cursor: 'pointer',
                 background: form.documentTypes.includes(dt.value)
-                  ? 'var(--primary-50, #eef1fd)'
+                  ? 'var(--primary-50)'
                   : '#fff',
               }}
             >
@@ -457,9 +457,9 @@ export default function Printers() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -492,14 +492,14 @@ export default function Printers() {
             alignItems: 'center',
             gap: '0.75rem',
             padding: '0.75rem 1rem',
-            background: '#f0f4f8',
+            background: 'var(--erp-bg)',
             borderRadius: '0.75rem',
             marginBottom: '1.5rem',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--erp-border)',
           }}
         >
-          <Info style={{ width: 20, height: 20, color: '#64748b', flexShrink: 0 }} />
-          <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+          <Info style={{ width: 20, height: 20, color: 'var(--text-label)', flexShrink: 0 }} />
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             <strong>{t('platformDetection')}:</strong> {platform.os.toUpperCase()}
             {platform.isMobile ? ' (mobile)' : ' (desktop)'}
             {platform.hasQzTray && ' — QZ Tray détecté ✓'}
@@ -520,7 +520,7 @@ export default function Printers() {
           style={{
             display: 'flex',
             gap: '0.25rem',
-            borderBottom: '2px solid #e2e8f0',
+            borderBottom: '2px solid var(--erp-border)',
             marginBottom: '1.5rem',
           }}
         >
@@ -537,9 +537,9 @@ export default function Printers() {
                 cursor: 'pointer',
                 borderBottom:
                   activeTab === tab
-                    ? '2px solid var(--primary-color, #235ae4)'
+                    ? '2px solid var(--primary-color)'
                     : '2px solid transparent',
-                color: activeTab === tab ? 'var(--primary-color, #235ae4)' : '#64748b',
+                color: activeTab === tab ? 'var(--primary-color)' : 'var(--text-label)',
                 marginBottom: -2,
               }}
             >
@@ -551,7 +551,7 @@ export default function Printers() {
         {activeTab === 'printers' && (
           <>
             {isLoading ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-placeholder)' }}>
                 <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }} />
               </div>
             ) : printers.length === 0 ? (
@@ -561,13 +561,13 @@ export default function Printers() {
                   padding: '3rem',
                   background: '#fff',
                   borderRadius: '0.75rem',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--erp-border)',
                 }}
               >
                 <Printer
                   style={{ width: 48, height: 48, color: '#cbd5e1', margin: '0 auto 1rem' }}
                 />
-                <p style={{ color: '#64748b' }}>{t('noprinters')}</p>
+                <p style={{ color: 'var(--text-label)' }}>{t('noprinters')}</p>
                 <button onClick={openCreate} style={{ ...btnPrimary, marginTop: '0.75rem' }}>
                   <Plus style={{ width: 16, height: 16 }} />
                   {t('addPrinter')}
@@ -585,7 +585,7 @@ export default function Printers() {
                       padding: '1rem 1.25rem',
                       background: '#fff',
                       borderRadius: '0.75rem',
-                      border: `1.5px solid ${printer.isDefault ? 'var(--primary-color, #235ae4)' : '#e2e8f0'}`,
+                      border: `1.5px solid ${printer.isDefault ? 'var(--primary-color)' : 'var(--erp-border)'}`,
                       boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
                     }}
                   >
@@ -596,8 +596,8 @@ export default function Printers() {
                           height: 42,
                           borderRadius: '0.625rem',
                           background: printer.isDefault
-                            ? 'var(--primary-color, #235ae4)'
-                            : '#f1f5f9',
+                            ? 'var(--primary-color)'
+                            : 'var(--erp-border-light)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -607,20 +607,20 @@ export default function Printers() {
                           style={{
                             width: 20,
                             height: 20,
-                            color: printer.isDefault ? '#fff' : '#64748b',
+                            color: printer.isDefault ? '#fff' : 'var(--text-label)',
                           }}
                         />
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700, color: '#1e293b' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                           {printer.name}
                           {printer.isDefault && (
                             <span
                               style={{
                                 marginLeft: 8,
                                 fontSize: '0.7rem',
-                                background: 'var(--primary-50, #eef1fd)',
-                                color: 'var(--primary-color, #235ae4)',
+                                background: 'var(--primary-50)',
+                                color: 'var(--primary-color)',
                                 padding: '2px 8px',
                                 borderRadius: 12,
                                 fontWeight: 600,
@@ -630,7 +630,7 @@ export default function Printers() {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                        <div style={{ fontSize: '0.8125rem', color: 'var(--text-label)' }}>
                           {BRAND_OPTIONS.find((b) => b.value === printer.brand)?.label} ·{' '}
                           {printer.model ?? printer.brand} ·{' '}
                           {
@@ -640,7 +640,7 @@ export default function Printers() {
                           · {printer.paperWidth}mm
                           {printer.ip && ` · ${printer.ip}:${printer.port}`}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-placeholder)', marginTop: 2 }}>
                           {printer.documentTypes.join(', ')}
                           {printer.lastSeenAt && (
                             <span style={{ marginLeft: 8 }}>
@@ -665,14 +665,14 @@ export default function Printers() {
                         style={btnIcon}
                         title={t('editPrinter')}
                       >
-                        <Pencil style={{ width: 16, height: 16, color: '#64748b' }} />
+                        <Pencil style={{ width: 16, height: 16, color: 'var(--text-label)' }} />
                       </button>
                       <button
                         onClick={() => handleDelete(printer)}
                         style={btnIcon}
                         title={t('deletePrinter')}
                       >
-                        <Trash2 style={{ width: 16, height: 16, color: '#ef4444' }} />
+                        <Trash2 style={{ width: 16, height: 16, color: 'var(--status-unpaid-text)' }} />
                       </button>
                     </div>
                   </div>
@@ -687,13 +687,13 @@ export default function Printers() {
             style={{
               background: '#fff',
               borderRadius: '0.75rem',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--erp-border)',
               overflow: 'hidden',
             }}
           >
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <tr style={{ background: 'var(--erp-border-light)', borderBottom: '1px solid var(--erp-border)' }}>
                   <th style={thStyle}>{t('printedAt')}</th>
                   <th style={thStyle}>{t('printerName')}</th>
                   <th style={thStyle}>{t('documentTypes')}</th>
@@ -707,14 +707,14 @@ export default function Printers() {
                   <tr>
                     <td
                       colSpan={6}
-                      style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}
+                      style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-placeholder)' }}
                     >
                       {t('noPrintJobs')}
                     </td>
                   </tr>
                 ) : (
                   jobs.map((job: any) => (
-                    <tr key={job.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <tr key={job.id} style={{ borderBottom: '1px solid var(--erp-border-light)' }}>
                       <td style={tdStyle}>
                         {new Date(job.printedAt ?? job.printed_at).toLocaleString('fr-FR')}
                       </td>
@@ -726,7 +726,7 @@ export default function Printers() {
                           {job.status === 'success' ? (
                             <CheckCircle style={{ width: 14, height: 14, color: '#22c55e' }} />
                           ) : job.status === 'failed' ? (
-                            <XCircle style={{ width: 14, height: 14, color: '#ef4444' }} />
+                            <XCircle style={{ width: 14, height: 14, color: 'var(--status-unpaid-text)' }} />
                           ) : (
                             <Clock style={{ width: 14, height: 14, color: '#f97316' }} />
                           )}
@@ -749,7 +749,7 @@ export default function Printers() {
                   justifyContent: 'center',
                   gap: '0.5rem',
                   padding: '0.75rem',
-                  borderTop: '1px solid #e2e8f0',
+                  borderTop: '1px solid var(--erp-border)',
                 }}
               >
                 <button
@@ -759,7 +759,7 @@ export default function Printers() {
                 >
                   ← Précédent
                 </button>
-                <span style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.875rem' }}>
+                <span style={{ padding: '0.5rem', color: 'var(--text-label)', fontSize: '0.875rem' }}>
                   Page {jobsPage}
                 </span>
                 <button
@@ -782,7 +782,7 @@ export default function Printers() {
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontSize: '1rem',
-                color: '#1e293b',
+                color: 'var(--text-primary)',
                 padding: '0.75rem 0',
               }}
             >
@@ -822,14 +822,14 @@ export default function Printers() {
                   key={guide.title}
                   style={{
                     padding: '1rem',
-                    background: '#f8fafc',
+                    background: 'var(--erp-border-light)',
                     borderRadius: '0.75rem',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--erp-border)',
                   }}
                 >
-                  <h4 style={{ margin: '0 0 0.5rem', color: '#1e293b' }}>{guide.title}</h4>
+                  <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-primary)' }}>{guide.title}</h4>
                   <p
-                    style={{ margin: 0, fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5 }}
+                    style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-label)', lineHeight: 1.5 }}
                   >
                     {guide.desc}
                   </p>
@@ -893,11 +893,11 @@ export default function Printers() {
             <div
               style={{
                 fontSize: '0.8125rem',
-                color: '#64748b',
-                background: '#f8fafc',
+                color: 'var(--text-label)',
+                background: 'var(--erp-border-light)',
                 borderRadius: '0.5rem',
                 padding: '0.625rem 0.75rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--erp-border)',
               }}
             >
               <strong>QZ Tray</strong> {t('qztrayDiscoveryNote')} <strong>HTTP probe</strong>{' '}
@@ -906,7 +906,7 @@ export default function Printers() {
 
             {/* Results */}
             {isScanning && discovered.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}>
                 <Loader2
                   style={{
                     width: 32,
@@ -920,7 +920,7 @@ export default function Printers() {
             )}
 
             {!isScanning && discovered.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}>
                 <Printer style={{ width: 36, height: 36, margin: '0 auto 0.5rem', opacity: 0.4 }} />
                 <div>{t('noDiscoveredPrinters')}</div>
               </div>
@@ -946,7 +946,7 @@ export default function Printers() {
                       padding: '0.75rem 1rem',
                       background: '#fff',
                       borderRadius: '0.625rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid var(--erp-border)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -979,10 +979,10 @@ export default function Printers() {
                         )}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {p.name}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-label)' }}>
                           {BRAND_OPTIONS.find((b) => b.value === p.brand)?.label ?? p.brand}
                           {p.ip ? ` · ${p.ip}:${p.port}` : ''}
                           {' · '}
@@ -1059,7 +1059,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem 0.75rem',
   borderRadius: '0.5rem',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--erp-border)',
   fontSize: '0.875rem',
   outline: 'none',
   boxSizing: 'border-box',
@@ -1072,7 +1072,7 @@ const btnPrimary: React.CSSProperties = {
   padding: '0.5rem 1rem',
   borderRadius: '0.5rem',
   border: 'none',
-  background: 'var(--primary-color, #235ae4)',
+  background: 'var(--primary-color)',
   color: '#fff',
   fontWeight: 600,
   fontSize: '0.875rem',
@@ -1085,7 +1085,7 @@ const btnSecondary: React.CSSProperties = {
   gap: '0.5rem',
   padding: '0.5rem 0.75rem',
   borderRadius: '0.5rem',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--erp-border)',
   background: '#fff',
   color: '#374151',
   fontWeight: 500,
@@ -1100,7 +1100,7 @@ const btnIcon: React.CSSProperties = {
   width: 36,
   height: 36,
   borderRadius: '0.5rem',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--erp-border)',
   background: '#fff',
   cursor: 'pointer',
 };
@@ -1109,11 +1109,11 @@ const thStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '0.625rem 1rem',
   fontWeight: 600,
-  color: '#475569',
+  color: 'var(--text-secondary)',
   fontSize: '0.8125rem',
 };
 
 const tdStyle: React.CSSProperties = {
   padding: '0.625rem 1rem',
-  color: '#1e293b',
+  color: 'var(--text-primary)',
 };

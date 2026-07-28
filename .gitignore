@@ -159,3 +159,13 @@ scripts.env
 .env.production
 **/.env.local
 .vscode/settings.json
+.vscode
+.claude
+.agents
+.husky
+skills-lock.json
+# Added by code-review-graph
+.code-review-graph/
+
+# Added by graphify
+graphify-out/

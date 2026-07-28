@@ -21,6 +21,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
+import { StatusBadge } from '../../components/ui';
 
 export default function Taxes() {
   const { t } = useLanguage();
@@ -113,7 +114,7 @@ export default function Taxes() {
             height: '16rem',
           }}
         >
-          <div style={{ color: '#475569' }}>{t('loading')}</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('loading')}</div>
         </div>
       </AdminLayout>
     );
@@ -134,9 +135,9 @@ export default function Taxes() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -167,7 +168,7 @@ export default function Taxes() {
               topRight: (r: TaxRate) => `${r.rate}%`,
               bottomRight: (r: TaxRate) =>
                 r.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null,
             }}
           />
@@ -175,9 +176,9 @@ export default function Taxes() {
         <div
           className="responsive-table-desktop"
           style={{
-            background: '#ffffff',
+            background: 'var(--erp-surface)',
             borderRadius: '0.75rem',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--erp-border)',
             overflow: 'hidden',
           }}
         >
@@ -199,7 +200,7 @@ export default function Taxes() {
               header={t('name')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                   {row.name}
                 </span>
               )}
@@ -209,7 +210,7 @@ export default function Taxes() {
               header={t('ratePercentage')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.rate}%</span>
               )}
             />
             <Column
@@ -217,7 +218,7 @@ export default function Taxes() {
               header={t('status')}
               body={(row) =>
                 row.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null
               }
             />
@@ -272,11 +273,11 @@ export default function Taxes() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
-                {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+                {t('name')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
               </label>
               <InputText
                 type="text"
@@ -293,11 +294,11 @@ export default function Taxes() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
-                {t('ratePercentage')} <span style={{ color: '#ef4444' }}>*</span>
+                {t('ratePercentage')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
               </label>
               <span style={{ position: 'relative', display: 'block', width: '100%' }}>
                 <InputText
@@ -318,7 +319,7 @@ export default function Taxes() {
                     transform: 'translateY(-50%)',
                     width: '1rem',
                     height: '1rem',
-                    color: '#94a3b8',
+                    color: 'var(--text-placeholder)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -330,7 +331,7 @@ export default function Taxes() {
                 checked={formData.isDefault}
                 onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
               />
-              <label style={{ fontSize: '0.875rem', color: '#334155' }}>
+              <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 {t('setAsDefaultTaxRate')}
               </label>
             </div>

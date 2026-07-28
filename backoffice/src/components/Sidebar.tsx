@@ -312,8 +312,8 @@ function ActivePip({ isRtl }: { isRtl: boolean }) {
         width: '0.1875rem',
         height: '1.125rem',
         borderRadius: isRtl ? '0.25rem 0 0 0.25rem' : '0 0.25rem 0.25rem 0',
-        background: '#3b82f6',
-        boxShadow: '0 0 6px rgba(59,130,246,0.55)',
+        background: 'var(--sb-accent)',
+        boxShadow: '0 0 6px var(--sb-accent-glow)',
       }}
     />
   );
@@ -333,6 +333,7 @@ function FlatLink({ item, isRtl, label, collapsed }: FlatLinkProps) {
       to={item.to}
       id={item.id}
       className={`sb-link p-ripple${active ? ' sb-link--active' : ''}`}
+      aria-current={active ? 'page' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -340,7 +341,7 @@ function FlatLink({ item, isRtl, label, collapsed }: FlatLinkProps) {
         justifyContent: collapsed ? 'center' : 'flex-start',
         padding: collapsed ? '0.625rem' : '0.4375rem 0.5rem',
         borderRadius: '0.5rem',
-        background: active ? 'rgba(59,130,246,0.16)' : 'transparent',
+        background: active ? 'var(--sb-accent-bg)' : 'transparent',
         color: active ? '#fff' : 'rgba(255,255,255,0.62)',
         fontWeight: active ? 600 : 400,
         textDecoration: 'none',
@@ -360,7 +361,7 @@ function FlatLink({ item, isRtl, label, collapsed }: FlatLinkProps) {
           height: '1.75rem',
           borderRadius: '0.375rem',
           flexShrink: 0,
-          background: active ? 'rgba(59,130,246,0.2)' : 'transparent',
+          background: active ? 'var(--sb-accent-bg-strong)' : 'transparent',
         }}
       >
         <item.icon style={{ width: 16, height: 16 }} strokeWidth={active ? 2.2 : 1.75} />
@@ -396,13 +397,14 @@ function ChildLink({ child, label, isRtl, inPopover }: ChildLinkProps) {
     <Link
       to={child.to}
       className={`sb-link p-ripple${active ? ' sb-link--active' : ''}`}
+      aria-current={active ? 'page' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
         padding: inPopover ? '0.4375rem 0.75rem' : '0.375rem 0.5rem 0.375rem 1.25rem',
         borderRadius: '0.4375rem',
-        background: active ? 'rgba(59,130,246,0.18)' : 'transparent',
+        background: active ? 'var(--sb-accent-bg)' : 'transparent',
         color: active ? '#fff' : 'rgba(255,255,255,0.58)',
         fontWeight: active ? 600 : 400,
         textDecoration: 'none',
@@ -418,7 +420,7 @@ function ChildLink({ child, label, isRtl, inPopover }: ChildLinkProps) {
             width: 3,
             height: '1rem',
             borderRadius: 2,
-            background: '#3b82f6',
+            background: 'var(--sb-accent)',
             flexShrink: 0,
           }}
         />
@@ -523,7 +525,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
         [isRtl ? 'right' : 'left']: isMobileDrawer ? undefined : 0,
         height: isMobileDrawer ? '100%' : '100vh',
         width: isMobileDrawer ? '100%' : isCollapsed ? '4.5rem' : '15rem',
-        background: 'linear-gradient(195deg, #0f172a 0%, #111827 55%, #0c1a38 100%)',
+        background: 'var(--sb-bg)',
         transition: isMobileDrawer ? 'none' : 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: isMobileDrawer ? undefined : 20,
         display: 'flex',
@@ -627,6 +629,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                 <button
                   className="sb-group-btn"
                   aria-expanded={isOpen}
+                  aria-label={getGroupLabel(group)}
                   onClick={() => !isCollapsed && toggleGroup(group.id)}
                   onMouseEnter={() => {
                     if (isCollapsed) {
@@ -644,7 +647,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
                     width: '100%',
                     padding: isCollapsed ? '0.625rem' : '0.4375rem 0.5rem',
-                    background: hasActive && isCollapsed ? 'rgba(59,130,246,0.14)' : 'transparent',
+                    background: hasActive && isCollapsed ? 'var(--sb-accent-bg-soft)' : 'transparent',
                     border: 'none',
                     cursor: 'pointer',
                     borderRadius: '0.5rem',
@@ -663,7 +666,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                         width: '0.1875rem',
                         height: '1.125rem',
                         borderRadius: isRtl ? '0.25rem 0 0 0.25rem' : '0 0.25rem 0.25rem 0',
-                        background: '#3b82f6',
+                        background: 'var(--sb-accent)',
                       }}
                     />
                   )}
@@ -676,14 +679,14 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                       height: '1.75rem',
                       borderRadius: '0.375rem',
                       flexShrink: 0,
-                      background: hasActive ? 'rgba(59,130,246,0.2)' : 'transparent',
+                      background: hasActive ? 'var(--sb-accent-bg-strong)' : 'transparent',
                     }}
                   >
                     <group.icon
                       style={{
                         width: 16,
                         height: 16,
-                        color: hasActive ? '#93c5fd' : 'rgba(255,255,255,0.55)',
+                        color: hasActive ? 'var(--sb-accent-text)' : 'rgba(255,255,255,0.55)',
                       }}
                       strokeWidth={hasActive ? 2.2 : 1.75}
                     />
@@ -698,7 +701,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                           fontWeight: 700,
                           letterSpacing: '0.06em',
                           textTransform: 'uppercase',
-                          color: hasActive ? 'rgba(147,197,253,0.9)' : 'rgba(255,255,255,0.35)',
+                          color: hasActive ? 'var(--sb-accent-text)' : 'rgba(255,255,255,0.35)',
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -755,7 +758,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                       position: 'absolute',
                       top: 0,
                       [isRtl ? 'right' : 'left']: 'calc(100% + 0.5rem)',
-                      background: '#1e293b',
+                      background: 'var(--sb-popover-bg)',
                       border: '1px solid rgba(255,255,255,0.1)',
                       borderRadius: '0.625rem',
                       boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
@@ -772,7 +775,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                         fontWeight: 700,
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
-                        color: 'rgba(147,197,253,0.8)',
+                        color: 'var(--sb-accent-text)',
                       }}
                     >
                       {getGroupLabel(group)}
@@ -840,8 +843,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
             style={{
               padding: '0.5rem 0.75rem',
               borderRadius: '0.5rem',
-              background: 'rgba(59,130,246,0.07)',
-              border: '1px solid rgba(59,130,246,0.14)',
+              background: 'var(--sb-accent-bg-soft)',
+              border: '1px solid var(--sb-accent-bg-soft)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -883,6 +886,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="sb-collapse-btn"
+          aria-label={isCollapsed ? t('navExpand') : t('navCollapse')}
           title={isCollapsed ? t('navExpand') : t('navCollapse')}
           style={{
             display: 'flex',
@@ -931,13 +935,19 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
 
       <style>{`
                 .sb-link { text-decoration: none; }
-                .sb-link:hover:not(.sb-link--active) { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.9) !important; }
-                .sb-link--active:hover { background: rgba(59,130,246,0.22) !important; }
+                .sb-link:hover:not(.sb-link--active) { background: var(--sb-hover-bg) !important; color: var(--sb-hover-text) !important; }
+                .sb-link--active:hover { background: var(--sb-accent-bg-strong) !important; }
                 .sb-group-btn:hover { background: rgba(255,255,255,0.05) !important; }
-                .sb-collapse-btn:hover { background: rgba(255,255,255,0.07) !important; color: rgba(255,255,255,0.7) !important; }
+                .sb-collapse-btn:hover { background: var(--sb-border) !important; color: rgba(255,255,255,0.7) !important; }
+                .sb-link:focus-visible,
+                .sb-group-btn:focus-visible,
+                .sb-collapse-btn:focus-visible {
+                    outline: none;
+                    box-shadow: 0 0 0 2px var(--sb-accent);
+                }
                 .sidebar-enterprise nav::-webkit-scrollbar { width: 3px; }
                 .sidebar-enterprise nav::-webkit-scrollbar-track { background: transparent; }
-                .sidebar-enterprise nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
+                .sidebar-enterprise nav::-webkit-scrollbar-thumb { background: var(--sb-border); border-radius: 3px; }
             `}</style>
     </aside>
   );

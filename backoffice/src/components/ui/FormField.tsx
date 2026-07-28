@@ -55,11 +55,11 @@ export function FormField({
   const errorMessage = fieldError?.message ? t(fieldError.message as TranslationKey) : undefined;
 
   return (
-    <div style={style} className={className}>
+    <div style={style} className={className ? `ui-field ${className}` : 'ui-field'}>
       {label && (
-        <label htmlFor={name} className="p-label" style={{ display: 'block' }}>
+        <label htmlFor={name} className="ui-field__label">
           {label}
-          {required && <span style={{ color: '#ef4444', marginInlineStart: '0.25rem' }}>*</span>}
+          {required && <span className="ui-field__required">*</span>}
         </label>
       )}
 
@@ -78,12 +78,7 @@ export function FormField({
       )}
 
       {errorMessage && (
-        <small
-          id={`${name}-error`}
-          className="p-error"
-          role="alert"
-          style={{ display: 'block', marginTop: '0.25rem', fontSize: '0.75rem', color: '#ef4444' }}
-        >
+        <small id={`${name}-error`} className="ui-field__error p-error" role="alert">
           {errorMessage}
         </small>
       )}
@@ -107,12 +102,7 @@ export function FormError({ name }: { name: string }) {
 
   const msg = t(fieldError.message as TranslationKey);
   return (
-    <small
-      id={`${name}-error`}
-      className="p-error"
-      role="alert"
-      style={{ display: 'block', marginTop: '0.25rem', fontSize: '0.75rem', color: '#ef4444' }}
-    >
+    <small id={`${name}-error`} className="ui-field__error p-error" role="alert">
       {msg}
     </small>
   );

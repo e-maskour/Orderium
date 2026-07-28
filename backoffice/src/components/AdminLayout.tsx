@@ -61,7 +61,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0f4f8' }} dir={dir}>
+    <div style={{ minHeight: '100vh', background: 'var(--erp-bg)' }} dir={dir}>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <AppSidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
@@ -125,6 +125,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <Link
               key={tab.path}
               to={tab.path}
+              className="mobile-tab"
+              aria-current={active ? 'page' : undefined}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -133,7 +135,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 gap: '0.1875rem',
                 flex: 1,
                 padding: '0.5rem 0.25rem',
-                color: active ? '#235ae4' : '#94a3b8',
+                color: active ? 'var(--primary-color)' : 'var(--text-muted)',
                 textDecoration: 'none',
                 transition: 'color 0.15s',
                 position: 'relative',
@@ -149,7 +151,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                     width: '2rem',
                     height: '0.1875rem',
                     borderRadius: '0 0 0.25rem 0.25rem',
-                    background: '#235ae4',
+                    background: 'var(--primary-color)',
                   }}
                 />
               )}
@@ -173,6 +175,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         })}
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
+          className="mobile-tab"
+          aria-label={t('navMore')}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -181,7 +185,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             gap: '0.1875rem',
             flex: 1,
             padding: '0.5rem 0.25rem',
-            color: '#94a3b8',
+            color: 'var(--text-muted)',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
@@ -208,11 +212,16 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           position: fixed; bottom: 0; left: 0; right: 0;
           height: calc(3.5rem + env(safe-area-inset-bottom));
           padding-bottom: env(safe-area-inset-bottom);
-          background: #ffffff; border-top: 1px solid #e2e8f0;
+          background: var(--erp-surface); border-top: 1px solid var(--erp-border);
           display: flex; align-items: stretch; z-index: 30;
           box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
           -webkit-text-size-adjust: 100%;
           text-size-adjust: 100%;
+        }
+        .mobile-tab:focus-visible {
+          outline: none;
+          box-shadow: var(--focus-ring);
+          border-radius: 0.5rem;
         }
       `}</style>
     </div>

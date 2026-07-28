@@ -599,10 +599,10 @@ const GROUP_CONFIG: Record<string, { color: string; bg: string }> = {
 };
 
 const TYPE_CONFIG: Record<string, { label: Record<Lang, string>; color: string; bg: string }> = {
-  page: { label: { en: 'Page', fr: 'Page', ar: 'صفحة' }, color: '#475569', bg: '#f1f5f9' },
+  page: { label: { en: 'Page', fr: 'Page', ar: 'صفحة' }, color: '#475569', bg: 'var(--erp-border-light)' },
   create: { label: { en: 'New', fr: 'Nouveau', ar: 'جديد' }, color: '#10b981', bg: '#dcfce7' },
   settings: { label: { en: 'Config', fr: 'Config', ar: 'إعداد' }, color: '#8b5cf6', bg: '#ede9fe' },
-  report: { label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' }, color: '#235ae4', bg: '#eff3ff' },
+  report: { label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' }, color: 'var(--primary-color)', bg: '#eff3ff' },
 };
 
 const QUICK_ACCESS_PATHS = [
@@ -989,8 +989,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
           zIndex: 100,
           direction: language === 'ar' ? 'rtl' : 'ltr',
           backdropFilter: 'blur(12px)',
-          backgroundColor: 'rgba(255,255,255,0.97)',
-          borderBottom: '1px solid rgba(35, 90, 228, 0.12)',
+          backgroundColor: 'var(--topbar-bg)',
+          borderBottom: '1px solid var(--topbar-border)',
           paddingTop: 'env(safe-area-inset-top)',
         }}
       >
@@ -1027,7 +1027,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 rounded
                 onClick={handleInstallClick}
                 style={{
-                  background: 'linear-gradient(135deg,#235ae4,#1a47b8)',
+                  background: 'linear-gradient(135deg,var(--primary-color),#1a47b8)',
                   border: 'none',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -1073,6 +1073,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
             <button
               onClick={(e) => avatarMenuRef.current?.toggle(e)}
               aria-label="User menu"
+              className="header-user-btn"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1097,7 +1098,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 shape="circle"
                 size="normal"
                 style={{
-                  background: 'linear-gradient(135deg,#0f172a,#1a2342)',
+                  background: 'linear-gradient(135deg,var(--text-primary),#1a2342)',
                   color: '#ffffff',
                   fontWeight: 700,
                   fontSize: '0.8125rem',
@@ -1155,7 +1156,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
               <div
                 style={{
                   padding: '0.875rem 1rem',
-                  background: 'linear-gradient(135deg,#0f172a,#1a2342)',
+                  background: 'linear-gradient(135deg,var(--text-primary),#1a2342)',
                   direction: language === 'ar' ? 'rtl' : 'ltr',
                 }}
               >
@@ -1229,7 +1230,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                   {
                     icon: <Settings style={{ width: '1rem', height: '1rem' }} strokeWidth={1.75} />,
                     label: t('userSettings'),
-                    color: '#235ae4',
+                    color: 'var(--primary-color)',
                     bg: '#eff6ff',
                     onClick: () => {
                       avatarMenuRef.current?.hide();
@@ -1289,7 +1290,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                   </button>
                 ))}
 
-                <div style={{ height: '1px', background: '#f1f5f9', margin: '0.25rem 0' }} />
+                <div style={{ height: '1px', background: 'var(--erp-border-light)', margin: '0.25rem 0' }} />
 
                 <button
                   onClick={() => {
@@ -1406,7 +1407,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         width: '2.5rem',
                         height: '0.25rem',
                         borderRadius: '99px',
-                        background: '#e2e8f0',
+                        background: 'var(--erp-border)',
                       }}
                     />
                   </div>
@@ -1418,7 +1419,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                       alignItems: 'center',
                       gap: '0.75rem',
                       padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #f1f5f9',
+                      borderBottom: '1px solid var(--erp-border-light)',
                     }}
                   >
                     <Search
@@ -1460,14 +1461,14 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                           justifyContent: 'center',
                           width: '1.75rem',
                           height: '1.75rem',
-                          background: '#f1f5f9',
+                          background: 'var(--erp-border-light)',
                           borderRadius: '50%',
                           border: 'none',
                           cursor: 'pointer',
                           flexShrink: 0,
                         }}
                       >
-                        <X style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+                        <X style={{ width: '0.875rem', height: '0.875rem', color: 'var(--text-label)' }} />
                       </button>
                     ) : (
                       <button
@@ -1564,7 +1565,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                 style={{
                                   fontSize: '0.9375rem',
                                   fontWeight: 600,
-                                  color: '#0f172a',
+                                  color: 'var(--text-primary)',
                                   lineHeight: 1.3,
                                 }}
                               >
@@ -1597,7 +1598,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             >
                               <path
                                 d="M6 4l4 4-4 4"
-                                stroke="#64748b"
+                                stroke="var(--text-label)"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -1663,7 +1664,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     alignItems: 'center',
                     gap: '1rem',
                     padding: '1.125rem 1.5rem',
-                    borderBottom: '2px solid #f1f5f9',
+                    borderBottom: '2px solid var(--erp-border-light)',
                   }}
                 >
                   <Search
@@ -1702,9 +1703,9 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         justifyContent: 'center',
                         width: '1.75rem',
                         height: '1.75rem',
-                        background: '#f1f5f9',
+                        background: 'var(--erp-border-light)',
                         borderRadius: '0.375rem',
-                        color: '#64748b',
+                        color: 'var(--text-label)',
                         flexShrink: 0,
                         padding: 0,
                       }}
@@ -1718,7 +1719,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         alignItems: 'center',
                         padding: '0.25rem 0.625rem',
                         background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid var(--erp-border)',
                         borderRadius: '0.375rem',
                         fontSize: '0.75rem',
                         color: '#94a3b8',
@@ -1738,7 +1739,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     gap: '0.25rem',
                     padding: '0.625rem 1.25rem',
                     overflowX: 'auto',
-                    borderBottom: '1px solid #f1f5f9',
+                    borderBottom: '1px solid var(--erp-border-light)',
                     flexDirection: isRTL ? 'row-reverse' : 'row',
                   }}
                 >
@@ -1867,7 +1868,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             >
                               {gLabel}
                             </span>
-                            <div style={{ flex: 1, height: '1px', background: '#f1f5f9' }} />
+                            <div style={{ flex: 1, height: '1px', background: 'var(--erp-border-light)' }} />
                           </div>
 
                           {/* Route items */}
@@ -1910,7 +1911,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     width: '2.375rem',
                                     height: '2.375rem',
                                     borderRadius: '0.625rem',
-                                    background: isItemActive ? rowGc.color : '#f1f5f9',
+                                    background: isItemActive ? rowGc.color : 'var(--erp-border-light)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -1922,7 +1923,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     style={{
                                       width: '1.0625rem',
                                       height: '1.0625rem',
-                                      color: isItemActive ? 'white' : '#64748b',
+                                      color: isItemActive ? 'white' : 'var(--text-label)',
                                     }}
                                     strokeWidth={1.75}
                                   />
@@ -1943,7 +1944,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                         margin: 0,
                                         fontSize: '0.9375rem',
                                         fontWeight: isItemActive ? 600 : 500,
-                                        color: isItemActive ? '#0f172a' : '#1e293b',
+                                        color: isItemActive ? 'var(--text-primary)' : '#1e293b',
                                         lineHeight: 1.3,
                                       }}
                                     >
@@ -1986,7 +1987,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     style={{
                                       margin: 0,
                                       fontSize: '0.8125rem',
-                                      color: isItemActive ? '#64748b' : '#94a3b8',
+                                      color: isItemActive ? 'var(--text-label)' : '#94a3b8',
                                       lineHeight: 1.3,
                                       marginTop: '0.2rem',
                                       overflow: 'hidden',
@@ -2062,7 +2063,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '0.625rem 1.25rem',
-                    borderTop: '1px solid #f1f5f9',
+                    borderTop: '1px solid var(--erp-border-light)',
                     background: '#fafafa',
                     flexDirection: isRTL ? 'row-reverse' : 'row',
                   }}
@@ -2100,10 +2101,10 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                               height: '1.375rem',
                               padding: '0 0.3rem',
                               background: 'white',
-                              border: '1px solid #e2e8f0',
+                              border: '1px solid var(--erp-border)',
                               borderRadius: '0.3125rem',
                               fontSize: '0.75rem',
-                              color: '#64748b',
+                              color: 'var(--text-label)',
                               boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                             }}
                           >
@@ -2213,11 +2214,17 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 }
                 .header-search-icon-btn:hover {
                     background: #f3f4f6;
-                    color: #235ae4;
+                    color: var(--primary-color);
                     transform: scale(1.08);
                 }
                 .header-search-icon-btn:active {
                     transform: scale(0.93);
+                }
+                .header-search-icon-btn:focus-visible,
+                .header-user-btn:focus-visible {
+                    outline: none;
+                    box-shadow: var(--focus-ring);
+                    border-radius: 0.625rem;
                 }
                 .header-search-icon-ring {
                     display: none;

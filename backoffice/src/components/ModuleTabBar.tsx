@@ -225,8 +225,8 @@ export const ModuleTabBar = () => {
     <div
       className="module-tab-bar"
       style={{
-        background: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
+        background: 'var(--erp-surface)',
+        borderBottom: '1px solid var(--erp-border)',
         width: '100%',
         flexShrink: 0,
       }}
@@ -248,18 +248,16 @@ export const ModuleTabBar = () => {
             <Link
               key={tab.to}
               to={tab.to}
-              className="module-tab-link"
+              className={`module-tab-link${active ? ' module-tab-link--active' : ''}`}
+              aria-current={active ? 'page' : undefined}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.375rem',
                 padding: '0 0.875rem',
                 height: '2.625rem',
-                color: active ? '#235ae4' : '#64748b',
-                fontWeight: active ? 600 : 500,
                 fontSize: '0.8125rem',
                 textDecoration: 'none',
-                borderBottom: `2px solid ${active ? '#235ae4' : 'transparent'}`,
                 marginBottom: '-1px',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
@@ -278,8 +276,23 @@ export const ModuleTabBar = () => {
       <style>{`
                 .module-tab-bar::-webkit-scrollbar { display: none; }
                 .module-tab-bar > div::-webkit-scrollbar { display: none; }
-                .module-tab-link:hover { color: #334155 !important; }
-                .module-tab-link[style*="color: rgb(35, 90, 228)"]:hover { color: #235ae4 !important; }
+                .module-tab-link {
+                    color: var(--text-muted);
+                    font-weight: 500;
+                    border-bottom: 2px solid transparent;
+                }
+                .module-tab-link:hover { color: var(--text-secondary); }
+                .module-tab-link--active {
+                    color: var(--primary-color);
+                    font-weight: 600;
+                    border-bottom-color: var(--primary-color);
+                }
+                .module-tab-link--active:hover { color: var(--primary-color); }
+                .module-tab-link:focus-visible {
+                    outline: none;
+                    box-shadow: var(--focus-ring);
+                    border-radius: var(--erp-radius-xs);
+                }
                 @media (max-width: 767px) {
                     .module-tab-bar > div { padding: 0 0.75rem; }
                     .module-tab-link { padding: 0 0.625rem; font-size: 0.75rem; }

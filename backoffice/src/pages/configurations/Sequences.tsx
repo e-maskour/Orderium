@@ -22,6 +22,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
+import { StatusBadge } from '../../components/ui';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ export default function Sequences() {
             height: '16rem',
           }}
         >
-          <div style={{ color: '#475569' }}>{t('loading')}</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('loading')}</div>
         </div>
       </AdminLayout>
     );
@@ -197,9 +198,9 @@ export default function Sequences() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -222,9 +223,9 @@ export default function Sequences() {
               bottomLeft: (seq: Sequence) => seq.formatTemplate || '',
               bottomRight: (seq: Sequence) =>
                 seq.isActive ? (
-                  <span className="erp-badge erp-badge--active">{t('active')}</span>
+                  <StatusBadge tone="active" label={t('active')} />
                 ) : (
-                  <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>
+                  <StatusBadge tone="danger" label={t('inactive')} />
                 ),
             }}
           />
@@ -233,9 +234,9 @@ export default function Sequences() {
         <div
           className="responsive-table-desktop"
           style={{
-            background: '#ffffff',
+            background: 'var(--erp-surface)',
             borderRadius: '0.75rem',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--erp-border)',
             overflow: 'hidden',
           }}
         >
@@ -257,7 +258,7 @@ export default function Sequences() {
               header={t('name')}
               sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                   {row.name}
                 </span>
               )}
@@ -267,7 +268,7 @@ export default function Sequences() {
               header={t('entityType')}
               sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                   {entityTypeOptions.find((o) => o.value === row.entityType)?.label ||
                     row.entityType}
                 </span>
@@ -278,7 +279,7 @@ export default function Sequences() {
               header={t('format')}
               sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                   {row.formatTemplate || '—'}
                 </span>
               )}
@@ -305,7 +306,7 @@ export default function Sequences() {
               body={(row: Sequence) => {
                 const opt = resetPeriodOptions.find((o) => o.value === row.resetPeriod);
                 return (
-                  <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                     {opt?.label || row.resetPeriod}
                   </span>
                 );
@@ -315,11 +316,10 @@ export default function Sequences() {
               field="isActive"
               header={t('status')}
               body={(row: Sequence) => (
-                <span
-                  className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}
-                >
-                  {row.isActive ? t('active') : t('inactive')}
-                </span>
+                <StatusBadge
+                  tone={row.isActive ? 'active' : 'danger'}
+                  label={row.isActive ? t('active') : t('inactive')}
+                />
               )}
             />
             <Column
@@ -399,7 +399,7 @@ export default function Sequences() {
                     fontFamily: 'monospace',
                     fontSize: '1.5rem',
                     fontWeight: 700,
-                    color: '#ffffff',
+                    color: 'var(--erp-surface)',
                     letterSpacing: '0.05em',
                   }}
                 >
@@ -461,12 +461,12 @@ export default function Sequences() {
                 style={{
                   fontSize: '0.6875rem',
                   fontWeight: 700,
-                  color: '#94a3b8',
+                  color: 'var(--text-placeholder)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   marginBottom: '0.875rem',
                   paddingBottom: '0.5rem',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderBottom: '1px solid var(--erp-border-light)',
                 }}
               >
                 {t('identity')}
@@ -482,7 +482,7 @@ export default function Sequences() {
                       marginBottom: '0.375rem',
                     }}
                   >
-                    {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+                    {t('name')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
                   <InputText
                     value={formData.name}
@@ -503,7 +503,7 @@ export default function Sequences() {
                       marginBottom: '0.375rem',
                     }}
                   >
-                    {t('entityType')} <span style={{ color: '#ef4444' }}>*</span>
+                    {t('entityType')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
                   <Dropdown
                     value={formData.entityType}
@@ -525,12 +525,12 @@ export default function Sequences() {
                 style={{
                   fontSize: '0.6875rem',
                   fontWeight: 700,
-                  color: '#94a3b8',
+                  color: 'var(--text-placeholder)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   marginBottom: '0.875rem',
                   paddingBottom: '0.5rem',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderBottom: '1px solid var(--erp-border-light)',
                 }}
               >
                 {t('numbering')}
@@ -587,7 +587,7 @@ export default function Sequences() {
                       marginBottom: '0.375rem',
                     }}
                   >
-                    {t('numberLength')} <span style={{ color: '#ef4444' }}>*</span>
+                    {t('numberLength')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
                   <InputText
                     type="number"
@@ -602,7 +602,7 @@ export default function Sequences() {
                   <span
                     style={{
                       fontSize: '0.75rem',
-                      color: '#94a3b8',
+                      color: 'var(--text-placeholder)',
                       marginTop: '0.25rem',
                       display: 'block',
                     }}
@@ -641,12 +641,12 @@ export default function Sequences() {
                 style={{
                   fontSize: '0.6875rem',
                   fontWeight: 700,
-                  color: '#94a3b8',
+                  color: 'var(--text-placeholder)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   marginBottom: '0.875rem',
                   paddingBottom: '0.5rem',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderBottom: '1px solid var(--erp-border-light)',
                 }}
               >
                 {t('dateComponents')}
@@ -660,7 +660,7 @@ export default function Sequences() {
                     gap: '0.625rem',
                     padding: '0.625rem 0.875rem',
                     borderRadius: '0.5rem',
-                    border: `1.5px solid ${formData.yearInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    border: `1.5px solid ${formData.yearInPrefix ? '#3b82f6' : 'var(--erp-border)'}`,
                     background: formData.yearInPrefix ? '#eff6ff' : '#fafafa',
                     cursor: isLocked ? 'not-allowed' : 'pointer',
                     transition: 'all 0.15s',
@@ -689,7 +689,7 @@ export default function Sequences() {
                     gap: '0.625rem',
                     padding: '0.625rem 0.875rem',
                     borderRadius: '0.5rem',
-                    border: `1.5px solid ${formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    border: `1.5px solid ${formData.trimesterInPrefix ? '#3b82f6' : 'var(--erp-border)'}`,
                     background: formData.trimesterInPrefix ? '#eff6ff' : '#fafafa',
                     cursor: isLocked ? 'not-allowed' : 'pointer',
                     transition: 'all 0.15s',
@@ -724,7 +724,7 @@ export default function Sequences() {
                     gap: '0.625rem',
                     padding: '0.625rem 0.875rem',
                     borderRadius: '0.5rem',
-                    border: `1.5px solid ${formData.monthInPrefix && !formData.trimesterInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    border: `1.5px solid ${formData.monthInPrefix && !formData.trimesterInPrefix ? '#3b82f6' : 'var(--erp-border)'}`,
                     background:
                       formData.monthInPrefix && !formData.trimesterInPrefix ? '#eff6ff' : '#fafafa',
                     cursor: isLocked || formData.trimesterInPrefix ? 'not-allowed' : 'pointer',
@@ -759,7 +759,7 @@ export default function Sequences() {
                     gap: '0.625rem',
                     padding: '0.625rem 0.875rem',
                     borderRadius: '0.5rem',
-                    border: `1.5px solid ${formData.dayInPrefix ? '#3b82f6' : '#e2e8f0'}`,
+                    border: `1.5px solid ${formData.dayInPrefix ? '#3b82f6' : 'var(--erp-border)'}`,
                     background: formData.dayInPrefix ? '#eff6ff' : '#fafafa',
                     cursor: isLocked ? 'not-allowed' : 'pointer',
                     transition: 'all 0.15s',
@@ -790,7 +790,7 @@ export default function Sequences() {
                 justifyContent: 'space-between',
                 padding: '0.75rem 1rem',
                 borderRadius: '0.625rem',
-                border: '1.5px solid #e2e8f0',
+                border: '1.5px solid var(--erp-border)',
                 background: '#fafafa',
                 cursor: isLocked ? 'not-allowed' : 'pointer',
               }}

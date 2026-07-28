@@ -72,7 +72,7 @@ const OPTION_CARD_BASE: React.CSSProperties = {
   flex: 1,
   padding: '1rem',
   borderRadius: '0.5rem',
-  border: '2px solid #e2e8f0',
+  border: '2px solid var(--erp-border)',
   cursor: 'pointer',
   transition: 'border-color 0.15s, background-color 0.15s',
   userSelect: 'none',
@@ -96,8 +96,8 @@ function OptionCard({
       onClick={onClick}
       style={{
         ...OPTION_CARD_BASE,
-        borderColor: selected ? accentColor : '#e2e8f0',
-        backgroundColor: selected ? `${accentColor}10` : '#f8fafc',
+        borderColor: selected ? accentColor : 'var(--erp-border)',
+        backgroundColor: selected ? `${accentColor}10` : 'var(--erp-border-light)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
@@ -106,7 +106,7 @@ function OptionCard({
             width: '1rem',
             height: '1rem',
             borderRadius: '50%',
-            border: `2px solid ${selected ? accentColor : '#94a3b8'}`,
+            border: `2px solid ${selected ? accentColor : 'var(--text-placeholder)'}`,
             backgroundColor: selected ? accentColor : 'transparent',
             flexShrink: 0,
             display: 'flex',
@@ -130,13 +130,13 @@ function OptionCard({
             style={{
               fontSize: '0.875rem',
               fontWeight: selected ? 600 : 500,
-              color: selected ? '#1e293b' : '#475569',
+              color: selected ? 'var(--text-primary)' : 'var(--text-secondary)',
             }}
           >
             {label}
           </div>
           {sublabel && (
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-placeholder)', marginTop: '0.125rem' }}>
               {sublabel}
             </div>
           )}
@@ -241,9 +241,9 @@ export default function InventorySettings() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -276,9 +276,9 @@ export default function InventorySettings() {
             {/* Default Warehouse */}
             <div
               style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--erp-surface)',
                 borderRadius: '0.5rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--erp-border)',
                 padding: '1.5rem',
               }}
             >
@@ -286,7 +286,7 @@ export default function InventorySettings() {
                 style={{
                   fontSize: '1rem',
                   fontWeight: 600,
-                  color: '#1e293b',
+                  color: 'var(--text-primary)',
                   marginBottom: '1rem',
                 }}
               >
@@ -332,9 +332,9 @@ export default function InventorySettings() {
             {/* Stock Movement Automation */}
             <div
               style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--erp-surface)',
                 borderRadius: '0.5rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--erp-border)',
                 padding: '1.5rem',
               }}
             >
@@ -342,7 +342,7 @@ export default function InventorySettings() {
                 style={{
                   fontSize: '1rem',
                   fontWeight: 600,
-                  color: '#1e293b',
+                  color: 'var(--text-primary)',
                   marginBottom: '1.25rem',
                 }}
               >
@@ -361,7 +361,7 @@ export default function InventorySettings() {
                     }}
                   >
                     <TrendingUp style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#166534' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--status-paid-text)' }}>
                       {t('incrementStock') || 'Increment Stock'}
                     </span>
                   </div>
@@ -383,7 +383,7 @@ export default function InventorySettings() {
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid #f1f5f9' }} />
+                <div style={{ borderTop: '1px solid var(--erp-border-light)' }} />
 
                 {/* Decrement group */}
                 <div>
@@ -395,7 +395,7 @@ export default function InventorySettings() {
                       marginBottom: '0.75rem',
                     }}
                   >
-                    <TrendingDown style={{ width: '1rem', height: '1rem', color: '#ef4444' }} />
+                    <TrendingDown style={{ width: '1rem', height: '1rem', color: 'var(--status-unpaid-text)' }} />
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#991b1b' }}>
                       {t('decrementStock') || 'Decrement Stock'}
                     </span>
@@ -406,14 +406,14 @@ export default function InventorySettings() {
                       sublabel="Facture Vente"
                       selected={decTrigger === 'invoice'}
                       onClick={() => setDecTrigger('invoice')}
-                      accentColor="#ef4444"
+                      accentColor="var(--status-unpaid-text)"
                     />
                     <OptionCard
                       label={t('decrementOnOrderVente')}
                       sublabel="Bon de livraison"
                       selected={decTrigger === 'order'}
                       onClick={() => setDecTrigger('order')}
-                      accentColor="#ef4444"
+                      accentColor="var(--status-unpaid-text)"
                     />
                   </div>
                 </div>

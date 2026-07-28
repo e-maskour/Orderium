@@ -72,8 +72,8 @@ export function TableSkeleton({ rows = 8, columns = 5, showHeader = true }: Tabl
             display: 'flex',
             alignItems: 'center',
             padding: '0.875rem 1.25rem',
-            background: '#f8fafc',
-            borderBottom: '2px solid #e2e8f0',
+            background: 'var(--erp-bg)',
+            borderBottom: '2px solid var(--erp-border)',
             gap: '1.5rem',
           }}
         >

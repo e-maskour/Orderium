@@ -125,7 +125,7 @@ export default function CompanySettings() {
           >
             <Loader2
               className="animate-spin"
-              style={{ width: '1.5rem', height: '1.5rem', color: '#475569' }}
+              style={{ width: '1.5rem', height: '1.5rem', color: 'var(--text-secondary)' }}
             />
           </div>
         </div>
@@ -148,9 +148,9 @@ export default function CompanySettings() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -179,8 +179,8 @@ export default function CompanySettings() {
 
         <style>{`
                 .cs-form { padding: 0; display: flex; flex-direction: column; gap: 1.25rem; }
-                .cs-card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); }
-                .cs-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); }
+                .cs-card { background: var(--erp-surface); border-radius: 0.75rem; border: 1px solid var(--erp-border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); }
+                .cs-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--erp-border-light); background: linear-gradient(135deg, var(--erp-border-light) 0%, var(--erp-surface) 100%); }
                 .cs-icon-badge { width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
                 .cs-card-body { padding: 1.25rem; }
                 @media (min-width: 768px) { .cs-card-body { padding: 1.5rem; } }
@@ -191,7 +191,7 @@ export default function CompanySettings() {
                 .cs-label { display: block; font-size: 0.8125rem; font-weight: 500; color: #374151; margin-bottom: 0.375rem; }
                 .cs-req { color: #f43f5e; }
                 .cs-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 0.3rem; }
-                .cs-sep { border: none; border-top: 1px solid #f1f5f9; margin: 0.25rem 0; }
+                .cs-sep { border: none; border-top: 1px solid var(--erp-border-light); margin: 0.25rem 0; }
                 .cs-identity-wrap { display: flex; gap: 1.25rem; align-items: flex-start; }
                 @media (max-width: 480px) { .cs-identity-wrap { flex-direction: column; align-items: stretch; } }
                 .cs-avatar { flex-shrink: 0; width: 4.5rem; height: 4.5rem; border-radius: 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; font-size: 1.375rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
@@ -355,7 +355,7 @@ export default function CompanySettings() {
                     type="text"
                     value={formData.country || 'Maroc'}
                     readOnly
-                    style={{ width: '100%', background: '#f8fafc', color: '#64748b' }}
+                    style={{ width: '100%', background: 'var(--erp-border-light)', color: 'var(--text-label)' }}
                   />
                 </div>
               </div>

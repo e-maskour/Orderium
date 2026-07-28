@@ -65,7 +65,7 @@ export default function Configurations() {
       description: t('inventorySettingsSubtitle'),
       icon: Package,
       path: '/configurations/inventory',
-      color: '#235ae4',
+      color: 'var(--primary-color)',
     },
     {
       name: t('printers'),
@@ -97,14 +97,16 @@ export default function Configurations() {
                 style={{ '--module-color': module.color } as React.CSSProperties}
               >
                 <div className="config-module-icon">
-                  <Icon style={{ width: '1.5rem', height: '1.5rem', color: '#ffffff' }} />
+                  <Icon
+                    style={{ width: '1.5rem', height: '1.5rem', color: 'var(--text-on-primary)' }}
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3
                     style={{
                       fontSize: '1rem',
                       fontWeight: 700,
-                      color: '#1e293b',
+                      color: 'var(--text-primary)',
                       marginBottom: '0.25rem',
                       margin: '0 0 0.25rem',
                     }}
@@ -112,7 +114,12 @@ export default function Configurations() {
                     {module.name}
                   </h3>
                   <p
-                    style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-label)',
+                      margin: 0,
+                      lineHeight: 1.5,
+                    }}
                   >
                     {module.description}
                   </p>
@@ -149,30 +156,35 @@ export default function Configurations() {
           align-items: flex-start;
           gap: 1rem;
           padding: 1.25rem;
-          background: #fff;
+          background: var(--erp-surface);
           border-radius: 0.875rem;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid var(--erp-border);
           text-decoration: none;
           transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-          box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+          box-shadow: var(--erp-shadow-sm);
           height: 100%;
           min-height: 5.5rem;
         }
         .config-module-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(15,23,42,0.1);
-          border-color: color-mix(in srgb, var(--module-color, #235ae4) 40%, transparent);
+          box-shadow: var(--erp-shadow);
+          border-color: color-mix(in srgb, var(--module-color, var(--primary-color)) 40%, transparent);
+        }
+        .config-module-card:focus-visible {
+          outline: none;
+          box-shadow: var(--focus-ring);
+          border-color: color-mix(in srgb, var(--module-color, var(--primary-color)) 50%, transparent);
         }
         .config-module-icon {
           width: 3rem;
           height: 3rem;
-          background: var(--module-color, #235ae4);
+          background: var(--module-color, var(--primary-color));
           border-radius: 0.625rem;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 4px 8px color-mix(in srgb, var(--module-color, #235ae4) 35%, transparent);
+          box-shadow: 0 4px 8px color-mix(in srgb, var(--module-color, var(--primary-color)) 35%, transparent);
         }
         @media (max-width: 1023px) { .config-modules-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 639px)  { .config-modules-grid { grid-template-columns: 1fr; } }

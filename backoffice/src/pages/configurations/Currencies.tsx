@@ -21,6 +21,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
+import { StatusBadge } from '../../components/ui';
 
 export default function Currencies() {
   const { t } = useLanguage();
@@ -114,7 +115,7 @@ export default function Currencies() {
             height: '16rem',
           }}
         >
-          <div style={{ color: '#475569' }}>{t('loading')}</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('loading')}</div>
         </div>
       </AdminLayout>
     );
@@ -135,9 +136,9 @@ export default function Currencies() {
                 width: '2.25rem',
                 height: '2.25rem',
                 flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
+                background: 'var(--erp-border-light)',
+                border: '1.5px solid var(--erp-border)',
+                color: 'var(--text-label)',
                 borderRadius: '0.625rem',
                 padding: 0,
               }}
@@ -168,7 +169,7 @@ export default function Currencies() {
               topRight: (c: Currency) => c.name,
               bottomRight: (c: Currency) =>
                 c.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null,
             }}
           />
@@ -176,9 +177,9 @@ export default function Currencies() {
         <div
           className="responsive-table-desktop"
           style={{
-            background: '#ffffff',
+            background: 'var(--erp-surface)',
             borderRadius: '0.75rem',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--erp-border)',
             overflow: 'hidden',
           }}
         >
@@ -202,7 +203,7 @@ export default function Currencies() {
               header={t('code')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                   {row.code}
                 </span>
               )}
@@ -212,7 +213,7 @@ export default function Currencies() {
               header={t('name')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.name}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.name}</span>
               )}
             />
             <Column
@@ -220,7 +221,7 @@ export default function Currencies() {
               header={t('symbol')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.symbol}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.symbol}</span>
               )}
             />
             <Column
@@ -228,7 +229,7 @@ export default function Currencies() {
               header={t('status')}
               body={(row) =>
                 row.isDefault ? (
-                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                  <StatusBadge tone="success" label={t('default')} />
                 ) : null
               }
             />
@@ -284,7 +285,7 @@ export default function Currencies() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
@@ -308,7 +309,7 @@ export default function Currencies() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
@@ -331,7 +332,7 @@ export default function Currencies() {
                   display: 'block',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                   marginBottom: '0.25rem',
                 }}
               >
@@ -354,7 +355,7 @@ export default function Currencies() {
                 checked={formData.isDefault}
                 onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
               />
-              <label htmlFor="isDefault" style={{ fontSize: '0.875rem', color: '#334155' }}>
+              <label htmlFor="isDefault" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 {t('setAsDefaultCurrency')}
               </label>
             </div>

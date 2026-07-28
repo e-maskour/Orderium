@@ -71,11 +71,123 @@
     --status-active-bg: #eff3ff;
     --status-active-border: #c7d7f9;
 
-    /* ── Typography ── */
+    /* ── Typography: semantic text colors (all WCAG AA on --erp-surface/--erp-bg) ──
+       primary   #0f172a on #fff ≈ 16.8:1 (AAA) — headings, key data
+       secondary #475569 on #fff ≈  7.4:1 (AAA) — body copy
+       muted     #64748b on #fff ≈  4.9:1 (AA)  — captions, hints, secondary labels
+       label     #64748b on #fff ≈  4.9:1 (AA)  — form labels
+       disabled  #94a3b8 — DISABLED controls / placeholders ONLY (exempt from AA). Never body text. */
     --text-primary: #0f172a;
     --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-muted: #64748b;
     --text-label: #64748b;
+    --text-disabled: #94a3b8;
+    --text-placeholder: #94a3b8;
+    --text-on-primary: #ffffff;
+
+    /* ── Status TEXT colors (AA-compliant on the matching --status-*-bg tint) ──
+       The base --status-* values above stay as the "solid" color (dots, fills, icons).
+       These -text variants are darkened so small badge text clears WCAG AA 4.5:1. */
+    --status-paid-text: #166534;     /* on #f0fdf4 ≈ 5.9:1 */
+    --status-unpaid-text: #b91c1c;   /* on #fef2f2 ≈ 5.2:1 */
+    --status-partial-text: #92400e;  /* on #fffbeb ≈ 5.5:1 */
+    --status-pending-text: #9a3412;  /* on #fff7ed ≈ 5.9:1 */
+    --status-draft-text: #475569;    /* on #f8fafc ≈ 7.1:1 */
+    --status-active-text: #163ba0;   /* on #eff3ff ≈ 8.0:1 */
+
+    /* ── Font families ── */
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-arabic: 'IBM Plex Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+
+    /* ── Font weights (use ≤3 in practice: regular body, medium UI, semibold headings; bold = rare emphasis) ── */
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    /* ── Type scale (dense ERP ramp; body default 14px) ── */
+    --text-2xs: 0.6875rem;   /* 11px — micro caption, table chrome */
+    --text-xs: 0.75rem;      /* 12px — caption, badge */
+    --text-sm: 0.8125rem;    /* 13px — dense table cell, helper */
+    --text-base: 0.875rem;   /* 14px — body default */
+    --text-md: 0.9375rem;    /* 15px — emphasized body */
+    --text-lg: 1.0625rem;    /* 17px — section header */
+    --text-xl: 1.25rem;      /* 20px — sub-page title */
+    --text-2xl: 1.5rem;      /* 24px — page title */
+    --text-3xl: 1.875rem;    /* 30px — display / KPI value */
+
+    /* ── Line heights (body ≥1.4 per brief) ── */
+    --leading-none: 1;
+    --leading-tight: 1.25;   /* headings */
+    --leading-snug: 1.35;
+    --leading-normal: 1.5;   /* body */
+    --leading-relaxed: 1.6;
+
+    /* ── Spacing scale (4px base: index × 4px) — canonical: 4/8/12/16/24/32/48 ── */
+    --space-0: 0;
+    --space-1: 0.25rem;      /* 4px  */
+    --space-2: 0.5rem;       /* 8px  */
+    --space-3: 0.75rem;      /* 12px */
+    --space-4: 1rem;         /* 16px */
+    --space-5: 1.25rem;      /* 20px */
+    --space-6: 1.5rem;       /* 24px */
+    --space-8: 2rem;         /* 32px */
+    --space-10: 2.5rem;      /* 40px */
+    --space-12: 3rem;        /* 48px */
+    --space-16: 4rem;        /* 64px */
+
+    /* ── Radius scale (aligns with existing --erp-radius-*; adds xs + pill) ── */
+    --erp-radius-xs: 0.375rem;   /* 6px — inputs, small controls */
+    --erp-radius-md: 0.625rem;   /* 10px */
+    --radius-pill: 999px;
+
+    /* ── Z-index scale (app chrome layering; PrimeReact overlays self-manage above these) ── */
+    --z-base: 1;
+    --z-raised: 10;
+    --z-sticky: 100;
+    --z-sidebar: 1030;
+    --z-header: 1040;
+    --z-drawer: 1045;
+    --z-overlay: 1050;
+    --z-modal: 1060;
+    --z-toast: 1080;
+    --z-tooltip: 1090;
+
+    /* ── Focus ring (visible keyboard focus, used app-wide) ── */
+    --focus-ring: 0 0 0 3px rgba(35, 90, 228, 0.35);
+    --focus-ring-offset: 0 0 0 2px var(--erp-surface), 0 0 0 5px rgba(35, 90, 228, 0.35);
+
+    /* ── App shell: sidebar (dark navigation rail) tokens ──
+       The rail sits on a dark navy gradient, so its accent is a lighter on-dark
+       brand tint (blue-500) rather than --primary-color, which would lose
+       contrast on the dark surface. Centralized here so the rail stays
+       internally consistent and recolorable from one place. */
+    --sb-bg: linear-gradient(195deg, #0f172a 0%, #111827 55%, #0c1a38 100%);
+    --sb-popover-bg: #1e293b;
+    --sb-accent: #3b82f6;
+    --sb-accent-text: #93c5fd;
+    --sb-accent-glow: rgba(59, 130, 246, 0.55);
+    --sb-accent-bg: rgba(59, 130, 246, 0.16);
+    --sb-accent-bg-strong: rgba(59, 130, 246, 0.22);
+    --sb-accent-bg-soft: rgba(59, 130, 246, 0.10);
+    --sb-text-strong: #ffffff;
+    --sb-text: rgba(255, 255, 255, 0.62);
+    --sb-text-dim: rgba(255, 255, 255, 0.38);
+    --sb-text-faint: rgba(255, 255, 255, 0.30);
+    --sb-border: rgba(255, 255, 255, 0.07);
+    --sb-border-soft: rgba(255, 255, 255, 0.06);
+    --sb-hover-bg: rgba(255, 255, 255, 0.06);
+    --sb-hover-text: rgba(255, 255, 255, 0.90);
+
+    /* ── App shell: top header bar ── */
+    --topbar-height: 4.25rem;
+    --topbar-bg: rgba(255, 255, 255, 0.97);
+    --topbar-border: rgba(35, 90, 228, 0.12);
+
+    /* ── Legacy semantic aliases (kept for backward-compat; currently unused in JSX).
+       NOTE: terracotta/teal/gold all resolve to the blue brand by design — do NOT
+       treat the names as literal hues. Prefer --primary-* / --status-* in new code. */
 }
 
 /* ── Enterprise base body style ── */
@@ -118,37 +230,37 @@ body {
 }
 
 .erp-badge--paid {
-    color: var(--status-paid);
+    color: var(--status-paid-text);
     background: var(--status-paid-bg);
     border-color: var(--status-paid-border);
 }
 
 .erp-badge--unpaid {
-    color: var(--status-unpaid);
+    color: var(--status-unpaid-text);
     background: var(--status-unpaid-bg);
     border-color: var(--status-unpaid-border);
 }
 
 .erp-badge--partial {
-    color: var(--status-partial);
+    color: var(--status-partial-text);
     background: var(--status-partial-bg);
     border-color: var(--status-partial-border);
 }
 
 .erp-badge--pending {
-    color: var(--status-pending);
+    color: var(--status-pending-text);
     background: var(--status-pending-bg);
     border-color: var(--status-pending-border);
 }
 
 .erp-badge--draft {
-    color: var(--status-draft);
+    color: var(--status-draft-text);
     background: var(--status-draft-bg);
     border-color: var(--status-draft-border);
 }
 
 .erp-badge--active {
-    color: var(--status-active);
+    color: var(--status-active-text);
     background: var(--status-active-bg);
     border-color: var(--status-active-border);
 }
@@ -305,33 +417,33 @@ input[type='number'] {
     width: 3.5rem;
     height: 3.5rem;
     border-radius: 1rem;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    border: 1.5px solid #bfdbfe;
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+    border: 1.5px solid var(--primary-200);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1rem;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 2px 8px rgba(35, 90, 228, 0.12);
 }
 
 .es-icon {
     width: 1.5rem;
     height: 1.5rem;
-    color: #3b82f6;
+    color: var(--primary-color);
 }
 
 .es-title {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: #1e293b;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.4;
 }
 
 .es-desc {
-    font-size: 0.8125rem;
-    color: #94a3b8;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
     margin: 0.375rem 0 0;
     max-width: 24rem;
     line-height: 1.55;
@@ -900,7 +1012,7 @@ input[type='number'] {
     width: 3rem;
     height: 3rem;
     border-radius: 0.875rem;
-    background: linear-gradient(135deg, #235ae4 0%, #1a47b8 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -909,7 +1021,7 @@ input[type='number'] {
 .page-header__icon {
     width: 1.375rem;
     height: 1.375rem;
-    color: #ffffff;
+    color: var(--text-on-primary);
 }
 
 .page-header__icon-shine {
@@ -934,7 +1046,7 @@ input[type='number'] {
     margin: 0;
     font-size: 1.375rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     letter-spacing: -0.025em;
     line-height: 1.2;
     white-space: nowrap;
@@ -946,7 +1058,7 @@ input[type='number'] {
     margin: 0;
     margin-top: 0.2rem;
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--text-label);
     font-weight: 500;
     line-height: 1.4;
     white-space: nowrap;
@@ -2667,4 +2779,391 @@ input[type='number'] {
 [dir="rtl"] .p-dropdown .p-dropdown-label {
     text-align: right;
 }
+}
+
+/* ============================================================
+   Shared UI primitives — Phase 2 component library
+   Token-driven classes consumed by src/components/ui/*
+   ============================================================ */
+
+/* ── Button (wraps PrimeReact .p-button; coloring inherited from severity/outlined/text) ── */
+.ui-btn.p-button {
+    gap: var(--space-2);
+    font-weight: var(--weight-semibold);
+}
+
+.ui-btn .ui-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ui-btn .ui-btn__icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.ui-btn.p-button-sm .ui-btn__icon svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.ui-btn.p-button-lg .ui-btn__icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.ui-btn.p-button:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring) !important;
+}
+
+/* ── StatusBadge: reuses .erp-badge; adds dot, icon, small size ── */
+.erp-badge__dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.erp-badge__icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.erp-badge__icon svg {
+    width: 0.8125rem;
+    height: 0.8125rem;
+}
+
+.erp-badge--sm {
+    padding: 0.125rem var(--space-2);
+    font-size: var(--text-2xs);
+}
+
+/* ── Card ── */
+.ui-card {
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius);
+    box-shadow: var(--erp-shadow-sm);
+}
+
+.ui-card--pad-none {
+    padding: 0;
+}
+
+.ui-card--pad-sm {
+    padding: var(--space-3);
+}
+
+.ui-card--pad-md {
+    padding: var(--space-4);
+}
+
+.ui-card--pad-lg {
+    padding: var(--space-6);
+}
+
+.ui-card--interactive {
+    transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    cursor: pointer;
+}
+
+.ui-card--interactive:hover {
+    box-shadow: var(--erp-shadow);
+    border-color: #d1d9e6;
+    transform: translateY(-1px);
+}
+
+.ui-card--interactive:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.ui-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--erp-border-light);
+}
+
+.ui-card__title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ui-card__header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.ui-card__body {
+    padding: var(--space-4);
+}
+
+.ui-card__footer {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--erp-border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+/* ── Toolbar ── */
+.ui-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius);
+    padding: var(--space-3) var(--space-4);
+    box-shadow: var(--erp-shadow-sm);
+}
+
+.ui-toolbar__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.ui-toolbar__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-inline-start: auto;
+}
+
+/* ── Tabs ── */
+.ui-tabs {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    border-bottom: 1px solid var(--erp-border);
+    overflow-x: auto;
+}
+
+.ui-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    margin-bottom: -1px;
+}
+
+.ui-tab:hover:not(:disabled) {
+    color: var(--text-secondary);
+}
+
+.ui-tab:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--erp-radius-xs);
+}
+
+.ui-tab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ui-tab--active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: var(--weight-semibold);
+}
+
+.ui-tab__icon {
+    display: inline-flex;
+}
+
+.ui-tab__icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.ui-tab__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    border-radius: var(--radius-pill);
+    background: var(--erp-border-light);
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-semibold);
+}
+
+.ui-tab--active .ui-tab__count {
+    background: var(--primary-50);
+    color: var(--primary-700);
+}
+
+/* ── Breadcrumbs ── */
+.ui-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ui-breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.ui-breadcrumbs a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: var(--weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    border-radius: var(--erp-radius-xs);
+}
+
+.ui-breadcrumbs a:hover {
+    color: var(--primary-color);
+}
+
+.ui-breadcrumbs a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.ui-breadcrumbs__sep {
+    color: var(--erp-border);
+    display: inline-flex;
+}
+
+.ui-breadcrumbs__current {
+    color: var(--text-primary);
+    font-weight: var(--weight-semibold);
+}
+
+.ui-breadcrumbs svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+[dir="rtl"] .ui-breadcrumbs__sep svg {
+    transform: scaleX(-1);
+}
+
+/* ── SearchInput ── */
+.ui-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+}
+
+.ui-search__icon {
+    position: absolute;
+    inset-inline-start: var(--space-3);
+    width: 1rem;
+    height: 1rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.ui-search__input.p-inputtext {
+    width: 100%;
+    padding-inline-start: 2.25rem;
+    padding-inline-end: 2.25rem;
+}
+
+.ui-search__input.p-inputtext::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.ui-search__clear {
+    position: absolute;
+    inset-inline-end: var(--space-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ui-search__clear:hover {
+    background: var(--erp-border-light);
+    color: var(--text-secondary);
+}
+
+.ui-search__clear:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.ui-search__clear svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+/* ── FormField (ui-field) ── */
+.ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.ui-field__label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-label);
+    display: block;
+}
+
+.ui-field__required {
+    color: var(--status-unpaid-text);
+    margin-inline-start: 0.125rem;
+}
+
+.ui-field__error {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--status-unpaid-text);
+}
+
+.ui-field__hint {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
 }
