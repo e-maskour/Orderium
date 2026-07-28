@@ -355,7 +355,11 @@ export default function CompanySettings() {
                     type="text"
                     value={formData.country || 'Maroc'}
                     readOnly
-                    style={{ width: '100%', background: 'var(--erp-border-light)', color: 'var(--text-label)' }}
+                    style={{
+                      width: '100%',
+                      background: 'var(--erp-border-light)',
+                      color: 'var(--text-label)',
+                    }}
                   />
                 </div>
               </div>

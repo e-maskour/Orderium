@@ -18,8 +18,10 @@ import { cx } from './cx';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps
-  extends Omit<PrimeButtonProps, 'size' | 'icon' | 'severity' | 'children'> {
+export interface ButtonProps extends Omit<
+  PrimeButtonProps,
+  'size' | 'icon' | 'severity' | 'children'
+> {
   /** Semantic variant — maps to PrimeReact severity/outlined/text. @default 'primary' */
   variant?: ButtonVariant;
   /** @default 'md' */

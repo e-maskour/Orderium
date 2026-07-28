@@ -293,7 +293,9 @@ export default function UnitsOfMeasure() {
               header={t('name')}
               sortable
               body={(row: IUnitOfMeasure) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                <span
+                  style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}
+                >
                   {row.name}
                 </span>
               )}
@@ -303,7 +305,9 @@ export default function UnitsOfMeasure() {
               header={t('code')}
               sortable
               body={(row: IUnitOfMeasure) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.code}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {row.code}
+                </span>
               )}
             />
             <Column
@@ -324,7 +328,9 @@ export default function UnitsOfMeasure() {
               header={t('ratio')}
               sortable
               body={(row: IUnitOfMeasure) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.ratio}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {row.ratio}
+                </span>
               )}
             />
             <Column
@@ -567,7 +573,9 @@ export default function UnitsOfMeasure() {
                 checked={formData.isActive ?? false}
                 onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
               />
-              <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('active')}</label>
+              <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                {t('active')}
+              </label>
             </div>
           </form>
         </Modal>

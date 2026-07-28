@@ -258,7 +258,9 @@ export default function Sequences() {
               header={t('name')}
               sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                <span
+                  style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}
+                >
                   {row.name}
                 </span>
               )}
@@ -279,7 +281,13 @@ export default function Sequences() {
               header={t('format')}
               sortable
               body={(row: Sequence) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    color: 'var(--text-secondary)',
+                    fontFamily: 'monospace',
+                  }}
+                >
                   {row.formatTemplate || '—'}
                 </span>
               )}
@@ -587,7 +595,8 @@ export default function Sequences() {
                       marginBottom: '0.375rem',
                     }}
                   >
-                    {t('numberLength')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
+                    {t('numberLength')}{' '}
+                    <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
                   <InputText
                     type="number"

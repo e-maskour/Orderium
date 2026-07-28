@@ -647,7 +647,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
                     width: '100%',
                     padding: isCollapsed ? '0.625rem' : '0.4375rem 0.5rem',
-                    background: hasActive && isCollapsed ? 'var(--sb-accent-bg-soft)' : 'transparent',
+                    background:
+                      hasActive && isCollapsed ? 'var(--sb-accent-bg-soft)' : 'transparent',
                     border: 'none',
                     cursor: 'pointer',
                     borderRadius: '0.5rem',

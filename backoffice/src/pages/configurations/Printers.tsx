@@ -261,9 +261,7 @@ function PrinterForm({
                 borderRadius: '0.375rem',
                 border: '1px solid var(--erp-border)',
                 cursor: 'pointer',
-                background: form.documentTypes.includes(dt.value)
-                  ? 'var(--primary-50)'
-                  : '#fff',
+                background: form.documentTypes.includes(dt.value) ? 'var(--primary-50)' : '#fff',
               }}
             >
               <input
@@ -536,9 +534,7 @@ export default function Printers() {
                 background: 'none',
                 cursor: 'pointer',
                 borderBottom:
-                  activeTab === tab
-                    ? '2px solid var(--primary-color)'
-                    : '2px solid transparent',
+                  activeTab === tab ? '2px solid var(--primary-color)' : '2px solid transparent',
                 color: activeTab === tab ? 'var(--primary-color)' : 'var(--text-label)',
                 marginBottom: -2,
               }}
@@ -551,7 +547,9 @@ export default function Printers() {
         {activeTab === 'printers' && (
           <>
             {isLoading ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-placeholder)' }}>
+              <div
+                style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-placeholder)' }}
+              >
                 <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }} />
               </div>
             ) : printers.length === 0 ? (
@@ -640,7 +638,13 @@ export default function Printers() {
                           · {printer.paperWidth}mm
                           {printer.ip && ` · ${printer.ip}:${printer.port}`}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-placeholder)', marginTop: 2 }}>
+                        <div
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-placeholder)',
+                            marginTop: 2,
+                          }}
+                        >
                           {printer.documentTypes.join(', ')}
                           {printer.lastSeenAt && (
                             <span style={{ marginLeft: 8 }}>
@@ -672,7 +676,9 @@ export default function Printers() {
                         style={btnIcon}
                         title={t('deletePrinter')}
                       >
-                        <Trash2 style={{ width: 16, height: 16, color: 'var(--status-unpaid-text)' }} />
+                        <Trash2
+                          style={{ width: 16, height: 16, color: 'var(--status-unpaid-text)' }}
+                        />
                       </button>
                     </div>
                   </div>
@@ -693,7 +699,12 @@ export default function Printers() {
           >
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
-                <tr style={{ background: 'var(--erp-border-light)', borderBottom: '1px solid var(--erp-border)' }}>
+                <tr
+                  style={{
+                    background: 'var(--erp-border-light)',
+                    borderBottom: '1px solid var(--erp-border)',
+                  }}
+                >
                   <th style={thStyle}>{t('printedAt')}</th>
                   <th style={thStyle}>{t('printerName')}</th>
                   <th style={thStyle}>{t('documentTypes')}</th>
@@ -707,7 +718,11 @@ export default function Printers() {
                   <tr>
                     <td
                       colSpan={6}
-                      style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-placeholder)' }}
+                      style={{
+                        textAlign: 'center',
+                        padding: '2rem',
+                        color: 'var(--text-placeholder)',
+                      }}
                     >
                       {t('noPrintJobs')}
                     </td>
@@ -726,7 +741,9 @@ export default function Printers() {
                           {job.status === 'success' ? (
                             <CheckCircle style={{ width: 14, height: 14, color: '#22c55e' }} />
                           ) : job.status === 'failed' ? (
-                            <XCircle style={{ width: 14, height: 14, color: 'var(--status-unpaid-text)' }} />
+                            <XCircle
+                              style={{ width: 14, height: 14, color: 'var(--status-unpaid-text)' }}
+                            />
                           ) : (
                             <Clock style={{ width: 14, height: 14, color: '#f97316' }} />
                           )}
@@ -759,7 +776,9 @@ export default function Printers() {
                 >
                   ← Précédent
                 </button>
-                <span style={{ padding: '0.5rem', color: 'var(--text-label)', fontSize: '0.875rem' }}>
+                <span
+                  style={{ padding: '0.5rem', color: 'var(--text-label)', fontSize: '0.875rem' }}
+                >
                   Page {jobsPage}
                 </span>
                 <button
@@ -827,9 +846,16 @@ export default function Printers() {
                     border: '1px solid var(--erp-border)',
                   }}
                 >
-                  <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-primary)' }}>{guide.title}</h4>
+                  <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-primary)' }}>
+                    {guide.title}
+                  </h4>
                   <p
-                    style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-label)', lineHeight: 1.5 }}
+                    style={{
+                      margin: 0,
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-label)',
+                      lineHeight: 1.5,
+                    }}
                   >
                     {guide.desc}
                   </p>
@@ -906,7 +932,9 @@ export default function Printers() {
 
             {/* Results */}
             {isScanning && discovered.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}>
+              <div
+                style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}
+              >
                 <Loader2
                   style={{
                     width: 32,
@@ -920,7 +948,9 @@ export default function Printers() {
             )}
 
             {!isScanning && discovered.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}>
+              <div
+                style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-placeholder)' }}
+              >
                 <Printer style={{ width: 36, height: 36, margin: '0 auto 0.5rem', opacity: 0.4 }} />
                 <div>{t('noDiscoveredPrinters')}</div>
               </div>
@@ -979,7 +1009,13 @@ export default function Printers() {
                         )}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            fontSize: '0.875rem',
+                          }}
+                        >
                           {p.name}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-label)' }}>

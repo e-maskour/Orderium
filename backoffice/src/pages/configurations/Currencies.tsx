@@ -168,9 +168,7 @@ export default function Currencies() {
               topLeft: (c: Currency) => `${c.code} ${c.symbol}`,
               topRight: (c: Currency) => c.name,
               bottomRight: (c: Currency) =>
-                c.isDefault ? (
-                  <StatusBadge tone="success" label={t('default')} />
-                ) : null,
+                c.isDefault ? <StatusBadge tone="success" label={t('default')} /> : null,
             }}
           />
         </div>
@@ -203,7 +201,9 @@ export default function Currencies() {
               header={t('code')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                <span
+                  style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}
+                >
                   {row.code}
                 </span>
               )}
@@ -213,7 +213,9 @@ export default function Currencies() {
               header={t('name')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.name}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {row.name}
+                </span>
               )}
             />
             <Column
@@ -221,16 +223,16 @@ export default function Currencies() {
               header={t('symbol')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.symbol}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {row.symbol}
+                </span>
               )}
             />
             <Column
               field="isDefault"
               header={t('status')}
               body={(row) =>
-                row.isDefault ? (
-                  <StatusBadge tone="success" label={t('default')} />
-                ) : null
+                row.isDefault ? <StatusBadge tone="success" label={t('default')} /> : null
               }
             />
             <Column
@@ -355,7 +357,10 @@ export default function Currencies() {
                 checked={formData.isDefault}
                 onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
               />
-              <label htmlFor="isDefault" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              <label
+                htmlFor="isDefault"
+                style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}
+              >
                 {t('setAsDefaultCurrency')}
               </label>
             </div>

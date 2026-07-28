@@ -136,7 +136,13 @@ function OptionCard({
             {label}
           </div>
           {sublabel && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-placeholder)', marginTop: '0.125rem' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-placeholder)',
+                marginTop: '0.125rem',
+              }}
+            >
               {sublabel}
             </div>
           )}
@@ -361,7 +367,13 @@ export default function InventorySettings() {
                     }}
                   >
                     <TrendingUp style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--status-paid-text)' }}>
+                    <span
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: 'var(--status-paid-text)',
+                      }}
+                    >
                       {t('incrementStock') || 'Increment Stock'}
                     </span>
                   </div>
@@ -395,7 +407,9 @@ export default function InventorySettings() {
                       marginBottom: '0.75rem',
                     }}
                   >
-                    <TrendingDown style={{ width: '1rem', height: '1rem', color: 'var(--status-unpaid-text)' }} />
+                    <TrendingDown
+                      style={{ width: '1rem', height: '1rem', color: 'var(--status-unpaid-text)' }}
+                    />
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#991b1b' }}>
                       {t('decrementStock') || 'Decrement Stock'}
                     </span>

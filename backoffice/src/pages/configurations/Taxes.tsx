@@ -167,9 +167,7 @@ export default function Taxes() {
               topLeft: (r: TaxRate) => r.name,
               topRight: (r: TaxRate) => `${r.rate}%`,
               bottomRight: (r: TaxRate) =>
-                r.isDefault ? (
-                  <StatusBadge tone="success" label={t('default')} />
-                ) : null,
+                r.isDefault ? <StatusBadge tone="success" label={t('default')} /> : null,
             }}
           />
         </div>
@@ -200,7 +198,9 @@ export default function Taxes() {
               header={t('name')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                <span
+                  style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}
+                >
                   {row.name}
                 </span>
               )}
@@ -210,16 +210,16 @@ export default function Taxes() {
               header={t('ratePercentage')}
               sortable
               body={(row) => (
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{row.rate}%</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {row.rate}%
+                </span>
               )}
             />
             <Column
               field="isDefault"
               header={t('status')}
               body={(row) =>
-                row.isDefault ? (
-                  <StatusBadge tone="success" label={t('default')} />
-                ) : null
+                row.isDefault ? <StatusBadge tone="success" label={t('default')} /> : null
               }
             />
             <Column

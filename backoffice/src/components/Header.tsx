@@ -599,10 +599,18 @@ const GROUP_CONFIG: Record<string, { color: string; bg: string }> = {
 };
 
 const TYPE_CONFIG: Record<string, { label: Record<Lang, string>; color: string; bg: string }> = {
-  page: { label: { en: 'Page', fr: 'Page', ar: 'صفحة' }, color: '#475569', bg: 'var(--erp-border-light)' },
+  page: {
+    label: { en: 'Page', fr: 'Page', ar: 'صفحة' },
+    color: '#475569',
+    bg: 'var(--erp-border-light)',
+  },
   create: { label: { en: 'New', fr: 'Nouveau', ar: 'جديد' }, color: '#10b981', bg: '#dcfce7' },
   settings: { label: { en: 'Config', fr: 'Config', ar: 'إعداد' }, color: '#8b5cf6', bg: '#ede9fe' },
-  report: { label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' }, color: 'var(--primary-color)', bg: '#eff3ff' },
+  report: {
+    label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' },
+    color: 'var(--primary-color)',
+    bg: '#eff3ff',
+  },
 };
 
 const QUICK_ACCESS_PATHS = [
@@ -1290,7 +1298,13 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                   </button>
                 ))}
 
-                <div style={{ height: '1px', background: 'var(--erp-border-light)', margin: '0.25rem 0' }} />
+                <div
+                  style={{
+                    height: '1px',
+                    background: 'var(--erp-border-light)',
+                    margin: '0.25rem 0',
+                  }}
+                />
 
                 <button
                   onClick={() => {
@@ -1468,7 +1482,13 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                           flexShrink: 0,
                         }}
                       >
-                        <X style={{ width: '0.875rem', height: '0.875rem', color: 'var(--text-label)' }} />
+                        <X
+                          style={{
+                            width: '0.875rem',
+                            height: '0.875rem',
+                            color: 'var(--text-label)',
+                          }}
+                        />
                       </button>
                     ) : (
                       <button
@@ -1868,7 +1888,13 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             >
                               {gLabel}
                             </span>
-                            <div style={{ flex: 1, height: '1px', background: 'var(--erp-border-light)' }} />
+                            <div
+                              style={{
+                                flex: 1,
+                                height: '1px',
+                                background: 'var(--erp-border-light)',
+                              }}
+                            />
                           </div>
 
                           {/* Route items */}
@@ -1911,7 +1937,9 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     width: '2.375rem',
                                     height: '2.375rem',
                                     borderRadius: '0.625rem',
-                                    background: isItemActive ? rowGc.color : 'var(--erp-border-light)',
+                                    background: isItemActive
+                                      ? rowGc.color
+                                      : 'var(--erp-border-light)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
