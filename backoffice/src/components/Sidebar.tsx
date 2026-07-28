@@ -32,6 +32,7 @@ import {
   ChevronDown,
   TrendingUp,
   TrendingDown,
+  BarChart2,
 } from 'lucide-react';
 import type { TranslationKey } from '../lib/i18n';
 import { useTenantModules } from './TenantStatusGuard';
@@ -109,6 +110,14 @@ const TOP_FLAT: FlatItem[] = [
     labelKey: 'navPos',
     activePaths: ['/pos'],
     moduleKey: 'pos',
+  },
+  {
+    kind: 'flat',
+    id: 'sb-analytics',
+    to: '/analytics',
+    icon: BarChart2,
+    labelKey: 'analytics',
+    activePaths: ['/analytics'],
   },
 ];
 

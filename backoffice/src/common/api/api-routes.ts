@@ -176,6 +176,66 @@ export const API_ROUTES = {
     RECENT_ACTIVITIES: '/api/statistics/recent-activities',
   },
 
+  // ─── Reports / Analytics ───────────────────────────────────
+  REPORTS: {
+    SALES: {
+      REVENUE: '/api/reports/sales/revenue',
+      REVENUE_XLSX: '/api/reports/sales/revenue/xlsx',
+      TOP_PRODUCTS: '/api/reports/sales/top-products',
+      BY_CUSTOMER: '/api/reports/sales/by-customer',
+      BY_CATEGORY: '/api/reports/sales/by-category',
+      BY_POS: '/api/reports/sales/by-pos',
+    },
+    PURCHASES: {
+      BY_PERIOD: '/api/reports/purchases/by-period',
+      BY_PERIOD_XLSX: '/api/reports/purchases/by-period/xlsx',
+      TOP_SUPPLIERS: '/api/reports/purchases/top-suppliers',
+      BY_PRODUCT: '/api/reports/purchases/by-product',
+    },
+    INVOICES: {
+      JOURNAL_VENTE: '/api/reports/invoices/journal-vente',
+      JOURNAL_ACHAT: '/api/reports/invoices/journal-achat',
+      TVA_SUMMARY: '/api/reports/invoices/tva-summary',
+      OUTSTANDING: '/api/reports/invoices/outstanding',
+      AGING: '/api/reports/invoices/aging-balance',
+      JOURNAL_VENTE_XLSX: '/api/reports/invoices/journal-vente/xlsx',
+      TVA_XLSX: '/api/reports/invoices/tva-summary/xlsx',
+    },
+    PAYMENTS: {
+      CASHFLOW: '/api/reports/payments/cashflow',
+      BY_METHOD: '/api/reports/payments/by-method',
+      IN_OUT: '/api/reports/payments/in-out-flow',
+      CASHFLOW_XLSX: '/api/reports/payments/cashflow/xlsx',
+    },
+    CLIENTS: {
+      TOP: '/api/reports/clients/top',
+      TOP_XLSX: '/api/reports/clients/top/xlsx',
+      AGING: '/api/reports/clients/aging',
+      INACTIVE: '/api/reports/clients/inactive',
+      STATEMENT: '/api/reports/clients/statement',
+    },
+    SUPPLIERS: {
+      TOP: '/api/reports/suppliers/top',
+      TOP_XLSX: '/api/reports/suppliers/top/xlsx',
+      AGING: '/api/reports/suppliers/aging',
+      STATEMENT: '/api/reports/suppliers/statement',
+    },
+    STOCK: {
+      VALUATION: '/api/reports/stock/valuation',
+      VALUATION_XLSX: '/api/reports/stock/valuation/xlsx',
+      LOW_STOCK: '/api/reports/stock/low-stock',
+      MOVEMENTS: '/api/reports/stock/movements-journal',
+      SLOW_DEAD: '/api/reports/stock/slow-dead',
+      BY_WAREHOUSE: '/api/reports/stock/by-warehouse',
+    },
+    PRODUCTS: {
+      PERFORMANCE: '/api/reports/products/performance',
+      PERFORMANCE_XLSX: '/api/reports/products/performance/xlsx',
+      MARGIN: '/api/reports/products/margin',
+      NEVER_SOLD: '/api/reports/products/never-sold',
+    },
+  },
+
   // ─── Inventory — Warehouses ────────────────────────────────
   WAREHOUSES: {
     LIST: '/api/inventory/warehouses',

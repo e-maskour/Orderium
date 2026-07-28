@@ -31,6 +31,7 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ConfigurationsModule } from './modules/configurations/configurations.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -165,6 +166,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     PortalModule,
     NotificationsModule,
     StatisticsModule,
+    ReportsModule,
     PaymentsModule,
     ConfigurationsModule,
     InventoryModule,
