@@ -19,7 +19,7 @@ export class FilterUsersDto {
   @IsEnum(UserStatus)
   status?: UserStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Only users holding this role' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

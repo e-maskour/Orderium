@@ -5,6 +5,11 @@ import { API_ROUTES } from '@/common/api-routes';
 export interface Category {
   id: number;
   name: string;
+  /**
+   * Object-storage key or absolute URL for the category image, uploaded from
+   * the back-office. Null when unset — the UI falls back to a placeholder.
+   */
+  imageUrl: string | null;
 }
 
 export function useCategories() {
@@ -12,10 +17,12 @@ export function useCategories() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    http<{ data: { id: number; name: string }[] }>(API_ROUTES.PORTAL.CATEGORIES)
+    http<{ data: { id: number; name: string; imageUrl?: string | null }[] }>(
+      API_ROUTES.PORTAL.CATEGORIES,
+    )
       .then((res) => {
         const items = Array.isArray(res.data)
-          ? res.data.map((c) => ({ id: c.id, name: c.name }))
+          ? res.data.map((c) => ({ id: c.id, name: c.name, imageUrl: c.imageUrl ?? null }))
           : [];
         setCategories(items);
       })

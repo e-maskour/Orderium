@@ -109,4 +109,7 @@ export default {
   selected: 'Sélectionné',
   noPreview: 'Aperçu non disponible',
   openInNewTab: 'Ouvrir dans un nouvel onglet',
+
+  confirmMoveToTrash: 'Déplacer vers la corbeille ?',
+  confirmDeletePermanently: 'Supprimer définitivement ?',
 };

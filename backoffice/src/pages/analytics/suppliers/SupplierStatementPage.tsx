@@ -6,7 +6,9 @@ import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
 import { analyticsService } from '../../../modules/analytics/analytics.service';
+import { buildPdfSpec } from '../../../modules/analytics/analytics.pdf';
 import { API_ROUTES } from '../../../common/api/api-routes';
+import { useLanguage } from '../../../context/LanguageContext';
 import type {
   PartnerStatementFilter,
   ReportData,
@@ -17,28 +19,8 @@ const MAD = (row: Record<string, unknown>, field: string) => {
   return isNaN(v) ? '—' : v.toLocaleString('fr-MA', { minimumFractionDigits: 2 });
 };
 
-const COLUMNS = [
-  { field: 'date', header: 'Date' },
-  { field: 'reference', header: 'Référence' },
-  { field: 'description', header: 'Description' },
-  {
-    field: 'debit',
-    header: 'Débit (MAD)',
-    body: (row: Record<string, unknown>) => MAD(row, 'debit'),
-  },
-  {
-    field: 'credit',
-    header: 'Crédit (MAD)',
-    body: (row: Record<string, unknown>) => MAD(row, 'credit'),
-  },
-  {
-    field: 'balance',
-    header: 'Solde (MAD)',
-    body: (row: Record<string, unknown>) => MAD(row, 'balance'),
-  },
-];
-
 const SupplierStatementPage: React.FC = () => {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<PartnerStatementFilter>({ preset: 'this_month' });
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getSupplierStatement(filter),
@@ -48,17 +30,38 @@ const SupplierStatementPage: React.FC = () => {
     setTimeout(refetch, 0);
   };
 
+  const columns = [
+    { field: 'date', header: t('date') },
+    { field: 'reference', header: t('reference') },
+    { field: 'description', header: t('description') },
+    {
+      field: 'debit',
+      header: `${t('debit')} (MAD)`,
+      body: (row: Record<string, unknown>) => MAD(row, 'debit'),
+    },
+    {
+      field: 'credit',
+      header: `${t('credit')} (MAD)`,
+      body: (row: Record<string, unknown>) => MAD(row, 'credit'),
+    },
+    {
+      field: 'balance',
+      header: `${t('balance')} (MAD)`,
+      body: (row: Record<string, unknown>) => MAD(row, 'balance'),
+    },
+  ];
+
   return (
     <ReportLayout
       icon={ScrollText}
-      title="Relevé de compte fournisseur"
-      subtitle="Historique complet — commandes, factures et paiements"
+      title={t('analyticsSupplierStatementTitle')}
+      subtitle={t('analyticsSupplierStatementSubtitle')}
       isLoading={isLoading}
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={
         <ReportTable
-          columns={COLUMNS}
+          columns={columns}
           rows={data?.rows ?? []}
           total={data?.meta?.total}
           page={filter.page}
@@ -74,6 +77,41 @@ const SupplierStatementPage: React.FC = () => {
             filter,
           )}
           xlsxFilename="releve-fournisseur.xlsx"
+          filter={filter}
+          pdf={buildPdfSpec(
+            {
+              reportKey: 'suppliers-statement',
+              title: t('analyticsSupplierStatementTitle'),
+              subtitle: t('analyticsSupplierStatementSubtitle'),
+              fileName: 'releve-fournisseur',
+              columns: [
+                { key: 'date', header: t('date'), format: 'date' },
+                { key: 'reference', header: t('reference'), emphasis: true },
+                { key: 'description', header: t('description') },
+                {
+                  key: 'debit',
+                  header: t('debit'),
+                  format: 'currency',
+                  total: true,
+                },
+                {
+                  key: 'credit',
+                  header: t('credit'),
+                  format: 'currency',
+                  total: true,
+                },
+                {
+                  key: 'balance',
+                  header: t('balance'),
+                  format: 'currency',
+                  signed: true,
+                  emphasis: true,
+                },
+              ],
+            },
+            filter,
+            t,
+          )}
         />
       }
     />

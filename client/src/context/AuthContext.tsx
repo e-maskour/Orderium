@@ -1,5 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, PortalUser, LoginRequest, RegisterRequest } from '@/modules/auth';
+import {
+  authService,
+  PortalUser,
+  LoginRequest,
+  RegisterRequest,
+  AccountStatus,
+  rememberPendingPhone,
+  clearPendingPhone,
+} from '@/modules/auth';
 import { API_ROUTES } from '@/common/api-routes';
 
 interface AuthContextType {
@@ -7,7 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
+  /** Resolves with the approval state of the freshly created account. */
+  register: (data: RegisterRequest) => Promise<AccountStatus>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -32,12 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (data: LoginRequest) => {
     const response = await authService.login(data);
+    // A successful login means the account is approved — drop any pending marker.
+    clearPendingPhone();
     setUser(response.user as PortalUser);
   };
 
   const register = async (data: RegisterRequest) => {
     const response = await authService.register(data);
-    setUser(response.user as PortalUser);
+    // Registration returns no token — the account still needs admin approval,
+    // so the user is deliberately NOT put into the authenticated state here.
+    const status = (response.user?.status as AccountStatus) ?? 'pending';
+    if (status !== 'approved') {
+      rememberPendingPhone(data.phoneNumber);
+    }
+    return status;
   };
 
   const logout = () => {

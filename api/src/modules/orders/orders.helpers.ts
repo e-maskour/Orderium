@@ -403,3 +403,74 @@ export const ORDER_XLSX_COL_WIDTHS = [
   { wch: 12 },
   { wch: 12 },
 ];
+
+// ─── Merge summary (consolidated recap of several orders) ──────────────────
+
+export interface MergeSummaryResult {
+  orders: Array<{
+    id: number;
+    orderNumber: string;
+    partnerName: string;
+    total: number;
+    items: Array<{
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      total: number;
+    }>;
+  }>;
+  orderCount: number;
+  grandTotal: number;
+  totalQuantity: number;
+  missingIds: number[];
+}
+
+/**
+ * Shape a set of orders into the consolidated recap used by both the
+ * backoffice merge modal and the merge PDF. `requestedIds` drives the output
+ * ordering so the recap follows the user's selection, and any id with no
+ * matching row is reported back as missing rather than silently dropped.
+ */
+export function buildOrdersMergeSummary(
+  orders: Order[],
+  requestedIds: number[],
+): MergeSummaryResult {
+  const byId = new Map(orders.map((order) => [order.id, order]));
+  const missingIds = requestedIds.filter((id) => !byId.has(id));
+
+  const mapped = requestedIds
+    .map((id) => byId.get(id))
+    .filter((order): order is Order => !!order)
+    .map((order) => {
+      const isPurchase = !!order.supplierId;
+      const partnerName = isPurchase
+        ? order.supplierName || order.supplier?.name || 'Fournisseur'
+        : order.customerName || order.customer?.name || 'Client';
+
+      return {
+        id: order.id,
+        orderNumber:
+          order.orderNumber ?? order.documentNumber ?? `#${order.id}`,
+        partnerName,
+        total: Number(order.total) || 0,
+        items: (order.items ?? []).map((item) => ({
+          description: item.description || item.product?.name || 'Article',
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+          total: Number(item.total) || 0,
+        })),
+      };
+    });
+
+  return {
+    orders: mapped,
+    orderCount: mapped.length,
+    grandTotal: mapped.reduce((sum, order) => sum + order.total, 0),
+    totalQuantity: mapped.reduce(
+      (sum, order) =>
+        sum + order.items.reduce((qty, item) => qty + item.quantity, 0),
+      0,
+    ),
+    missingIds,
+  };
+}

@@ -38,6 +38,15 @@ export class FilterProductsDto {
 
   @ApiProperty({
     required: false,
+    description: 'Filter by brand IDs',
+    type: [Number],
+  })
+  @IsOptional()
+  @IsArray()
+  brandIds?: number[];
+
+  @ApiProperty({
+    required: false,
     description: 'Filter by product type (service or not)',
   })
   @IsOptional()

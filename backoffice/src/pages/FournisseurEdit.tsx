@@ -161,33 +161,38 @@ export default function FournisseurEdit() {
         {/* KPIs */}
         <div style={{ marginBottom: '1.5rem' }}>
           <KpiSheet count={6} label="Statistiques">
-            <KpiCard label="Total Factures" value={totalInvoices} icon={FileText} color="blue" />
             <KpiCard
-              label="Revenu Total des Factures"
+              label={t('totalInvoicesKpi')}
+              value={totalInvoices}
+              icon={FileText}
+              color="blue"
+            />
+            <KpiCard
+              label={t('totalInvoiceRevenueKpi')}
               value={formatDH(totalExpenses, 0)}
               icon={CreditCard}
               color="emerald"
             />
             <KpiCard
-              label="Impayé des Factures"
+              label={t('unpaidInvoicesKpi')}
               value={formatDH(unpaidAmount, 0)}
               icon={Clock}
               color="amber"
             />
             <KpiCard
-              label="Total Bon de livraison"
+              label={t('totalDeliveryNotesKpi')}
               value={totalOrders}
               icon={Truck}
               color="indigo"
             />
             <KpiCard
-              label="Revenu Total des Bon"
+              label={t('totalDeliveryNoteRevenueKpi')}
               value={formatDH(totalOrderExpenses, 0)}
               icon={DollarSign}
               color="green"
             />
             <KpiCard
-              label="Impayé des Bons"
+              label={t('unpaidDeliveryNotesKpi')}
               value={formatDH(unpaidOrderAmount, 0)}
               icon={AlertCircle}
               color="orange"

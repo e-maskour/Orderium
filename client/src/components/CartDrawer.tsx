@@ -8,18 +8,13 @@ import { useState, useEffect } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
 import { Product } from '@/types/database';
 
+import { resolveMediaUrl } from '@/lib/media';
+
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   isPanelMode?: boolean;
 }
-
-const getImageUrl = (imageUrl?: string): string | undefined => {
-  if (!imageUrl) return undefined;
-  if (imageUrl.startsWith('http')) return imageUrl;
-  const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
-  return `${minioPublicUrl}/orderium-media/${imageUrl}`;
-};
 
 const CartItemRow = ({
   item,
@@ -80,7 +75,7 @@ const CartItemRow = ({
         >
           {item.product.imageUrl ? (
             <img
-              src={getImageUrl(item.product.imageUrl)}
+              src={resolveMediaUrl(item.product.imageUrl)}
               alt={displayName}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />

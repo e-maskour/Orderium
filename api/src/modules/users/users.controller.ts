@@ -21,6 +21,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { USR } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Users')
 @Serialize(UserResponseDto)
@@ -31,6 +32,7 @@ export class UsersController {
   @Get()
   @ApiOperation({ summary: 'List users with filtering and pagination' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @RequirePermission('users.view')
   async findAll(@Query() dto: FilterUsersDto) {
     const { users, total } = await this.usersService.findAll(dto);
     const page = dto.page ?? 1;
@@ -49,6 +51,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @RequirePermission('users.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.usersService.findOne(id);
     return ApiRes(USR.DETAIL, data);
@@ -58,6 +61,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Create a user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid user data' })
+  @RequirePermission('users.create')
   async create(@Body() dto: CreateUserDto) {
     const data = await this.usersService.create(dto);
     return ApiRes(USR.CREATED, data);
@@ -67,6 +71,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @RequirePermission('users.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
@@ -81,6 +86,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Activate a user' })
   @ApiResponse({ status: 200, description: 'User activated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @RequirePermission('users.edit')
   async activate(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     const data = await this.usersService.setStatus(id, true, req.user?.id);
     return ApiRes(USR.ACTIVATED, data);
@@ -91,6 +97,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Deactivate a user' })
   @ApiResponse({ status: 200, description: 'User deactivated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @RequirePermission('users.edit')
   async deactivate(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     const data = await this.usersService.setStatus(id, false, req.user?.id);
     return ApiRes(USR.DEACTIVATED, data);
@@ -101,6 +108,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @RequirePermission('users.delete')
   async remove(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     await this.usersService.remove(id, req.user?.id);
     return ApiRes(USR.DELETED, null);

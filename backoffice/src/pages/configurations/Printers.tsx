@@ -40,50 +40,70 @@ import {
   type ReceiptData,
   type DiscoveredPrinter,
 } from '@shared-print/PrintManager';
+import type { TranslationKey } from '../../lib/i18n';
+
+/**
+ * Option labels carry a `labelKey` when they are prose. Brand and protocol
+ * names (Epson, Star Micronics, QZ Tray, WiFi, USB) are proper nouns and stay
+ * untranslated in every language — `optionLabel` below resolves whichever
+ * applies.
+ */
+interface PrinterOption {
+  value: string;
+  label: string;
+  labelKey?: TranslationKey;
+}
+
+/** Falls back to the literal label for proper nouns that carry no key. */
+const optionLabel = (
+  o: { label: string; labelKey?: TranslationKey } | undefined,
+  t: (k: TranslationKey) => string,
+): string => (o ? (o.labelKey ? t(o.labelKey) : o.label) : '');
 
 const BRAND_OPTIONS = [
   { value: 'epson', label: 'Epson' },
   { value: 'star', label: 'Star Micronics' },
-  { value: 'generic', label: 'Générique' },
+  { value: 'generic', label: 'Générique', labelKey: 'printerBrandGeneric' },
   { value: 'qztray', label: 'QZ Tray' },
-  { value: 'browser', label: 'Navigateur' },
-];
+  { value: 'browser', label: 'Navigateur', labelKey: 'browser' },
+] as const satisfies readonly PrinterOption[];
 
 const CONNECTION_OPTIONS = [
   { value: 'wifi', label: 'WiFi', icon: Wifi },
   { value: 'usb', label: 'USB', icon: Usb },
-  { value: 'network', label: 'Réseau', icon: Globe },
-  { value: 'browser', label: 'Navigateur', icon: Monitor },
+  { value: 'network', label: 'Réseau', labelKey: 'printerConnectionNetwork', icon: Globe },
+  { value: 'browser', label: 'Navigateur', labelKey: 'browser', icon: Monitor },
 ];
 
 const PAPER_WIDTHS = [
-  { value: 80, label: '80mm (ticket)' },
+  { value: 80, label: '80mm (ticket)', labelKey: 'printerPaper80' },
   { value: 148, label: '148mm (A5)' },
 ];
 
 const DOC_TYPE_OPTIONS = [
-  { value: 'receipt', label: 'Ticket de caisse' },
-  { value: 'bl', label: 'Bon de livraison' },
-  { value: 'devis', label: 'Devis' },
-  { value: 'bon_commande', label: 'Bon de commande' },
+  { value: 'receipt', label: 'Ticket de caisse', labelKey: 'printerDocReceipt' },
+  { value: 'bl', label: 'Bon de livraison', labelKey: 'printerDocDeliveryNote' },
+  { value: 'devis', label: 'Devis', labelKey: 'quote' },
+  { value: 'bon_commande', label: 'Bon de commande', labelKey: 'printerDocPurchaseOrder' },
   { value: 'pos', label: 'POS' },
   { value: 'stock', label: 'Stock' },
 ];
 
-const DUMMY_RECEIPT: ReceiptData = {
+/** Built per call so the printed sample follows the active language. */
+const buildDummyReceipt = (t: (k: TranslationKey) => string): ReceiptData => ({
   storeName: 'Morocom — Test',
   storePhone: '0600000000',
   orderNumber: 'TEST-001',
-  date: new Date().toLocaleString('fr-FR'),
-  clientName: 'Client Test',
+  date: new Date().toLocaleString(),
+  clientName: t('printerTestCustomer'),
   items: [
-    { name: 'Produit A', qty: 2, unitPrice: 49.9, total: 99.8 },
-    { name: 'Produit B', qty: 1, unitPrice: 150.0, total: 150.0 },
+    { name: t('printerTestProductA'), qty: 2, unitPrice: 49.9, total: 99.8 },
+    { name: t('printerTestProductB'), qty: 1, unitPrice: 150.0, total: 150.0 },
   ],
   subtotal: 249.8,
   total: 249.8,
-  footer: "Ceci est un test d'impression",
-};
+  footer: t('printerTestLine'),
+});
 
 function PrinterForm({
   printer,
@@ -386,12 +406,12 @@ export default function Printers() {
       paperWidth: printer.paperWidth,
       name: printer.name,
     };
-    const result = await printReceipt(config, DUMMY_RECEIPT);
+    const result = await printReceipt(config, buildDummyReceipt(t));
 
     if (result.status === 'failed') {
       toastError(`Échec impression (${result.error ?? result.method})`);
     } else if (result.method === 'browser') {
-      toastSuccess('Impression via le navigateur');
+      toastSuccess(t('printerViaBrowser'));
     } else {
       toastSuccess(`Impression envoyée → ${result.method} (${result.durationMs}ms)`);
     }
@@ -413,7 +433,7 @@ export default function Printers() {
 
   const handleDelete = (printer: IPrinter) => {
     toastConfirm(
-      t('deletePrinterConfirm') || 'Supprimer cette imprimante ?',
+      t('deletePrinterConfirm') || t('confirmDeletePrinter'),
       () => deleteMutation.mutate(printer.id),
       { variant: 'destructive', confirmLabel: t('deletePrinter') },
     );
@@ -473,7 +493,7 @@ export default function Printers() {
                 style={btnSecondary}
               >
                 <ScanLine style={{ width: 16, height: 16 }} />
-                {t('scanNetwork') ?? 'Scan réseau'}
+                {t('scanNetwork') ?? t('printerNetworkScan')}
               </button>
               <button onClick={openCreate} style={btnPrimary}>
                 <Plus style={{ width: 16, height: 16 }} />
@@ -499,8 +519,8 @@ export default function Printers() {
           <Info style={{ width: 20, height: 20, color: 'var(--text-label)', flexShrink: 0 }} />
           <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             <strong>{t('platformDetection')}:</strong> {platform.os.toUpperCase()}
-            {platform.isMobile ? ' (mobile)' : ' (desktop)'}
-            {platform.hasQzTray && ' — QZ Tray détecté ✓'}
+            {platform.isMobile ? t('printerMobileSuffix') : t('printerDesktopSuffix')}
+            {platform.hasQzTray && t('printerQzDetected')}
             {' · '}
             <strong>{t('recommendedSetup')}:</strong>{' '}
             {platform.os === 'ios'
@@ -629,8 +649,11 @@ export default function Printers() {
                           )}
                         </div>
                         <div style={{ fontSize: '0.8125rem', color: 'var(--text-label)' }}>
-                          {BRAND_OPTIONS.find((b) => b.value === printer.brand)?.label} ·{' '}
-                          {printer.model ?? printer.brand} ·{' '}
+                          {optionLabel(
+                            BRAND_OPTIONS.find((b) => b.value === printer.brand),
+                            t,
+                          )}{' '}
+                          · {printer.model ?? printer.brand} ·{' '}
                           {
                             CONNECTION_OPTIONS.find((c) => c.value === printer.connectionType)
                               ?.label
@@ -818,23 +841,23 @@ export default function Printers() {
               {[
                 {
                   title: 'Windows / Mac (USB)',
-                  desc: "Installer QZ Tray, connecter l'imprimante USB, elle sera détectée automatiquement.",
+                  desc: t('printerHelpUsb'),
                 },
                 {
                   title: 'WiFi — Epson',
-                  desc: "Connecter l'imprimante au même réseau. Renseigner l'IP dans les paramètres. Le port par défaut est 8008.",
+                  desc: t('printerHelpEpson'),
                 },
                 {
                   title: 'WiFi — Star Micronics',
-                  desc: "Activer WebPRNT dans les paramètres de l'imprimante. Renseigner l'IP. Le port par défaut est 80.",
+                  desc: t('printerHelpWebprnt'),
                 },
                 {
                   title: 'iOS (AirPrint)',
-                  desc: "Aucune configuration nécessaire. L'impression utilise le dialogue natif du navigateur avec AirPrint.",
+                  desc: t('printerHelpAirprint'),
                 },
                 {
                   title: 'Android (Mopria)',
-                  desc: "Aucune configuration nécessaire. L'impression utilise le dialogue natif du navigateur avec Mopria.",
+                  desc: t('printerHelpMopria'),
                 },
               ].map((guide) => (
                 <div
@@ -1019,7 +1042,10 @@ export default function Printers() {
                           {p.name}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-label)' }}>
-                          {BRAND_OPTIONS.find((b) => b.value === p.brand)?.label ?? p.brand}
+                          {optionLabel(
+                            BRAND_OPTIONS.find((b) => b.value === p.brand),
+                            t,
+                          ) || p.brand}
                           {p.ip ? ` · ${p.ip}:${p.port}` : ''}
                           {' · '}
                           <span

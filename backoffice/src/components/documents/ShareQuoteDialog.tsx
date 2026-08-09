@@ -184,7 +184,7 @@ export function ShareQuoteDialog({
                 onClick={handleOpenPreview}
                 outlined
                 icon={<ExternalLink style={{ width: '1rem', height: '1rem' }} />}
-                label="Aperçu"
+                label={t('preview')}
                 style={{ flex: 1 }}
               />
               <Button

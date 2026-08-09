@@ -22,6 +22,7 @@ import { PTR } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { SERIALIZE_KEY } from '../../common/interceptors/serialize.interceptor';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Partners')
 @PortalRoute()
@@ -34,6 +35,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Create a new partner' })
   @ApiResponse({ status: 201, description: 'Partner created successfully' })
   @ApiResponse({ status: 409, description: 'Phone number already exists' })
+  @RequirePermission('partners.create')
   async create(@Body() createPartnerDto: CreatePartnerDto) {
     const partner = await this.partnersService.create(createPartnerDto);
     return ApiRes(PTR.CREATED, partner);
@@ -42,6 +44,7 @@ export class PartnersController {
   @Post('upsert')
   @ApiOperation({ summary: 'Create or update partner and link to portal' })
   @ApiResponse({ status: 201, description: 'Partner upserted successfully' })
+  @RequirePermission('partners.create')
   async upsert(
     @Body()
     body: CreatePartnerDto & { portalPhoneNumber?: string },
@@ -62,6 +65,7 @@ export class PartnersController {
   @ApiQuery({ name: 'type', required: false, enum: ['customer', 'supplier'] })
   @ApiQuery({ name: 'isEnabled', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Partners retrieved successfully' })
+  @RequirePermission('partners.view')
   async findAll(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -104,6 +108,7 @@ export class PartnersController {
     status: 200,
     description: 'Dashboard statistics retrieved successfully',
   })
+  @RequirePermission('partners.view')
   async getCustomersDashboard() {
     const stats = await this.partnersService.getCustomersDashboard();
     return ApiRes(PTR.CUSTOMER_DASHBOARD, stats);
@@ -115,6 +120,7 @@ export class PartnersController {
     status: 200,
     description: 'Dashboard statistics retrieved successfully',
   })
+  @RequirePermission('partners.view')
   async getSuppliersDashboard() {
     const stats = await this.partnersService.getSuppliersDashboard();
     return ApiRes(PTR.SUPPLIER_DASHBOARD, stats);
@@ -124,6 +130,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Search partners by phone' })
   @ApiQuery({ name: 'phone', required: true, type: String })
   @ApiResponse({ status: 200, description: 'Partners found' })
+  @RequirePermission('partners.view')
   async search(@Query('phone') phone: string) {
     const partners = await this.partnersService.searchByPhone(phone);
     return ApiRes(PTR.SEARCH, partners);
@@ -133,6 +140,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Get partner by phone number' })
   @ApiResponse({ status: 200, description: 'Partner retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
+  @RequirePermission('partners.view')
   async findByPhone(@Param('phoneNumber') phoneNumber: string) {
     const partner = await this.partnersService.findByPhone(phoneNumber);
     return ApiRes(PTR.BY_PHONE, partner);
@@ -146,6 +154,7 @@ export class PartnersController {
     status: 200,
     description: 'Customer analytics retrieved successfully',
   })
+  @RequirePermission('partners.view')
   async getCustomerAnalytics(
     @Param('id', ParseIntPipe) id: number,
     @Query('year') year?: string,
@@ -166,6 +175,7 @@ export class PartnersController {
     status: 200,
     description: 'Supplier analytics retrieved successfully',
   })
+  @RequirePermission('partners.view')
   async getSupplierAnalytics(
     @Param('id', ParseIntPipe) id: number,
     @Query('year') year?: string,
@@ -182,6 +192,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Get partner by ID' })
   @ApiResponse({ status: 200, description: 'Partner retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
+  @RequirePermission('partners.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const partner = await this.partnersService.findOne(id);
     return ApiRes(PTR.DETAIL, partner);
@@ -192,6 +203,7 @@ export class PartnersController {
   @ApiResponse({ status: 200, description: 'Partner updated successfully' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
   @ApiResponse({ status: 409, description: 'Phone number already exists' })
+  @RequirePermission('partners.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePartnerDto: UpdatePartnerDto,
@@ -205,6 +217,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Soft delete a partner' })
   @ApiResponse({ status: 200, description: 'Partner deleted successfully' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
+  @RequirePermission('partners.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.partnersService.remove(id);
     return ApiRes(PTR.DELETED, null);

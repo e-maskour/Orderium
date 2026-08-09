@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StatisticsService } from './statistics.service';
 import { ApiRes } from '../../common/api-response';
 import { STT } from '../../common/response-codes';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Statistics')
 @Controller('statistics')
@@ -15,6 +16,7 @@ export class StatisticsController {
     status: 200,
     description: 'Statistics retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getStatistics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -31,6 +33,7 @@ export class StatisticsController {
     status: 200,
     description: 'Order statistics retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getOrderStatistics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -47,6 +50,7 @@ export class StatisticsController {
     status: 200,
     description: 'Daily statistics retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getDailyStats(@Query('days') days?: string) {
     const daysNum = Math.min(365, Math.max(1, parseInt(days ?? '7', 10) || 7));
     const stats = await this.statisticsService.getDailyStats(daysNum);
@@ -59,6 +63,7 @@ export class StatisticsController {
     status: 200,
     description: 'Top products retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getTopProducts(@Query('limit') limit?: string) {
     const limitNum = Math.min(
       100,
@@ -74,6 +79,7 @@ export class StatisticsController {
     status: 200,
     description: 'Comprehensive statistics retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getComprehensiveStats(@Query('days') days?: string) {
     const daysNum = Math.min(365, Math.max(1, parseInt(days ?? '7', 10) || 7));
     const stats = await this.statisticsService.getComprehensiveStats(daysNum);
@@ -86,6 +92,7 @@ export class StatisticsController {
     status: 200,
     description: 'Recent activities retrieved successfully',
   })
+  @RequirePermission('dashboard.view')
   async getRecentActivities(@Query('limit') limit?: string) {
     const limitNum = Math.min(
       100,

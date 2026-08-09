@@ -146,4 +146,15 @@ export default {
   viewHistory: "Voir l'historique",
   paymentsCount: 'paiement(s)',
   paymentRecorded: 'Paiement enregistré avec succès',
+  // Merge (consolidated recap of several orders)
+  mergeOrders: 'Fusionner',
+  mergeOrdersTitle: 'Récapitulatif des commandes',
+  mergeDesignation: 'Désignation',
+  mergePrintPdf: 'Imprimer le PDF',
+  mergeOrderCount: 'Nombre de commandes',
+  mergeTotalQuantity: 'Quantité totale',
+  mergeGrandTotal: 'Total général',
+  mergeNoItems: 'Aucun article',
+  mergeMissingOrders: 'commande(s) introuvable(s) ont été ignorées',
+  mergeLoadError: 'Impossible de charger le récapitulatif',
 };

@@ -162,7 +162,7 @@ export default function Taxes() {
             loading={isLoading}
             totalCount={rates.length}
             countLabel="taux"
-            emptyMessage="Aucun taux configuré"
+            emptyMessage={t('noTaxRateConfigured')}
             config={{
               topLeft: (r: TaxRate) => r.name,
               topRight: (r: TaxRate) => `${r.rate}%`,

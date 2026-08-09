@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'react-router-dom';
 import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
+import { clientRequestsService } from '../modules/client-requests';
 import { Badge } from 'primereact/badge';
 import { Ripple } from 'primereact/ripple';
 import type { LucideIcon } from 'lucide-react';
@@ -25,6 +27,7 @@ import {
   Store,
   Banknote,
   UsersRound,
+  UserRoundCheck,
   Settings,
   Shield,
   ChevronLeft,
@@ -33,10 +36,13 @@ import {
   TrendingUp,
   TrendingDown,
   BarChart2,
+  Tags,
 } from 'lucide-react';
 import type { TranslationKey } from '../lib/i18n';
 import { useTenantModules } from './TenantStatusGuard';
 import type { TenantModules } from '../api/onboarding';
+import { usePermissions } from '../hooks/usePermissions';
+import { REPORT_VIEW_PERMISSIONS } from '../modules/access/report-permissions';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -54,6 +60,13 @@ interface FlatItem {
   activePaths: string[];
   exactMatch?: boolean;
   moduleKey?: keyof TenantModules;
+  /**
+   * Access permission required to see this entry. Menu visibility mirrors what
+   * the API will actually allow, so the sidebar never advertises a 403.
+   */
+  permission?: string;
+  /** Shown when the user holds at least one of these. */
+  anyPermission?: string[];
 }
 
 interface GroupItem {
@@ -78,6 +91,7 @@ const TOP_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-dashboard',
+    permission: 'dashboard.view',
     to: '/dashboard',
     icon: LayoutDashboard,
     labelKey: 'dashboard',
@@ -87,6 +101,7 @@ const TOP_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-orders',
+    permission: 'orders.view',
     to: '/orders',
     icon: ShoppingCart,
     labelKey: 'orders',
@@ -96,6 +111,7 @@ const TOP_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-caisse',
+    permission: 'caisse.view',
     to: '/caisse',
     icon: Banknote,
     labelKey: 'caisse',
@@ -105,6 +121,7 @@ const TOP_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-pos',
+    permission: 'pos.use',
     to: '/pos',
     icon: Store,
     labelKey: 'navPos',
@@ -114,6 +131,7 @@ const TOP_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-analytics',
+    anyPermission: REPORT_VIEW_PERMISSIONS,
     to: '/analytics',
     icon: BarChart2,
     labelKey: 'analytics',
@@ -131,6 +149,7 @@ const GROUPS: GroupItem[] = [
     children: [
       {
         id: 'sb-devis',
+        permission: 'quotes.view',
         to: '/devis',
         icon: FileCheck,
         labelKey: 'quote',
@@ -139,6 +158,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-bl',
+        permission: 'orders.view',
         to: '/bons-livraison',
         icon: PackageCheck,
         labelKey: 'deliveryNote',
@@ -147,6 +167,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-fv',
+        permission: 'invoices.view',
         to: '/factures/vente',
         icon: FileText,
         labelKey: 'salesInvoice',
@@ -155,6 +176,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-pv',
+        permission: 'payments.view',
         to: '/paiements-vente',
         icon: Wallet,
         labelKey: 'payments',
@@ -163,6 +185,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-customers',
+        permission: 'partners.view',
         to: '/customers',
         icon: UserCircle,
         labelKey: 'clients',
@@ -180,6 +203,7 @@ const GROUPS: GroupItem[] = [
     children: [
       {
         id: 'sb-dp',
+        permission: 'quotes.view',
         to: '/demande-prix',
         icon: DollarSign,
         labelKey: 'priceRequest',
@@ -188,6 +212,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-ba',
+        permission: 'orders.view',
         to: '/bon-achat',
         icon: ShoppingBag,
         labelKey: 'purchaseOrder',
@@ -196,6 +221,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-fa',
+        permission: 'invoices.view',
         to: '/factures/achat',
         icon: Receipt,
         labelKey: 'purchaseInvoice',
@@ -204,6 +230,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-pa',
+        permission: 'payments.view',
         to: '/paiements-achat',
         icon: Wallet,
         labelKey: 'payments',
@@ -212,6 +239,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-fournisseurs',
+        permission: 'partners.view',
         to: '/fournisseurs',
         icon: Truck,
         labelKey: 'suppliers',
@@ -229,6 +257,7 @@ const GROUPS: GroupItem[] = [
     children: [
       {
         id: 'sb-products',
+        permission: 'products.view',
         to: '/products',
         icon: Package,
         labelKey: 'products',
@@ -237,6 +266,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-cats',
+        permission: 'categories.view',
         to: '/categories',
         icon: FolderTree,
         labelKey: 'categories',
@@ -244,7 +274,16 @@ const GROUPS: GroupItem[] = [
         moduleKey: 'category',
       },
       {
+        id: 'sb-brands',
+        permission: 'brands.view',
+        to: '/brands',
+        icon: Tags,
+        labelKey: 'brands',
+        activePaths: ['/brands'],
+      },
+      {
         id: 'sb-wh',
+        permission: 'warehouses.view',
         to: '/warehouses',
         icon: Building2,
         labelKey: 'warehouses',
@@ -253,6 +292,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-sm',
+        permission: 'stock.view',
         to: '/stock-movements',
         icon: ArrowLeftRight,
         labelKey: 'stockMovements',
@@ -260,6 +300,7 @@ const GROUPS: GroupItem[] = [
       },
       {
         id: 'sb-adj',
+        permission: 'stock.view',
         to: '/inventory-adjustments',
         icon: SlidersHorizontal,
         labelKey: 'inventoryAdjustments',
@@ -273,6 +314,7 @@ const BOTTOM_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-delivery',
+    permission: 'delivery.view',
     to: '/delivery-persons',
     icon: Truck,
     labelKey: 'deliveryPersons',
@@ -281,7 +323,17 @@ const BOTTOM_FLAT: FlatItem[] = [
   },
   {
     kind: 'flat',
+    id: 'sb-client-requests',
+    permission: 'users.view',
+    to: '/client-requests',
+    icon: UserRoundCheck,
+    labelKey: 'clientRequests',
+    activePaths: ['/client-requests'],
+  },
+  {
+    kind: 'flat',
     id: 'sb-users',
+    permission: 'users.view',
     to: '/users',
     icon: UsersRound,
     labelKey: 'navTeam',
@@ -290,6 +342,7 @@ const BOTTOM_FLAT: FlatItem[] = [
   {
     kind: 'flat',
     id: 'sb-roles',
+    permission: 'roles.view',
     to: '/roles',
     icon: Shield,
     labelKey: 'rolesPermissions',
@@ -300,6 +353,7 @@ const BOTTOM_FLAT: FlatItem[] = [
 const PINNED: FlatItem = {
   kind: 'flat',
   id: 'sb-config',
+  permission: 'configurations.view',
   to: '/configurations',
   icon: Settings,
   labelKey: 'settings',
@@ -333,8 +387,10 @@ interface FlatLinkProps {
   isRtl: boolean;
   label: string;
   collapsed: boolean;
+  /** Pending-items pill, e.g. client requests awaiting a decision. */
+  badgeCount?: number;
 }
-function FlatLink({ item, isRtl, label, collapsed }: FlatLinkProps) {
+function FlatLink({ item, isRtl, label, collapsed, badgeCount }: FlatLinkProps) {
   const location = useLocation();
   const active = matchPath(location.pathname, item.activePaths, item.exactMatch);
   return (
@@ -386,6 +442,24 @@ function FlatLink({ item, isRtl, label, collapsed }: FlatLinkProps) {
           }}
         >
           {label}
+        </span>
+      )}
+      {!!badgeCount && (
+        <span
+          style={{
+            background: '#f59e0b',
+            color: '#fff',
+            borderRadius: '9999px',
+            fontSize: '0.625rem',
+            fontWeight: 700,
+            lineHeight: 1,
+            padding: collapsed ? '0.2rem 0.3rem' : '0.2rem 0.4rem',
+            position: collapsed ? 'absolute' : 'static',
+            top: collapsed ? '0.25rem' : undefined,
+            insetInlineEnd: collapsed ? '0.25rem' : undefined,
+          }}
+        >
+          {badgeCount > 99 ? '99+' : badgeCount}
         </span>
       )}
       <Ripple />
@@ -458,6 +532,7 @@ function ChildLink({ child, label, isRtl, inPopover }: ChildLinkProps) {
 export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }: SidebarProps) => {
   const { language, t } = useLanguage();
   const modules = useTenantModules();
+  const { hasPermission, hasAnyPermission } = usePermissions();
   const isRtl = language === 'ar';
   const location = useLocation();
   const pathname = location.pathname;
@@ -471,12 +546,37 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
     return val;
   };
 
-  const visibleTopFlat = TOP_FLAT.filter((item) => isVisible(item.moduleKey));
+  // Two independent gates: the tenant must have the module enabled, and the
+  // user's roles must grant it. An entry needs both to appear.
+  const isPermitted = (item: { permission?: string; anyPermission?: string[] }): boolean => {
+    if (item.permission && !hasPermission(item.permission)) return false;
+    if (item.anyPermission?.length && !hasAnyPermission(...item.anyPermission)) {
+      return false;
+    }
+    return true;
+  };
+
+  const isShown = (item: {
+    moduleKey?: keyof TenantModules;
+    permission?: string;
+    anyPermission?: string[];
+  }) => isVisible(item.moduleKey) && isPermitted(item);
+
+  const visibleTopFlat = TOP_FLAT.filter(isShown);
   const visibleGroups = GROUPS.map((group) => ({
     ...group,
-    children: group.children.filter((c) => isVisible(c.moduleKey)),
+    children: group.children.filter(isShown),
   })).filter((group) => group.children.length > 0);
-  const visibleBottomFlat = BOTTOM_FLAT.filter((item) => isVisible(item.moduleKey));
+  const visibleBottomFlat = BOTTOM_FLAT.filter(isShown);
+
+  // Pending client sign-ups, shown as a pill on the "Demandes clients" entry.
+  const { data: pendingClientRequests = 0 } = useQuery({
+    queryKey: ['client-requests', 'pending-count'],
+    queryFn: () => clientRequestsService.getPendingCount(),
+    enabled: visibleBottomFlat.some((item) => item.id === 'sb-client-requests'),
+    staleTime: 60_000,
+  });
+  const showPinned = isShown(PINNED);
 
   // Find which group the current path belongs to (if any)
   const activeGroupId =
@@ -617,7 +717,13 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
           {/* ── Top flat items ── */}
           {visibleTopFlat.map((item) => (
             <li key={item.id}>
-              <FlatLink item={item} isRtl={isRtl} label={getLabel(item)} collapsed={isCollapsed} />
+              <FlatLink
+                item={item}
+                isRtl={isRtl}
+                label={getLabel(item)}
+                collapsed={isCollapsed}
+                badgeCount={item.id === 'sb-client-requests' ? pendingClientRequests : undefined}
+              />
             </li>
           ))}
 
@@ -823,22 +929,30 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
           {/* ── Bottom flat items ── */}
           {visibleBottomFlat.map((item) => (
             <li key={item.id}>
-              <FlatLink item={item} isRtl={isRtl} label={getLabel(item)} collapsed={isCollapsed} />
+              <FlatLink
+                item={item}
+                isRtl={isRtl}
+                label={getLabel(item)}
+                collapsed={isCollapsed}
+                badgeCount={item.id === 'sb-client-requests' ? pendingClientRequests : undefined}
+              />
             </li>
           ))}
         </ul>
       </nav>
 
       {/* ── Pinned: Paramètres ─────────────────────── */}
-      <div
-        style={{
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          padding: isCollapsed ? '0.5rem 0.5rem' : '0.5rem 0.625rem',
-          flexShrink: 0,
-        }}
-      >
-        <FlatLink item={PINNED} isRtl={isRtl} label={getLabel(PINNED)} collapsed={isCollapsed} />
-      </div>
+      {showPinned && (
+        <div
+          style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            padding: isCollapsed ? '0.5rem 0.5rem' : '0.5rem 0.625rem',
+            flexShrink: 0,
+          }}
+        >
+          <FlatLink item={PINNED} isRtl={isRtl} label={getLabel(PINNED)} collapsed={isCollapsed} />
+        </div>
+      )}
 
       {/* ── Version badge ──────────────────────────── */}
       <div

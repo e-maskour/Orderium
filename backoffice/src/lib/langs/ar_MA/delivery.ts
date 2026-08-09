@@ -41,4 +41,9 @@ export default {
   // Error Messages
   error: 'خطأ',
   passwordRequiredError: 'كلمة المرور مطلوبة',
+
+  cancelDeliveryTitle: 'إلغاء التوصيل',
+
+  newDeliveryPerson: 'موزّع جديد',
+  noDeliveryPersonFound: 'لم يتم العثور على أي موزّع',
 };

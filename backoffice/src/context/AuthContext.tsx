@@ -1,5 +1,15 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 import { apiClient, API_ROUTES, setUnauthorizedHandler } from '../common';
+import { accessService, EMPTY_ACCESS } from '../modules/access';
+import type { EffectiveAccess } from '../modules/access';
 
 interface Admin {
   id: number;
@@ -9,10 +19,6 @@ interface Admin {
   isCustomer: boolean;
   isDelivery: boolean;
   isAdmin: boolean;
-  roleId?: number | null;
-  roleName?: string | null;
-  isSuperAdmin?: boolean;
-  permissions?: string[];
 }
 
 const normalizeAdmin = (raw: any): Admin | null => {
@@ -31,55 +37,97 @@ const normalizeAdmin = (raw: any): Admin | null => {
     isAdmin: Boolean(isAdmin),
     isCustomer: Boolean(isCustomer),
     isDelivery: Boolean(isDelivery),
-    roleId: raw.roleId ?? null,
-    roleName: raw.roleName ?? null,
-    isSuperAdmin: Boolean(raw.isSuperAdmin),
-    permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
   };
 };
 
+const normalizeAccess = (raw: any): EffectiveAccess => ({
+  userId: typeof raw?.userId === 'number' ? raw.userId : null,
+  roleIds: Array.isArray(raw?.roleIds) ? raw.roleIds : [],
+  roleNames: Array.isArray(raw?.roleNames) ? raw.roleNames : [],
+  isSuperAdmin: Boolean(raw?.isSuperAdmin),
+  permissions: Array.isArray(raw?.permissions) ? raw.permissions : [],
+});
+
 interface AuthContextType {
   admin: Admin | null;
+  access: EffectiveAccess;
   login: (credentials: { phoneNumber: string; password: string }) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** True once the effective permission set has been fetched from the server. */
+  isAccessLoaded: boolean;
+  /** Re-fetch effective permissions — call after changing your own roles. */
+  refreshAccess: () => Promise<void>;
   hasPermission: (key: string) => boolean;
+  hasAnyPermission: (...keys: string[]) => boolean;
+  hasAllPermissions: (...keys: string[]) => boolean;
+  /** True when the user holds at least one permission on a module. */
+  canAccessModule: (moduleKey: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_ADMIN = 'admin';
+const STORAGE_TOKEN = 'adminToken';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [admin, setAdmin] = useState<Admin | null>(null);
+  const [access, setAccess] = useState<EffectiveAccess>(EMPTY_ACCESS);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAccessLoaded, setIsAccessLoaded] = useState(false);
+
+  const clearSession = useCallback(() => {
+    setAdmin(null);
+    setAccess(EMPTY_ACCESS);
+    setIsAuthenticated(false);
+    setIsAccessLoaded(false);
+    localStorage.removeItem(STORAGE_ADMIN);
+    localStorage.removeItem(STORAGE_TOKEN);
+  }, []);
+
+  /**
+   * Permissions always come from the server, never from the stored session.
+   * A cached copy would go stale the moment an administrator edits a role,
+   * which is the failure mode this whole design exists to avoid.
+   */
+  const refreshAccess = useCallback(async () => {
+    try {
+      const fresh = await accessService.getMyAccess();
+      setAccess(normalizeAccess(fresh));
+    } catch {
+      // A failed refresh must not silently widen access.
+      setAccess(EMPTY_ACCESS);
+    } finally {
+      setIsAccessLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
-    // Check for existing session
-    const storedAdmin = localStorage.getItem('admin');
-    const storedToken = localStorage.getItem('adminToken');
-    if (storedAdmin && storedToken) {
-      const parsed = normalizeAdmin(JSON.parse(storedAdmin));
-      if (parsed?.isAdmin) {
-        setAdmin(parsed);
-        setIsAuthenticated(true);
-      } else {
-        localStorage.removeItem('admin');
-        localStorage.removeItem('adminToken');
-      }
+    const storedAdmin = localStorage.getItem(STORAGE_ADMIN);
+    const storedToken = localStorage.getItem(STORAGE_TOKEN);
+    if (!storedAdmin || !storedToken) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
-  }, []);
+
+    const parsed = normalizeAdmin(JSON.parse(storedAdmin));
+    if (!parsed?.isAdmin) {
+      clearSession();
+      setIsLoading(false);
+      return;
+    }
+
+    setAdmin(parsed);
+    setIsAuthenticated(true);
+    void refreshAccess().finally(() => setIsLoading(false));
+  }, [clearSession, refreshAccess]);
 
   // Register the unauthorized handler so apiClient auto-logout triggers React state cleanup
   useEffect(() => {
-    setUnauthorizedHandler(() => {
-      setAdmin(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('admin');
-      localStorage.removeItem('adminToken');
-    });
-  }, []);
+    setUnauthorizedHandler(() => clearSession());
+  }, [clearSession]);
 
   const login = async (credentials: { phoneNumber: string; password: string }) => {
     const data = await apiClient.post<any>(
@@ -97,30 +145,77 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setAdmin(normalized);
     setIsAuthenticated(true);
-    localStorage.setItem('admin', JSON.stringify(normalized));
-    localStorage.setItem('adminToken', data.data?.token);
+    localStorage.setItem(STORAGE_ADMIN, JSON.stringify(normalized));
+    localStorage.setItem(STORAGE_TOKEN, data.data?.token);
+
+    // The login response carries a resolved snapshot; take it so the first
+    // render is already gated, then confirm against the server.
+    setAccess(normalizeAccess(data.data?.user));
+    setIsAccessLoaded(true);
+    await refreshAccess();
   };
 
-  const logout = () => {
-    setAdmin(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('admin');
-    localStorage.removeItem('adminToken');
-  };
+  const logout = () => clearSession();
 
-  const hasPermission = (key: string): boolean => {
-    if (!admin) return false;
-    if (admin.isSuperAdmin) return true;
-    return admin.permissions?.includes(key) ?? false;
-  };
+  const permissionSet = useMemo(() => new Set(access.permissions), [access.permissions]);
 
-  return (
-    <AuthContext.Provider
-      value={{ admin, login, logout, isAuthenticated, isLoading, hasPermission }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const hasPermission = useCallback(
+    (key: string) => access.isSuperAdmin || permissionSet.has(key),
+    [access.isSuperAdmin, permissionSet],
   );
+
+  const hasAnyPermission = useCallback(
+    (...keys: string[]) =>
+      access.isSuperAdmin || keys.length === 0 || keys.some((key) => permissionSet.has(key)),
+    [access.isSuperAdmin, permissionSet],
+  );
+
+  const hasAllPermissions = useCallback(
+    (...keys: string[]) => access.isSuperAdmin || keys.every((key) => permissionSet.has(key)),
+    [access.isSuperAdmin, permissionSet],
+  );
+
+  const canAccessModule = useCallback(
+    (moduleKey: string) => {
+      if (access.isSuperAdmin) return true;
+      const prefix = `${moduleKey}.`;
+      return access.permissions.some((key) => key.startsWith(prefix));
+    },
+    [access.isSuperAdmin, access.permissions],
+  );
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      admin,
+      access,
+      login,
+      logout,
+      isAuthenticated,
+      isLoading,
+      isAccessLoaded,
+      refreshAccess,
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
+      canAccessModule,
+    }),
+    // `login`/`logout` are stable in practice; the rest drive re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      admin,
+      access,
+      isAuthenticated,
+      isLoading,
+      isAccessLoaded,
+      refreshAccess,
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
+      canAccessModule,
+    ],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

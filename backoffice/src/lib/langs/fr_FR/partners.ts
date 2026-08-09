@@ -86,4 +86,14 @@ export default {
   visibleInSystem: 'Visible et actif dans le système',
   hiddenFromSystem: 'Masqué et inactif dans le système',
   partnerInfo: 'Informations du partenaire',
+
+  // ─── Partner KPI cards ────────────────────────────────────
+  totalInvoicesKpi: 'Total factures',
+  totalInvoiceRevenueKpi: 'Chiffre d’affaires facturé',
+  unpaidInvoicesKpi: 'Impayé sur factures',
+  totalDeliveryNotesKpi: 'Total bons de livraison',
+  totalDeliveryNoteRevenueKpi: 'Chiffre d’affaires sur bons',
+  unpaidDeliveryNotesKpi: 'Impayé sur bons',
+  noSupplierFound: 'Aucun fournisseur trouvé',
+  walkInCustomer: 'Client comptoir',
 };

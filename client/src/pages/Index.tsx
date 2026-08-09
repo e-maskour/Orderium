@@ -1,17 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Package, Tag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ProductFilters } from '@/types/database';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useBrands } from '@/hooks/useBrands';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
-import { CategoryChips } from '@/components/CategoryChips';
+import { FilterTiles } from '@/components/FilterTiles';
 import { ProductGrid } from '@/components/ProductGrid';
 import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { SHOP_PARAMS, parseFilterId } from '@/common/routes';
 
 const Index = () => {
   const { t, dir } = useLanguage();
@@ -19,31 +23,57 @@ const Index = () => {
   const { isCartOpen, closeCart, itemCount } = useCart();
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
-  const [filters, setFilters] = useState<ProductFilters>({ categoryId: null, search: '' });
+  // Facet filters live in the URL so landing-page cards, the filter strip and a
+  // refresh/shared link all resolve to the same state.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryId = parseFilterId(searchParams.get(SHOP_PARAMS.CATEGORY));
+  const brandId = parseFilterId(searchParams.get(SHOP_PARAMS.BRAND));
+
+  const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleCategoryChange = (categoryId: number | null) => {
-    setFilters((prev) => ({ ...prev, categoryId }));
-    setCurrentPage(1);
-  };
+  const filters: ProductFilters = useMemo(
+    () => ({ categoryId, brandId, search }),
+    [categoryId, brandId, search],
+  );
 
-  const handleSearchChange = (search: string) => {
-    setFilters((prev) => ({ ...prev, search }));
-  };
+  const setFilterParam = useCallback(
+    (key: string, value: number | null) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (value == null) next.delete(key);
+          else next.set(key, String(value));
+          return next;
+        },
+        // Replace so Back returns to the landing page, not through every filter.
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const handleCategoryChange = (id: number | null) => setFilterParam(SHOP_PARAMS.CATEGORY, id);
+  const handleBrandChange = (id: number | null) => setFilterParam(SHOP_PARAMS.BRAND, id);
+  const handleSearchChange = (value: string) => setSearch(value);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryId, brandId]);
 
   // Debounce search → reset page
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
-      setDebouncedSearch(filters.search);
+      setDebouncedSearch(search);
       setCurrentPage(1);
     }, 400);
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
-  }, [filters.search]);
+  }, [search]);
 
   const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,13 +103,15 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResizing, dir]);
 
-  const { categories } = useCategories();
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { brands, loading: brandsLoading } = useBrands();
 
   const { products, loading, error, totalCount, totalPages } = useProducts({
     page: currentPage,
     pageSize: 50,
     search: debouncedSearch,
-    categoryId: filters.categoryId,
+    categoryId,
+    brandId,
   });
 
   const filteredProducts = products;
@@ -200,22 +232,34 @@ const Index = () => {
               marginTop: '-1.25rem',
             }}
           >
-            <SearchBar value={filters.search} onChange={handleSearchChange} />
+            <SearchBar value={search} onChange={handleSearchChange} />
           </div>
 
-          {/* Category strip */}
-          <div
-            style={{
-              background: 'white',
-              borderBottom: '1px solid #f3f4f6',
-              padding: '0.5rem 1rem',
-              flexShrink: 0,
-            }}
-          >
-            <CategoryChips
-              categories={categories}
-              activeCategoryId={filters.categoryId}
-              onCategoryChange={handleCategoryChange}
+          {/* Brand + category filter strips */}
+          <div className="cl-filter-panel">
+            <FilterTiles
+              title={t('brands')}
+              allLabel={t('allBrands')}
+              options={brands.map((b) => ({ id: b.id, label: b.name, imageUrl: b.logoUrl }))}
+              activeId={brandId}
+              onChange={handleBrandChange}
+              icon={Tag}
+              altTemplate={t('brandImageOf')}
+              loading={brandsLoading}
+            />
+            <FilterTiles
+              title={t('categories')}
+              allLabel={t('allCategories')}
+              options={categories.map((c) => ({
+                id: c.id,
+                label: c.name,
+                imageUrl: c.imageUrl,
+              }))}
+              activeId={categoryId}
+              onChange={handleCategoryChange}
+              icon={Package}
+              altTemplate={t('categoryImageOf')}
+              loading={categoriesLoading}
             />
           </div>
 

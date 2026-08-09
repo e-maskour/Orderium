@@ -94,7 +94,7 @@ const ReportKpiCards: React.FC<ReportKpiCardsProps> = ({ cards }) => {
                 style={{
                   position: 'absolute',
                   top: '-1rem',
-                  right: '-1rem',
+                  insetInlineEnd: '-1rem',
                   width: '4rem',
                   height: '4rem',
                   borderRadius: '9999px',
@@ -119,7 +119,7 @@ const ReportKpiCards: React.FC<ReportKpiCardsProps> = ({ cards }) => {
                   }}
                 >
                   <i
-                    className={`pi ${iconClass}`}
+                    className={`pi ${iconClass} analytics-kpi__icon`}
                     style={{ fontSize: '0.875rem', color: style.text }}
                   />
                 </div>

@@ -13,6 +13,7 @@ import { BulkService } from './bulk.service';
 import { ApiRes } from '../../common/api-response';
 import { BULK } from '../../common/response-codes';
 import { BulkExportEntity } from '../../common/queues/queue.constants';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 class StartExportDto {
   supplierId?: number;
@@ -32,6 +33,7 @@ export class BulkController {
     description: 'Export job queued',
     schema: { example: { jobId: 'abc123' } },
   })
+  @RequirePermission('bulk.export', 'orders.export')
   async exportOrders(@Body() dto: StartExportDto) {
     const jobId = await this.bulkService.enqueueXlsxExport(
       'orders' as BulkExportEntity,
@@ -47,6 +49,7 @@ export class BulkController {
     description: 'Export job queued',
     schema: { example: { jobId: 'abc123' } },
   })
+  @RequirePermission('bulk.export', 'invoices.export')
   async exportInvoices(@Body() dto: StartExportDto) {
     const jobId = await this.bulkService.enqueueXlsxExport(
       'invoices' as BulkExportEntity,
@@ -62,6 +65,7 @@ export class BulkController {
     description: 'Export job queued',
     schema: { example: { jobId: 'abc123' } },
   })
+  @RequirePermission('bulk.export', 'products.export')
   async exportProducts() {
     const jobId = await this.bulkService.enqueueXlsxExport(
       'products' as BulkExportEntity,
@@ -85,6 +89,7 @@ export class BulkController {
       },
     },
   })
+  @RequirePermission('bulk.export')
   async getJobStatus(@Param('jobId') jobId: string) {
     const jobStatus = await this.bulkService.getJobStatus(jobId);
     if (jobStatus.status === 'not-found') {

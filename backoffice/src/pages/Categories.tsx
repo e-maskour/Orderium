@@ -1,8 +1,19 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
+import { ImageUpload } from '../components/ImageUpload';
 import { PageHeader } from '../components/PageHeader';
-import { FolderTree, Plus, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import {
+  FolderTree,
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronRight,
+  ChevronDown,
+  Search,
+  X,
+  Image as ImageIcon,
+} from 'lucide-react';
 import {
   categoriesService,
   Category,
@@ -24,6 +35,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -32,18 +44,76 @@ export default function Categories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
+  const [quickSearch, setQuickSearch] = useState('');
+  const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  useEffect(() => {
+    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    quickSearchDebounceRef.current = setTimeout(() => {
+      setAppliedSearch(quickSearch);
+      setCurrentPage(1);
+    }, 500);
+    return () => {
+      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    };
+  }, [quickSearch]);
+
   const [formData, setFormData] = useState<CreateCategoryDTO>({
     name: '',
     description: '',
     type: 'product',
     parentId: undefined,
     isActive: true,
+    imageUrl: null,
+    imagePublicId: null,
   });
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ['categories', 'product'],
-    queryFn: () => categoriesService.getHierarchy('product'),
+  const { data: categoriesPage, isLoading } = useQuery({
+    queryKey: ['categories', 'paginated', 'product', appliedSearch, currentPage, pageSize],
+    queryFn: () =>
+      categoriesService.getPaginated({
+        search: appliedSearch,
+        type: 'product',
+        page: currentPage,
+        limit: pageSize,
+      }),
+    placeholderData: keepPreviousData,
   });
+
+  const categories = categoriesPage?.categories ?? [];
+  const pagination = categoriesPage?.pagination ?? {
+    page: currentPage,
+    limit: pageSize,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  };
+  const totalCount = pagination.total;
+
+  // A deletion can empty the last page — fall back onto the last page that still exists.
+  useEffect(() => {
+    if (currentPage > pagination.totalPages) setCurrentPage(pagination.totalPages);
+  }, [pagination.totalPages, currentPage]);
+
+  // Matches can sit deep in a subtree, so reveal them instead of making the user hunt.
+  useEffect(() => {
+    if (!appliedSearch) return;
+    const expandable = new Set<number>();
+    const collect = (list: Category[]) => {
+      list.forEach((category) => {
+        if (category.children?.length) {
+          expandable.add(category.id);
+          collect(category.children);
+        }
+      });
+    };
+    collect(categoriesPage?.categories ?? []);
+    setExpandedCategories(expandable);
+  }, [appliedSearch, categoriesPage]);
 
   const { data: allCategories = [] } = useQuery({
     queryKey: ['categories', 'all', 'product'],
@@ -94,6 +164,8 @@ export default function Categories() {
       type: 'product',
       parentId,
       isActive: true,
+      imageUrl: null,
+      imagePublicId: null,
     });
     setShowModal(true);
   };
@@ -106,6 +178,8 @@ export default function Categories() {
       type: category.type,
       parentId: category.parentId,
       isActive: category.isActive,
+      imageUrl: category.imageUrl ?? null,
+      imagePublicId: category.imagePublicId ?? null,
     });
     setShowModal(true);
   };
@@ -119,6 +193,8 @@ export default function Categories() {
       type: 'product',
       parentId: undefined,
       isActive: true,
+      imageUrl: null,
+      imagePublicId: null,
     });
   };
 
@@ -185,6 +261,37 @@ export default function Categories() {
             <div style={{ width: '1.5rem' }} />
           )}
 
+          {category.imageUrl ? (
+            <img
+              src={category.imageUrl}
+              alt=""
+              style={{
+                width: '2rem',
+                height: '2rem',
+                borderRadius: '0.375rem',
+                objectFit: 'cover',
+                border: '1px solid #e2e8f0',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '2rem',
+                height: '2rem',
+                borderRadius: '0.375rem',
+                background: '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+              title={t('categoryImage')}
+            >
+              <ImageIcon style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
+            </div>
+          )}
+
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <h4 style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{category.name}</h4>
@@ -248,6 +355,92 @@ export default function Categories() {
           }
         />
 
+        {/* Quick Search Bar */}
+        <div
+          className="page-quick-search"
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+            marginBottom: '1rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+              flex: 1,
+              minWidth: '12rem',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t('search')}
+            </span>
+            <div style={{ position: 'relative' }}>
+              <Search
+                style={{
+                  position: 'absolute',
+                  insetInlineStart: '0.875rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '1rem',
+                  height: '1rem',
+                  color: '#94a3b8',
+                  pointerEvents: 'none',
+                }}
+              />
+              <InputText
+                type="text"
+                value={quickSearch}
+                onChange={(e) => setQuickSearch(e.target.value)}
+                placeholder={t('searchCategories')}
+                style={{
+                  width: '100%',
+                  height: '3rem',
+                  fontSize: '0.875rem',
+                  paddingInlineStart: '2.5rem',
+                  paddingInlineEnd: quickSearch ? '2.5rem' : '0.875rem',
+                  borderRadius: '0.625rem',
+                  border: '1.5px solid #e2e8f0',
+                  background: '#ffffff',
+                }}
+              />
+              {quickSearch && (
+                <button
+                  type="button"
+                  onClick={() => setQuickSearch('')}
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#94a3b8',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Categories List */}
         <div
           style={{
@@ -284,11 +477,26 @@ export default function Categories() {
                 }}
               />
               <p style={{ color: '#64748b' }}>
-                {t('noCategoriesFound')}. {t('createFirstCategory')}.
+                {t('noCategoriesFound')}.{appliedSearch ? '' : ` ${t('createFirstCategory')}.`}
               </p>
             </div>
           ) : (
             <div>{categories.map((category) => renderCategory(category))}</div>
+          )}
+
+          {totalCount > 0 && (
+            <Paginator
+              first={(currentPage - 1) * pageSize}
+              rows={pageSize}
+              totalRecords={totalCount}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              onPageChange={(e: PaginatorPageChangeEvent) => {
+                setCurrentPage(Math.floor(e.first / e.rows) + 1);
+                setPageSize(e.rows);
+              }}
+              template="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+              currentPageReportTemplate={t('pageReportTemplate')}
+            />
           )}
         </div>
 
@@ -358,7 +566,7 @@ export default function Categories() {
                   })
                 }
                 options={[
-                  { label: 'No Parent (Root Category)', value: '' },
+                  { label: t('noParentRootCategory'), value: '' },
                   ...allCategories
                     .filter((cat) => !editingCategory || cat.id !== editingCategory.id)
                     .map((cat) => ({ label: cat.name, value: cat.id })),
@@ -367,6 +575,39 @@ export default function Categories() {
                 optionValue="value"
                 style={{ width: '100%' }}
               />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('categoryImage')}
+              </label>
+              <ImageUpload
+                folder="categories"
+                maxSizeMB={5}
+                currentImage={formData.imageUrl ?? undefined}
+                currentPublicId={formData.imagePublicId}
+                onImageUpload={(imageUrl, imagePublicId) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    imageUrl,
+                    imagePublicId: imagePublicId ?? null,
+                  }))
+                }
+                onImageRemove={() =>
+                  setFormData((prev) => ({ ...prev, imageUrl: null, imagePublicId: null }))
+                }
+              />
+              <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
+                {t('imageShownInClientPortal')}
+              </p>
             </div>
 
             <div>

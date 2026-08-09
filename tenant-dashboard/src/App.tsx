@@ -9,6 +9,8 @@ import { TenantsList } from './pages/TenantsList';
 import { TenantDetail } from './pages/TenantDetail';
 import { CreateTenant } from './pages/CreateTenant';
 import { MigrationManager } from './pages/MigrationManager';
+import { Payments } from './pages/Payments';
+import { PaymentDetail } from './pages/PaymentDetail';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +52,8 @@ export default function App() {
             <Route path="tenants" element={<TenantsList />} />
             <Route path="tenants/new" element={<CreateTenant />} />
             <Route path="tenants/:id" element={<TenantDetail />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="payments/:id" element={<PaymentDetail />} />
             <Route path="migrations" element={<MigrationManager />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

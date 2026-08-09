@@ -380,14 +380,14 @@ export default function InventorySettings() {
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <OptionCard
                       label={t('incrementOnInvoiceAchat')}
-                      sublabel="Facture Achat"
+                      sublabel={t('docTypePurchaseInvoice')}
                       selected={incTrigger === 'invoice'}
                       onClick={() => setIncTrigger('invoice')}
                       accentColor="#22c55e"
                     />
                     <OptionCard
                       label={t('incrementOnOrderAchat')}
-                      sublabel="Bon d'achat"
+                      sublabel={t('docTypePurchaseOrder')}
                       selected={incTrigger === 'order'}
                       onClick={() => setIncTrigger('order')}
                       accentColor="#22c55e"
@@ -417,14 +417,14 @@ export default function InventorySettings() {
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <OptionCard
                       label={t('decrementOnInvoiceVente')}
-                      sublabel="Facture Vente"
+                      sublabel={t('docTypeSalesInvoice')}
                       selected={decTrigger === 'invoice'}
                       onClick={() => setDecTrigger('invoice')}
                       accentColor="var(--status-unpaid-text)"
                     />
                     <OptionCard
                       label={t('decrementOnOrderVente')}
-                      sublabel="Bon de livraison"
+                      sublabel={t('docTypeDeliveryNote')}
                       selected={decTrigger === 'order'}
                       onClick={() => setDecTrigger('order')}
                       accentColor="var(--status-unpaid-text)"

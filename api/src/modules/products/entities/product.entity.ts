@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { Warehouse } from '../../inventory/entities/warehouse.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Brand } from '../../brands/entities/brand.entity';
 import { UnitOfMeasure } from '../../inventory/entities/unit-of-measure.entity';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
@@ -19,6 +20,7 @@ import { numericTransformer } from '../../../common/transformers/numeric.transfo
 @Index(['name'])
 @Index(['code'])
 @Index(['isEnabled', 'name'])
+@Index(['brandId'])
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
@@ -124,6 +126,17 @@ export class Product {
   @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse;
+
+  /** Optional brand — a product may have zero or one brand */
+  @Column({ type: 'int', nullable: true })
+  brandId: number | null;
+
+  @ManyToOne(() => Brand, (brand) => brand.products, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'brandId' })
+  brand: Brand | null;
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable({

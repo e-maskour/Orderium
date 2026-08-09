@@ -106,4 +106,7 @@ export default {
   selected: 'محدد',
   noPreview: 'لا تتوفر معاينة',
   openInNewTab: 'فتح في علامة تبويب جديدة',
+
+  confirmMoveToTrash: 'نقل إلى سلة المهملات؟',
+  confirmDeletePermanently: 'حذف نهائي؟',
 };

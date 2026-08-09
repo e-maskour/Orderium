@@ -143,4 +143,15 @@ export default {
   viewHistory: 'عرض السجل',
   paymentsCount: 'دفعة/دفعات',
   paymentRecorded: 'تم تسجيل الدفعة بنجاح',
+  // Merge (consolidated recap of several orders)
+  mergeOrders: 'دمج',
+  mergeOrdersTitle: 'ملخص الطلبات',
+  mergeDesignation: 'التسمية',
+  mergePrintPdf: 'طباعة PDF',
+  mergeOrderCount: 'عدد الطلبات',
+  mergeTotalQuantity: 'إجمالي الكمية',
+  mergeGrandTotal: 'المجموع الإجمالي',
+  mergeNoItems: 'لا توجد عناصر',
+  mergeMissingOrders: 'طلب/طلبات غير موجودة تم تجاهلها',
+  mergeLoadError: 'تعذر تحميل الملخص',
 };

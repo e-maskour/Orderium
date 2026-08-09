@@ -4,7 +4,9 @@ import {
   IsBoolean,
   IsNumber,
   IsIn,
+  MaxLength,
 } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
   @IsString()
@@ -25,6 +27,19 @@ export class CreateCategoryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Category image URL' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Category image public ID from the storage provider',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  imagePublicId?: string | null;
 }
 
 export class UpdateCategoryDto {
@@ -48,4 +63,17 @@ export class UpdateCategoryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Category image URL' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Category image public ID from the storage provider',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  imagePublicId?: string | null;
 }

@@ -393,9 +393,9 @@ export default function DocumentListPage({
       }
       setShareToken(null);
       setShareTokenExpiry(null);
-      toastSuccess('Lien révoqué avec succès');
+      toastSuccess(t('shareLinkRevoked'));
     } catch (error: any) {
-      toastError(error.message || 'Erreur lors de la révocation du lien');
+      toastError(error.message || t('shareLinkRevokeError'));
     }
   };
 

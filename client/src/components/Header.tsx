@@ -3,7 +3,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
-import { ShoppingBag, ClipboardList, User } from 'lucide-react';
+import { ShoppingBag, ClipboardList, User, Headset } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import orderiumLogo from '../assets/logo-client.svg';
 
@@ -85,6 +85,26 @@ export const Header = ({ onCartClick }: HeaderProps) => {
             {t('myOrders')}
           </Link>
           <Link
+            to="/support"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.875rem',
+              borderRadius: '0.625rem',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              color: '#374151',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            <Headset size={16} />
+            {t('support')}
+          </Link>
+          <Link
             to="/profile"
             style={{
               display: 'flex',
@@ -108,6 +128,25 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
         {/* Right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          {/* Support — icon only where the desktop nav is hidden */}
+          <Link
+            to="/support"
+            aria-label={t('support')}
+            title={t('support')}
+            className="lg:hidden"
+            style={{
+              width: '2.75rem',
+              height: '2.75rem',
+              borderRadius: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <Headset size={20} color="#6b7280" />
+          </Link>
           {user?.customerId && <NotificationBell userId={user.id} />}
           <LanguageToggle />
 

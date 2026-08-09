@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Clock } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   daysRemaining: number;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function TrialBanner({ daysRemaining, trialEndsAt }: Props) {
+  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed) return null;
@@ -26,7 +28,7 @@ export function TrialBanner({ daysRemaining, trialEndsAt }: Props) {
 
   const message =
     daysRemaining === 0
-      ? 'Your trial ends today! Contact us to activate your subscription.'
+      ? t('trialEndsToday')
       : `Your trial ends in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}${endsText ? ` (${endsText})` : ''}. Contact us to upgrade.`;
 
   return (

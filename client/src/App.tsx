@@ -10,14 +10,18 @@ import { CartProvider } from '@/context/CartContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { PushNotificationProvider } from '@/components/PushNotificationProvider';
 import { TenantStatusGuard } from '@/components/TenantStatusGuard';
-import Index from './pages/Index';
+import Home from './pages/Home';
+import { SHOP_PATH } from '@/common/routes';
 
+const Shop = lazy(() => import('./pages/Index'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Success = lazy(() => import('./pages/Success'));
 const Login = lazy(() => import('./pages/Login'));
+const AccountStatus = lazy(() => import('./pages/AccountStatus'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Support = lazy(() => import('./pages/Support'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -73,11 +77,20 @@ const App = () => (
                   <Suspense fallback={<LazyFallback />}>
                     <Routes>
                       <Route path="/login" element={<Login />} />
+                      <Route path="/account-status" element={<AccountStatus />} />
                       <Route
                         path="/"
                         element={
                           <ProtectedRoute>
-                            <Index />
+                            <Home />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path={SHOP_PATH}
+                        element={
+                          <ProtectedRoute>
+                            <Shop />
                           </ProtectedRoute>
                         }
                       />
@@ -102,6 +115,14 @@ const App = () => (
                         element={
                           <ProtectedRoute>
                             <Settings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/support"
+                        element={
+                          <ProtectedRoute>
+                            <Support />
                           </ProtectedRoute>
                         }
                       />

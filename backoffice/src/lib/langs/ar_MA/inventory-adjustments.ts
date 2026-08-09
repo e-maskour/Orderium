@@ -74,4 +74,17 @@ export default {
   adjNoProductsMatchSearch: 'لا توجد منتجات تطابق بحثك',
   adjLoadMoreProducts: 'تحميل المزيد',
   adjTotalProducts: 'منتج في هذا المستودع',
+
+  // ─── Stock movements (previously untranslated) ────────────
+  confirmValidateMovement: 'هل تؤكد اعتماد هذه الحركة؟',
+  dateScheduled: 'التاريخ المقرر',
+  dateDone: 'تاريخ التنفيذ',
+  source: 'المصدر',
+  destination: 'الوجهة',
+  origin: 'المنشأ',
+  partner: 'الشريك',
+  lotNumber: 'رقم الدفعة',
+  serialNumber: 'الرقم التسلسلي',
+
+  adjustmentLinesLoadError: ': تعذّر تحميل السطور',
 };

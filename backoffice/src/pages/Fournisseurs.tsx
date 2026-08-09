@@ -293,7 +293,7 @@ export default function Fournisseurs() {
             loading={isLoading}
             totalCount={suppliers.length}
             countLabel={t('suppliers')}
-            emptyMessage="Aucun fournisseur trouvé"
+            emptyMessage={t('noSupplierFound')}
             config={{
               topLeft: (s: Partner) => s.name,
               topRight: (s: Partner) => s.phoneNumber || '',
@@ -328,7 +328,7 @@ export default function Fournisseurs() {
               border: '1px solid #e2e8f0',
             }}
           >
-            <EmptyState icon={Users} title="Aucun fournisseur trouvé" />
+            <EmptyState icon={Users} title={t('noSupplierFound')} />
           </div>
         ) : (
           <div
@@ -370,7 +370,7 @@ export default function Fournisseurs() {
               rows={25}
               rowsPerPageOptions={[10, 25, 50, 100]}
               removableSort
-              emptyMessage={<EmptyState icon={Users} title="Aucun fournisseur trouvé" compact />}
+              emptyMessage={<EmptyState icon={Users} title={t('noSupplierFound')} compact />}
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
               currentPageReportTemplate={t('pageReportTemplate')}
             >

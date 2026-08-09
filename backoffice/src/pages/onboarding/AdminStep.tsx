@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { UserCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { CreateAdminPayload } from '../../api/onboarding';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../lib/i18n';
 
 interface AdminStepProps {
   onNext: (data: CreateAdminPayload) => Promise<void>;
@@ -9,19 +11,19 @@ interface AdminStepProps {
 
 function getPasswordStrength(password: string): {
   level: 0 | 1 | 2 | 3;
-  label: string;
+  labelKey: TranslationKey | null;
   color: string;
 } {
-  if (password.length === 0) return { level: 0, label: '', color: '#e2e8f0' };
+  if (password.length === 0) return { level: 0, labelKey: null, color: '#e2e8f0' };
   let score = 0;
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
   if (/\d/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 2) return { level: 1, label: 'Weak', color: '#ef4444' };
-  if (score <= 3) return { level: 2, label: 'Medium', color: '#f59e0b' };
-  return { level: 3, label: 'Strong', color: '#10b981' };
+  if (score <= 2) return { level: 1, labelKey: 'passwordWeak', color: '#ef4444' };
+  if (score <= 3) return { level: 2, labelKey: 'passwordMedium', color: '#f59e0b' };
+  return { level: 3, labelKey: 'passwordStrong', color: '#10b981' };
 }
 
 const inputStyle: React.CSSProperties = {
@@ -45,6 +47,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function AdminStep({ onNext, onBack }: AdminStepProps) {
+  const { t } = useLanguage();
   const [form, setForm] = useState<CreateAdminPayload>({
     fullName: '',
     email: '',
@@ -66,17 +69,17 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!form.fullName.trim()) errs.fullName = 'Full name is required';
+    if (!form.fullName.trim()) errs.fullName = t('onboardingErrFullNameRequired');
     if (form.email && form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      errs.email = 'Enter a valid email';
+      errs.email = t('onboardingErrInvalidEmail');
     const normalizedPhone = form.phoneNumber.replace(/[\s\-().]/g, '');
-    if (!normalizedPhone) errs.phoneNumber = 'Phone number is required';
+    if (!normalizedPhone) errs.phoneNumber = t('onboardingErrPhoneRequired');
     else if (!/^\+?[0-9]{8,15}$/.test(normalizedPhone))
-      errs.phoneNumber = 'Use digits only, e.g. +212600000000';
-    if (!form.password) errs.password = 'Password is required';
-    else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
-    if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
-    else if (form.password !== confirmPassword) errs.confirmPassword = 'Passwords do not match';
+      errs.phoneNumber = t('onboardingErrPhoneFormat');
+    if (!form.password) errs.password = t('onboardingErrPasswordRequired');
+    else if (form.password.length < 8) errs.password = t('onboardingErrPasswordTooShort');
+    if (!confirmPassword) errs.confirmPassword = t('onboardingErrConfirmPassword');
+    else if (form.password !== confirmPassword) errs.confirmPassword = t('passwordsDoNotMatch');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -121,20 +124,20 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
           <UserCircle size={20} style={{ color: '#235ae4' }} />
         </div>
         <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
-          Create your super-admin account. This will be your login to manage the platform.
+          {t('onboardingAdminIntro')}
         </p>
       </div>
 
       {/* Full Name */}
       <div style={{ marginBottom: '0.75rem' }}>
         <label style={labelStyle}>
-          Full Name <span style={{ color: '#ef4444' }}>*</span>
+          {t('fullName')} <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <input
           style={focusStyle('fullName')}
           value={form.fullName}
           onChange={(e) => set('fullName', e.target.value)}
-          placeholder="Ahmed Benali"
+          placeholder={t('onboardingFullNamePlaceholder')}
           autoComplete="name"
           onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
           onBlur={(e) =>
@@ -148,12 +151,12 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
 
       {/* Email */}
       <div style={{ marginBottom: '0.75rem' }}>
-        <label style={labelStyle}>Email Address</label>
+        <label style={labelStyle}>{t('onboardingEmailAddress')}</label>
         <input
           style={focusStyle('email')}
           value={form.email}
           onChange={(e) => set('email', e.target.value)}
-          placeholder="ahmed@company.com"
+          placeholder={t('onboardingAdminEmailPlaceholder')}
           type="email"
           autoComplete="email"
           onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
@@ -167,7 +170,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
       {/* Phone */}
       <div style={{ marginBottom: '0.75rem' }}>
         <label style={labelStyle}>
-          Phone Number <span style={{ color: '#ef4444' }}>*</span>
+          {t('phoneNumber')} <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <input
           style={focusStyle('phoneNumber')}
@@ -182,7 +185,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
           }
         />
         <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-          This will be your login username
+          {t('onboardingUsernameHint')}
         </div>
         {errors.phoneNumber && (
           <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{errors.phoneNumber}</span>
@@ -192,14 +195,14 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
       {/* Password */}
       <div style={{ marginBottom: '0.5rem' }}>
         <label style={labelStyle}>
-          Password <span style={{ color: '#ef4444' }}>*</span>
+          {t('password')} <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <div style={{ position: 'relative' }}>
           <input
             style={focusStyle('password')}
             value={form.password}
             onChange={(e) => set('password', e.target.value)}
-            placeholder="At least 8 characters"
+            placeholder={t('onboardingPasswordPlaceholder')}
             type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
             onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
@@ -245,7 +248,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
               ))}
             </div>
             <span style={{ fontSize: '0.75rem', color: strength.color, fontWeight: 600 }}>
-              {strength.label}
+              {strength.labelKey ? t(strength.labelKey) : ''}
             </span>
           </div>
         )}
@@ -266,7 +269,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
       {/* Confirm Password */}
       <div style={{ marginBottom: '0.75rem' }}>
         <label style={labelStyle}>
-          Confirm Password <span style={{ color: '#ef4444' }}>*</span>
+          {t('confirmPassword')} <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <div style={{ position: 'relative' }}>
           <input
@@ -280,7 +283,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
               setConfirmPassword(e.target.value);
               if (errors.confirmPassword) setErrors((p) => ({ ...p, confirmPassword: '' }));
             }}
-            placeholder="Re-enter your password"
+            placeholder={t('onboardingConfirmPasswordPlaceholder')}
             type={showConfirm ? 'text' : 'password'}
             autoComplete="new-password"
             onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
@@ -330,7 +333,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
             cursor: isLoading ? 'not-allowed' : 'pointer',
           }}
         >
-          ← Back
+          ← {t('back')}
         </button>
         <button
           type="submit"
@@ -354,10 +357,10 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
           {isLoading ? (
             <>
               <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-              Creating account...
+              {t('onboardingCreatingAccount')}
             </>
           ) : (
-            'Create Admin Account →'
+            t('onboardingCreateAdminAccount')
           )}
         </button>
       </div>

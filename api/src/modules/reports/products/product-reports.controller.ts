@@ -5,6 +5,7 @@ import { ApiRes } from '../../../common/api-response';
 import { RPT } from '../../../common/response-codes';
 import { ProductReportsService } from './product-reports.service';
 import { ReportFilterDto } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Products')
 @Controller('reports/products')
@@ -14,6 +15,7 @@ export class ProductReportsController {
   @Get('performance')
   @ApiOperation({ summary: 'Product performance — revenue and qty sold' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_products.view')
   async getProductPerformance(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.PRODUCTS_PERFORMANCE,
@@ -24,6 +26,7 @@ export class ProductReportsController {
   @Get('margin')
   @ApiOperation({ summary: 'Margin analysis — revenue minus cost per product' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_products.view')
   async getMarginAnalysis(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.PRODUCTS_MARGIN,
@@ -34,6 +37,7 @@ export class ProductReportsController {
   @Get('never-sold')
   @ApiOperation({ summary: 'Products never sold in the selected period' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_products.view')
   async getNeverSoldProducts(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.PRODUCTS_NEVER_SOLD,
@@ -47,6 +51,7 @@ export class ProductReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export product performance as XLSX' })
+  @RequirePermission('reports_products.export')
   async getProductPerformanceXlsx(
     @Query() filter: ReportFilterDto,
     @Res() res: Response,

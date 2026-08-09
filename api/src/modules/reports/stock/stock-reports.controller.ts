@@ -8,6 +8,7 @@ import {
   StockReportFilterDto,
   ReportFilterDto,
 } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Stock')
 @Controller('reports/stock')
@@ -17,6 +18,7 @@ export class StockReportsController {
   @Get('valuation')
   @ApiOperation({ summary: 'Stock valuation — stock × cost per product' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_stock.view')
   async getStockValuation(@Query() filter: StockReportFilterDto) {
     return ApiRes(
       RPT.STOCK_VALUATION,
@@ -29,6 +31,7 @@ export class StockReportsController {
     summary: 'Low stock alerts (available qty <= alert threshold)',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_stock.view')
   async getLowStock(@Query() filter: StockReportFilterDto) {
     return ApiRes(RPT.STOCK_LOW, await this.service.getLowStock(filter));
   }
@@ -36,6 +39,7 @@ export class StockReportsController {
   @Get('movements-journal')
   @ApiOperation({ summary: 'Stock movements journal (paginated)' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_stock.view')
   async getMovementsJournal(@Query() filter: StockReportFilterDto) {
     return ApiRes(
       RPT.STOCK_MOVEMENTS,
@@ -48,6 +52,7 @@ export class StockReportsController {
     summary: 'Slow / dead stock — products with no movement in period',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_stock.view')
   async getSlowDeadStock(@Query() filter: StockReportFilterDto) {
     return ApiRes(
       RPT.STOCK_SLOW_DEAD,
@@ -58,6 +63,7 @@ export class StockReportsController {
   @Get('by-warehouse')
   @ApiOperation({ summary: 'Stock overview grouped by warehouse' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_stock.view')
   async getStockByWarehouse(@Query() filter: StockReportFilterDto) {
     return ApiRes(
       RPT.STOCK_BY_WAREHOUSE,
@@ -71,6 +77,7 @@ export class StockReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export stock valuation as XLSX' })
+  @RequirePermission('reports_stock.export')
   async getStockValuationXlsx(
     @Query() filter: StockReportFilterDto,
     @Res() res: Response,

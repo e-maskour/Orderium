@@ -30,6 +30,7 @@ import { UpdateNodeDto } from './dto/update-node.dto';
 import { MoveNodeDto } from './dto/move-node.dto';
 import { CreateShareDto } from './dto/create-share.dto';
 import { SearchDriveDto } from './dto/search-drive.dto';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Drive')
 @Controller('drive')
@@ -43,6 +44,7 @@ export class DriveController {
   @Get('stats')
   @ApiOperation({ summary: 'Get drive statistics' })
   @ApiResponse({ status: 200, description: 'Drive statistics retrieved' })
+  @RequirePermission('drive.view')
   async getStats(@Request() req: any) {
     const data = await this.driveService.getStats(
       req.user.id,
@@ -58,6 +60,7 @@ export class DriveController {
   @Get('search')
   @ApiOperation({ summary: 'Search drive nodes' })
   @ApiResponse({ status: 200, description: 'Search results retrieved' })
+  @RequirePermission('drive.view')
   async search(@Query() dto: SearchDriveDto, @Request() req: any) {
     const { nodes, total } = await this.driveService.search(
       dto,
@@ -78,6 +81,7 @@ export class DriveController {
   @Get('browse')
   @ApiOperation({ summary: 'Browse raw MinIO storage at a given prefix' })
   @ApiResponse({ status: 200, description: 'Storage contents listed' })
+  @RequirePermission('drive.view')
   async browseStorage(@Query('prefix') prefix = '') {
     const data = await this.driveService.browseStorage(prefix);
     return ApiRes(DRV.BROWSE_LISTED, data);
@@ -88,6 +92,7 @@ export class DriveController {
     summary: 'Get a presigned download URL for a raw storage key',
   })
   @ApiResponse({ status: 200, description: 'Presigned URL generated' })
+  @RequirePermission('drive.view')
   async getRawUrl(@Query('key') key: string) {
     const data = await this.driveService.getRawPresignedUrl(key);
     return ApiRes(DRV.RAW_URL, data);
@@ -100,6 +105,7 @@ export class DriveController {
   @Get('trash')
   @ApiOperation({ summary: 'List trash items' })
   @ApiResponse({ status: 200, description: 'Trash items retrieved' })
+  @RequirePermission('drive.view')
   async listTrash(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -123,6 +129,7 @@ export class DriveController {
   @Get('shared-with-me')
   @ApiOperation({ summary: 'Get shared with me items' })
   @ApiResponse({ status: 200, description: 'Shared items retrieved' })
+  @RequirePermission('drive.view')
   async sharedWithMe(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -145,6 +152,7 @@ export class DriveController {
   @Get('tags')
   @ApiOperation({ summary: 'List available tags' })
   @ApiResponse({ status: 200, description: 'Tags retrieved' })
+  @RequirePermission('drive.view')
   async listTags() {
     const tags = await this.driveService.listTags();
     return ApiRes(DRV.TAGS_LISTED, tags);
@@ -157,6 +165,7 @@ export class DriveController {
   @Get('nodes')
   @ApiOperation({ summary: 'List root nodes' })
   @ApiResponse({ status: 200, description: 'Root nodes retrieved' })
+  @RequirePermission('drive.view')
   async listRoot(@Request() req: any) {
     const { nodes, total } = await this.driveService.listRoot(
       req.user.id,
@@ -168,6 +177,7 @@ export class DriveController {
   @Get('nodes/:id/children')
   @ApiOperation({ summary: 'List node children' })
   @ApiResponse({ status: 200, description: 'Child nodes retrieved' })
+  @RequirePermission('drive.view')
   async listChildren(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -183,6 +193,7 @@ export class DriveController {
   @Get('nodes/:id/shares')
   @ApiOperation({ summary: 'List node shares' })
   @ApiResponse({ status: 200, description: 'Shares retrieved' })
+  @RequirePermission('drive.view')
   async listShares(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -198,6 +209,7 @@ export class DriveController {
   @Get('nodes/:id/activity')
   @ApiOperation({ summary: 'List node activity' })
   @ApiResponse({ status: 200, description: 'Activity retrieved' })
+  @RequirePermission('drive.view')
   async listActivity(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -213,6 +225,7 @@ export class DriveController {
   @Get('nodes/:id')
   @ApiOperation({ summary: 'Get node details' })
   @ApiResponse({ status: 200, description: 'Node retrieved' })
+  @RequirePermission('drive.view')
   async getNode(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     const node = await this.driveService.getNode(
       id,
@@ -229,6 +242,7 @@ export class DriveController {
   @Post('folders')
   @ApiOperation({ summary: 'Create a folder' })
   @ApiResponse({ status: 201, description: 'Folder created' })
+  @RequirePermission('drive.upload')
   async createFolder(@Body() dto: CreateFolderDto, @Request() req: any) {
     const node = await this.driveService.createFolder(dto, req.user.id);
     return ApiRes(DRV.FOLDER_CREATED, node);
@@ -243,6 +257,7 @@ export class DriveController {
   @ApiOperation({ summary: 'Upload a file' })
   @ApiResponse({ status: 201, description: 'File uploaded' })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @RequirePermission('drive.upload')
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('parentNodeId') parentNodeId: string | undefined,
@@ -263,6 +278,7 @@ export class DriveController {
   @Patch('nodes/:id')
   @ApiOperation({ summary: 'Update node' })
   @ApiResponse({ status: 200, description: 'Node updated' })
+  @RequirePermission('drive.edit')
   async updateNode(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateNodeDto,
@@ -280,6 +296,7 @@ export class DriveController {
   @Patch('nodes/:id/move')
   @ApiOperation({ summary: 'Move node' })
   @ApiResponse({ status: 200, description: 'Node moved' })
+  @RequirePermission('drive.edit')
   async moveNode(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: MoveNodeDto,
@@ -297,6 +314,7 @@ export class DriveController {
   @Delete('nodes/:id')
   @ApiOperation({ summary: 'Move node to trash' })
   @ApiResponse({ status: 200, description: 'Node trashed' })
+  @RequirePermission('drive.delete')
   async trashNode(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     await this.driveService.trashNode(id, req.user.id, req.user.isAdmin);
     return ApiRes(DRV.NODE_TRASHED, null);
@@ -305,6 +323,7 @@ export class DriveController {
   @Post('nodes/:id/restore')
   @ApiOperation({ summary: 'Restore node from trash' })
   @ApiResponse({ status: 200, description: 'Node restored' })
+  @RequirePermission('drive.edit')
   async restoreNode(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -320,6 +339,7 @@ export class DriveController {
   @Delete('nodes/:id/permanent')
   @ApiOperation({ summary: 'Permanently delete node' })
   @ApiResponse({ status: 200, description: 'Node deleted' })
+  @RequirePermission('drive.delete')
   async permanentDelete(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -335,6 +355,7 @@ export class DriveController {
   @Post('nodes/:id/shares')
   @ApiOperation({ summary: 'Create share for node' })
   @ApiResponse({ status: 201, description: 'Share created' })
+  @RequirePermission('drive.share')
   async createShare(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateShareDto,
@@ -352,6 +373,7 @@ export class DriveController {
   @Patch('nodes/:id/shares/:shareId')
   @ApiOperation({ summary: 'Update share' })
   @ApiResponse({ status: 200, description: 'Share updated' })
+  @RequirePermission('drive.share')
   async updateShare(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('shareId', ParseUUIDPipe) shareId: string,
@@ -371,6 +393,7 @@ export class DriveController {
   @Delete('nodes/:id/shares/:shareId')
   @ApiOperation({ summary: 'Revoke share' })
   @ApiResponse({ status: 200, description: 'Share revoked' })
+  @RequirePermission('drive.share')
   async revokeShare(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('shareId', ParseUUIDPipe) shareId: string,
@@ -394,6 +417,7 @@ export class DriveController {
   @ApiOperation({ summary: 'Replace file' })
   @ApiResponse({ status: 200, description: 'File replaced' })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @RequirePermission('drive.upload')
   async replaceFile(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -411,6 +435,7 @@ export class DriveController {
   @Get('files/:id/download')
   @ApiOperation({ summary: 'Get file download URL' })
   @ApiResponse({ status: 200, description: 'Download URL generated' })
+  @RequirePermission('drive.view')
   async getDownloadUrl(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -426,6 +451,7 @@ export class DriveController {
   @Get('files/:id/versions')
   @ApiOperation({ summary: 'List file versions' })
   @ApiResponse({ status: 200, description: 'File versions retrieved' })
+  @RequirePermission('drive.view')
   async listVersions(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
@@ -445,6 +471,7 @@ export class DriveController {
   @Post('nodes/:id/tags/:tagId')
   @ApiOperation({ summary: 'Add tag to node' })
   @ApiResponse({ status: 200, description: 'Tag added' })
+  @RequirePermission('drive.edit')
   async addTag(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('tagId', ParseIntPipe) tagId: number,
@@ -457,6 +484,7 @@ export class DriveController {
   @Delete('nodes/:id/tags/:tagId')
   @ApiOperation({ summary: 'Remove tag from node' })
   @ApiResponse({ status: 200, description: 'Tag removed' })
+  @RequirePermission('drive.edit')
   async removeTag(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('tagId', ParseIntPipe) tagId: number,

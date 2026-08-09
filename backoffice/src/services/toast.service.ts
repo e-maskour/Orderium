@@ -175,6 +175,7 @@ const DELETION_ERROR_CODES = new Set([
   'CATEGORY_HAS_CHILDREN',
   'CATEGORY_HAS_PRODUCTS',
   'WAREHOUSE_HAS_PRODUCTS',
+  'BRAND_HAS_PRODUCTS',
 ]);
 
 export function toastDeleteError(error: unknown, t: (key: string) => string): void {

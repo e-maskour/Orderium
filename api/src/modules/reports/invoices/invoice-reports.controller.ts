@@ -9,6 +9,7 @@ import {
   ReportFilterDto,
   AgingReportFilterDto,
 } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Invoices')
 @Controller('reports/invoices')
@@ -20,6 +21,7 @@ export class InvoiceReportsController {
     summary: 'Sales invoice journal (journal des factures vente)',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_invoices.view')
   async getJournalVente(@Query() filter: InvoiceReportFilterDto) {
     return ApiRes(
       RPT.INVOICE_JOURNAL_VENTE,
@@ -32,6 +34,7 @@ export class InvoiceReportsController {
     summary: 'Purchase invoice journal (journal des factures achat)',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_invoices.view')
   async getJournalAchat(@Query() filter: InvoiceReportFilterDto) {
     return ApiRes(
       RPT.INVOICE_JOURNAL_ACHAT,
@@ -42,6 +45,7 @@ export class InvoiceReportsController {
   @Get('tva-summary')
   @ApiOperation({ summary: 'TVA summary by Moroccan rate (20/14/10/7/0%)' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_invoices.view')
   async getTvaSummary(@Query() filter: InvoiceReportFilterDto) {
     return ApiRes(
       RPT.INVOICE_TVA_SUMMARY,
@@ -52,6 +56,7 @@ export class InvoiceReportsController {
   @Get('outstanding')
   @ApiOperation({ summary: 'Outstanding (impayées) invoices' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_invoices.view')
   async getOutstanding(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.INVOICE_OUTSTANDING,
@@ -64,6 +69,7 @@ export class InvoiceReportsController {
     summary: 'Aging balance by partner (0 / 1-30 / 31-60 / 61-90 / +90 days)',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_invoices.view')
   async getAgingBalance(@Query() filter: AgingReportFilterDto) {
     return ApiRes(
       RPT.INVOICE_AGING,
@@ -79,6 +85,7 @@ export class InvoiceReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export sales journal as XLSX' })
+  @RequirePermission('reports_invoices.export')
   async getJournalVenteXlsx(
     @Query() filter: InvoiceReportFilterDto,
     @Res() res: Response,
@@ -97,6 +104,7 @@ export class InvoiceReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export TVA summary as XLSX' })
+  @RequirePermission('reports_invoices.export')
   async getTvaSummaryXlsx(
     @Query() filter: InvoiceReportFilterDto,
     @Res() res: Response,

@@ -19,6 +19,7 @@ import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
+import { MergeSummaryDto } from './dto/merge-summary.dto';
 import {
   OrderListResponseDto,
   OrderDetailResponseDto,
@@ -28,6 +29,7 @@ import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Orders')
 @PortalRoute()
@@ -40,6 +42,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Create a new order' })
   @ApiResponse({ status: 201, description: 'Order created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid order data' })
+  @RequirePermission('orders.create')
   async create(@Body() createOrderDto: CreateOrderDto) {
     const order = await this.ordersService.createOrder(createOrderDto);
     return ApiRes(ORD.CREATED, order);
@@ -51,6 +54,7 @@ export class OrdersController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'perPage', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
+  @RequirePermission('orders.view')
   async filterOrders(
     @Body() filterDto: FilterOrdersDto,
     @Query('page') page?: string,
@@ -108,6 +112,7 @@ export class OrdersController {
   @Post('filter/aggregates')
   @ApiOperation({ summary: 'Get financial aggregates for filtered orders' })
   @ApiResponse({ status: 200, description: 'Order aggregates retrieved' })
+  @RequirePermission('orders.view')
   async getFilterAggregates(
     @Body() filterDto: FilterOrdersDto,
     @Query('direction') direction?: string,
@@ -142,6 +147,18 @@ export class OrdersController {
     return ApiRes(ORD.AGGREGATES, aggregates);
   }
 
+  @Post('merge-summary')
+  @ApiOperation({
+    summary: 'Consolidated recap of several orders with all their items',
+  })
+  @ApiResponse({ status: 200, description: 'Merge summary retrieved' })
+  @ApiResponse({ status: 404, description: 'None of the orders were found' })
+  @RequirePermission('orders.view')
+  async getMergeSummary(@Body() dto: MergeSummaryDto) {
+    const summary = await this.ordersService.getMergeSummary(dto.ids);
+    return ApiRes(ORD.MERGE_SUMMARY, summary);
+  }
+
   @Get()
   @Serialize(OrderListResponseDto)
   @ApiOperation({ summary: 'Get all orders with filtering' })
@@ -151,6 +168,7 @@ export class OrdersController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
+  @RequirePermission('orders.view')
   async findAll(
     @Query('limit') limit?: string,
     @Query('originType') originType?: string,
@@ -198,6 +216,7 @@ export class OrdersController {
     status: 200,
     description: 'Order numbers retrieved successfully',
   })
+  @RequirePermission('orders.view')
   async searchOrderNumbers(
     @Query('search') search?: string,
     @Query('limit') limit?: string,
@@ -224,6 +243,7 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   @ApiResponse({ status: 400, description: 'Customer ID is required' })
+  @RequirePermission('orders.view')
   async findByNumber(
     @Param('orderNumber') orderNumber: string,
     @Query('customerId') customerId?: string,
@@ -261,6 +281,7 @@ export class OrdersController {
     status: 200,
     description: 'Customer orders retrieved successfully with pagination',
   })
+  @RequirePermission('orders.view')
   async findByCustomer(
     @Param('customerId', ParseIntPipe) customerId: number,
     @Query('page') page?: string,
@@ -303,6 +324,7 @@ export class OrdersController {
     description: 'Order analytics retrieved successfully',
   })
   @ApiResponse({ status: 400, description: 'Invalid direction parameter' })
+  @RequirePermission('orders.view')
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -317,6 +339,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Get order by ID' })
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.getOrderById(id);
     return ApiRes(ORD.DETAIL, order);
@@ -328,6 +351,7 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update a validated order' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: Partial<CreateOrderDto>,
@@ -344,6 +368,7 @@ export class OrdersController {
   })
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.edit')
   async updateValidated(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: Partial<CreateOrderDto>,
@@ -358,6 +383,7 @@ export class OrdersController {
   @Delete('bulk')
   @ApiOperation({ summary: 'Bulk delete orders' })
   @ApiResponse({ status: 200, description: 'Orders deleted successfully' })
+  @RequirePermission('orders.delete')
   async bulkRemove(@Body() dto: { ids: number[] }) {
     await this.ordersService.bulkRemove(dto.ids);
     return ApiRes(ORD.BULK_DELETED, null);
@@ -367,6 +393,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Delete an order' })
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.ordersService.remove(id);
     return ApiRes(ORD.DELETED, null);
@@ -379,6 +406,7 @@ export class OrdersController {
   })
   @ApiResponse({ status: 200, description: 'Order validated successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.validate')
   async validate(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.validate(id);
     return ApiRes(ORD.VALIDATED, order);
@@ -389,6 +417,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Devalidate an order (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Order devalidated successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.cancel')
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.devalidate(id);
     return ApiRes(ORD.DEVALIDATED, order);
@@ -402,6 +431,7 @@ export class OrdersController {
     description: 'Order marked as delivered successfully',
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.edit')
   async deliver(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.deliver(id);
     return ApiRes(ORD.DELIVERED, order);
@@ -412,6 +442,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Cancel an order' })
   @ApiResponse({ status: 200, description: 'Order cancelled successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.cancel')
   async cancel(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.cancel(id);
     return ApiRes(ORD.CANCELLED, order);
@@ -429,6 +460,7 @@ export class OrdersController {
   })
   @ApiResponse({ status: 400, description: 'Invalid status transition' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.edit')
   async changeStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { status: string },
@@ -445,6 +477,7 @@ export class OrdersController {
     description: 'Order marked as invoiced successfully',
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @RequirePermission('orders.edit')
   async markAsInvoiced(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { invoiceId: number },
@@ -456,6 +489,7 @@ export class OrdersController {
   @Post(':id/share')
   @ApiOperation({ summary: 'Generate a shareable public link for an order' })
   @ApiResponse({ status: 200, description: 'Share link generated' })
+  @RequirePermission('orders.export')
   async generateShareLink(@Param('id', ParseIntPipe) id: number) {
     const result = await this.ordersService.generateShareLink(id);
     return ApiRes(ORD.SHARED, result);
@@ -476,6 +510,7 @@ export class OrdersController {
   @Delete(':id/share')
   @ApiOperation({ summary: 'Revoke share link for an order' })
   @ApiResponse({ status: 200, description: 'Share link revoked' })
+  @RequirePermission('orders.export')
   async revokeShareLink(@Param('id', ParseIntPipe) id: number) {
     await this.ordersService.revokeShareLink(id);
     return ApiRes(ORD.SHARE_REVOKED, null);
@@ -489,6 +524,7 @@ export class OrdersController {
   @ApiOperation({
     summary: "Export orders (bon de livraison / bon d'achat) to XLSX file",
   })
+  @RequirePermission('orders.export')
   async exportToXlsx(
     @Query('supplierId') supplierId?: string,
     @Res() res?: Response,

@@ -15,8 +15,12 @@ export interface User {
   isActive: boolean;
   userType: UserType;
   status: 'pending' | 'approved' | 'rejected';
+  /** @deprecated Read `roles`; kept for one release. */
   roleId: number | null;
+  /** @deprecated Read `roles`; kept for one release. */
   role: Role | null;
+  /** Access groups held by this user — effective rights are their union. */
+  roles: Role[];
   dateCreated: string;
   dateUpdated: string;
 }
@@ -29,7 +33,7 @@ export interface CreateUserPayload {
   avatarUrl?: string;
   status?: UserStatus;
   userType: UserType;
-  roleId?: number;
+  roleIds?: number[];
   isAdmin?: boolean;
   isCustomer?: boolean;
 }
@@ -42,7 +46,7 @@ export interface UpdateUserPayload {
   avatarUrl?: string;
   status?: UserStatus;
   userType?: UserType;
-  roleId?: number | null;
+  roleIds?: number[];
   isAdmin?: boolean;
   isCustomer?: boolean;
 }

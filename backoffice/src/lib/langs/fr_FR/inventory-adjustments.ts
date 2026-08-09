@@ -75,4 +75,17 @@ export default {
   adjNoProductsMatchSearch: 'Aucun produit ne correspond à votre recherche',
   adjLoadMoreProducts: 'Charger plus',
   adjTotalProducts: 'produits dans cet entrepôt',
+
+  // ─── Stock movements (previously untranslated) ────────────
+  confirmValidateMovement: 'Confirmez-vous la validation de ce mouvement ?',
+  dateScheduled: 'Date prévue',
+  dateDone: 'Date effectuée',
+  source: 'Source',
+  destination: 'Destination',
+  origin: 'Origine',
+  partner: 'Partenaire',
+  lotNumber: 'N° de lot',
+  serialNumber: 'N° de série',
+
+  adjustmentLinesLoadError: ': impossible de charger les lignes',
 };

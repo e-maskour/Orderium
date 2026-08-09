@@ -5,6 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -62,11 +64,26 @@ export class Portal {
   @Column({ type: 'text', nullable: true })
   avatarUrl: string | null;
 
-  /** Assigned role (nullable) */
+  /**
+   * @deprecated Superseded by the many-to-many `roles` relation below, which
+   * mirrors Odoo's `res.users.groups_id`. Backfilled into `user_roles` by the
+   * access-control migration and kept for one release so that any straggling
+   * reader keeps working. Do not write to it.
+   */
   @Column({ type: 'int', nullable: true })
   roleId: number | null;
 
+  /** @deprecated See `roleId`. */
   @ManyToOne(() => Role, { nullable: true, onDelete: 'SET NULL', eager: false })
   @JoinColumn({ name: 'roleId' })
   role: Role | null;
+
+  /** Access groups held by this user. Effective rights are their union. */
+  @ManyToMany(() => Role, { eager: false })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
+  })
+  roles: Role[];
 }

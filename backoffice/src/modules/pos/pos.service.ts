@@ -12,12 +12,19 @@ class PosService {
    * Fetch paginated enabled, non-service products for POS display.
    */
   async getProducts(
-    params: { page?: number; perPage?: number; search?: string; categoryId?: number | null } = {},
+    params: {
+      page?: number;
+      perPage?: number;
+      search?: string;
+      categoryId?: number | null;
+      brandId?: number | null;
+    } = {},
   ): Promise<IPosProductsResponse> {
-    const { page = 1, perPage = 50, search, categoryId } = params;
+    const { page = 1, perPage = 50, search, categoryId, brandId } = params;
     const filterBody: Record<string, unknown> = {};
     if (search) filterBody.search = search;
     if (categoryId != null) filterBody.categoryIds = [categoryId];
+    if (brandId != null) filterBody.brandIds = [brandId];
 
     const response = await apiClient.post<any[]>(API_ROUTES.PRODUCTS.FILTER, filterBody, {
       params: { page, perPage },
@@ -38,6 +45,8 @@ class PosService {
       categories: Array.isArray(p.categories)
         ? p.categories.map((c: any) => ({ id: c.id, name: c.name }))
         : [],
+      brandId: p.brandId ?? null,
+      brand: p.brand ?? null,
       imageUrl: p.imageUrl,
       saleUnitOfMeasure: p.saleUnitOfMeasure,
     }));

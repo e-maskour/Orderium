@@ -12,6 +12,7 @@ import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Category } from '../categories/entities/category.entity';
+import { Brand } from '../brands/entities/brand.entity';
 import { UnitOfMeasure } from '../inventory/entities/unit-of-measure.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { ImportResultDto } from './dto/import-result.dto';
@@ -37,6 +38,24 @@ export class ProductsService {
     return this.tenantConnService.getRepository(Category);
   }
 
+  private get brandRepository(): Repository<Brand> {
+    return this.tenantConnService.getRepository(Brand);
+  }
+
+  /**
+   * Validates an optional brand reference.
+   * `null` clears the brand; `undefined` leaves it untouched.
+   */
+  private async assertBrandExists(
+    brandId: number | null | undefined,
+  ): Promise<void> {
+    if (brandId === null || brandId === undefined) return;
+    const exists = await this.brandRepository.existsBy({ id: brandId });
+    if (!exists) {
+      throw new NotFoundException(`Brand with ID ${brandId} not found`);
+    }
+  }
+
   private get unitOfMeasureRepository(): Repository<UnitOfMeasure> {
     return this.tenantConnService.getRepository(UnitOfMeasure);
   }
@@ -53,6 +72,8 @@ export class ProductsService {
 
   async create(dto: CreateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = dto;
+
+    await this.assertBrandExists(productData.brandId);
 
     if (!productData.saleUnitId || !productData.purchaseUnitId) {
       const unitUom = await this.unitOfMeasureRepository.findOne({
@@ -83,10 +104,12 @@ export class ProductsService {
     stockFilter?: 'negative' | 'zero' | 'positive',
     categoryIds?: number[],
     isService?: boolean,
+    brandIds?: number[],
   ): Promise<{ products: Product[]; count: number; totalCount: number }> {
     const qb = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.brand', 'brand')
       .leftJoinAndSelect('product.saleUnitOfMeasure', 'saleUnitOfMeasure')
       .leftJoinAndSelect(
         'product.purchaseUnitOfMeasure',
@@ -96,7 +119,7 @@ export class ProductsService {
 
     if (search) {
       qb.andWhere(
-        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search)',
+        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search OR brand.name ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -106,6 +129,8 @@ export class ProductsService {
     else if (stockFilter === 'positive') qb.andWhere('product.stock > 0');
     if (categoryIds?.length)
       qb.andWhere('categories.id IN (:...categoryIds)', { categoryIds });
+    if (brandIds?.length)
+      qb.andWhere('product.brandId IN (:...brandIds)', { brandIds });
     if (isService !== undefined)
       qb.andWhere('product.isService = :isService', { isService });
 
@@ -114,6 +139,40 @@ export class ProductsService {
       .take(perPage);
     const [products, totalCount] = await qb.getManyAndCount();
     return { products, count: products.length, totalCount };
+  }
+
+  /** Catalogue joins shared by the storefront discovery queries. */
+  private discoveryQuery() {
+    return this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.saleUnitOfMeasure', 'saleUnitOfMeasure')
+      .where('product.isEnabled = :isEnabled', { isEnabled: true });
+  }
+
+  /** Most recently added products — powers the storefront "new arrivals" rail. */
+  async findNewest(limit = 3): Promise<Product[]> {
+    return this.discoveryQuery()
+      .orderBy('product.dateCreated', 'DESC')
+      .take(limit)
+      .getMany();
+  }
+
+  /**
+   * Hydrates a ranked list of ids into full products, preserving the caller's
+   * order — best-seller and reorder rails rank before they hydrate. Ids that no
+   * longer resolve to an enabled product are dropped rather than left as holes.
+   */
+  async findRanked(ids: number[]): Promise<Product[]> {
+    if (!ids.length) return [];
+    const products = await this.discoveryQuery()
+      .andWhere('product.id IN (:...ids)', { ids })
+      .getMany();
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((product): product is Product => product !== undefined);
   }
 
   async findOne(id: number): Promise<Product> {
@@ -125,6 +184,7 @@ export class ProductsService {
       where: { id },
       relations: [
         'categories',
+        'brand',
         'saleUnitOfMeasure',
         'purchaseUnitOfMeasure',
         'warehouse',
@@ -139,6 +199,9 @@ export class ProductsService {
   async update(id: number, dto: UpdateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = dto;
     const product = await this.findOne(id);
+
+    await this.assertBrandExists(productData.brandId);
+
     Object.assign(product, productData);
 
     if (categoryIds !== undefined) {
@@ -212,6 +275,7 @@ export class ProductsService {
       where: { isEnabled: true },
       relations: [
         'categories',
+        'brand',
         'saleUnitOfMeasure',
         'purchaseUnitOfMeasure',
         'warehouse',
@@ -247,10 +311,11 @@ export class ProductsService {
 
       if (data.length === 0) throw new BadRequestException('The file is empty');
 
-      const [units, warehouses, categories] = await Promise.all([
+      const [units, warehouses, categories, brands] = await Promise.all([
         this.unitOfMeasureRepository.find(),
         this.warehouseRepository.find(),
         this.categoryRepository.find(),
+        this.brandRepository.find(),
       ]);
 
       for (let i = 0; i < data.length; i++) {
@@ -278,7 +343,7 @@ export class ProductsService {
           const isUpdate = !!product;
           if (!product) product = this.productRepository.create();
 
-          mapImportRow(row, product, units, warehouses, categories);
+          mapImportRow(row, product, units, warehouses, categories, brands);
           await this.productRepository.save(product);
 
           if (isUpdate) result.updated++;
@@ -323,6 +388,7 @@ export class ProductsService {
         'Unité achat': 'Unité',
         Entrepôt: 'Principal',
         Catégories: 'Catégorie 1, Catégorie 2',
+        Marque: 'Exemple de marque',
       },
     ];
 

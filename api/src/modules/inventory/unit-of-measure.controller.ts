@@ -20,6 +20,7 @@ import { UomResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { UOM } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Inventory - Units of Measure')
 @Serialize(UomResponseDto)
@@ -33,6 +34,7 @@ export class UnitOfMeasureController {
     status: 201,
     description: 'Unit of measure created successfully',
   })
+  @RequirePermission('uom.create')
   async create(@Body() createDto: CreateUnitOfMeasureDto) {
     const uom = await this.uomService.create(createDto);
     return ApiRes(UOM.CREATED, uom);
@@ -42,6 +44,7 @@ export class UnitOfMeasureController {
   @ApiOperation({ summary: 'Get all units of measure' })
   @ApiResponse({ status: 200, description: 'List of all units of measure' })
   @ApiQuery({ name: 'category', required: false, type: String })
+  @RequirePermission('uom.view')
   async findAll(@Query('category') category?: string) {
     const uoms = await this.uomService.findAll(category);
     return ApiRes(UOM.LIST, uoms);
@@ -50,6 +53,7 @@ export class UnitOfMeasureController {
   @Get('categories')
   @ApiOperation({ summary: 'Get all UoM categories' })
   @ApiResponse({ status: 200, description: 'List of categories' })
+  @RequirePermission('uom.view')
   async getCategories() {
     const categories = await this.uomService.getCategories();
     return ApiRes(UOM.CATEGORIES, categories);
@@ -62,6 +66,7 @@ export class UnitOfMeasureController {
     status: 400,
     description: 'Cannot convert between different categories',
   })
+  @RequirePermission('uom.view')
   async convertQuantity(
     @Body() body: { quantity: number; fromUomId: number; toUomId: number },
   ) {
@@ -77,6 +82,7 @@ export class UnitOfMeasureController {
   @ApiOperation({ summary: 'Get unit of measure by ID' })
   @ApiResponse({ status: 200, description: 'Unit of measure details' })
   @ApiResponse({ status: 404, description: 'Unit of measure not found' })
+  @RequirePermission('uom.view')
   async findOne(@Param('id') id: string) {
     const uom = await this.uomService.findOne(+id);
     return ApiRes(UOM.DETAIL, uom);
@@ -89,6 +95,7 @@ export class UnitOfMeasureController {
     description: 'Unit of measure updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Unit of measure not found' })
+  @RequirePermission('uom.edit')
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateUnitOfMeasureDto,
@@ -105,6 +112,7 @@ export class UnitOfMeasureController {
     description: 'Unit of measure deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Unit of measure not found' })
+  @RequirePermission('uom.delete')
   remove(@Param('id') id: string) {
     return this.uomService.remove(+id);
   }

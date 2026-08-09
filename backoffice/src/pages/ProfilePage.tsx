@@ -8,12 +8,18 @@ import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { User, Phone, Lock, Shield, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAccessLabels } from '../hooks/useAccessLabels';
 import { useLanguage } from '../context/LanguageContext';
 import { apiClient, API_ROUTES } from '../common';
 import { toastSuccess, toastError } from '../services/toast.service';
 
 export default function ProfilePage() {
   const { admin } = useAuth();
+  // Roles are no longer carried on the session object — they come from the
+  // server-resolved access set, which is what keeps them current.
+  const { isSuperAdmin, roleNames } = usePermissions();
+  const { roleName: translatedRoleName } = useAccessLabels();
   const { t, language } = useLanguage();
   const isRTL = language === 'ar';
   const fontFamily = isRTL ? 'var(--font-arabic)' : 'var(--font-latin)';
@@ -212,7 +218,9 @@ export default function ProfilePage() {
                       fontFamily,
                     }}
                   >
-                    {admin?.isSuperAdmin ? 'Super Admin' : admin?.roleName || t('administrator')}
+                    {isSuperAdmin
+                      ? t('superAdminBadge')
+                      : roleNames.map(translatedRoleName).join(', ') || t('userNoRoles')}
                   </span>
                 </div>
               </div>

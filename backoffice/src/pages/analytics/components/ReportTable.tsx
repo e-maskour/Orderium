@@ -2,6 +2,7 @@ import React from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column, type ColumnProps } from 'primereact/column';
 import { Paginator } from 'primereact/paginator';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export interface ReportColumn extends ColumnProps {
   field: string;
@@ -27,6 +28,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
   onPageChange,
   loading,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div>
       <DataTable
@@ -36,7 +39,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
         stripedRows
         scrollable
         scrollHeight="500px"
-        emptyMessage="Aucune donnée disponible"
+        emptyMessage={t('reportNoDataAvailable')}
       >
         {columns.map((col) => (
           <Column key={col.field} {...col} />

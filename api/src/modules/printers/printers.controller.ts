@@ -18,6 +18,7 @@ import { UpdatePrinterDto } from './dto/update-printer.dto';
 import { ApiRes } from '../../common/api-response';
 import { PRI } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Printers')
 @PortalRoute()
@@ -30,6 +31,7 @@ export class PrintersController {
   @Get()
   @ApiOperation({ summary: 'List all printers' })
   @ApiResponse({ status: 200, description: 'Printers retrieved' })
+  @RequirePermission('printers.view')
   async findAll() {
     const printers = await this.printersService.findAll();
     return ApiRes(PRI.LIST, printers);
@@ -38,6 +40,7 @@ export class PrintersController {
   @Get(':id')
   @ApiOperation({ summary: 'Get printer by ID' })
   @ApiResponse({ status: 200, description: 'Printer retrieved' })
+  @RequirePermission('printers.view')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const printer = await this.printersService.findOne(id);
     return ApiRes(PRI.DETAIL, printer);
@@ -46,6 +49,7 @@ export class PrintersController {
   @Post()
   @ApiOperation({ summary: 'Create a new printer' })
   @ApiResponse({ status: 201, description: 'Printer created' })
+  @RequirePermission('printers.create')
   async create(@Body() dto: CreatePrinterDto) {
     const printer = await this.printersService.create(dto);
     return ApiRes(PRI.CREATED, printer);
@@ -54,6 +58,7 @@ export class PrintersController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a printer' })
   @ApiResponse({ status: 200, description: 'Printer updated' })
+  @RequirePermission('printers.edit')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePrinterDto,
@@ -66,6 +71,7 @@ export class PrintersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a printer' })
   @ApiResponse({ status: 200, description: 'Printer deleted' })
+  @RequirePermission('printers.delete')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.printersService.remove(id);
     return ApiRes(PRI.DELETED, null);
@@ -75,6 +81,7 @@ export class PrintersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update printer last_seen_at' })
   @ApiResponse({ status: 200, description: 'Printer pinged' })
+  @RequirePermission('printers.print')
   async ping(@Param('id', ParseUUIDPipe) id: string) {
     await this.printersService.ping(id);
     return ApiRes(PRI.PINGED, null);

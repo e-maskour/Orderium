@@ -7,6 +7,8 @@ export interface ICategory {
   parent?: ICategory;
   children?: ICategory[];
   isActive: boolean;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
   dateCreated: string;
   dateUpdated: string;
 }
@@ -17,6 +19,8 @@ export interface CreateCategoryDTO {
   type: string;
   parentId?: number;
   isActive?: boolean;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
 }
 
 export interface UpdateCategoryDTO {
@@ -25,4 +29,22 @@ export interface UpdateCategoryDTO {
   type?: string;
   parentId?: number;
   isActive?: boolean;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
+}
+
+export interface GetCategoriesParams {
+  search?: string;
+  type?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CategoriesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }

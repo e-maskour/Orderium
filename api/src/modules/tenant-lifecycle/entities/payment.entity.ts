@@ -5,22 +5,34 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 import { Tenant } from '../../tenant/tenant.entity';
+import { PaymentInstallment } from './payment-installment.entity';
 
-export type PaymentStatus = 'pending' | 'validated' | 'rejected' | 'refunded';
-export type PaymentMethod =
-  | 'bank_transfer'
-  | 'cash'
-  | 'check'
-  | 'card'
-  | 'other';
+/**
+ * Derived — never stored. Computed in SQL from the validated installments
+ * so it can never drift out of sync with the money actually recorded.
+ *
+ * Precedence: void > paid > overdue > partial > pending
+ */
+export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue' | 'void';
+
 export type BillingCycle = 'monthly' | 'yearly';
 
+/**
+ * A subscription obligation: what a tenant owes for one billing period.
+ *
+ * This row records the DEBT, not the money. Money movement lives in
+ * `payment_installments` (tranches), one row per act of payment. The
+ * balance and status of this row are always derived from those children —
+ * there is deliberately no `status` column to fall out of sync.
+ */
 @Entity('payments')
+@Index(['tenantId', 'periodStart'])
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -33,19 +45,21 @@ export class Payment {
   @JoinColumn({ name: 'tenantId' })
   tenant: Tenant;
 
+  @OneToMany(() => PaymentInstallment, (i) => i.payment)
+  installments: PaymentInstallment[];
+
+  /** Total owed for the period. */
   @Column({
     type: 'decimal',
-    precision: 10,
+    precision: 12,
     scale: 2,
     transformer: numericTransformer,
   })
-  amount: number;
+  amountDue: number;
 
+  /** ISO-4217. All installments on this row must match it. */
   @Column({ type: 'varchar', length: 3, default: 'MAD' })
   currency: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  paymentMethod: PaymentMethod | null;
 
   @Column({ type: 'varchar', length: 20 })
   planName: string;
@@ -59,24 +73,17 @@ export class Payment {
   @Column({ type: 'date' })
   periodEnd: string;
 
+  /** Past this date with a balance outstanding => derived status `overdue`. */
   @Index()
-  @Column({ type: 'varchar', length: 20, default: 'pending' })
-  status: PaymentStatus;
+  @Column({ type: 'date' })
+  dueDate: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  validatedBy: string | null;
-
+  /** The one genuinely manual state: a voided obligation is not derivable. */
   @Column({ type: 'timestamptz', nullable: true })
-  validatedAt: Date | null;
+  voidedAt: Date | null;
 
   @Column({ type: 'text', nullable: true })
-  rejectionReason: string | null;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  referenceNumber: string | null;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  receiptUrl: string | null;
+  voidReason: string | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
@@ -86,4 +93,18 @@ export class Payment {
 
   @UpdateDateColumn()
   updatedAt: Date;
+}
+
+/** A Payment enriched with the SQL-computed balance figures. */
+export interface PaymentWithBalance extends Payment {
+  /** Sum of `validated` installments. */
+  amountPaid: number;
+  /** `amountDue - amountPaid`, floored at 0. */
+  amountRemaining: number;
+  /** Sum of `refunded` installments — reported, never netted off. */
+  amountRefunded: number;
+  status: PaymentStatus;
+  /** True whenever a balance is outstanding past `dueDate`, even if partial. */
+  isOverdue: boolean;
+  installmentCount: number;
 }

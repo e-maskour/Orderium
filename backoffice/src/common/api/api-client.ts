@@ -320,8 +320,15 @@ class ApiClient {
   /**
    * For raw responses (binary data, blobs, etc.).
    * Returns the raw Response object as data.
+   *
+   * `config.body` is sent for non-GET methods — needed by exports whose request
+   * payload is too large for a query string (e.g. report PDF specs).
    */
-  async raw(method: HttpMethod, url: string, config?: RequestConfig): Promise<Response> {
+  async raw(
+    method: HttpMethod,
+    url: string,
+    config?: RequestConfig & { body?: unknown },
+  ): Promise<Response> {
     const result = await executeRequest<Response>(
       { method, url, ...config, rawResponse: true },
       this.baseUrl,

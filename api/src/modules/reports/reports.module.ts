@@ -27,9 +27,16 @@ import { ProductReportsController } from './products/product-reports.controller'
 
 import { ReportExportService } from './shared/report-export.service';
 
+import { ConfigurationsModule } from '../configurations/configurations.module';
+import { PdfReportModule } from '../pdf-report';
+import { ReportPdfController } from './pdf/report-pdf.controller';
+import { ReportPdfService } from './pdf/report-pdf.service';
+import { ReportPdfResolver } from './pdf/report-pdf.resolver';
+
 @Module({
-  imports: [TenantModule],
+  imports: [TenantModule, ConfigurationsModule, PdfReportModule],
   controllers: [
+    ReportPdfController,
     SalesReportsController,
     PurchasesReportsController,
     InvoiceReportsController,
@@ -49,6 +56,8 @@ import { ReportExportService } from './shared/report-export.service';
     StockReportsService,
     ProductReportsService,
     ReportExportService,
+    ReportPdfResolver,
+    ReportPdfService,
   ],
 })
 export class ReportsModule {}

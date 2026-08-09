@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { CheckCircle, Copy, ExternalLink, MessageCircle, LayoutDashboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../lib/i18n';
 
 interface SuccessScreenProps {
   companyName: string;
@@ -23,12 +25,13 @@ const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || portalUrl(3002);
 const DELIVERY_URL = import.meta.env.VITE_DELIVERY_URL || portalUrl(3003);
 
 interface PortalCard {
-  label: string;
+  labelKey: TranslationKey;
   url: string;
   icon: string;
 }
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
@@ -51,7 +54,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      title="Copy URL"
+      title={t('copyUrl')}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -68,12 +71,14 @@ function CopyButton({ text }: { text: string }) {
       }}
     >
       <Copy size={12} />
-      {copied ? 'Copied!' : 'Copy'}
+      {copied ? t('onboardingCopied') : t('copy')}
     </button>
   );
 }
 
-function PortalLinkCard({ label, url, icon }: PortalCard) {
+function PortalLinkCard({ labelKey, url, icon }: PortalCard) {
+  const { t } = useLanguage();
+  const label = t(labelKey);
   const hasUrl = Boolean(url);
 
   return (
@@ -121,7 +126,7 @@ function PortalLinkCard({ label, url, icon }: PortalCard) {
                 }}
               >
                 <ExternalLink size={12} />
-                Open
+                {t('open')}
               </a>
             </>
           )}
@@ -143,11 +148,12 @@ function PortalLinkCard({ label, url, icon }: PortalCard) {
 
 export default function SuccessScreen({ companyName, companyLogo }: SuccessScreenProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const portals: PortalCard[] = [
-    { label: 'Admin Panel', url: ADMIN_URL, icon: '🏢' },
-    { label: 'Client Portal', url: CLIENT_URL, icon: '👤' },
-    { label: 'Delivery Portal', url: DELIVERY_URL, icon: '🚚' },
+    { labelKey: 'onboardingAdminPanel', url: ADMIN_URL, icon: '🏢' },
+    { labelKey: 'onboardingClientPortal', url: CLIENT_URL, icon: '👤' },
+    { labelKey: 'onboardingDeliveryPortal', url: DELIVERY_URL, icon: '🚚' },
   ];
 
   const whatsappMessage = encodeURIComponent(
@@ -176,10 +182,14 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
       </div>
 
       <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>
-        You're all set!
+        {t('onboardingAllSet')}
       </h2>
       <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
-        Welcome to Morocom, <strong>{companyName}</strong>. Your admin account is ready.
+        {t('onboardingSuccessSubtitle')
+          .split('{company}')
+          .flatMap((part, i) =>
+            i === 0 ? [part] : [<strong key={i}>{companyName}</strong>, part],
+          )}
       </p>
 
       {/* Company badge */}
@@ -198,7 +208,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
         >
           <img
             src={companyLogo}
-            alt="Company logo"
+            alt={t('onboardingCompanyLogoAlt')}
             style={{
               height: '2rem',
               maxWidth: '6rem',
@@ -227,11 +237,11 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
             marginBottom: '0.75rem',
           }}
         >
-          Share these links with your team
+          {t('onboardingShareLinks')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {portals.map((p) => (
-            <PortalLinkCard key={p.label} {...p} />
+            <PortalLinkCard key={p.labelKey} {...p} />
           ))}
         </div>
       </div>
@@ -260,7 +270,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
           }}
         >
           <LayoutDashboard size={18} />
-          Go to Dashboard
+          {t('onboardingGoToDashboard')}
         </button>
 
         {(CLIENT_URL || DELIVERY_URL || ADMIN_URL) && (
@@ -286,7 +296,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
             }}
           >
             <MessageCircle size={18} />
-            Share via WhatsApp
+            {t('onboardingShareWhatsapp')}
           </a>
         )}
       </div>

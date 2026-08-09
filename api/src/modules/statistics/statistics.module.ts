@@ -7,5 +7,6 @@ import { TenantModule } from '../tenant/tenant.module';
   imports: [TenantModule],
   controllers: [StatisticsController],
   providers: [StatisticsService],
+  exports: [StatisticsService],
 })
 export class StatisticsModule {}

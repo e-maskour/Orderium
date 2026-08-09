@@ -35,6 +35,14 @@ export class Category {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  /** Public URL (or object key) of the category image shown in the client portal. */
+  @Column({ type: 'text', nullable: true })
+  imageUrl: string | null;
+
+  /** Object-storage key, kept so the old image can be removed on replace/delete. */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imagePublicId: string | null;
+
   // Self-referential relationship for parent
   @ManyToOne(() => Category, (category) => category.children, {
     nullable: true,

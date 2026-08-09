@@ -68,6 +68,23 @@ export class CategorySummaryDto {
 }
 
 /**
+ * Slim brand reference — used inside product responses.
+ */
+export class BrandSummaryDto {
+  @ApiProperty()
+  @Expose()
+  id: number;
+
+  @ApiProperty()
+  @Expose()
+  name: string;
+
+  @ApiPropertyOptional()
+  @Expose()
+  logoUrl: string | null;
+}
+
+/**
  * Slim unit-of-measure reference — used inside product response nested UoM.
  */
 export class UomSummaryDto {

@@ -23,6 +23,7 @@ import { StockMovementResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { MOV } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Inventory - Stock Movements')
 @Serialize(StockMovementResponseDto)
@@ -33,6 +34,7 @@ export class StockMovementController {
   @Post()
   @ApiOperation({ summary: 'Create a new stock movement (draft)' })
   @ApiResponse({ status: 201, description: 'Movement created successfully' })
+  @RequirePermission('stock.transfer')
   async create(@Body() createDto: CreateStockMovementDto) {
     const movement = await this.stockService.createMovement(createDto);
     return ApiRes(MOV.CREATED, movement);
@@ -48,6 +50,7 @@ export class StockMovementController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @RequirePermission('stock.view')
   async findAll(
     @Query('productId') productId?: string,
     @Query('warehouseId') warehouseId?: string,
@@ -74,6 +77,7 @@ export class StockMovementController {
   @ApiOperation({ summary: 'Get movement by ID' })
   @ApiResponse({ status: 200, description: 'Movement details' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
+  @RequirePermission('stock.view')
   async findOne(@Param('id') id: string) {
     const movement = await this.stockService.findMovement(+id);
     return ApiRes(MOV.DETAIL, movement);
@@ -87,6 +91,7 @@ export class StockMovementController {
     description: 'Insufficient stock or already validated',
   })
   @ApiResponse({ status: 404, description: 'Movement not found' })
+  @RequirePermission('stock.transfer')
   async validate(@Body() validateDto: ValidateMovementDto) {
     const movement = await this.stockService.validateMovement(validateDto);
     return ApiRes(MOV.VALIDATED, movement);
@@ -99,6 +104,7 @@ export class StockMovementController {
     status: 400,
     description: 'Insufficient stock or invalid warehouses',
   })
+  @RequirePermission('stock.transfer')
   async internalTransfer(@Body() transferDto: InternalTransferDto) {
     const movement = await this.stockService.internalTransfer(transferDto);
     return ApiRes(MOV.TRANSFERRED, movement);
@@ -109,6 +115,7 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update validated movement' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
+  @RequirePermission('stock.transfer')
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateStockMovementDto,
@@ -123,6 +130,7 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement cancelled successfully' })
   @ApiResponse({ status: 400, description: 'Cannot cancel validated movement' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
+  @RequirePermission('stock.transfer')
   async cancel(@Param('id') id: string) {
     const movement = await this.stockService.cancelMovement(+id);
     return ApiRes(MOV.CANCELLED, movement);

@@ -27,6 +27,7 @@ import {
   Ruler,
   Archive,
   Building,
+  Tags,
 } from 'lucide-react';
 
 interface TabDef {
@@ -115,6 +116,7 @@ const MODULE_CONFIGS: ModuleConf[] = [
       [
         '/products',
         '/categories',
+        '/brands',
         '/warehouses',
         '/stock-movements',
         '/inventory-adjustments',
@@ -126,6 +128,12 @@ const MODULE_CONFIGS: ModuleConf[] = [
         to: '/categories',
         icon: FolderTree,
         isActive: match('/categories'),
+      },
+      {
+        labelKey: 'brands',
+        to: '/brands',
+        icon: Tags,
+        isActive: match('/brands'),
       },
       {
         labelKey: 'warehouses',

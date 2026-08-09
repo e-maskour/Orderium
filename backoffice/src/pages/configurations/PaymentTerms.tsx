@@ -171,7 +171,7 @@ export default function PaymentTerms() {
             loading={isLoading}
             totalCount={terms.length}
             countLabel="conditions"
-            emptyMessage="Aucune condition configurée"
+            emptyMessage={t('noPaymentTermConfigured')}
             config={{
               topLeft: (term: PaymentTerm) => term.label,
               topRight: (term: PaymentTerm) => `${term.days} ${t('daysLabel')}`,

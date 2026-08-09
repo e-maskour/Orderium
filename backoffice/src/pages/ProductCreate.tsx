@@ -11,6 +11,7 @@ import {
 import { warehousesService } from '../modules/warehouses';
 import { taxesService } from '../modules/taxes';
 import { categoriesService } from '../modules/categories';
+import { brandsService } from '../modules/brands';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
 import { useApiErrors } from '../hooks/useApiErrors';
@@ -62,6 +63,11 @@ export default function ProductCreate() {
     queryFn: () => categoriesService.getByType('product'),
   });
 
+  const { data: brands = [] } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsService.getAll(),
+  });
+
   const { data: uoms = [] } = useQuery({
     queryKey: ['uom'],
     queryFn: () => uomService.getAll(),
@@ -87,6 +93,7 @@ export default function ProductCreate() {
       saleUnitId: null,
       purchaseUnitId: null,
       categoryIds: [],
+      brandId: null,
       warehouseId: null,
       isService: false,
       isEnabled: true,
@@ -175,6 +182,7 @@ export default function ProductCreate() {
       purchaseTax: purchaseTaxRate?.rate ?? 0,
       warehouseId: data.warehouseId,
       categoryIds: data.categoryIds,
+      brandId: data.brandId ?? null,
       isService: data.isService,
       isEnabled: data.isEnabled,
       isPriceChangeAllowed: data.isPriceChangeAllowed,
@@ -192,6 +200,7 @@ export default function ProductCreate() {
     value: w.id,
   }));
   const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
+  const brandOptions = brands.map((b) => ({ label: b.name, value: b.id }));
   const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
 
   const [saleUomSuggestions, setSaleUomSuggestions] = useState<{ label: string; value: number }[]>(
@@ -898,6 +907,27 @@ export default function ProductCreate() {
                   )}
                 />
                 <FieldError name="warehouseId" />
+              </div>
+
+              <div className="p-field" style={{ marginBottom: '1rem' }}>
+                <label className="p-label">{t('brand')}</label>
+                <Controller
+                  name="brandId"
+                  control={control}
+                  render={({ field }) => (
+                    <Dropdown
+                      value={field.value ?? null}
+                      onChange={(e) => field.onChange(e.value ?? null)}
+                      onBlur={field.onBlur}
+                      options={brandOptions}
+                      placeholder={t('selectBrand')}
+                      filter
+                      showClear
+                      filterPlaceholder={t('search')}
+                      style={{ width: '100%' }}
+                    />
+                  )}
+                />
               </div>
 
               <div className="p-field">

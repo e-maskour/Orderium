@@ -14,6 +14,7 @@ import { QueryPrintJobsDto } from './dto/query-print-jobs.dto';
 import { ApiRes } from '../../common/api-response';
 import { PJB } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Print Jobs')
 @PortalRoute()
@@ -26,6 +27,7 @@ export class PrintJobsController {
   @Post()
   @ApiOperation({ summary: 'Log a print attempt' })
   @ApiResponse({ status: 201, description: 'Print job logged' })
+  @RequirePermission('printers.print')
   async log(
     @Body() dto: LogPrintJobDto,
     @Request() req: { user: { id: number; sub: number } },
@@ -37,6 +39,7 @@ export class PrintJobsController {
   @Get()
   @ApiOperation({ summary: 'List print job history' })
   @ApiResponse({ status: 200, description: 'Print jobs retrieved' })
+  @RequirePermission('printers.view')
   async findAll(@Query() query: QueryPrintJobsDto) {
     const result = await this.printJobsService.findAll(query);
     return ApiRes(PJB.LIST, result.data, {

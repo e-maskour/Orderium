@@ -22,6 +22,7 @@ import { InventoryAdjustmentResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { ADJ } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Inventory - Adjustments')
 @Serialize(InventoryAdjustmentResponseDto)
@@ -32,6 +33,7 @@ export class InventoryAdjustmentController {
   @Post()
   @ApiOperation({ summary: 'Create a new inventory adjustment' })
   @ApiResponse({ status: 201, description: 'Adjustment created successfully' })
+  @RequirePermission('stock.adjust')
   async create(@Body() createDto: CreateInventoryAdjustmentDto) {
     const adjustment = await this.adjustmentService.create(createDto);
     return ApiRes(ADJ.CREATED, adjustment);
@@ -44,6 +46,7 @@ export class InventoryAdjustmentController {
   @ApiQuery({ name: 'status', required: false, enum: AdjustmentStatus })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @RequirePermission('stock.view')
   async findAll(
     @Query('warehouseId') warehouseId?: string,
     @Query('status') status?: AdjustmentStatus,
@@ -70,6 +73,7 @@ export class InventoryAdjustmentController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequirePermission('stock.view')
   async generateCountingList(
     @Param('warehouseId') warehouseId: string,
     @Query('search') search?: string,
@@ -91,6 +95,7 @@ export class InventoryAdjustmentController {
   @ApiOperation({ summary: 'Get adjustment by ID' })
   @ApiResponse({ status: 200, description: 'Adjustment details' })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.view')
   async findOne(@Param('id') id: string) {
     const adjustment = await this.adjustmentService.findOne(+id);
     return ApiRes(ADJ.DETAIL, adjustment);
@@ -104,6 +109,7 @@ export class InventoryAdjustmentController {
     description: 'Can only start counting for draft adjustments',
   })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.adjust')
   async startCounting(@Param('id') id: string) {
     const adjustment = await this.adjustmentService.startCounting(+id);
     return ApiRes(ADJ.STARTED, adjustment);
@@ -120,6 +126,7 @@ export class InventoryAdjustmentController {
     description: 'Cannot validate or already validated',
   })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.adjust')
   async validate(@Body() validateDto: ValidateAdjustmentDto) {
     const adjustment = await this.adjustmentService.validate(validateDto);
     return ApiRes(ADJ.VALIDATED, adjustment);
@@ -136,6 +143,7 @@ export class InventoryAdjustmentController {
     description: 'Cannot cancel validated adjustment',
   })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.adjust')
   async cancel(@Param('id') id: string) {
     const adjustment = await this.adjustmentService.cancel(+id);
     return ApiRes(ADJ.CANCELLED, adjustment);
@@ -149,6 +157,7 @@ export class InventoryAdjustmentController {
     description: 'Cannot update validated adjustment',
   })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.adjust')
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateInventoryAdjustmentDto,
@@ -166,6 +175,7 @@ export class InventoryAdjustmentController {
     description: 'Can only delete draft adjustments',
   })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
+  @RequirePermission('stock.adjust')
   remove(@Param('id') id: string) {
     return this.adjustmentService.remove(+id);
   }

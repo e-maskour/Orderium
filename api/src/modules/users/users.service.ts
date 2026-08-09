@@ -6,7 +6,7 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, ILike, In, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Portal } from '../portal/entities/portal.entity';
 import { Role } from '../roles/entities/role.entity';
@@ -14,10 +14,14 @@ import { CreateUserDto, UserType, UserStatus } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { AccessControlService } from '../access/access-control.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly tenantConnService: TenantConnectionService) {}
+  constructor(
+    private readonly tenantConnService: TenantConnectionService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   private get portalRepo(): Repository<Portal> {
     return this.tenantConnService.getRepository(Portal);
@@ -48,7 +52,9 @@ export class UsersService {
       baseConditions.isActive = false;
     }
     if (dto.roleId) {
-      baseConditions.roleId = dto.roleId;
+      // Role membership lives in `user_roles`, so filter on the relation
+      // rather than on the deprecated `portal.roleId` column.
+      baseConditions.roles = { id: dto.roleId };
     }
 
     if (dto.search) {
@@ -64,7 +70,7 @@ export class UsersService {
 
     const [users, total] = await this.portalRepo.findAndCount({
       where,
-      relations: ['role', 'role.permissions'],
+      relations: ['role', 'roles'],
       order: { dateCreated: 'DESC' },
       skip,
       take: perPage,
@@ -76,7 +82,7 @@ export class UsersService {
   async findOne(id: number): Promise<Portal> {
     const user = await this.portalRepo.findOne({
       where: { id },
-      relations: ['role', 'role.permissions'],
+      relations: ['role', 'roles'],
     });
     if (!user) throw new NotFoundException(`User #${id} not found`);
     return user;
@@ -94,11 +100,7 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    let role: Role | null = null;
-    if (dto.roleId) {
-      role = await this.roleRepo.findOne({ where: { id: dto.roleId } });
-      if (!role) throw new NotFoundException(`Role #${dto.roleId} not found`);
-    }
+    const roles = await this.resolveRoles(dto.roleIds, dto.roleId);
 
     const user = this.portalRepo.create({
       name: dto.name,
@@ -111,10 +113,12 @@ export class UsersService {
       isAdmin: dto.userType === UserType.ADMIN || dto.isAdmin === true,
       isCustomer: dto.userType === UserType.CLIENT || dto.isCustomer === true,
       status: 'approved',
-      roleId: role?.id ?? null,
+      roles,
     } as Partial<Portal>);
 
-    return this.portalRepo.save(user);
+    const saved = await this.portalRepo.save(user);
+    await this.accessControl.invalidate();
+    return this.findOne(saved.id);
   }
 
   async update(
@@ -129,23 +133,24 @@ export class UsersService {
       throw new ForbiddenException('You cannot deactivate your own account');
     }
 
-    if (dto.roleId !== undefined && dto.roleId !== null) {
-      const role = await this.roleRepo.findOne({ where: { id: dto.roleId } });
-      if (!role) throw new NotFoundException(`Role #${dto.roleId} not found`);
+    if (dto.roleIds !== undefined || dto.roleId !== undefined) {
+      const next = await this.resolveRoles(dto.roleIds, dto.roleId);
 
-      // Guard: cannot remove own super_admin role
+      // Guard: an administrator must not be able to lock themselves out.
+      const heldSuperAdmin = (user.roles ?? []).some((r) => r.isSuperAdmin);
       if (
         currentUserId === id &&
-        user.role?.isSuperAdmin &&
-        !role.isSuperAdmin
+        heldSuperAdmin &&
+        !next.some((r) => r.isSuperAdmin)
       ) {
         throw new ForbiddenException(
-          'You cannot remove your own super_admin role',
+          'You cannot remove your own administrator role',
         );
       }
-      user.roleId = dto.roleId;
-    } else if (dto.roleId === null) {
-      user.roleId = null;
+
+      user.roles = next;
+      // Keep the deprecated column loosely in step for any straggling reader.
+      user.roleId = next[0]?.id ?? null;
     }
 
     if (dto.name !== undefined) user.name = dto.name;
@@ -187,7 +192,9 @@ export class UsersService {
       user.password = await bcrypt.hash(dto.password, 10);
     }
 
-    return this.portalRepo.save(user);
+    await this.portalRepo.save(user);
+    await this.accessControl.invalidate();
+    return this.findOne(id);
   }
 
   async setStatus(
@@ -209,5 +216,28 @@ export class UsersService {
     }
     const user = await this.findOne(id);
     await this.portalRepo.remove(user);
+    await this.accessControl.invalidate();
+  }
+
+  /**
+   * Accepts the many-to-many `roleIds` and folds in the deprecated single
+   * `roleId` so older callers keep working.
+   */
+  private async resolveRoles(
+    roleIds?: number[],
+    legacyRoleId?: number | null,
+  ): Promise<Role[]> {
+    const ids = new Set<number>(roleIds ?? []);
+    if (legacyRoleId !== undefined && legacyRoleId !== null) {
+      ids.add(legacyRoleId);
+    }
+    if (ids.size === 0) return [];
+
+    const roles = await this.roleRepo.find({ where: { id: In([...ids]) } });
+    if (roles.length !== ids.size) {
+      const missing = [...ids].filter((id) => !roles.some((r) => r.id === id));
+      throw new NotFoundException(`Role(s) not found: ${missing.join(', ')}`);
+    }
+    return roles;
   }
 }

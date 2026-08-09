@@ -4,7 +4,6 @@ import type {
   ListTenantsParams,
   CreateTenantInput,
   UpdateTenantInput,
-  CreatePaymentInput,
   TenantModulesConfig,
 } from '../types/tenant';
 
@@ -16,8 +15,6 @@ export const tenantKeys = {
   detail: (id: number) => [...tenantKeys.details(), id] as const,
   stats: (id: number) => [...tenantKeys.all, 'stats', id] as const,
   activity: (id: number) => [...tenantKeys.all, 'activity', id] as const,
-  payments: (id: number) => [...tenantKeys.all, 'payments', id] as const,
-  allPayments: (params?: object) => ['payments', 'all', params] as const,
   plans: () => ['plans'] as const,
   modules: (id: number) => [...tenantKeys.all, 'modules', id] as const,
 };
@@ -52,22 +49,6 @@ export function useTenantActivity(id: number) {
     queryKey: tenantKeys.activity(id),
     queryFn: () => tenantsApi.getActivity(id),
     enabled: id > 0,
-  });
-}
-
-export function useTenantPayments(id: number) {
-  return useQuery({
-    queryKey: tenantKeys.payments(id),
-    queryFn: () => tenantsApi.listPayments(id),
-    enabled: id > 0,
-  });
-}
-
-export function useAllPayments(params?: { status?: string; from?: string; to?: string }) {
-  return useQuery({
-    queryKey: tenantKeys.allPayments(params),
-    queryFn: () => tenantsApi.listAllPayments(params),
-    staleTime: 30_000,
   });
 }
 
@@ -180,58 +161,6 @@ export function useDeleteTenant() {
     mutationFn: ({ id, confirmation }: { id: number; confirmation: string }) =>
       tenantsApi.deletePermanently(id, confirmation),
     onSuccess: () => qc.invalidateQueries({ queryKey: tenantKeys.lists() }),
-  });
-}
-
-export function useCreatePayment(tenantId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: CreatePaymentInput) => tenantsApi.createPayment(tenantId, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tenantKeys.payments(tenantId) });
-      qc.invalidateQueries({ queryKey: tenantKeys.detail(tenantId) });
-    },
-  });
-}
-
-export function useValidatePayment() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      paymentId,
-      validatedBy,
-    }: {
-      paymentId: string;
-      tenantId: number;
-      validatedBy?: string;
-    }) => tenantsApi.validatePayment(paymentId, validatedBy),
-    onSuccess: (_data, { tenantId }) => {
-      qc.invalidateQueries({ queryKey: tenantKeys.payments(tenantId) });
-      qc.invalidateQueries({ queryKey: tenantKeys.detail(tenantId) });
-      qc.invalidateQueries({ queryKey: tenantKeys.lists() });
-    },
-  });
-}
-
-export function useRejectPayment() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ paymentId, reason }: { paymentId: string; tenantId: number; reason: string }) =>
-      tenantsApi.rejectPayment(paymentId, reason),
-    onSuccess: (_data, { tenantId }) => {
-      qc.invalidateQueries({ queryKey: tenantKeys.payments(tenantId) });
-    },
-  });
-}
-
-export function useRefundPayment() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ paymentId }: { paymentId: string; tenantId: number }) =>
-      tenantsApi.refundPayment(paymentId),
-    onSuccess: (_data, { tenantId }) => {
-      qc.invalidateQueries({ queryKey: tenantKeys.payments(tenantId) });
-    },
   });
 }
 

@@ -9,6 +9,7 @@ import {
   AgingReportFilterDto,
   PartnerStatementFilterDto,
 } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Suppliers')
 @Controller('reports/suppliers')
@@ -18,6 +19,7 @@ export class SupplierReportsController {
   @Get('top')
   @ApiOperation({ summary: 'Top suppliers by total purchases' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_suppliers.view')
   async getTopSuppliers(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.SUPPLIERS_TOP,
@@ -30,6 +32,7 @@ export class SupplierReportsController {
     summary: 'Supplier aging — outstanding purchase invoices by bucket',
   })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_suppliers.view')
   async getSupplierAging(@Query() filter: AgingReportFilterDto) {
     return ApiRes(
       RPT.SUPPLIERS_AGING,
@@ -40,6 +43,7 @@ export class SupplierReportsController {
   @Get('statement')
   @ApiOperation({ summary: 'Supplier account statement (ledger)' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_suppliers.view')
   async getSupplierStatement(@Query() filter: PartnerStatementFilterDto) {
     return ApiRes(
       RPT.SUPPLIER_STATEMENT,
@@ -53,6 +57,7 @@ export class SupplierReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export top suppliers as XLSX' })
+  @RequirePermission('reports_suppliers.export')
   async getTopSuppliersXlsx(
     @Query() filter: ReportFilterDto,
     @Res() res: Response,

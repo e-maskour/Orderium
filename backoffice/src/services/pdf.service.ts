@@ -36,6 +36,15 @@ class PDFService {
   }
 
   /**
+   * Get URL for the consolidated multi-order recap PDF ("merge").
+   * Not a DocumentType: it targets a selection of orders, not one document.
+   */
+  getOrdersMergePDFUrl(orderIds: number[], mode: PDFMode = 'preview', lang?: string): string {
+    const langParam = lang && lang !== 'fr' ? `&lang=${lang}` : '';
+    return `${API_URL}/api/pdf/orders-merge?ids=${orderIds.join(',')}&mode=${mode}${langParam}`;
+  }
+
+  /**
    * Get API endpoint based on document type
    */
   private getEndpoint(documentType: DocumentType): string {

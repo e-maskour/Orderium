@@ -28,6 +28,16 @@ export class CategoryResponseDto {
   @Expose()
   isActive: boolean;
 
+  @ApiPropertyOptional({ description: 'Category image URL' })
+  @Expose()
+  imageUrl: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Category image public ID from the storage provider',
+  })
+  @Expose()
+  imagePublicId: string | null;
+
   @ApiPropertyOptional()
   @Expose()
   parentId: number | null;

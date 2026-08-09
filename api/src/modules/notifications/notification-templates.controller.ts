@@ -17,6 +17,7 @@ import { NotificationTemplateResponseDto } from './dto/notification-response.dto
 import { ApiRes } from '../../common/api-response';
 import { NTPL } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 class UpdateNotificationTemplateDto {
   @ApiPropertyOptional({ example: 'Nouvelle commande' })
@@ -88,6 +89,7 @@ export class NotificationTemplatesController {
   @Get()
   @ApiOperation({ summary: 'List all notification templates' })
   @ApiResponse({ status: 200, description: 'Templates retrieved' })
+  @RequirePermission('notifications.view')
   async findAll() {
     const templates = await this.templateService.findAll();
     return ApiRes(NTPL.LIST, templates);
@@ -97,6 +99,7 @@ export class NotificationTemplatesController {
   @ApiOperation({ summary: 'Get a single notification template by key' })
   @ApiResponse({ status: 200, description: 'Template retrieved' })
   @ApiResponse({ status: 404, description: 'Template not found' })
+  @RequirePermission('notifications.view')
   async findOne(@Param('key') key: string) {
     const template = await this.templateService.findByKey(key);
     if (!template) throw new NotFoundException(`Template '${key}' not found`);
@@ -106,6 +109,7 @@ export class NotificationTemplatesController {
   @Patch(':key')
   @ApiOperation({ summary: 'Update a notification template' })
   @ApiResponse({ status: 200, description: 'Template updated' })
+  @RequirePermission('notifications.manage')
   async update(
     @Param('key') key: string,
     @Body() dto: UpdateNotificationTemplateDto,
@@ -118,6 +122,7 @@ export class NotificationTemplatesController {
   @Patch(':key/toggle')
   @ApiOperation({ summary: 'Enable or disable a notification template' })
   @ApiResponse({ status: 200, description: 'Template toggled' })
+  @RequirePermission('notifications.manage')
   async toggle(
     @Param('key') key: string,
     @Body() dto: ToggleNotificationTemplateDto,
@@ -130,6 +135,7 @@ export class NotificationTemplatesController {
   @Post(':key/reset')
   @ApiOperation({ summary: 'Reset a template to its factory default' })
   @ApiResponse({ status: 200, description: 'Template reset' })
+  @RequirePermission('notifications.manage')
   async resetOne(@Param('key') key: string) {
     const template = await this.templateService.resetToDefault(key);
     if (!template) {
@@ -143,6 +149,7 @@ export class NotificationTemplatesController {
   @Post('reset-all')
   @ApiOperation({ summary: 'Reset all templates to factory defaults' })
   @ApiResponse({ status: 200, description: 'All templates reset' })
+  @RequirePermission('notifications.manage')
   async resetAll() {
     await this.templateService.resetAllToDefaults();
     return ApiRes(NTPL.RESET_ALL, null);
@@ -153,6 +160,7 @@ export class NotificationTemplatesController {
     summary: 'Send a custom push + in-app notification to a client',
   })
   @ApiResponse({ status: 200, description: 'Custom notification sent' })
+  @RequirePermission('notifications.send')
   async sendCustom(@Body() dto: SendCustomNotificationDto) {
     await this.orderNotificationService.notifyAdminCustomMessage(
       dto.customerId,

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Edit2,
@@ -17,6 +17,7 @@ import {
   Archive,
   Trash2,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Plus,
   Zap,
@@ -53,10 +54,6 @@ import {
   useUnarchiveTenant,
   useExtendTrial,
   useTenantActivity,
-  useTenantPayments,
-  useValidatePayment,
-  useRejectPayment,
-  useRefundPayment,
   useTenantModules,
   useUpdateTenantModules,
 } from '../hooks/useTenants';
@@ -64,7 +61,12 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CopyableUrl } from '../components/CopyableUrl';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TenantForm } from '../components/TenantForm';
-import type { UpdateTenantInput, Payment, TenantModulesConfig } from '../types/tenant';
+import { PaymentForm } from '../components/PaymentForm';
+import { PaymentStatusBadge, PaymentProgress } from '../components/PaymentStatusBadge';
+import { useTenantPayments } from '../hooks/usePayments';
+import { BILLING_CYCLE_LABELS } from '../types/payment';
+import { formatMoney } from '../utils/format';
+import type { UpdateTenantInput, TenantModulesConfig } from '../types/tenant';
 import { DEFAULT_MODULES } from '../types/tenant';
 
 type Tab = 'overview' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
@@ -138,36 +140,6 @@ function UsageMeter({
         />
       </div>
     </div>
-  );
-}
-
-function PaymentStatusBadge({ status }: { status: Payment['status'] }) {
-  const cfg: Record<Payment['status'], { cls: string; dot: string }> = {
-    pending: {
-      cls: 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-400',
-      dot: 'bg-amber-400',
-    },
-    validated: {
-      cls: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-400',
-      dot: 'bg-emerald-500',
-    },
-    rejected: {
-      cls: 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400',
-      dot: 'bg-red-500',
-    },
-    refunded: {
-      cls: 'bg-slate-100 text-slate-600 ring-slate-400/10 dark:bg-slate-800 dark:text-slate-400',
-      dot: 'bg-slate-400',
-    },
-  };
-  const { cls, dot } = cfg[status];
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${cls}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
   );
 }
 
@@ -250,9 +222,6 @@ export function TenantDetail() {
   const archive = useArchiveTenant();
   const unarchive = useUnarchiveTenant();
   const extendTrial = useExtendTrial();
-  const validatePayment = useValidatePayment();
-  const rejectPayment = useRejectPayment();
-  const refundPayment = useRefundPayment();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [editMode, setEditMode] = useState(false);
@@ -261,9 +230,7 @@ export function TenantDetail() {
   >(null);
   const [confirmText, setConfirmText] = useState('');
   const [extendDays, setExtendDays] = useState(14);
-  const [rejectReason, setRejectReason] = useState('');
-  const [rejectPaymentId, setRejectPaymentId] = useState<string | null>(null);
-  const [expandedPayment, setExpandedPayment] = useState<string | null>(null);
+  const [paymentFormOpen, setPaymentFormOpen] = useState(false);
   const [draftModules, setDraftModules] = useState<TenantModulesConfig>(DEFAULT_MODULES);
 
   // Sync draft when server data arrives
@@ -999,16 +966,15 @@ export function TenantDetail() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Payment History
+                  Payments
                 </h2>
                 <p className="text-xs text-slate-400">
-                  {paymentsData?.length ?? 0} record{(paymentsData?.length ?? 0) !== 1 ? 's' : ''}
+                  {paymentsData?.length ?? 0} billing period
+                  {(paymentsData?.length ?? 0) !== 1 ? 's' : ''} — open one to record or manage
+                  tranches
                 </p>
               </div>
-              <button
-                onClick={() => toast('Payment recording coming soon')}
-                className="btn-primary py-2 text-xs"
-              >
+              <button onClick={() => setPaymentFormOpen(true)} className="btn-primary py-2 text-xs">
                 <Plus className="h-3.5 w-3.5" /> Record Payment
               </button>
             </div>
@@ -1023,143 +989,72 @@ export function TenantDetail() {
                     No payments yet
                   </p>
                   <p className="text-xs text-slate-400">
-                    Payments recorded for this tenant will appear here.
+                    Record what this client owes for a billing period, then log each tranche against
+                    it.
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                {paymentsData.map((p: Payment) => (
-                  <div key={p.id} className="card overflow-hidden">
-                    <button
-                      className="flex w-full items-center gap-4 p-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                      onClick={() => setExpandedPayment(expandedPayment === p.id ? null : p.id)}
-                    >
+                {paymentsData.map((p) => (
+                  <Link
+                    key={p.id}
+                    to={`/payments/${p.id}`}
+                    className="card block p-4 transition hover:shadow-md dark:hover:bg-slate-800/40"
+                  >
+                    <div className="flex items-center gap-4">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
                         <CreditCard className="h-4 w-4 text-slate-500" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 capitalize">
+                          <span className="text-sm font-semibold capitalize text-slate-900 dark:text-slate-100">
                             {p.planName}
                           </span>
-                          <span className="text-xs text-slate-400">({p.billingCycle})</span>
-                          <PaymentStatusBadge status={p.status} />
+                          <span className="text-xs text-slate-400">
+                            ({BILLING_CYCLE_LABELS[p.billingCycle]})
+                          </span>
+                          <PaymentStatusBadge status={p.status} isOverdue={p.isOverdue} />
                         </div>
                         <p className="mt-0.5 text-xs text-slate-400">
-                          {formatDate(p.createdAt)} · {formatDate(p.periodStart)} →{' '}
-                          {formatDate(p.periodEnd)}
-                          {p.paymentMethod && (
+                          {formatDate(p.periodStart)} → {formatDate(p.periodEnd)} · due{' '}
+                          {formatDate(p.dueDate)}
+                          {p.installmentCount > 0 && (
                             <>
                               {' '}
-                              ·{' '}
-                              <span className="capitalize">
-                                {p.paymentMethod.replace('_', ' ')}
-                              </span>
+                              · {p.installmentCount} tranche
+                              {p.installmentCount !== 1 ? 's' : ''}
                             </>
                           )}
                         </p>
                       </div>
-                      <div className="shrink-0 text-right">
+                      <div className="w-40 shrink-0 text-right">
                         <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(p.amount, p.currency)}
+                          {formatMoney(p.amountDue, p.currency)}
                         </p>
-                      </div>
-                      {expandedPayment === p.id ? (
-                        <ChevronUp className="h-4 w-4 shrink-0 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
-                      )}
-                    </button>
-
-                    {expandedPayment === p.id && (
-                      <div className="border-t border-slate-100 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/30">
-                        <div className="flex flex-wrap items-center gap-3">
-                          {p.referenceNumber && (
-                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900">
-                              <span className="text-xs text-slate-400">Ref: </span>
-                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                {p.referenceNumber}
-                              </span>
-                            </div>
-                          )}
-                          {p.notes && <p className="text-xs italic text-slate-500">{p.notes}</p>}
-                          {p.status === 'pending' && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() =>
-                                  validatePayment
-                                    .mutateAsync({ paymentId: p.id, tenantId })
-                                    .then(() => toast.success('Payment validated'))
-                                    .catch(() => toast.error('Failed'))
-                                }
-                                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-                              >
-                                <CheckCircle className="h-3.5 w-3.5" /> Validate
-                              </button>
-                              <button
-                                onClick={() => setRejectPaymentId(p.id)}
-                                className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-700 dark:bg-transparent dark:hover:bg-red-900/20"
-                              >
-                                <XCircle className="h-3.5 w-3.5" /> Reject
-                              </button>
-                            </div>
-                          )}
-                          {p.status === 'validated' && (
-                            <button
-                              onClick={() =>
-                                refundPayment
-                                  .mutateAsync({ paymentId: p.id, tenantId })
-                                  .then(() => toast.success('Payment refunded'))
-                                  .catch(() => toast.error('Failed'))
-                              }
-                              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" /> Refund
-                            </button>
-                          )}
-                          {rejectPaymentId === p.id && (
-                            <div className="flex items-center gap-2">
-                              <input
-                                placeholder="Rejection reason…"
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                className="input w-52 py-1.5 text-xs"
-                              />
-                              <button
-                                onClick={() =>
-                                  rejectPayment
-                                    .mutateAsync({
-                                      paymentId: p.id,
-                                      tenantId,
-                                      reason: rejectReason,
-                                    })
-                                    .then(() => {
-                                      toast.success('Rejected');
-                                      setRejectPaymentId(null);
-                                      setRejectReason('');
-                                    })
-                                    .catch(() => toast.error('Failed'))
-                                }
-                                className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
-                              >
-                                Confirm
-                              </button>
-                              <button
-                                onClick={() => setRejectPaymentId(null)}
-                                className="text-xs text-slate-400 hover:text-slate-600"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          )}
+                        <p className="text-xs text-slate-400">
+                          {formatMoney(p.amountRemaining, p.currency)} left
+                        </p>
+                        <div className="mt-1.5">
+                          <PaymentProgress
+                            paid={p.amountPaid}
+                            due={p.amountDue}
+                            label={`${formatMoney(p.amountPaid, p.currency)} of ${formatMoney(p.amountDue, p.currency)} paid`}
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
+
+            <PaymentForm
+              open={paymentFormOpen}
+              fixedTenantId={tenantId}
+              onClose={() => setPaymentFormOpen(false)}
+            />
           </div>
         )}
 

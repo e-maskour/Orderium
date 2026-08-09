@@ -117,6 +117,14 @@ export class CreateProductDto {
   @IsOptional()
   categoryIds?: number[];
 
+  @ApiPropertyOptional({
+    description: 'Brand ID — a product may have zero or one brand',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber()
+  brandId?: number | null;
+
   @ApiPropertyOptional({ description: 'Sale unit of measure ID' })
   @IsOptional()
   @IsNumber()

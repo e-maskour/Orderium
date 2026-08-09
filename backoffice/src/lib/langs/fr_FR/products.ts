@@ -52,6 +52,34 @@ export default {
   categoryDeleted: 'Catégorie supprimée avec succès',
   deleteCategoryConfirmation: 'Êtes-vous sûr de vouloir supprimer la catégorie',
 
+  // Brands
+  brands: 'Marques',
+  brand: 'Marque',
+  manageBrands: 'Gérer les marques du catalogue',
+  addBrand: 'Ajouter une marque',
+  editBrand: 'Éditer la marque',
+  createBrand: 'Créer une marque',
+  brandName: 'Nom de la marque',
+  enterBrandName: 'Entrez le nom de la marque',
+  brandWebsite: 'Site web',
+  enterBrandWebsite: 'https://exemple.com',
+  brandLogo: 'Logo de la marque',
+  categoryImage: 'Image de la catégorie',
+  imageShownInClientPortal: 'Affichée dans le portail client',
+  brandLogoUrl: 'URL du logo',
+  enterBrandLogoUrl: 'https://exemple.com/logo.png',
+  brandCreated: 'Marque créée avec succès',
+  brandUpdated: 'Marque mise à jour avec succès',
+  brandDeleted: 'Marque supprimée avec succès',
+  noBrand: 'Aucune marque',
+  noBrandsFound: 'Aucune marque trouvée',
+  createFirstBrand: 'Créez votre première marque pour commencer',
+  searchBrands: 'Rechercher des marques...',
+  selectBrand: 'Sélectionner une marque',
+  brandProductCount: 'Produits',
+  showInactiveBrands: 'Afficher les marques inactives',
+  confirmDeleteBrand: 'Êtes-vous sûr de vouloir supprimer la marque "{{name}}" ?',
+
   // Product Details
   noCode: 'Aucun code',
   saving: 'Enregistrement...',
@@ -169,6 +197,7 @@ export default {
   behaviorOptions: 'Options de comportement du produit',
   warehouseAndCategories: 'Entrepôt et catégories',
   searchCategoriesShort: 'Rechercher des catégories...',
+  searchCategories: 'Rechercher des catégories...',
   minPriceTooltip: 'Le prix de vente ne peut pas descendre en dessous de ce montant.',
   calculatedAuto: 'Calculé automatiquement',
   unsavedChangesConfirm:
@@ -192,4 +221,19 @@ export default {
   retry: 'Réessayer',
   cameraAccessDenied: 'Accès à la caméra refusé',
   failedToLoadImage: "Impossible de charger l'image",
+
+  // ─── Product form (previously untranslated) ───────────────
+  classification: 'Classification',
+  selectUnit: 'Sélectionner une unité',
+
+  // ─── Catalogue modal & stock filters ──────────────────────
+  selectProductsToAdd: 'Sélectionnez des produits à ajouter',
+  done: 'Terminé',
+  searchProductPlaceholder: 'Rechercher un produit...',
+  noProductFound: 'Aucun produit trouvé',
+  tryAnotherSearchTerm: 'Essayez un autre terme de recherche',
+  stockNegative: 'Stock négatif',
+  stockZero: 'Stock nul',
+  stockPositive: 'Stock positif',
+  noParentRootCategory: 'Aucun parent (catégorie racine)',
 };

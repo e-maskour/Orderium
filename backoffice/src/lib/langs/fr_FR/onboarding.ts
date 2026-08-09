@@ -1,0 +1,85 @@
+export default {
+  // ── Welcome screen ──
+  onboardingWelcomeTitle: 'Bienvenue sur Morocom',
+  onboardingWelcomeSubtitle: 'Configurons votre entreprise en 2 étapes seulement',
+  onboardingTimeEstimate: 'Environ 2 minutes',
+  onboardingGetStarted: 'Commencer →',
+  onboardingNoCreditCard: 'Gratuit, aucune carte bancaire requise',
+
+  // ── Steps ──
+  onboardingStepCompanyTitle: "Profil de l'entreprise",
+  onboardingStepCompanyDesc: 'Parlez-nous de votre entreprise',
+  onboardingStepCompanySubtitle: 'Étape 1 sur 2 — Informations de base',
+  onboardingStepAdminTitle: 'Compte administrateur',
+  onboardingStepAdminDesc: 'Créez votre identifiant administrateur',
+  onboardingStepAdminSubtitle: 'Étape 2 sur 2 — Vos identifiants administrateur',
+
+  // ── Company step ──
+  onboardingCompanyIntro:
+    'Parlez-nous de votre entreprise. Vous pourrez modifier ces informations à tout moment dans les paramètres.',
+  onboardingSectionBasicInfo: 'Informations de base',
+  onboardingCompanyName: "Nom de l'entreprise",
+  onboardingCompanyNamePlaceholder: 'ex. Acme Distribution SARL',
+  onboardingBusinessType: "Type d'activité / Métiers",
+  onboardingBusinessTypePlaceholder: 'ex. Distribution en gros, Construction',
+  onboardingCompanyLogo: "Logo de l'entreprise",
+  onboardingLogoPreview: 'Aperçu du logo',
+  onboardingClickToUpload: 'Cliquez pour téléverser',
+  onboardingDragAndDrop: ' ou glissez-déposez',
+  onboardingLogoHint: "PNG, JPG, SVG jusqu'à 5 Mo",
+  onboardingSectionContact: 'Contact',
+  onboardingEmailPlaceholder: 'contact@entreprise.com',
+  onboardingSectionAddress: 'Adresse',
+  onboardingAddressPlaceholder: '123 Avenue Mohammed V',
+  onboardingCityPlaceholder: 'Casablanca',
+  onboardingStatePlaceholder: 'Casablanca-Settat',
+  onboardingSectionLegal: 'Informations légales & financières',
+  onboardingTaxId: 'Identifiant fiscal (IF)',
+  onboardingSelectPlaceholder: 'Sélectionner...',
+  onboardingSaving: 'Enregistrement...',
+
+  onboardingContinueToAdmin: 'Continuer vers le compte administrateur →',
+  onboardingLegalStructureOther: 'Autre',
+  onboardingErrCompanyNameRequired: "Le nom de l'entreprise est requis",
+  onboardingErrInvalidEmailAddress: 'Saisissez une adresse e-mail valide',
+  onboardingErrWebsiteScheme: "L'URL doit commencer par http:// ou https://",
+
+  // ── Admin step ──
+  onboardingCreateAdminAccount: 'Créer le compte administrateur →',
+  onboardingErrFullNameRequired: 'Le nom complet est requis',
+  onboardingErrInvalidEmail: 'Saisissez un e-mail valide',
+  onboardingErrPhoneRequired: 'Le numéro de téléphone est requis',
+  onboardingErrPhoneFormat: 'Chiffres uniquement, ex. +212600000000',
+  onboardingErrPasswordRequired: 'Le mot de passe est requis',
+  onboardingErrPasswordTooShort: 'Le mot de passe doit contenir au moins 8 caractères',
+  onboardingErrConfirmPassword: 'Veuillez confirmer votre mot de passe',
+  onboardingAdminIntro:
+    'Créez votre compte super-administrateur. Ce sera votre identifiant pour gérer la plateforme.',
+  onboardingFullNamePlaceholder: 'Ahmed Benali',
+  onboardingEmailAddress: 'Adresse e-mail',
+  onboardingAdminEmailPlaceholder: 'ahmed@entreprise.com',
+  onboardingUsernameHint: "Ce sera votre nom d'utilisateur de connexion",
+  onboardingPasswordPlaceholder: 'Au moins 8 caractères',
+  onboardingConfirmPasswordPlaceholder: 'Ressaisissez votre mot de passe',
+  onboardingCreatingAccount: 'Création du compte...',
+
+  // ── Success screen ──
+  onboardingSuccessSubtitle:
+    'Bienvenue sur Morocom, {company}. Votre compte administrateur est prêt.',
+  onboardingCopied: 'Copié !',
+  onboardingAllSet: 'Tout est prêt !',
+  onboardingCompanyLogoAlt: "Logo de l'entreprise",
+  onboardingAdminPanel: "Panneau d'administration",
+  onboardingClientPortal: 'Portail client',
+  onboardingDeliveryPortal: 'Portail livreur',
+  onboardingShareLinks: 'Partagez ces liens avec votre équipe',
+  onboardingGoToDashboard: 'Aller au tableau de bord',
+  onboardingShareWhatsapp: 'Partager via WhatsApp',
+
+  companyProfileSaveError: "Échec de l'enregistrement du profil de l'entreprise",
+  adminAccountCreated: 'Compte administrateur créé avec succès !',
+  adminAccountCreateError: 'Échec de la création du compte administrateur',
+  yourCompany: 'Votre entreprise',
+  onlyImageFilesSupported: 'Seuls les fichiers image sont acceptés',
+  imageMustBeSmallerThan5Mb: "L'image doit faire moins de 5 Mo",
+};

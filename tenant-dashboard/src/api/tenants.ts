@@ -7,8 +7,6 @@ import type {
   ListTenantsParams,
   CreateTenantInput,
   UpdateTenantInput,
-  Payment,
-  CreatePaymentInput,
   SubscriptionPlanData,
   ActivityLogEntry,
   TenantModulesConfig,
@@ -88,42 +86,6 @@ export const tenantsApi = {
 
   getActivity: async (id: number): Promise<ActivityLogEntry[]> => {
     const { data } = await apiClient.get(`/admin/tenants/${id}/activity`);
-    return data;
-  },
-
-  // ── Payments ───────────────────────────────────────────────────────────────
-
-  createPayment: async (tenantId: number, input: CreatePaymentInput): Promise<Payment> => {
-    const { data } = await apiClient.post(`/admin/tenants/${tenantId}/payments`, input);
-    return data;
-  },
-
-  listPayments: async (tenantId: number): Promise<Payment[]> => {
-    const { data } = await apiClient.get(`/admin/tenants/${tenantId}/payments`);
-    return data;
-  },
-
-  listAllPayments: async (params?: {
-    status?: string;
-    from?: string;
-    to?: string;
-  }): Promise<Payment[]> => {
-    const { data } = await apiClient.get('/admin/payments', { params });
-    return data;
-  },
-
-  validatePayment: async (paymentId: string, validatedBy?: string): Promise<Payment> => {
-    const { data } = await apiClient.post(`/admin/payments/${paymentId}/validate`, { validatedBy });
-    return data;
-  },
-
-  rejectPayment: async (paymentId: string, reason: string): Promise<Payment> => {
-    const { data } = await apiClient.post(`/admin/payments/${paymentId}/reject`, { reason });
-    return data;
-  },
-
-  refundPayment: async (paymentId: string): Promise<Payment> => {
-    const { data } = await apiClient.post(`/admin/payments/${paymentId}/refund`, {});
     return data;
   },
 

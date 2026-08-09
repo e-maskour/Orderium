@@ -98,6 +98,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        undefined,
       );
       expect(result.data).toHaveLength(1);
       expect(result.metadata).toMatchObject({
@@ -126,6 +127,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        undefined,
       );
     });
 
@@ -146,6 +148,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        undefined,
       );
     });
 
@@ -161,6 +164,7 @@ describe('ProductsController', () => {
       expect(mockProductsService.findAll).toHaveBeenCalledWith(
         1,
         100,
+        undefined,
         undefined,
         undefined,
         undefined,

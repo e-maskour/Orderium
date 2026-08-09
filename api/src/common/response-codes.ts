@@ -62,6 +62,34 @@ export const CAT = {
   UPDATED: { code: 'CAT200_05', status: 200, message: 'Category Updated' },
   /** DELETE /categories/:id           → data: null                 | metadata: null */
   DELETED: { code: 'CAT200_06', status: 200, message: 'Category Deleted' },
+  /** GET /categories/paginated        → data: CategoryTree[]       | metadata: PaginationMeta */
+  PAGINATED: {
+    code: 'CAT200_07',
+    status: 200,
+    message: 'Categories Retrieved',
+  },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  BRANDS  (BrandsController)
+// ─────────────────────────────────────────────────────────────
+export const BRD = {
+  /** GET /brands                      → data: Brand[]              | metadata: null */
+  LIST: { code: 'BRD200_01', status: 200, message: 'Brands Retrieved' },
+  /** GET /brands/:id                  → data: Brand                | metadata: null */
+  DETAIL: { code: 'BRD200_02', status: 200, message: 'Brand Retrieved' },
+  /** GET /brands/:id/products         → data: Product[]            | metadata: null */
+  PRODUCTS: {
+    code: 'BRD200_03',
+    status: 200,
+    message: 'Brand Products Retrieved',
+  },
+  /** POST /brands                     → data: Brand                | metadata: null */
+  CREATED: { code: 'BRD201_01', status: 201, message: 'Brand Created' },
+  /** PATCH /brands/:id                → data: Brand                | metadata: null */
+  UPDATED: { code: 'BRD200_04', status: 200, message: 'Brand Updated' },
+  /** DELETE /brands/:id               → data: null                 | metadata: null */
+  DELETED: { code: 'BRD200_05', status: 200, message: 'Brand Deleted' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -203,6 +231,12 @@ export const ORD = {
     code: 'ORD200_22',
     status: 200,
     message: 'Order Aggregates Retrieved',
+  },
+  /** POST /orders/merge-summary          → data: OrdersMergeSummaryDto | metadata: null */
+  MERGE_SUMMARY: {
+    code: 'ORD200_23',
+    status: 200,
+    message: 'Orders Merge Summary Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;
 
@@ -513,6 +547,30 @@ export const PRT = {
     code: 'PRT200_14',
     status: 200,
     message: 'Categories Retrieved',
+  },
+  /** GET /portal/brands                       → data: BrandSummary[]   | metadata: null */
+  BRANDS_LIST: {
+    code: 'PRT200_15',
+    status: 200,
+    message: 'Brands Retrieved',
+  },
+  /** GET /portal/products/top-sellers          → data: Product[]        | metadata: null */
+  TOP_SELLERS: {
+    code: 'PRT200_16',
+    status: 200,
+    message: 'Top Selling Products Retrieved',
+  },
+  /** GET /portal/products/newest               → data: Product[]        | metadata: null */
+  NEWEST_PRODUCTS: {
+    code: 'PRT200_17',
+    status: 200,
+    message: 'New Products Retrieved',
+  },
+  /** GET /portal/products/reorder              → data: Product[]        | metadata: null */
+  REORDER_PRODUCTS: {
+    code: 'PRT200_18',
+    status: 200,
+    message: 'Frequently Ordered Products Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;
 
@@ -1313,6 +1371,32 @@ export const PERM = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  ACCESS CONTROL  (AccessController)
+// ─────────────────────────────────────────────────────────────
+export const ACL = {
+  /** GET  /access/modules → data: { categories, modules, levels } | metadata: null */
+  MODULES: {
+    code: 'ACL200_01',
+    status: 200,
+    message: 'Access Modules Retrieved',
+  },
+  /** GET  /access/me      → data: EffectiveAccess                 | metadata: null */
+  ME: { code: 'ACL200_02', status: 200, message: 'Effective Access Retrieved' },
+  /** POST /access/sync    → data: SyncAccessControlResult         | metadata: null */
+  SYNCED: {
+    code: 'ACL200_03',
+    status: 200,
+    message: 'Access Control Synchronised',
+  },
+  /** Raised by PermissionsGuard when a required permission is missing. */
+  FORBIDDEN: {
+    code: 'ACL403_01',
+    status: 403,
+    message: 'Insufficient Permissions',
+  },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  ROLES  (RolesController)
 // ─────────────────────────────────────────────────────────────
 export const ROLE = {
@@ -1614,6 +1698,14 @@ export const RPT = {
   // ── Exports ────────────────────────────────────────────────
   // GET /reports/{domain}/xlsx  → binary xlsx stream
   XLSX: { code: 'RPT200_XLSX', status: 200, message: 'Report XLSX Generated' },
+  // POST /reports/pdf/{reportKey} → binary pdf stream
+  PDF: { code: 'RPT200_PDF', status: 200, message: 'Report PDF Generated' },
+  /** GET /reports/pdf                       → data: { reports: string[] } */
+  PDF_KEYS: {
+    code: 'RPT200_32',
+    status: 200,
+    message: 'Report PDF Keys Retrieved',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 /**

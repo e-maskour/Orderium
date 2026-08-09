@@ -9,6 +9,8 @@ import {
   Clock,
 } from 'lucide-react';
 import orderiumLogo from '../assets/logo-backoffice.svg';
+import { useLanguage } from '../context/LanguageContext';
+import type { TranslationKey } from '../lib/i18n';
 
 export type BlockReason = 'trial_expired' | 'subscription_expired' | 'suspended' | 'disabled';
 
@@ -24,9 +26,10 @@ const BRAND_DEEP = '#0f2d7a';
 /* ── Per-status configuration ───────────────────────────────────────────── */
 interface StatusConfig {
   Icon: React.ElementType;
-  badge: string; // pill text
-  title: string;
-  detail: string;
+  /** Translation keys — resolved at render so the screen follows the language. */
+  badgeKey: TranslationKey;
+  titleKey: TranslationKey;
+  detailKey: TranslationKey;
   accentLight: string; // icon bg tint
   accentIcon: string; // icon colour
   accentBorder: string; // card border
@@ -35,40 +38,36 @@ interface StatusConfig {
 const CONFIG: Record<BlockReason, StatusConfig> = {
   suspended: {
     Icon: PauseCircle,
-    badge: 'Account Suspended',
-    title: 'Your account has been suspended',
-    detail:
-      'Access to this workspace has been temporarily suspended by your platform administrator. All your data is safe and preserved.',
+    badgeKey: 'blockedSuspendedTitle',
+    titleKey: 'blockedSuspendedHeading',
+    detailKey: 'blockedSuspendedBody',
     accentLight: '#fef2f2',
     accentIcon: '#dc2626',
     accentBorder: '#fecaca',
   },
   disabled: {
     Icon: Ban,
-    badge: 'Account Disabled',
-    title: 'Your account has been disabled',
-    detail:
-      'This workspace has been disabled by your platform administrator. Please reach out to have it re-enabled.',
+    badgeKey: 'blockedDisabledTitle',
+    titleKey: 'blockedDisabledHeading',
+    detailKey: 'blockedDisabledBody',
     accentLight: '#f8fafc',
     accentIcon: '#475569',
     accentBorder: '#cbd5e1',
   },
   subscription_expired: {
     Icon: XCircle,
-    badge: 'Subscription Expired',
-    title: 'Your subscription has expired',
-    detail:
-      'Your plan has expired and access has been paused. Please renew your subscription to restore full access for your team.',
+    badgeKey: 'blockedExpiredTitle',
+    titleKey: 'blockedExpiredHeading',
+    detailKey: 'blockedExpiredBody',
     accentLight: '#fff7ed',
     accentIcon: '#dc2626',
     accentBorder: '#fca5a5',
   },
   trial_expired: {
     Icon: Clock,
-    badge: 'Trial Ended',
-    title: 'Your free trial has ended',
-    detail:
-      'Your trial period has concluded. Upgrade to a paid plan to continue using Morocom without interruption.',
+    badgeKey: 'blockedTrialTitle',
+    titleKey: 'blockedTrialHeading',
+    detailKey: 'blockedTrialBody',
     accentLight: '#eff6ff',
     accentIcon: '#235ae4',
     accentBorder: 'rgba(35,90,228,0.2)',
@@ -76,7 +75,12 @@ const CONFIG: Record<BlockReason, StatusConfig> = {
 };
 
 export function BlockedScreen({ reason }: Props) {
-  const { Icon, badge, title, detail, accentLight, accentIcon, accentBorder } = CONFIG[reason];
+  const { Icon, badgeKey, titleKey, detailKey, accentLight, accentIcon, accentBorder } =
+    CONFIG[reason];
+  const { t } = useLanguage();
+  const badge = t(badgeKey);
+  const title = t(titleKey);
+  const detail = t(detailKey);
 
   return (
     <>

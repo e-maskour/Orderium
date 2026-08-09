@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Building2, Phone, Mail, Globe, MapPin, FileText, Upload, X, Loader2 } from 'lucide-react';
 import type { ICompany } from '../../modules/company/company.interface';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../lib/i18n';
 
 interface CompanyStepProps {
   onNext: (data: ICompany) => Promise<void>;
@@ -16,19 +18,19 @@ const LEGAL_STRUCTURES = [
   'Association',
   'Other',
 ];
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+const MONTH_KEYS: TranslationKey[] = [
+  'monthJanuary',
+  'monthFebruary',
+  'monthMarch',
+  'monthApril',
+  'monthMay',
+  'monthJune',
+  'monthJuly',
+  'monthAugust',
+  'monthSeptember',
+  'monthOctober',
+  'monthNovember',
+  'monthDecember',
 ];
 const COUNTRIES = [
   'Maroc',
@@ -105,6 +107,7 @@ function FormField({
 }
 
 export default function CompanyStep({ onNext }: CompanyStepProps) {
+  const { t } = useLanguage();
   const [form, setForm] = useState<ICompany>({
     companyName: '',
     professions: '',
@@ -142,12 +145,12 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!form.companyName.trim()) errs.companyName = 'Company name is required';
+    if (!form.companyName.trim()) errs.companyName = t('onboardingErrCompanyNameRequired');
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errs.email = 'Enter a valid email address';
+      errs.email = t('onboardingErrInvalidEmailAddress');
     }
     if (form.website && !/^https?:\/\//.test(form.website)) {
-      errs.website = 'URL must start with http:// or https://';
+      errs.website = t('onboardingErrWebsiteScheme');
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -166,11 +169,11 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrors((prev) => ({ ...prev, logo: 'Only image files are supported' }));
+      setErrors((prev) => ({ ...prev, logo: t('onlyImageFilesSupported') }));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, logo: 'Image must be smaller than 5MB' }));
+      setErrors((prev) => ({ ...prev, logo: t('imageMustBeSmallerThan5Mb') }));
       return;
     }
     const reader = new FileReader();
@@ -201,7 +204,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: 0, marginBottom: '1.25rem' }}>
-        Tell us about your business. You can update these details anytime in Settings.
+        {t('onboardingCompanyIntro')}
       </p>
 
       {/* ── Basic Info ── */}
@@ -210,15 +213,15 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
           size={12}
           style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.375rem' }}
         />
-        Basic Information
+        {t('onboardingSectionBasicInfo')}
       </div>
 
-      <FormField label="Company Name" required>
+      <FormField label={t('onboardingCompanyName')} required>
         <input
           style={focusStyle('companyName')}
           value={form.companyName}
           onChange={(e) => set('companyName', e.target.value)}
-          placeholder="e.g. Acme Distribution SARL"
+          placeholder={t('onboardingCompanyNamePlaceholder')}
           onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
           onBlur={(e) =>
             (e.currentTarget.style.borderColor = errors.companyName ? '#ef4444' : '#e2e8f0')
@@ -230,12 +233,12 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
       </FormField>
 
       <div style={{ marginTop: '0.75rem' }}>
-        <FormField label="Business Type / Professions">
+        <FormField label={t('onboardingBusinessType')}>
           <input
             style={inputStyle}
             value={form.professions}
             onChange={(e) => set('professions', e.target.value)}
-            placeholder="e.g. Wholesale Distribution, Construction"
+            placeholder={t('onboardingBusinessTypePlaceholder')}
             onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
             onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
           />
@@ -244,7 +247,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       {/* Logo upload */}
       <div style={{ marginTop: '0.75rem' }}>
-        <label style={labelStyle}>Company Logo</label>
+        <label style={labelStyle}>{t('onboardingCompanyLogo')}</label>
         <div
           onDrop={handleDrop}
           onDragOver={(e) => {
@@ -268,7 +271,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <img
                 src={logoPreview}
-                alt="Logo preview"
+                alt={t('onboardingLogoPreview')}
                 style={{
                   height: '4rem',
                   maxWidth: '12rem',
@@ -307,11 +310,13 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
             <>
               <Upload size={20} style={{ color: '#94a3b8', marginBottom: '0.375rem' }} />
               <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>
-                <span style={{ fontWeight: 600, color: '#235ae4' }}>Click to upload</span> or drag
-                and drop
+                <span style={{ fontWeight: 600, color: '#235ae4' }}>
+                  {t('onboardingClickToUpload')}
+                </span>
+                {t('onboardingDragAndDrop')}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                PNG, JPG, SVG up to 5MB
+                {t('onboardingLogoHint')}
               </div>
             </>
           )}
@@ -336,11 +341,11 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
           size={12}
           style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.375rem' }}
         />
-        Contact
+        {t('onboardingSectionContact')}
       </div>
 
       <FormRow>
-        <FormField label="Phone">
+        <FormField label={t('phone')}>
           <input
             style={inputStyle}
             value={form.phone}
@@ -351,12 +356,12 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
             onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
           />
         </FormField>
-        <FormField label="Email">
+        <FormField label={t('email')}>
           <input
             style={focusStyle('email')}
             value={form.email}
             onChange={(e) => set('email', e.target.value)}
-            placeholder="contact@company.com"
+            placeholder={t('onboardingEmailPlaceholder')}
             type="email"
             onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
             onBlur={(e) =>
@@ -371,7 +376,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       <div style={{ marginTop: '0.75rem' }}>
         <FormRow>
-          <FormField label="Fax">
+          <FormField label={t('fax')}>
             <input
               style={inputStyle}
               value={form.fax}
@@ -381,7 +386,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
               onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
             />
           </FormField>
-          <FormField label="Website">
+          <FormField label={t('website')}>
             <input
               style={focusStyle('website')}
               value={form.website}
@@ -406,15 +411,15 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
           size={12}
           style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.375rem' }}
         />
-        Address
+        {t('onboardingSectionAddress')}
       </div>
 
-      <FormField label="Address">
+      <FormField label={t('address')}>
         <input
           style={inputStyle}
           value={form.address}
           onChange={(e) => set('address', e.target.value)}
-          placeholder="123 Avenue Mohammed V"
+          placeholder={t('onboardingAddressPlaceholder')}
           onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
         />
@@ -422,17 +427,17 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       <div style={{ marginTop: '0.75rem' }}>
         <FormRow>
-          <FormField label="City">
+          <FormField label={t('city')}>
             <input
               style={inputStyle}
               value={form.city}
               onChange={(e) => set('city', e.target.value)}
-              placeholder="Casablanca"
+              placeholder={t('onboardingCityPlaceholder')}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
               onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
             />
           </FormField>
-          <FormField label="Zip Code">
+          <FormField label={t('zipCode')}>
             <input
               style={inputStyle}
               value={form.zipCode}
@@ -447,17 +452,17 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       <div style={{ marginTop: '0.75rem' }}>
         <FormRow>
-          <FormField label="State / Province">
+          <FormField label={t('state')}>
             <input
               style={inputStyle}
               value={form.state}
               onChange={(e) => set('state', e.target.value)}
-              placeholder="Casablanca-Settat"
+              placeholder={t('onboardingStatePlaceholder')}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
               onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
             />
           </FormField>
-          <FormField label="Country">
+          <FormField label={t('country')}>
             <select
               style={{ ...inputStyle, appearance: 'auto' }}
               value={form.country}
@@ -479,7 +484,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
           size={12}
           style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.375rem' }}
         />
-        Legal & Financial
+        {t('onboardingSectionLegal')}
         <span
           style={{
             fontWeight: 400,
@@ -495,7 +500,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
       </div>
 
       <FormRow>
-        <FormField label="VAT Number (TVA)">
+        <FormField label={t('vatNumber')}>
           <input
             style={inputStyle}
             value={form.vatNumber}
@@ -505,7 +510,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
             onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
           />
         </FormField>
-        <FormField label="ICE Number">
+        <FormField label={t('ice')}>
           <input
             style={inputStyle}
             value={form.ice}
@@ -519,7 +524,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       <div style={{ marginTop: '0.75rem' }}>
         <FormRow>
-          <FormField label="Tax ID (IF)">
+          <FormField label={t('onboardingTaxId')}>
             <input
               style={inputStyle}
               value={form.taxId}
@@ -529,7 +534,7 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
               onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
             />
           </FormField>
-          <FormField label="Registration Number (RC)">
+          <FormField label={t('rc')}>
             <input
               style={inputStyle}
               value={form.registrationNumber}
@@ -544,21 +549,21 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
 
       <div style={{ marginTop: '0.75rem' }}>
         <FormRow>
-          <FormField label="Legal Structure">
+          <FormField label={t('legalStructure')}>
             <select
               style={{ ...inputStyle, appearance: 'auto' }}
               value={form.legalStructure}
               onChange={(e) => set('legalStructure', e.target.value)}
             >
-              <option value="">Select...</option>
-              {LEGAL_STRUCTURES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              <option value="">{t('onboardingSelectPlaceholder')}</option>
+              {LEGAL_STRUCTURES.map((ls) => (
+                <option key={ls} value={ls}>
+                  {ls === 'Other' ? t('onboardingLegalStructureOther') : ls}
                 </option>
               ))}
             </select>
           </FormField>
-          <FormField label="Capital (MAD)">
+          <FormField label={t('capital')}>
             <input
               style={inputStyle}
               value={form.capital ?? ''}
@@ -574,15 +579,15 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
       </div>
 
       <div style={{ marginTop: '0.75rem' }}>
-        <FormField label="Fiscal Year Start Month">
+        <FormField label={t('fiscalYearStart')}>
           <select
             style={{ ...inputStyle, appearance: 'auto' }}
             value={form.fiscalYearStartMonth ?? 1}
             onChange={(e) => set('fiscalYearStartMonth', Number(e.target.value))}
           >
-            {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
+            {MONTH_KEYS.map((key, i) => (
+              <option key={key} value={i + 1}>
+                {t(key)}
               </option>
             ))}
           </select>
@@ -614,10 +619,10 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
           {isLoading ? (
             <>
               <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-              Saving...
+              {t('onboardingSaving')}
             </>
           ) : (
-            'Continue to Admin Account →'
+            t('onboardingContinueToAdmin')
           )}
         </button>
       </div>

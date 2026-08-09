@@ -20,6 +20,7 @@ import { UpdateSequenceDto } from './dto/update-sequence.dto';
 import { SequenceResponseDto } from './dto/sequence-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { SEQ } from '../../common/response-codes';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Sequences')
 @Controller('sequences')
@@ -31,6 +32,7 @@ export class SequencesController {
   @Get()
   @ApiOperation({ summary: 'List all sequences for the current tenant' })
   @ApiResponse({ status: 200, type: [SequenceResponseDto] })
+  @RequirePermission('sequences.view')
   async findAll() {
     const sequences = await this.sequencesService.findAll();
     return ApiRes(SEQ.LIST, sequences);
@@ -39,6 +41,7 @@ export class SequencesController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a sequence by ID' })
   @ApiResponse({ status: 200, type: SequenceResponseDto })
+  @RequirePermission('sequences.view')
   async findOne(@Param('id') id: string) {
     const sequence = await this.sequencesService.findOne(id);
     return ApiRes(SEQ.DETAIL, sequence);
@@ -47,6 +50,7 @@ export class SequencesController {
   @Post()
   @ApiOperation({ summary: 'Create a new sequence' })
   @ApiResponse({ status: 201, type: SequenceResponseDto })
+  @RequirePermission('sequences.create')
   async create(@Body() dto: CreateSequenceDto) {
     const sequence = await this.sequencesService.create(dto);
     return ApiRes(SEQ.CREATED, sequence);
@@ -58,6 +62,7 @@ export class SequencesController {
       'Update sequence settings (prefix, format flags, reset period, etc.)',
   })
   @ApiResponse({ status: 200, type: SequenceResponseDto })
+  @RequirePermission('sequences.edit')
   async update(@Param('id') id: string, @Body() dto: UpdateSequenceDto) {
     const sequence = await this.sequencesService.update(id, dto);
     return ApiRes(SEQ.UPDATED, sequence);
@@ -72,6 +77,7 @@ export class SequencesController {
     type: Number,
     description: 'Reset counter to this value (default: 1)',
   })
+  @RequirePermission('sequences.edit')
   async resetCounter(
     @Param('entityType') entityType: string,
     @Query('resetTo', new DefaultValuePipe(1), ParseIntPipe) resetTo: number,
@@ -88,6 +94,7 @@ export class SequencesController {
     status: 200,
     description: 'Preview of the next document number',
   })
+  @RequirePermission('sequences.view')
   async getPreview(@Param('entityType') entityType: string) {
     const preview = await this.sequencesService.getPreview(entityType);
     return ApiRes(SEQ.PREVIEW, { preview });
@@ -98,6 +105,7 @@ export class SequencesController {
   @ApiOperation({
     summary: 'Seed default sequences for this tenant (idempotent)',
   })
+  @RequirePermission('sequences.create')
   async seedDefaults() {
     await this.sequencesService.seedDefaults();
     return ApiRes(SEQ.SEEDED, null);

@@ -29,6 +29,7 @@ import type { DataTableProps, DataTableValueArray } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { Search } from 'lucide-react';
 import { EmptyState } from './EmptyState';
+import { useLanguage } from '../context/LanguageContext';
 
 // ─── Loading Skeleton ────────────────────────────────────────────────────────
 
@@ -102,11 +103,12 @@ export interface DataTableEmptyStateProps {
 }
 
 export function DataTableEmptyState({ icon, title, description }: DataTableEmptyStateProps) {
+  const { t } = useLanguage();
   return (
     <EmptyState
       icon={icon}
-      title={title ?? 'No results found'}
-      description={description ?? 'Try adjusting your search or filter criteria.'}
+      title={title ?? t('noResultsFound')}
+      description={description ?? t('noResultsHintFilters')}
     />
   );
 }

@@ -14,6 +14,7 @@ export class ProductsService {
       code = '',
       stockFilter,
       categoryIds = [],
+      brandIds = [],
       isService,
       minPrice,
       maxPrice,
@@ -26,6 +27,7 @@ export class ProductsService {
     if (code) filterBody.code = code;
     if (stockFilter) filterBody.stockFilter = stockFilter;
     if (categoryIds.length > 0) filterBody.categoryIds = categoryIds;
+    if (brandIds.length > 0) filterBody.brandIds = brandIds;
     if (isService !== undefined) filterBody.isService = isService;
     if (minPrice !== undefined) filterBody.minPrice = minPrice;
     if (maxPrice !== undefined) filterBody.maxPrice = maxPrice;

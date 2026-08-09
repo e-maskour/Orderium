@@ -9,6 +9,7 @@ import {
   AgingReportFilterDto,
   PartnerStatementFilterDto,
 } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Clients')
 @Controller('reports/clients')
@@ -18,6 +19,7 @@ export class ClientReportsController {
   @Get('top')
   @ApiOperation({ summary: 'Top customers by revenue' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_clients.view')
   async getTopCustomers(@Query() filter: ReportFilterDto) {
     return ApiRes(RPT.CLIENTS_TOP, await this.service.getTopCustomers(filter));
   }
@@ -25,6 +27,7 @@ export class ClientReportsController {
   @Get('aging')
   @ApiOperation({ summary: 'Customer aging — outstanding invoices by bucket' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_clients.view')
   async getCustomerAging(@Query() filter: AgingReportFilterDto) {
     return ApiRes(
       RPT.CLIENTS_AGING,
@@ -35,6 +38,7 @@ export class ClientReportsController {
   @Get('inactive')
   @ApiOperation({ summary: 'Inactive customers (no order in 90+ days)' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_clients.view')
   async getInactiveCustomers(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.CLIENTS_INACTIVE,
@@ -45,6 +49,7 @@ export class ClientReportsController {
   @Get('statement')
   @ApiOperation({ summary: 'Customer account statement (ledger)' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_clients.view')
   async getCustomerStatement(@Query() filter: PartnerStatementFilterDto) {
     return ApiRes(
       RPT.CLIENT_STATEMENT,
@@ -58,6 +63,7 @@ export class ClientReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export top customers as XLSX' })
+  @RequirePermission('reports_clients.export')
   async getTopCustomersXlsx(
     @Query() filter: ReportFilterDto,
     @Res() res: Response,

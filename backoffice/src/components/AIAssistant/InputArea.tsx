@@ -7,6 +7,7 @@ import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Send, StopCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface InputAreaProps {
   onSend: (message: string) => void;
@@ -15,6 +16,7 @@ interface InputAreaProps {
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled = false, onCancel }) => {
+  const { t } = useLanguage();
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -68,7 +70,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled = false, 
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={disabled ? 'Waiting for response...' : 'Ask me anything...'}
+          placeholder={disabled ? t('aiWaitingResponse') : t('aiAskAnything')}
           disabled={disabled}
           rows={1}
           autoResize
@@ -95,7 +97,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled = false, 
             severity="danger"
             label="Stop"
             icon={<StopCircle style={{ width: '1rem', height: '1rem' }} />}
-            tooltip="Cancel (ESC)"
+            tooltip={t('aiCancelEsc')}
             style={{ borderRadius: '0.5rem' }}
           />
         ) : (

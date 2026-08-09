@@ -41,6 +41,7 @@ import {
   CreditCard,
   ChevronDown,
   User,
+  Tags,
 } from 'lucide-react';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toastInfo, toastConfirm } from '../services/toast.service';
@@ -417,6 +418,19 @@ const APP_ROUTES: SearchRoute[] = [
     keywords: ['catégories', 'التصنيفات', 'famille', 'taxonomy'],
   },
   {
+    path: '/brands',
+    labels: { en: 'Brands', fr: 'Marques', ar: 'العلامات التجارية' },
+    descriptions: {
+      en: 'Product brand management',
+      fr: 'Gestion des marques',
+      ar: 'إدارة العلامات التجارية',
+    },
+    icon: Tags,
+    group: 'Inventory',
+    type: 'page',
+    keywords: ['marques', 'العلامات التجارية', 'brand', 'fabricant', 'manufacturer'],
+  },
+  {
     path: '/warehouses',
     labels: { en: 'Warehouses', fr: 'Entrepôts', ar: 'المستودعات' },
     descriptions: {
@@ -783,6 +797,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
         items: [
           { path: '/products', Icon: Package, label: t('products') },
           { path: '/categories', Icon: FolderTree, label: t('categories') },
+          { path: '/brands', Icon: Tags, label: t('brands') },
           { path: '/warehouses', Icon: Building2, label: t('warehouses') },
           { path: '/stock-movements', Icon: TrendingUp, label: t('stockMovements') },
           { path: '/inventory-adjustments', Icon: FileCheck, label: t('inventoryAdjustments') },

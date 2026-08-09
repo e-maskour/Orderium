@@ -1,22 +1,12 @@
 import React, { useState } from 'react';
-import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import type { DatePreset, ReportFilter } from '../../../modules/analytics/analytics.interface';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface Preset {
   label: string;
   value: DatePreset;
 }
-
-const PRESETS: Preset[] = [
-  { label: "Aujourd'hui", value: 'today' },
-  { label: 'Cette semaine', value: 'this_week' },
-  { label: 'Ce mois', value: 'this_month' },
-  { label: 'Mois dernier', value: 'last_month' },
-  { label: 'Ce trimestre', value: 'this_quarter' },
-  { label: 'Cette année', value: 'this_year' },
-  { label: 'Personnalisé', value: 'custom' },
-];
 
 interface ReportFilterBarProps {
   filter: ReportFilter;
@@ -24,12 +14,23 @@ interface ReportFilterBarProps {
   extra?: React.ReactNode;
 }
 
-function toDateStr(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
 const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, extra }) => {
+  const { t } = useLanguage();
   const [customRange, setCustomRange] = useState<Date[] | null>(null);
+
+  const PRESETS: Preset[] = [
+    { label: t('analyticsPresetToday'), value: 'today' },
+    { label: t('analyticsPresetThisWeek'), value: 'this_week' },
+    { label: t('analyticsPresetThisMonth'), value: 'this_month' },
+    { label: t('analyticsPresetLastMonth'), value: 'last_month' },
+    { label: t('analyticsPresetThisQuarter'), value: 'this_quarter' },
+    { label: t('analyticsPresetThisYear'), value: 'this_year' },
+    { label: t('analyticsPresetCustom'), value: 'custom' },
+  ];
+
+  function toDateStr(d: Date): string {
+    return d.toISOString().slice(0, 10);
+  }
 
   const handlePreset = (preset: DatePreset) => {
     onChange({ ...filter, preset, startDate: undefined, endDate: undefined });
@@ -56,7 +57,7 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
           className="text-500 text-xs font-semibold uppercase"
           style={{ letterSpacing: '0.06em' }}
         >
-          Période
+          {t('analyticsFilterPeriod')}
         </span>
       </div>
 
@@ -99,7 +100,7 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
             readOnlyInput
             hideOnRangeSelection
             showIcon
-            placeholder="Choisir une période"
+            placeholder={t('analyticsFilterChoosePeriod')}
             dateFormat="dd/mm/yy"
             inputStyle={{ height: '2rem', fontSize: '0.8125rem' }}
           />

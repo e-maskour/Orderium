@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsNumber,
   IsEnum,
+  IsArray,
   MinLength,
   MaxLength,
 } from 'class-validator';
@@ -56,10 +57,27 @@ export class CreateUserDto {
   @IsEnum(UserType)
   userType: UserType;
 
-  @ApiPropertyOptional({ description: 'Role ID to assign' })
+  /**
+   * @deprecated Use `roleIds`. Accepted so existing callers keep working; it
+   * is folded into `roleIds` on the way in.
+   */
+  @ApiPropertyOptional({
+    description: 'Deprecated — single role ID. Use roleIds.',
+    deprecated: true,
+  })
   @IsOptional()
   @IsNumber()
   roleId?: number;
+
+  @ApiPropertyOptional({
+    type: [Number],
+    description:
+      'Access groups to assign. A user holds many roles; effective rights are their union.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  roleIds?: number[];
 
   @ApiPropertyOptional({ default: false })
   @IsOptional()

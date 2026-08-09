@@ -300,7 +300,7 @@ export function ProductCatalogueModal({
               {selectedCount > 1 ? 's' : ''}
             </span>
           ) : (
-            'Sélectionnez des produits à ajouter'
+            t('selectProductsToAdd')
           )}
         </div>
       </div>
@@ -322,7 +322,7 @@ export function ProductCatalogueModal({
         {filteredProducts.length !== 1 ? 's' : ''}
       </span>
       <Button
-        label="Terminé"
+        label={t('done')}
         onClick={handleClose}
         style={{
           background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
@@ -396,7 +396,7 @@ export function ProductCatalogueModal({
             style={{ width: '1rem', height: '1rem', color: '#94a3b8' }}
           />
           <InputText
-            placeholder="Rechercher un produit..."
+            placeholder={t('searchProductPlaceholder')}
             value={catalogueSearch}
             onChange={(e) => setCatalogueSearch(e.target.value)}
             style={{ width: '100%' }}
@@ -420,8 +420,8 @@ export function ProductCatalogueModal({
         ) : filteredProducts.length === 0 ? (
           <EmptyState
             icon={Package2}
-            title="Aucun produit trouvé"
-            description={catalogueSearch ? 'Essayez un autre terme de recherche' : undefined}
+            title={t('noProductFound')}
+            description={catalogueSearch ? t('tryAnotherSearchTerm') : undefined}
             compact
           />
         ) : (

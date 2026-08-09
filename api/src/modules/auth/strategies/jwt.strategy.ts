@@ -3,6 +3,15 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
+/**
+ * The token carries identity only.
+ *
+ * Permissions used to be embedded here, which meant a role edit had no effect
+ * until the user logged out. They are now resolved per request by
+ * `AccessControlService`, so the token stays small and authorisation stays
+ * live. Tokens minted before this change still validate — their extra claims
+ * are simply ignored.
+ */
 export interface JwtPayload {
   sub: number;
   phoneNumber: string;
@@ -10,12 +19,6 @@ export interface JwtPayload {
   isCustomer: boolean;
   /** 'portal' = client/delivery app token; 'admin' = backoffice token */
   scope: 'portal' | 'admin';
-  /** Role ID for permission checks */
-  roleId?: number | null;
-  /** Whether this user's role is super_admin (bypasses all permission checks) */
-  isSuperAdmin?: boolean;
-  /** Array of permission keys, e.g. ["invoices.create", "products.view"] */
-  permissions?: string[];
 }
 
 @Injectable()
@@ -35,9 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       isAdmin: payload.isAdmin,
       isCustomer: payload.isCustomer,
       scope: payload.scope ?? 'admin',
-      roleId: payload.roleId ?? null,
-      isSuperAdmin: payload.isSuperAdmin ?? false,
-      permissions: payload.permissions ?? [],
     };
   }
 }

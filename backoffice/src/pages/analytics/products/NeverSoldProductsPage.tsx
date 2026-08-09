@@ -6,22 +6,13 @@ import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
 import { analyticsService } from '../../../modules/analytics/analytics.service';
+import { buildPdfSpec } from '../../../modules/analytics/analytics.pdf';
 import { API_ROUTES } from '../../../common/api/api-routes';
+import { useLanguage } from '../../../context/LanguageContext';
 import type { ReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const COLUMNS = [
-  { field: 'productName', header: 'Produit' },
-  { field: 'sku', header: 'SKU' },
-  {
-    field: 'price',
-    header: 'Prix (MAD)',
-    body: (row: Record<string, unknown>) =>
-      Number(row.price).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
-  },
-  { field: 'stock', header: 'Stock actuel' },
-];
-
 const NeverSoldProductsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<ReportFilter>({ preset: 'this_year' });
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getNeverSoldProducts(filter),
@@ -31,15 +22,27 @@ const NeverSoldProductsPage: React.FC = () => {
     setTimeout(refetch, 0);
   };
 
+  const columns = [
+    { field: 'productName', header: t('analyticsProductPerformanceProduct') },
+    { field: 'sku', header: t('analyticsSku') },
+    {
+      field: 'price',
+      header: `${t('analyticsNeverSoldPrice')} (MAD)`,
+      body: (row: Record<string, unknown>) =>
+        Number(row.price).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+    },
+    { field: 'stock', header: t('analyticsStockCurrentQuantity') },
+  ];
+
   return (
     <ReportLayout
       icon={PackageX}
-      title="Produits jamais vendus"
-      subtitle="Articles actifs sans aucune vente enregistrée"
+      title={t('analyticsNeverSoldProductsTitle')}
+      subtitle={t('analyticsNeverSoldProductsSubtitle')}
       isLoading={isLoading}
       error={error}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      table={<ReportTable columns={COLUMNS} rows={data?.rows ?? []} loading={isLoading} />}
+      table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons
           xlsxUrl={analyticsService.xlsxUrl(
@@ -47,6 +50,36 @@ const NeverSoldProductsPage: React.FC = () => {
             filter,
           )}
           xlsxFilename="produits-jamais-vendus.xlsx"
+          filter={filter}
+          pdf={buildPdfSpec(
+            {
+              reportKey: 'products-never-sold',
+              title: t('analyticsNeverSoldProductsTitle'),
+              subtitle: t('analyticsNeverSoldProductsSubtitle'),
+              fileName: 'produits-jamais-vendus',
+              columns: [
+                {
+                  key: 'productName',
+                  header: t('analyticsProductPerformanceProduct'),
+                  emphasis: true,
+                },
+                { key: 'sku', header: t('analyticsSku') },
+                {
+                  key: 'price',
+                  header: t('analyticsNeverSoldPrice'),
+                  format: 'currency',
+                },
+                {
+                  key: 'stock',
+                  header: t('analyticsStockCurrentQuantity'),
+                  format: 'number',
+                  total: true,
+                },
+              ],
+            },
+            filter,
+            t,
+          )}
         />
       }
     />

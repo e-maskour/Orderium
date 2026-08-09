@@ -56,4 +56,33 @@ export default {
   rejected: 'مرفوض',
   userApproved: 'تم اعتماد المستخدم بنجاح',
   userRejected: 'تم رفض المستخدم بنجاح',
+
+  // ─── Users page (previously untranslated) ─────────────────
+  activate: 'تفعيل',
+  deactivate: 'تعطيل',
+  reject: 'رفض',
+  confirmDeactivateUser: 'تعطيل هذا المستخدم؟',
+  confirmActivateUser: 'تفعيل هذا المستخدم؟',
+  confirmRejectUser: 'رفض هذا الوصول إلى البوابة؟',
+  confirmApproveUser: 'الموافقة على هذا الوصول إلى البوابة؟',
+  noUsersFound: 'لم يتم العثور على أي مستخدم',
+  usersCountLabel: 'مستخدمون',
+  userCountLabel: 'مستخدم',
+  confirmDeleteUsersPlural: 'حذف {count} مستخدم؟',
+
+  // ─── Client access requests (portal sign-ups) ────────────
+  clientRequests: 'طلبات العملاء',
+  clientRequestsSubtitle: 'وافق على الحسابات المنشأة من بوابة العملاء أو ارفضها',
+  clientRequestsCountLabel: 'طلبات',
+  searchClientRequests: 'ابحث بالاسم أو رقم الهاتف…',
+  clearSearch: 'مسح البحث',
+  approveRequest: 'موافقة',
+  declineRequest: 'رفض',
+  confirmDeclineRequest: 'رفض طلب الوصول هذا؟',
+  noClientRequests: 'لا توجد طلبات عملاء',
+  requestedOn: 'تاريخ الطلب',
+  bulkApprove: 'الموافقة على المحدد',
+  bulkDecline: 'رفض المحدد',
+  requestApproved: 'تمت الموافقة على الطلب',
+  requestDeclined: 'تم رفض الطلب',
 };

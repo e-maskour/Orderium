@@ -238,7 +238,7 @@ export default function DeliveryPersons() {
             actions={
               <Button
                 icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-                label="Nouveau livreur"
+                label={t('newDeliveryPerson')}
                 onClick={openCreateModal}
               />
             }
@@ -357,7 +357,7 @@ export default function DeliveryPersons() {
             loading={isLoading}
             totalCount={filteredPersons.length}
             countLabel="livreurs"
-            emptyMessage="Aucun livreur trouvé"
+            emptyMessage={t('noDeliveryPersonFound')}
             selectedKeys={new Set(selectedPersons)}
             onToggleSelect={(key) => toggleSelectPerson(key as number)}
             config={{

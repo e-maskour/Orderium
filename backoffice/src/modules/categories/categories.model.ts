@@ -9,6 +9,8 @@ export class Category implements ICategory {
   parent?: Category;
   children?: Category[];
   isActive: boolean;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
   dateCreated: string;
   dateUpdated: string;
 
@@ -21,6 +23,8 @@ export class Category implements ICategory {
     this.parent = data.parent ? new Category(data.parent) : undefined;
     this.children = data.children?.map((c) => new Category(c));
     this.isActive = data.isActive;
+    this.imageUrl = data.imageUrl ?? null;
+    this.imagePublicId = data.imagePublicId ?? null;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
   }
@@ -64,6 +68,8 @@ export class Category implements ICategory {
       parent: data.parent ? Category.fromApiResponse(data.parent) : undefined,
       children: data.children?.map((c: any) => Category.fromApiResponse(c)),
       isActive: data.isActive ?? true,
+      imageUrl: data.imageUrl ?? null,
+      imagePublicId: data.imagePublicId ?? null,
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
     });
@@ -77,6 +83,8 @@ export class Category implements ICategory {
       type: this.type,
       parentId: this.parentId,
       isActive: this.isActive,
+      imageUrl: this.imageUrl,
+      imagePublicId: this.imagePublicId,
     };
   }
 
@@ -87,6 +95,8 @@ export class Category implements ICategory {
       type: this.type,
       parentId: this.parentId,
       isActive: this.isActive,
+      imageUrl: this.imageUrl,
+      imagePublicId: this.imagePublicId,
     };
   }
 
@@ -100,6 +110,8 @@ export class Category implements ICategory {
       parent: this.parent?.toJSON(),
       children: this.children?.map((c) => c.toJSON()),
       isActive: this.isActive,
+      imageUrl: this.imageUrl,
+      imagePublicId: this.imagePublicId,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     };

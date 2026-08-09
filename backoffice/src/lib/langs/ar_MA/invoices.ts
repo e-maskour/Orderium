@@ -493,4 +493,21 @@ export default {
   thisMonth: 'هذا الشهر',
   searchByInvoice: 'البحث بالفاتورة أو العميل أو المرجع...',
   modify: 'تعديل',
+
+  // ─── Public quote / document preview ──────────────────────
+  loadingQuote: 'جارٍ تحميل عرض السعر...',
+  quoteNotFound: 'عرض السعر غير موجود',
+  quoteClosed: 'عرض السعر مغلق',
+  signQuoteFull: 'توقيع عرض السعر',
+  rejectQuoteFull: 'رفض عرض السعر',
+  commentOptional: 'تعليق (اختياري)',
+  quantityLabel: 'الكمية',
+  unitPriceLabel: 'سعر الوحدة',
+  subtotalExclTax: 'المجموع قبل الضريبة',
+  totalInclTax: 'المجموع شامل الضريبة',
+  loadingDocument: 'جارٍ تحميل المستند...',
+  documentNotFoundOrExpired: 'المستند غير موجود أو انتهت صلاحية الرابط.',
+  documentUnavailableBody: 'هذا المستند غير متاح أو انتهت صلاحية الرابط.',
+  shareLinkRevoked: 'تم إلغاء الرابط بنجاح',
+  shareLinkRevokeError: 'خطأ أثناء إلغاء الرابط',
 };

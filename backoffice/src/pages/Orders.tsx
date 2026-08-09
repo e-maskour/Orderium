@@ -33,6 +33,7 @@ import {
   Plus,
   CreditCard,
   Share2,
+  Layers,
 } from 'lucide-react';
 import {
   toastSuccess,
@@ -57,6 +58,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
+import { OrdersMergeModal } from '../components/OrdersMergeModal';
 import { MobileList } from '../components/MobileList';
 import { formatAmount } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
@@ -75,6 +77,7 @@ export default function Orders() {
   const queryClient = useQueryClient();
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -486,6 +489,15 @@ export default function Orders() {
     const url = pdfService.getPDFUrl(documentType, orderId, 'preview', language);
     setPdfUrl(url);
     setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
+    setShowPDFPreview(true);
+  };
+
+  // Consolidated recap of the current selection — read-only, prints as one PDF.
+  const handleMergePrint = (title: string) => {
+    const url = pdfService.getOrdersMergePDFUrl(selectedOrders, 'preview', language);
+    setPdfUrl(url);
+    setPdfTitle(title);
+    setShowMergeModal(false);
     setShowPDFPreview(true);
   };
 
@@ -1848,6 +1860,14 @@ export default function Orders() {
             return actions;
           })(),
           {
+            id: 'merge',
+            label: t('mergeOrders'),
+            icon: <Layers style={{ width: '0.875rem', height: '0.875rem' }} />,
+            onClick: () => setShowMergeModal(true),
+            variant: 'secondary' as const,
+            hidden: selectedOrders.length < 2,
+          },
+          {
             id: 'delete',
             label: t('delete'),
             icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
@@ -2046,6 +2066,13 @@ export default function Orders() {
           )}
         </div>
       </Dialog>
+
+      <OrdersMergeModal
+        isOpen={showMergeModal}
+        onClose={() => setShowMergeModal(false)}
+        orderIds={selectedOrders}
+        onPrint={handleMergePrint}
+      />
 
       <PDFPreviewModal
         isOpen={showPDFPreview}

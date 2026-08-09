@@ -32,6 +32,7 @@ function KeyboardRouteWatcher() {
   return null;
 }
 import Login from './pages/Login';
+import { REPORT_VIEW_PERMISSIONS } from './modules/access';
 const OnboardingPage = lazy(() => import('./pages/onboarding/OnboardingPage'));
 
 // ── Onboarding Gate ───────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const ProductCreate = lazy(() => import('./pages/ProductCreate'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Categories = lazy(() => import('./pages/Categories'));
+const Brands = lazy(() => import('./pages/Brands'));
 const Customers = lazy(() => import('./pages/Customers'));
 const CustomerCreate = lazy(() => import('./pages/CustomerCreate'));
 const CustomerEdit = lazy(() => import('./pages/CustomerEdit'));
@@ -110,6 +112,7 @@ const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const DrivePage = lazy(() => import('./pages/drive/DrivePage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
+const ClientRequestsPage = lazy(() => import('./pages/ClientRequestsPage'));
 const RolesPage = lazy(() => import('./pages/RolesPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
@@ -251,7 +254,7 @@ function App() {
                           <Route
                             path="/dashboard"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="dashboard.view">
                                 <Dashboard />
                               </ProtectedRoute>
                             }
@@ -259,7 +262,7 @@ function App() {
                           <Route
                             path="/delivery-persons"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="delivery.view">
                                 <DeliveryPersons />
                               </ProtectedRoute>
                             }
@@ -267,7 +270,7 @@ function App() {
                           <Route
                             path="/orders"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <Orders />
                               </ProtectedRoute>
                             }
@@ -275,7 +278,7 @@ function App() {
                           <Route
                             path="/orders/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <OrderDetailPage />
                               </ProtectedRoute>
                             }
@@ -283,7 +286,7 @@ function App() {
                           <Route
                             path="/caisse"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="caisse.view">
                                 <Caisse />
                               </ProtectedRoute>
                             }
@@ -291,7 +294,7 @@ function App() {
                           <Route
                             path="/pos"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="pos.use">
                                 <POS />
                               </ProtectedRoute>
                             }
@@ -299,7 +302,7 @@ function App() {
                           <Route
                             path="/checkout"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.create">
                                 <CheckoutPage />
                               </ProtectedRoute>
                             }
@@ -307,7 +310,7 @@ function App() {
                           <Route
                             path="/checkout/success"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.create">
                                 <OrderSuccessPage />
                               </ProtectedRoute>
                             }
@@ -315,7 +318,7 @@ function App() {
                           <Route
                             path="/products"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="products.view">
                                 <Products />
                               </ProtectedRoute>
                             }
@@ -323,7 +326,7 @@ function App() {
                           <Route
                             path="/products/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="products.create">
                                 <ProductCreate />
                               </ProtectedRoute>
                             }
@@ -331,7 +334,7 @@ function App() {
                           <Route
                             path="/products/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="products.view">
                                 <ProductDetail />
                               </ProtectedRoute>
                             }
@@ -339,15 +342,23 @@ function App() {
                           <Route
                             path="/categories"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="categories.view">
                                 <Categories />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/brands"
+                            element={
+                              <ProtectedRoute permission="brands.view">
+                                <Brands />
                               </ProtectedRoute>
                             }
                           />
                           <Route
                             path="/customers"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.view">
                                 <Customers />
                               </ProtectedRoute>
                             }
@@ -355,7 +366,7 @@ function App() {
                           <Route
                             path="/customers/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.create">
                                 <CustomerCreate />
                               </ProtectedRoute>
                             }
@@ -363,7 +374,7 @@ function App() {
                           <Route
                             path="/customers/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.view">
                                 <CustomerEdit />
                               </ProtectedRoute>
                             }
@@ -371,7 +382,7 @@ function App() {
                           <Route
                             path="/fournisseurs"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.view">
                                 <Fournisseurs />
                               </ProtectedRoute>
                             }
@@ -379,7 +390,7 @@ function App() {
                           <Route
                             path="/fournisseurs/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.create">
                                 <FournisseurCreate />
                               </ProtectedRoute>
                             }
@@ -387,7 +398,7 @@ function App() {
                           <Route
                             path="/fournisseurs/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="partners.view">
                                 <FournisseurEdit />
                               </ProtectedRoute>
                             }
@@ -396,7 +407,7 @@ function App() {
                           <Route
                             path="/devis"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.view">
                                 <DevisVenteList />
                               </ProtectedRoute>
                             }
@@ -404,7 +415,7 @@ function App() {
                           <Route
                             path="/devis/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.create">
                                 <DevisVenteCreate />
                               </ProtectedRoute>
                             }
@@ -412,7 +423,7 @@ function App() {
                           <Route
                             path="/devis/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.view">
                                 <DevisVenteEdit />
                               </ProtectedRoute>
                             }
@@ -421,7 +432,7 @@ function App() {
                           <Route
                             path="/bons-livraison"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <BonLivraisonList />
                               </ProtectedRoute>
                             }
@@ -429,7 +440,7 @@ function App() {
                           <Route
                             path="/bons-livraison/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.create">
                                 <BonLivraisonCreate />
                               </ProtectedRoute>
                             }
@@ -437,7 +448,7 @@ function App() {
                           <Route
                             path="/bons-livraison/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <BonLivraisonEdit />
                               </ProtectedRoute>
                             }
@@ -452,7 +463,7 @@ function App() {
                           <Route
                             path="/factures/vente"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.view">
                                 <FactureVenteList />
                               </ProtectedRoute>
                             }
@@ -460,7 +471,7 @@ function App() {
                           <Route
                             path="/factures/vente/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.create">
                                 <FactureVenteCreate />
                               </ProtectedRoute>
                             }
@@ -468,7 +479,7 @@ function App() {
                           <Route
                             path="/factures/vente/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.view">
                                 <FactureVenteEdit />
                               </ProtectedRoute>
                             }
@@ -477,7 +488,7 @@ function App() {
                           <Route
                             path="/paiements-vente"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="payments.view">
                                 <PaiementsVente />
                               </ProtectedRoute>
                             }
@@ -487,7 +498,7 @@ function App() {
                           <Route
                             path="/factures/achat"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.view">
                                 <FactureAchatList />
                               </ProtectedRoute>
                             }
@@ -495,7 +506,7 @@ function App() {
                           <Route
                             path="/factures/achat/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.create">
                                 <FactureAchatCreate />
                               </ProtectedRoute>
                             }
@@ -503,7 +514,7 @@ function App() {
                           <Route
                             path="/factures/achat/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="invoices.view">
                                 <FactureAchatEdit />
                               </ProtectedRoute>
                             }
@@ -511,7 +522,7 @@ function App() {
                           <Route
                             path="/paiements-achat"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="payments.view">
                                 <PaiementsAchat />
                               </ProtectedRoute>
                             }
@@ -519,7 +530,7 @@ function App() {
                           <Route
                             path="/demande-prix"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.view">
                                 <DemandePrix />
                               </ProtectedRoute>
                             }
@@ -527,7 +538,7 @@ function App() {
                           <Route
                             path="/demande-prix/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.create">
                                 <DemandeAchatCreate />
                               </ProtectedRoute>
                             }
@@ -535,7 +546,7 @@ function App() {
                           <Route
                             path="/demande-prix/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="quotes.view">
                                 <DemandeAchatEdit />
                               </ProtectedRoute>
                             }
@@ -543,7 +554,7 @@ function App() {
                           <Route
                             path="/bon-achat"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <BonAchat />
                               </ProtectedRoute>
                             }
@@ -551,7 +562,7 @@ function App() {
                           <Route
                             path="/bon-achat/create"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.create">
                                 <BonAchatCreate />
                               </ProtectedRoute>
                             }
@@ -559,7 +570,7 @@ function App() {
                           <Route
                             path="/bon-achat/:id"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="orders.view">
                                 <BonAchatEdit />
                               </ProtectedRoute>
                             }
@@ -568,7 +579,7 @@ function App() {
                           <Route
                             path="/configurations"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <Configurations />
                               </ProtectedRoute>
                             }
@@ -576,7 +587,7 @@ function App() {
                           <Route
                             path="/configurations/taxes"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <Taxes />
                               </ProtectedRoute>
                             }
@@ -584,7 +595,7 @@ function App() {
                           <Route
                             path="/configurations/currencies"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <Currencies />
                               </ProtectedRoute>
                             }
@@ -592,7 +603,7 @@ function App() {
                           <Route
                             path="/configurations/payment-terms"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <PaymentTerms />
                               </ProtectedRoute>
                             }
@@ -600,7 +611,7 @@ function App() {
                           <Route
                             path="/configurations/sequences"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="sequences.view">
                                 <Sequences />
                               </ProtectedRoute>
                             }
@@ -608,7 +619,7 @@ function App() {
                           <Route
                             path="/configurations/uom"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="uom.view">
                                 <UnitsOfMeasure />
                               </ProtectedRoute>
                             }
@@ -616,7 +627,7 @@ function App() {
                           <Route
                             path="/configurations/company"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <CompanySettings />
                               </ProtectedRoute>
                             }
@@ -624,7 +635,7 @@ function App() {
                           <Route
                             path="/configurations/inventory"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="configurations.view">
                                 <InventorySettings />
                               </ProtectedRoute>
                             }
@@ -632,7 +643,7 @@ function App() {
                           <Route
                             path="/configurations/printers"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="printers.view">
                                 <Printers />
                               </ProtectedRoute>
                             }
@@ -640,7 +651,7 @@ function App() {
                           <Route
                             path="/warehouses"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="warehouses.view">
                                 <Warehouses />
                               </ProtectedRoute>
                             }
@@ -648,7 +659,7 @@ function App() {
                           <Route
                             path="/stock-movements"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="stock.view">
                                 <StockMovements />
                               </ProtectedRoute>
                             }
@@ -656,7 +667,7 @@ function App() {
                           <Route
                             path="/inventory-adjustments"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="stock.view">
                                 <InventoryAdjustments />
                               </ProtectedRoute>
                             }
@@ -664,7 +675,7 @@ function App() {
                           <Route
                             path="/notifications"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="notifications.view">
                                 <Notifications />
                               </ProtectedRoute>
                             }
@@ -673,7 +684,7 @@ function App() {
                           <Route
                             path="/drive"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="drive.view">
                                 <DrivePage />
                               </ProtectedRoute>
                             }
@@ -681,15 +692,23 @@ function App() {
                           <Route
                             path="/users"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="users.view">
                                 <UsersPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/client-requests"
+                            element={
+                              <ProtectedRoute permission="users.view">
+                                <ClientRequestsPage />
                               </ProtectedRoute>
                             }
                           />
                           <Route
                             path="/roles"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="roles.view">
                                 <RolesPage />
                               </ProtectedRoute>
                             }
@@ -722,7 +741,7 @@ function App() {
                           <Route
                             path="/analytics"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute anyPermission={REPORT_VIEW_PERMISSIONS}>
                                 <AnalyticsHub />
                               </ProtectedRoute>
                             }
@@ -730,7 +749,7 @@ function App() {
                           <Route
                             path="/analytics/sales/revenue"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_sales.view">
                                 <SalesRevenuePage />
                               </ProtectedRoute>
                             }
@@ -738,7 +757,7 @@ function App() {
                           <Route
                             path="/analytics/sales/top-products"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_sales.view">
                                 <SalesTopProductsPage />
                               </ProtectedRoute>
                             }
@@ -746,7 +765,7 @@ function App() {
                           <Route
                             path="/analytics/sales/by-customer"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_sales.view">
                                 <SalesByCustomerPage />
                               </ProtectedRoute>
                             }
@@ -754,7 +773,7 @@ function App() {
                           <Route
                             path="/analytics/sales/by-category"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_sales.view">
                                 <SalesByCategoryPage />
                               </ProtectedRoute>
                             }
@@ -762,7 +781,7 @@ function App() {
                           <Route
                             path="/analytics/sales/by-pos"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_sales.view">
                                 <SalesByPosPage />
                               </ProtectedRoute>
                             }
@@ -770,7 +789,7 @@ function App() {
                           <Route
                             path="/analytics/purchases/by-period"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_purchases.view">
                                 <PurchasesByPeriodPage />
                               </ProtectedRoute>
                             }
@@ -778,7 +797,7 @@ function App() {
                           <Route
                             path="/analytics/purchases/top-suppliers"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_purchases.view">
                                 <PurchasesTopSuppliersPage />
                               </ProtectedRoute>
                             }
@@ -786,7 +805,7 @@ function App() {
                           <Route
                             path="/analytics/purchases/by-product"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_purchases.view">
                                 <PurchasesByProductPage />
                               </ProtectedRoute>
                             }
@@ -794,7 +813,7 @@ function App() {
                           <Route
                             path="/analytics/invoices/journal-vente"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_invoices.view">
                                 <JournalVentePage />
                               </ProtectedRoute>
                             }
@@ -802,7 +821,7 @@ function App() {
                           <Route
                             path="/analytics/invoices/journal-achat"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_invoices.view">
                                 <JournalAchatPage />
                               </ProtectedRoute>
                             }
@@ -810,7 +829,7 @@ function App() {
                           <Route
                             path="/analytics/invoices/tva"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_invoices.view">
                                 <TvaSummaryPage />
                               </ProtectedRoute>
                             }
@@ -818,7 +837,7 @@ function App() {
                           <Route
                             path="/analytics/invoices/outstanding"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_invoices.view">
                                 <OutstandingInvoicesPage />
                               </ProtectedRoute>
                             }
@@ -826,7 +845,7 @@ function App() {
                           <Route
                             path="/analytics/invoices/aging"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_invoices.view">
                                 <InvoiceAgingPage />
                               </ProtectedRoute>
                             }
@@ -834,7 +853,7 @@ function App() {
                           <Route
                             path="/analytics/payments/cashflow"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_payments.view">
                                 <CashflowPage />
                               </ProtectedRoute>
                             }
@@ -842,7 +861,7 @@ function App() {
                           <Route
                             path="/analytics/payments/by-method"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_payments.view">
                                 <PaymentsByMethodPage />
                               </ProtectedRoute>
                             }
@@ -850,7 +869,7 @@ function App() {
                           <Route
                             path="/analytics/payments/in-out"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_payments.view">
                                 <InOutFlowPage />
                               </ProtectedRoute>
                             }
@@ -858,7 +877,7 @@ function App() {
                           <Route
                             path="/analytics/clients/top"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_clients.view">
                                 <TopClientsPage />
                               </ProtectedRoute>
                             }
@@ -866,7 +885,7 @@ function App() {
                           <Route
                             path="/analytics/clients/aging"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_clients.view">
                                 <ClientAgingPage />
                               </ProtectedRoute>
                             }
@@ -874,7 +893,7 @@ function App() {
                           <Route
                             path="/analytics/clients/inactive"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_clients.view">
                                 <InactiveClientsPage />
                               </ProtectedRoute>
                             }
@@ -882,7 +901,7 @@ function App() {
                           <Route
                             path="/analytics/clients/statement"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_clients.view">
                                 <ClientStatementPage />
                               </ProtectedRoute>
                             }
@@ -890,7 +909,7 @@ function App() {
                           <Route
                             path="/analytics/suppliers/top"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_suppliers.view">
                                 <TopSuppliersPage />
                               </ProtectedRoute>
                             }
@@ -898,7 +917,7 @@ function App() {
                           <Route
                             path="/analytics/suppliers/aging"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_suppliers.view">
                                 <SupplierAgingPage />
                               </ProtectedRoute>
                             }
@@ -906,7 +925,7 @@ function App() {
                           <Route
                             path="/analytics/suppliers/statement"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_suppliers.view">
                                 <SupplierStatementPage />
                               </ProtectedRoute>
                             }
@@ -914,7 +933,7 @@ function App() {
                           <Route
                             path="/analytics/stock/valuation"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_stock.view">
                                 <StockValuationPage />
                               </ProtectedRoute>
                             }
@@ -922,7 +941,7 @@ function App() {
                           <Route
                             path="/analytics/stock/low-stock"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_stock.view">
                                 <LowStockPage />
                               </ProtectedRoute>
                             }
@@ -930,7 +949,7 @@ function App() {
                           <Route
                             path="/analytics/stock/movements"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_stock.view">
                                 <StockMovementsPage />
                               </ProtectedRoute>
                             }
@@ -938,7 +957,7 @@ function App() {
                           <Route
                             path="/analytics/stock/slow-dead"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_stock.view">
                                 <SlowDeadStockPage />
                               </ProtectedRoute>
                             }
@@ -946,7 +965,7 @@ function App() {
                           <Route
                             path="/analytics/stock/by-warehouse"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_stock.view">
                                 <StockByWarehousePage />
                               </ProtectedRoute>
                             }
@@ -954,7 +973,7 @@ function App() {
                           <Route
                             path="/analytics/products/performance"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_products.view">
                                 <ProductPerformancePage />
                               </ProtectedRoute>
                             }
@@ -962,7 +981,7 @@ function App() {
                           <Route
                             path="/analytics/products/margin"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_products.view">
                                 <MarginAnalysisPage />
                               </ProtectedRoute>
                             }
@@ -970,7 +989,7 @@ function App() {
                           <Route
                             path="/analytics/products/never-sold"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedRoute permission="reports_products.view">
                                 <NeverSoldProductsPage />
                               </ProtectedRoute>
                             }

@@ -12,6 +12,10 @@ export type TranslationKey = keyof typeof translations.ar;
 
 export { formatCurrency } from '@orderium/ui';
 
+/** Fills `{placeholder}` tokens in a translated string. */
+export const interpolate = (template: string, vars: Record<string, string | number>): string =>
+  template.replace(/\{(\w+)\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
+
 export const formatPhone = (phone: string): string => {
   // Moroccan phone format: 06 XX XX XX XX or +212 6 XX XX XX XX
   const cleaned = phone.replace(/\D/g, '');

@@ -26,6 +26,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { ApiRes } from '../../common/api-response';
 import { QUO } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Quotes')
 @Controller('quotes')
@@ -36,6 +37,7 @@ export class QuotesController {
   @Serialize(QuoteListResponseDto)
   @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
   @ApiResponse({ status: 200, description: 'Quotes retrieved' })
+  @RequirePermission('quotes.view')
   async findAll(
     @Body() filterDto: FilterQuotesDto,
     @Query('page') page?: string,
@@ -79,6 +81,7 @@ export class QuotesController {
   @Post('aggregates')
   @ApiOperation({ summary: 'Get financial aggregates for filtered quotes' })
   @ApiResponse({ status: 200, description: 'Quote aggregates retrieved' })
+  @RequirePermission('quotes.view')
   async getAggregates(
     @Body() filterDto: FilterQuotesDto,
     @Query('direction') direction?: string,
@@ -107,6 +110,7 @@ export class QuotesController {
   @Serialize(QuoteListResponseDto)
   @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })
   @ApiResponse({ status: 200, description: 'Quotes retrieved' })
+  @RequirePermission('quotes.view')
   async findAllLegacy(
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
@@ -146,6 +150,7 @@ export class QuotesController {
   @ApiOperation({ summary: 'Get quote by ID' })
   @ApiResponse({ status: 200, description: 'Quote retrieved' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
+  @RequirePermission('quotes.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.findOne(id);
     return ApiRes(QUO.DETAIL, quote);
@@ -156,6 +161,7 @@ export class QuotesController {
   @ApiOperation({ summary: 'Create a new quote' })
   @ApiResponse({ status: 201, description: 'Quote created' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
+  @RequirePermission('quotes.create')
   async create(@Body() createQuoteDto: CreateQuoteDto) {
     const quote = await this.quotesService.create(createQuoteDto);
     return ApiRes(QUO.CREATED, quote);
@@ -166,6 +172,7 @@ export class QuotesController {
   @ApiOperation({ summary: 'Update a quote' })
   @ApiResponse({ status: 200, description: 'Quote updated' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
+  @RequirePermission('quotes.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateQuoteDto: UpdateQuoteDto,
@@ -179,6 +186,7 @@ export class QuotesController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: 200, description: 'Quote deleted' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
+  @RequirePermission('quotes.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.quotesService.remove(id);
     return ApiRes(QUO.DELETED, null);
@@ -188,6 +196,7 @@ export class QuotesController {
   @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Validate a quote (change from draft to sent)' })
   @ApiResponse({ status: 200, description: 'Quote validated' })
+  @RequirePermission('quotes.validate')
   async validate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.validate(id);
     return ApiRes(QUO.VALIDATED, quote);
@@ -197,6 +206,7 @@ export class QuotesController {
   @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Devalidate a quote (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Quote devalidated' })
+  @RequirePermission('quotes.validate')
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.devalidate(id);
     return ApiRes(QUO.DEVALIDATED, quote);
@@ -206,6 +216,7 @@ export class QuotesController {
   @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Accept a quote' })
   @ApiResponse({ status: 200, description: 'Quote accepted' })
+  @RequirePermission('quotes.validate')
   async accept(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.accept(id);
     return ApiRes(QUO.ACCEPTED, quote);
@@ -215,6 +226,7 @@ export class QuotesController {
   @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Reject a quote' })
   @ApiResponse({ status: 200, description: 'Quote rejected' })
+  @RequirePermission('quotes.validate')
   async reject(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.reject(id);
     return ApiRes(QUO.REJECTED, quote);
@@ -223,6 +235,7 @@ export class QuotesController {
   @Post(':id/share')
   @ApiOperation({ summary: 'Generate share link for quote' })
   @ApiResponse({ status: 200, description: 'Share link generated' })
+  @RequirePermission('quotes.export')
   async generateShareLink(@Param('id', ParseIntPipe) id: number) {
     const result = await this.quotesService.generateShareLink(id);
     return ApiRes(QUO.SHARED, result);
@@ -263,6 +276,7 @@ export class QuotesController {
     summary: 'Refuse a signed quote and set status to closed (admin only)',
   })
   @ApiResponse({ status: 200, description: 'Quote unsigned' })
+  @RequirePermission('quotes.edit')
   async unsignQuote(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.unsignQuote(id);
     return ApiRes(QUO.UNSIGNED, quote);
@@ -274,6 +288,7 @@ export class QuotesController {
     summary: 'Mark quote as converted to order (bon de livraison)',
   })
   @ApiResponse({ status: 200, description: 'Quote converted to order' })
+  @RequirePermission('quotes.convert')
   async convertToOrder(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { orderId: number },
@@ -286,6 +301,7 @@ export class QuotesController {
   @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Mark quote as converted to invoice (facture)' })
   @ApiResponse({ status: 200, description: 'Quote converted to invoice' })
+  @RequirePermission('quotes.convert')
   async convertToInvoice(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { invoiceId: number },
@@ -297,6 +313,7 @@ export class QuotesController {
   @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get quote analytics with chart data and KPIs' })
   @ApiResponse({ status: 200, description: 'Analytics retrieved' })
+  @RequirePermission('quotes.view')
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -313,6 +330,7 @@ export class QuotesController {
   )
   @ApiOperation({ summary: 'Export quotes/devis to XLSX file' })
   @ApiResponse({ status: 200, description: 'Export successful' })
+  @RequirePermission('quotes.export')
   async exportToXlsx(
     @Res() res: Response,
     @Query('supplierId') supplierId?: string,

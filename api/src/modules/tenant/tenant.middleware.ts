@@ -46,8 +46,13 @@ export class TenantMiddleware implements NestMiddleware {
       url === '/' ||
       url === '/api/health' ||
       url === '/health' ||
-      url.startsWith('/api/admin/tenants') ||
-      url.startsWith('/admin/tenants') ||
+      // The whole `/admin` surface is super-admin: tenants, payments,
+      // installments and plans all live in the master DB and are guarded by
+      // SuperAdminGuard, so none of them has — or could resolve — a tenant
+      // context. Matching the prefix rather than each route keeps new
+      // super-admin endpoints from silently 401-ing here.
+      url.startsWith('/api/admin/') ||
+      url.startsWith('/admin/') ||
       url.startsWith('/api/super-admin/') ||
       url.startsWith('/api/onboarding/public-status')
     ) {

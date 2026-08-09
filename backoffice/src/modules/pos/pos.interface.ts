@@ -8,6 +8,8 @@ export interface IPosProduct {
   cost?: number;
   categoryId?: number;
   categories?: { id: number; name: string }[];
+  brandId?: number | null;
+  brand?: { id: number; name: string } | null;
   imageUrl?: string;
   isEnabled?: boolean;
   isService?: boolean;

@@ -56,7 +56,7 @@ export default function PDFActionButtons({
         {showPreview && (
           <Button
             icon={<Eye size={16} />}
-            label="Prévisualiser"
+            label={t('preview')}
             onClick={() => handlePDFAction('preview')}
             onMouseEnter={handlePreviewMouseEnter}
             style={{ background: '#2563eb', borderColor: '#2563eb' }}

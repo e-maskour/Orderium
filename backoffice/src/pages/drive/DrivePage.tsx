@@ -1268,7 +1268,7 @@ export default function DrivePage() {
           icon: 'pi pi-trash',
           command: () =>
             toastConfirm(
-              (t('moveToTrash') as string) || 'Déplacer vers la corbeille ?',
+              (t('moveToTrash') as string) || t('confirmMoveToTrash'),
               () => trashMutation.mutate(node.id),
               { variant: 'warning', confirmLabel: (t('moveToTrash') as string) || 'Corbeille' },
             ),
@@ -1286,7 +1286,7 @@ export default function DrivePage() {
           icon: 'pi pi-times-circle',
           command: () =>
             toastConfirm(
-              (t('deleteForever') as string) || 'Supprimer définitivement ?',
+              (t('deleteForever') as string) || t('confirmDeletePermanently'),
               () => deleteMutation.mutate(node.id),
               {
                 variant: 'destructive',

@@ -5,6 +5,7 @@ import { formatCurrency } from '@/lib/i18n';
 import { Package, Plus, Check } from 'lucide-react';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface ProductCardProps {
   product: Product;
@@ -12,15 +13,11 @@ interface ProductCardProps {
   index?: number;
 }
 
-const getImageUrl = (imageUrl?: string): string | undefined => {
-  if (!imageUrl) return undefined;
-  if (imageUrl.startsWith('http')) return imageUrl;
-  const base = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
-  return `${base}/orderium-media/${imageUrl}`;
-};
-
 export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductCardProps) => {
   const isAboveFold = index < 6;
+  // Some catalogue rows point at URLs that no longer resolve; a broken-image
+  // glyph is worse than the placeholder the card already knows how to draw.
+  const [imageFailed, setImageFailed] = useState(false);
   const { language, dir } = useLanguage();
   const { getItemQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,14 +71,15 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
               justifyContent: 'center',
             }}
           >
-            {product.imageUrl ? (
+            {product.imageUrl && !imageFailed ? (
               <img
-                src={getImageUrl(product.imageUrl)}
+                src={resolveMediaUrl(product.imageUrl)}
                 alt={product.name}
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 loading={isAboveFold ? 'eager' : 'lazy'}
-                fetchpriority={isAboveFold ? 'high' : 'auto'}
+                fetchPriority={isAboveFold ? 'high' : 'auto'}
                 decoding="async"
+                onError={() => setImageFailed(true)}
               />
             ) : (
               <div
@@ -219,14 +217,15 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
             overflow: 'hidden',
           }}
         >
-          {product.imageUrl ? (
+          {product.imageUrl && !imageFailed ? (
             <img
-              src={getImageUrl(product.imageUrl)}
+              src={resolveMediaUrl(product.imageUrl)}
               alt={product.name}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               loading={isAboveFold ? 'eager' : 'lazy'}
-              fetchpriority={isAboveFold ? 'high' : 'auto'}
+              fetchPriority={isAboveFold ? 'high' : 'auto'}
               decoding="async"
+              onError={() => setImageFailed(true)}
             />
           ) : (
             <div

@@ -19,10 +19,12 @@ import {
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtService } from '@nestjs/jwt';
+import { AccessControlService } from '../access/access-control.service';
 import { PortalService } from './portal.service';
 import { LoginDto, RegisterDto } from './dto/portal.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { ApiRes } from '../../common/api-response';
@@ -33,7 +35,28 @@ import { QuotesService } from '../quotes/quotes.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { PartnersService } from '../partners/partners.service';
 import { CategoriesService } from '../categories/categories.service';
+import { BrandsService } from '../brands/brands.service';
+import { ProductsService } from '../products/products.service';
+import { StatisticsService } from '../statistics/statistics.service';
+import { ProductResponseDto } from '../products/dto/product-response.dto';
 import { OrderNotificationService } from '../notifications/order-notification.service';
+import {
+  RequirePermission,
+  NoPermissionRequired,
+} from '../auth/decorators/permissions.decorator';
+
+/**
+ * Landing-page rails show three items. The cap is enforced here rather than
+ * trusted from the query string so a rail cannot be widened into a bulk export.
+ */
+const RAIL_DEFAULT = 3;
+const RAIL_MAX = 12;
+
+function clampRailLimit(raw?: string): number {
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 1) return RAIL_DEFAULT;
+  return Math.min(Math.floor(parsed), RAIL_MAX);
+}
 
 @ApiTags('Portal')
 @Controller('portal')
@@ -42,12 +65,16 @@ export class PortalController {
   constructor(
     private readonly portalService: PortalService,
     private readonly jwtService: JwtService,
+    private readonly accessControl: AccessControlService,
     private readonly ordersService: OrdersService,
     private readonly invoicesService: InvoicesService,
     private readonly quotesService: QuotesService,
     private readonly configurationsService: ConfigurationsService,
     private readonly partnersService: PartnersService,
     private readonly categoriesService: CategoriesService,
+    private readonly brandsService: BrandsService,
+    private readonly productsService: ProductsService,
+    private readonly statisticsService: StatisticsService,
     private readonly orderNotificationService: OrderNotificationService,
   ) {}
 
@@ -84,11 +111,13 @@ export class PortalController {
       isCustomer: user.isCustomer,
       // admin users (isAdmin) get an 'admin' scope so they can access backoffice resources
       scope: user.isAdmin ? 'admin' : 'portal',
-      roleId: user.roleId ?? null,
-      isSuperAdmin: user.role?.isSuperAdmin ?? false,
-      permissions: user.role?.permissions?.map((p) => p.key) ?? [],
     };
     const token = this.jwtService.sign(payload);
+    // Resolved rather than read off the token, and refreshed by GET /access/me
+    // on every app load so a role edit is visible without logging out.
+    const access = user.isAdmin
+      ? await this.accessControl.getEffectiveAccess(user.id)
+      : null;
     return ApiRes(PRT.LOGIN, {
       user: {
         id: user.id,
@@ -99,10 +128,10 @@ export class PortalController {
         customerName: user.name,
         isAdmin: user.isAdmin,
         isCustomer: user.isCustomer,
-        roleId: user.roleId,
-        roleName: user.role?.name ?? null,
-        isSuperAdmin: user.role?.isSuperAdmin ?? false,
-        permissions: user.role?.permissions?.map((p) => p.key) ?? [],
+        roleIds: access?.roleIds ?? [],
+        roleNames: access?.roleNames ?? [],
+        isSuperAdmin: access?.isSuperAdmin ?? false,
+        permissions: access?.permissions ?? [],
       },
       token,
     });
@@ -138,11 +167,9 @@ export class PortalController {
       isAdmin: user.isAdmin,
       isCustomer: user.isCustomer,
       scope: 'admin',
-      roleId: user.roleId ?? null,
-      isSuperAdmin: user.role?.isSuperAdmin ?? false,
-      permissions: user.role?.permissions?.map((p) => p.key) ?? [],
     };
     const token = this.jwtService.sign(payload);
+    const access = await this.accessControl.getEffectiveAccess(user.id);
     return ApiRes(PRT.LOGIN, {
       user: {
         id: user.id,
@@ -153,9 +180,10 @@ export class PortalController {
         customerName: user.name,
         isAdmin: user.isAdmin,
         isCustomer: user.isCustomer,
-        roleId: user.roleId,
-        isSuperAdmin: user.role?.isSuperAdmin ?? false,
-        permissions: user.role?.permissions?.map((p) => p.key) ?? [],
+        roleIds: access.roleIds,
+        roleNames: access.roleNames,
+        isSuperAdmin: access.isSuperAdmin,
+        permissions: access.permissions,
       },
       token,
     });
@@ -332,6 +360,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Get the authenticated user profile' })
   @ApiResponse({ status: 200, description: 'Authenticated user profile' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @NoPermissionRequired()
   async getMe(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
@@ -364,6 +393,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Export own personal data (GDPR)' })
   @ApiResponse({ status: 200, description: 'User personal data export' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @NoPermissionRequired()
   async exportMyData(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const data = await this.portalService.exportUserData(userId);
@@ -377,6 +407,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Delete own account and personal data (GDPR)' })
   @ApiResponse({ status: 200, description: 'Account and data deleted' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @NoPermissionRequired()
   async deleteMyAccount(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
@@ -399,6 +430,7 @@ export class PortalController {
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @NoPermissionRequired()
   async getMyOrders(
     @Request() req: { user: { id: number; sub: number } },
     @Query('page') page = '1',
@@ -438,6 +470,7 @@ export class PortalController {
     description: 'Access denied or account not linked',
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @NoPermissionRequired()
   async getMyOrder(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -470,6 +503,7 @@ export class PortalController {
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'dateFrom', required: false, type: String })
   @ApiQuery({ name: 'dateTo', required: false, type: String })
+  @NoPermissionRequired()
   async getMyInvoices(
     @Request() req: { user: { id: number; sub: number } },
     @Query('page') page = '1',
@@ -510,6 +544,7 @@ export class PortalController {
     description: 'Access denied or account not linked',
   })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
+  @NoPermissionRequired()
   async getMyInvoice(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -540,6 +575,7 @@ export class PortalController {
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'dateFrom', required: false, type: String })
   @ApiQuery({ name: 'dateTo', required: false, type: String })
+  @NoPermissionRequired()
   async getMyQuotes(
     @Request() req: { user: { id: number; sub: number } },
     @Query('page') page = '1',
@@ -580,6 +616,7 @@ export class PortalController {
     description: 'Access denied or account not linked',
   })
   @ApiResponse({ status: 404, description: 'Quote not found' })
+  @NoPermissionRequired()
   async getMyQuote(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -616,17 +653,21 @@ export class PortalController {
     enum: ['pending', 'approved', 'rejected'],
   })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'userType', required: false, enum: ['admin', 'client'] })
+  @RequirePermission('users.view')
   async adminListUsers(
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '20',
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('userType') userType?: string,
   ) {
     const result = await this.portalService.findAllUsers(
       parseInt(page, 10),
       parseInt(pageSize, 10),
       status,
       search,
+      userType,
     );
     return ApiRes(PRT.ADMIN_USERS_LIST, result);
   }
@@ -637,6 +678,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Approve a portal user account (admin only)' })
   @ApiResponse({ status: 200, description: 'User approved' })
   @ApiResponse({ status: 404, description: 'Portal user not found' })
+  @RequirePermission('users.edit')
   async adminApproveUser(@Param('id', ParseIntPipe) id: number) {
     const user = await this.portalService.updateStatus(id, 'approved');
     if (!user) {
@@ -651,6 +693,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Reject a portal user account (admin only)' })
   @ApiResponse({ status: 200, description: 'User rejected' })
   @ApiResponse({ status: 404, description: 'Portal user not found' })
+  @RequirePermission('users.edit')
   async adminRejectUser(@Param('id', ParseIntPipe) id: number) {
     const user = await this.portalService.updateStatus(id, 'rejected');
     if (!user) {
@@ -705,8 +748,87 @@ export class PortalController {
   @Get('categories')
   @ApiOperation({ summary: 'List product categories (portal)' })
   @ApiResponse({ status: 200, description: 'List of product categories' })
+  @NoPermissionRequired()
   async getCategories() {
     const categories = await this.categoriesService.findAll('product');
     return ApiRes(PRT.CATEGORIES_LIST, categories);
+  }
+
+  @Get('brands')
+  @ApiOperation({ summary: 'List active brands (portal)' })
+  @ApiResponse({ status: 200, description: 'List of active brands' })
+  @NoPermissionRequired()
+  async getBrands() {
+    const brands = await this.brandsService.findAll();
+    // Portal clients only need what they render — keep storage keys and
+    // back-office metadata (website, description, productCount) server-side.
+    return ApiRes(
+      PRT.BRANDS_LIST,
+      brands.map((brand) => ({
+        id: brand.id,
+        name: brand.name,
+        logoUrl: brand.logoUrl,
+      })),
+    );
+  }
+
+  // ─── Storefront discovery rails ───────────────────────────────────────────
+  // Small, fixed-size lists rendered on the portal landing page. Each is capped
+  // server-side so a client cannot turn a rail into a full catalogue dump.
+
+  @Get('products/top-sellers')
+  @Serialize(ProductResponseDto)
+  @ApiOperation({ summary: 'Best-selling products by revenue (portal)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 3 })
+  @ApiResponse({ status: 200, description: 'Top selling products' })
+  @NoPermissionRequired()
+  async getTopSellers(@Query('limit') limit?: string) {
+    const take = clampRailLimit(limit);
+    const top = await this.statisticsService.getTopProducts(take);
+    const products = await this.productsService.findRanked(
+      top.map((entry) => entry.productId),
+    );
+    return ApiRes(PRT.TOP_SELLERS, products);
+  }
+
+  @Get('products/newest')
+  @Serialize(ProductResponseDto)
+  @ApiOperation({ summary: 'Most recently added products (portal)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 3 })
+  @ApiResponse({ status: 200, description: 'New products' })
+  @NoPermissionRequired()
+  async getNewestProducts(@Query('limit') limit?: string) {
+    const products = await this.productsService.findNewest(
+      clampRailLimit(limit),
+    );
+    return ApiRes(PRT.NEWEST_PRODUCTS, products);
+  }
+
+  @Get('products/reorder')
+  @Serialize(ProductResponseDto)
+  @ApiOperation({
+    summary: 'Products the signed-in customer orders most (portal)',
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 3 })
+  @ApiResponse({ status: 200, description: 'Frequently ordered products' })
+  @NoPermissionRequired()
+  async getReorderProducts(
+    @Request() req: { user: { id: number; sub: number } },
+    @Query('limit') limit?: string,
+  ) {
+    // The customer is derived from the token, never taken from the client —
+    // otherwise any portal user could read another customer's buying history.
+    const userId = req.user.sub ?? req.user.id;
+    const user = await this.portalService.findById(userId);
+    if (!user?.customerId) {
+      return ApiRes(PRT.REORDER_PRODUCTS, []);
+    }
+
+    const productIds = await this.ordersService.findMostOrderedProductIds(
+      user.customerId,
+      clampRailLimit(limit),
+    );
+    const products = await this.productsService.findRanked(productIds);
+    return ApiRes(PRT.REORDER_PRODUCTS, products);
   }
 }

@@ -16,6 +16,7 @@ import { WarehouseResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { WRH } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Inventory - Warehouses')
 @Serialize(WarehouseResponseDto)
@@ -26,6 +27,7 @@ export class WarehouseController {
   @Post()
   @ApiOperation({ summary: 'Create a new warehouse' })
   @ApiResponse({ status: 201, description: 'Warehouse created successfully' })
+  @RequirePermission('warehouses.create')
   async create(@Body() createDto: CreateWarehouseDto) {
     const warehouse = await this.warehouseService.create(createDto);
     return ApiRes(WRH.CREATED, warehouse);
@@ -34,6 +36,7 @@ export class WarehouseController {
   @Get()
   @ApiOperation({ summary: 'Get all warehouses' })
   @ApiResponse({ status: 200, description: 'List of all warehouses' })
+  @RequirePermission('warehouses.view')
   async findAll() {
     const warehouses = await this.warehouseService.findAll();
     return ApiRes(WRH.LIST, warehouses);
@@ -43,6 +46,7 @@ export class WarehouseController {
   @ApiOperation({ summary: 'Get warehouse by ID' })
   @ApiResponse({ status: 200, description: 'Warehouse details' })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
+  @RequirePermission('warehouses.view')
   async findOne(@Param('id') id: string) {
     const warehouse = await this.warehouseService.findOne(+id);
     return ApiRes(WRH.DETAIL, warehouse);
@@ -52,6 +56,7 @@ export class WarehouseController {
   @ApiOperation({ summary: 'Update warehouse' })
   @ApiResponse({ status: 200, description: 'Warehouse updated successfully' })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
+  @RequirePermission('warehouses.edit')
   async update(@Param('id') id: string, @Body() updateDto: UpdateWarehouseDto) {
     const warehouse = await this.warehouseService.update(+id, updateDto);
     return ApiRes(WRH.UPDATED, warehouse);
@@ -62,6 +67,7 @@ export class WarehouseController {
   @ApiOperation({ summary: 'Delete warehouse (soft delete)' })
   @ApiResponse({ status: 204, description: 'Warehouse deleted successfully' })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
+  @RequirePermission('warehouses.delete')
   remove(@Param('id') id: string) {
     return this.warehouseService.remove(+id);
   }

@@ -92,7 +92,7 @@ export class StockReportFilterDto extends ReportFilterDto {
   categoryId?: number;
 }
 
-export class AgingReportFilterDto {
+export class AgingReportFilterDto extends ReportFilterDto {
   @ApiPropertyOptional({
     example: '2025-12-31',
     description: 'Reference date for aging buckets',
@@ -106,20 +106,6 @@ export class AgingReportFilterDto {
   @IsInt()
   @Type(() => Number)
   partnerId?: number;
-
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  page?: number = 1;
-
-  @ApiPropertyOptional({ default: 50 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  perPage?: number = 50;
 }
 
 export class PartnerStatementFilterDto extends ReportFilterDto {

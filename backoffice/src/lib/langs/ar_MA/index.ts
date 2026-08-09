@@ -14,6 +14,8 @@ import drive from './drive';
 import users from './users';
 import company from './company';
 import inventoryAdjustments from './inventory-adjustments';
+import onboarding from './onboarding';
+import access from './access';
 
 export default {
   ...common,
@@ -32,4 +34,6 @@ export default {
   ...users,
   ...company,
   ...inventoryAdjustments,
+  ...onboarding,
+  ...access,
 };

@@ -117,7 +117,7 @@ export default function QuotePreviewPage() {
               margin: '0 auto 1rem',
             }}
           ></div>
-          <p style={{ color: '#475569' }}>Chargement du devis...</p>
+          <p style={{ color: '#475569' }}>{t('loadingQuote')}</p>
         </div>
       </div>
     );
@@ -159,7 +159,7 @@ export default function QuotePreviewPage() {
           >
             Erreur
           </h2>
-          <p style={{ color: '#475569', marginBottom: '1.5rem' }}>{error || 'Devis introuvable'}</p>
+          <p style={{ color: '#475569', marginBottom: '1.5rem' }}>{error || t('quoteNotFound')}</p>
         </div>
       </div>
     );
@@ -364,7 +364,7 @@ export default function QuotePreviewPage() {
               />
               <Column
                 field="quantity"
-                header="Quantité"
+                header={t('quantityLabel')}
                 headerStyle={{
                   textAlign: 'center',
                   padding: '0.75rem 1rem',
@@ -383,7 +383,7 @@ export default function QuotePreviewPage() {
               />
               <Column
                 field="unitPrice"
-                header="Prix unitaire"
+                header={t('unitPriceLabel')}
                 headerStyle={{
                   textAlign: 'right',
                   padding: '0.75rem 1rem',
@@ -519,7 +519,9 @@ export default function QuotePreviewPage() {
                       }}
                     >
                       <XCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-                      <h4 style={{ fontWeight: 700, color: '#991b1b', margin: 0 }}>Devis fermé</h4>
+                      <h4 style={{ fontWeight: 700, color: '#991b1b', margin: 0 }}>
+                        {t('quoteClosed')}
+                      </h4>
                     </div>
                     <p style={{ fontSize: '0.875rem', color: '#991b1b', margin: 0 }}>
                       Ce devis a été refusé et ne peut plus être modifié.
@@ -596,7 +598,7 @@ export default function QuotePreviewPage() {
                             value={clientNotes}
                             onChange={(e) => setClientNotes(e.target.value)}
                             rows={3}
-                            placeholder="Commentaire (optionnel)"
+                            placeholder={t('commentOptional')}
                             style={{ width: '100%' }}
                           />
                         </div>
@@ -620,7 +622,7 @@ export default function QuotePreviewPage() {
                 <div
                   style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}
                 >
-                  <span style={{ color: '#475569' }}>Sous-total HT:</span>
+                  <span style={{ color: '#475569' }}>{t('subtotalExclTax')}</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
                     {formatAmount(q.subtotal, 2)} {t('currency')}
                   </span>
@@ -642,7 +644,7 @@ export default function QuotePreviewPage() {
                     paddingTop: '0.5rem',
                   }}
                 >
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>Total TTC:</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{t('totalInclTax')}</span>
                   <span style={{ fontWeight: 700, color: '#2563eb' }}>
                     {formatAmount(q.total, 2)} {t('currency')}
                   </span>
@@ -694,7 +696,7 @@ export default function QuotePreviewPage() {
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <Button
-                  label={signing ? 'Signature...' : 'Signer le devis'}
+                  label={signing ? 'Signature...' : t('signQuoteFull')}
                   icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
                   onClick={handleSign}
                   disabled={signing || !signedBy.trim()}
@@ -702,7 +704,7 @@ export default function QuotePreviewPage() {
                   style={{ flex: 1 }}
                 />
                 <Button
-                  label={rejecting ? 'Refus...' : 'Refuser le devis'}
+                  label={rejecting ? 'Refus...' : t('rejectQuoteFull')}
                   icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
                   onClick={handleReject}
                   disabled={rejecting || !signedBy.trim()}

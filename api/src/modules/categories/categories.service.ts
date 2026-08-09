@@ -36,6 +36,94 @@ export class CategoriesService {
     return query.getMany();
   }
 
+  /**
+   * Paginated root categories with their full subtree attached.
+   *
+   * Pagination applies to ROOT categories only — children are never split
+   * across pages. When `search` is given, a root is kept if it matches or if
+   * any of its descendants matches, so the caller can expand straight to the hit.
+   */
+  async findPaginated(
+    page = 1,
+    perPage = 50,
+    search?: string,
+    type?: string,
+  ): Promise<{ categories: Category[]; totalCount: number }> {
+    const repo = this.categoryRepository;
+
+    // Walk UP from every matching node to find the roots of the subtrees that contain a hit.
+    let matchedRootIds: number[] | null = null;
+    if (search?.trim()) {
+      const pattern = `%${search.trim()}%`;
+      const rows: Array<{ id: number }> = await repo.manager.query(
+        `WITH RECURSIVE matched AS (
+           SELECT c.id, c."parentId"
+           FROM categories c
+           WHERE c."isActive" = true
+             AND ($2::varchar IS NULL OR c.type = $2)
+             AND (c.name ILIKE $1 OR c.description ILIKE $1)
+           UNION
+           SELECT p.id, p."parentId"
+           FROM categories p
+           INNER JOIN matched m ON p.id = m."parentId"
+         )
+         SELECT DISTINCT id FROM matched WHERE "parentId" IS NULL`,
+        [pattern, type ?? null],
+      );
+      matchedRootIds = rows.map((r) => Number(r.id));
+      if (matchedRootIds.length === 0) return { categories: [], totalCount: 0 };
+    }
+
+    const qb = repo
+      .createQueryBuilder('category')
+      .where('category.parentId IS NULL')
+      .andWhere('category.isActive = :isActive', { isActive: true });
+
+    if (type) qb.andWhere('category.type = :type', { type });
+    if (matchedRootIds)
+      qb.andWhere('category.id IN (:...matchedRootIds)', { matchedRootIds });
+
+    qb.orderBy('category.name', 'ASC')
+      .skip((page - 1) * perPage)
+      .take(perPage);
+
+    const [roots, totalCount] = await qb.getManyAndCount();
+    if (roots.length === 0) return { categories: [], totalCount };
+
+    await this.attachSubtrees(roots);
+    return { categories: roots, totalCount };
+  }
+
+  /** Load every active descendant of the given roots and wire up `children`. */
+  private async attachSubtrees(roots: Category[]): Promise<void> {
+    const rootIds = roots.map((r) => r.id);
+    const descendants: Category[] = await this.categoryRepository.manager.query(
+      `WITH RECURSIVE tree AS (
+         SELECT c.* FROM categories c WHERE c."parentId" = ANY($1::int[])
+         UNION
+         SELECT c.* FROM categories c INNER JOIN tree t ON c."parentId" = t.id
+       )
+       SELECT * FROM tree WHERE "isActive" = true ORDER BY name ASC`,
+      [rootIds],
+    );
+
+    const childrenByParent = new Map<number, Category[]>();
+    for (const node of descendants) {
+      node.id = Number(node.id);
+      node.parentId = Number(node.parentId);
+      const siblings = childrenByParent.get(node.parentId);
+      if (siblings) siblings.push(node);
+      else childrenByParent.set(node.parentId, [node]);
+    }
+
+    for (const node of descendants) {
+      node.children = childrenByParent.get(node.id) ?? [];
+    }
+    for (const root of roots) {
+      root.children = childrenByParent.get(root.id) ?? [];
+    }
+  }
+
   private async invalidateCategoryCache(id?: number) {
     if (id) await this.cacheManager.del(`category:${id}`);
   }

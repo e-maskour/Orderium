@@ -113,3 +113,29 @@ export interface CreateOrderDTO {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
+
+// ─── Merge summary (consolidated recap of several orders) ──────────────────
+
+export interface IMergeSummaryItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface IMergeSummaryOrder {
+  id: number;
+  orderNumber: string;
+  partnerName: string;
+  total: number;
+  items: IMergeSummaryItem[];
+}
+
+export interface IOrdersMergeSummary {
+  orders: IMergeSummaryOrder[];
+  orderCount: number;
+  grandTotal: number;
+  totalQuantity: number;
+  /** Requested ids that no longer exist server-side. */
+  missingIds: number[];
+}

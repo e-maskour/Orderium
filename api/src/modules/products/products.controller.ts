@@ -37,6 +37,7 @@ import { ApiRes } from '../../common/api-response';
 import { PRD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Products')
 @PortalRoute()
@@ -56,6 +57,7 @@ export class ProductsController {
     description: 'Product created successfully',
     type: ProductResponseDto,
   })
+  @RequirePermission('products.create')
   async create(@Body() createProductDto: CreateProductDto) {
     const product = await this.productsService.create(createProductDto);
     return ApiRes(PRD.CREATED, product);
@@ -72,6 +74,7 @@ export class ProductsController {
     description: 'Products retrieved successfully',
     type: [ProductResponseDto],
   })
+  @RequirePermission('products.view')
   async filterProducts(
     @Body() filterDto: FilterProductsDto,
     @Query('page') page?: string,
@@ -91,6 +94,7 @@ export class ProductsController {
       filterDto.stockFilter,
       filterDto.categoryIds,
       filterDto.isService,
+      filterDto.brandIds,
     );
 
     const offset = (pageNum - 1) * perPageNum;
@@ -116,12 +120,14 @@ export class ProductsController {
     enum: ['negative', 'zero', 'positive'],
   })
   @ApiQuery({ name: 'categoryIds', required: false, type: [Number] })
+  @ApiQuery({ name: 'brandIds', required: false, type: [Number] })
   @ApiQuery({ name: 'isService', required: false, type: Boolean })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
     type: [ProductResponseDto],
   })
+  @RequirePermission('products.view')
   async findAll(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -129,6 +135,7 @@ export class ProductsController {
     @Query('code') code?: string,
     @Query('stockFilter') stockFilter?: 'negative' | 'zero' | 'positive',
     @Query('categoryIds') categoryIds?: string,
+    @Query('brandIds') brandIds?: string,
     @Query('isService') isService?: string,
   ) {
     const limitNum = Math.min(
@@ -138,6 +145,9 @@ export class ProductsController {
     const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
     const categoryIdsArray = categoryIds
       ? categoryIds.split(',').map((id) => parseInt(id, 10))
+      : undefined;
+    const brandIdsArray = brandIds
+      ? brandIds.split(',').map((id) => parseInt(id, 10))
       : undefined;
     const isServiceBool =
       isService === 'true' ? true : isService === 'false' ? false : undefined;
@@ -153,6 +163,7 @@ export class ProductsController {
       stockFilter,
       categoryIdsArray,
       isServiceBool,
+      brandIdsArray,
     );
 
     return ApiRes(PRD.LIST, products, {
@@ -173,6 +184,7 @@ export class ProductsController {
     type: ProductResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @RequirePermission('products.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const product = await this.productsService.findOne(id);
     return ApiRes(PRD.DETAIL, product);
@@ -187,6 +199,7 @@ export class ProductsController {
     type: ProductResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @RequirePermission('products.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
@@ -200,6 +213,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Soft delete a product (set isEnabled to false)' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @RequirePermission('products.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.productsService.remove(id);
     return ApiRes(PRD.DELETED, null);
@@ -216,6 +230,7 @@ export class ProductsController {
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 400, description: 'Invalid file' })
+  @RequirePermission('products.edit')
   async uploadProductImage(
     @Param('id', ParseIntPipe) productId: number,
     @UploadedFile() file: Express.Multer.File,
@@ -285,6 +300,7 @@ export class ProductsController {
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 400, description: 'No image to delete' })
+  @RequirePermission('products.edit')
   async deleteProductImage(
     @Param('id', ParseIntPipe) productId: number,
     @Query('publicId') publicId?: string,
@@ -342,6 +358,7 @@ export class ProductsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @RequirePermission('products.view')
   async getOptimizedImageUrl(
     @Param('id', ParseIntPipe) productId: number,
     @Query('width') width?: string,
@@ -377,6 +394,7 @@ export class ProductsController {
     status: 200,
     description: 'Products exported successfully',
   })
+  @RequirePermission('products.export')
   async exportToXlsx(@Res() res: Response) {
     const buffer = await this.productsService.exportToXlsx();
     res.send(buffer);
@@ -391,6 +409,7 @@ export class ProductsController {
     description: 'Products imported successfully',
   })
   @ApiResponse({ status: 400, description: 'Invalid file' })
+  @RequirePermission('products.import')
   async importFromXlsx(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -411,6 +430,7 @@ export class ProductsController {
     status: 200,
     description: 'Template downloaded successfully',
   })
+  @RequirePermission('products.export')
   getImportTemplate(@Res() res: Response) {
     const buffer = this.productsService.getImportTemplate();
     res.send(buffer);

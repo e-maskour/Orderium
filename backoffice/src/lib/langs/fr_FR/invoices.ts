@@ -502,4 +502,21 @@ export default {
   thisMonth: 'Ce mois',
   searchByInvoice: 'Rechercher par facture, client ou référence...',
   modify: 'Modifier',
+
+  // ─── Public quote / document preview ──────────────────────
+  loadingQuote: 'Chargement du devis...',
+  quoteNotFound: 'Devis introuvable',
+  quoteClosed: 'Devis fermé',
+  signQuoteFull: 'Signer le devis',
+  rejectQuoteFull: 'Refuser le devis',
+  commentOptional: 'Commentaire (optionnel)',
+  quantityLabel: 'Quantité',
+  unitPriceLabel: 'Prix unitaire',
+  subtotalExclTax: 'Sous-total HT',
+  totalInclTax: 'Total TTC',
+  loadingDocument: 'Chargement du document...',
+  documentNotFoundOrExpired: 'Document introuvable ou lien expiré.',
+  documentUnavailableBody: "Ce document n'est pas disponible ou le lien a expiré.",
+  shareLinkRevoked: 'Lien révoqué avec succès',
+  shareLinkRevokeError: 'Erreur lors de la révocation du lien',
 };

@@ -8,6 +8,8 @@ import type {
   StockReportFilter,
   SalesReportFilter,
   ReportData,
+  PdfReportSpec,
+  AnyReportFilter,
 } from './analytics.interface';
 
 type AnyFilter =
@@ -81,4 +83,63 @@ export const analyticsService = {
 
   // XLSX download helpers
   xlsxUrl: (path: string, filter: AnyFilter) => `${path}${buildReportQueryString(filter)}`,
+
+  /**
+   * Renders a report as a branded PDF and returns the file.
+   *
+   * Sends only the presentation spec — the API re-runs the report itself with
+   * the same filter but without pagination, so the PDF holds the full result
+   * set rather than the page currently on screen.
+   */
+  async generateReportPdf(
+    spec: PdfReportSpec,
+    filter: AnyReportFilter,
+    locale?: string,
+  ): Promise<{ blob: Blob; fileName: string }> {
+    const { reportKey, ...presentation } = spec;
+
+    // Pagination is the screen's concern; the export always covers everything.
+    const { page: _page, perPage: _perPage, ...exportFilter } = filter as Record<string, unknown>;
+
+    const response = await apiClient.raw(
+      'POST',
+      `${API_ROUTES.REPORTS.PDF(reportKey)}${buildReportQueryString(exportFilter as AnyFilter)}`,
+      { body: { ...presentation, locale }, timeout: PDF_REQUEST_TIMEOUT_MS },
+    );
+
+    if (!response.ok) {
+      throw new Error(await readPdfError(response));
+    }
+
+    return {
+      blob: await response.blob(),
+      fileName: parseFileName(response) ?? `${spec.fileName ?? reportKey}.pdf`,
+    };
+  },
 };
+
+/** PDF rendering goes through an external API — allow more than the default 30s. */
+const PDF_REQUEST_TIMEOUT_MS = 60_000;
+
+/** Extracts the server-provided file name from `Content-Disposition`. */
+function parseFileName(response: Response): string | null {
+  const header = response.headers.get('content-disposition');
+  const match = header?.match(/filename="?([^"]+)"?/i);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Turns a failed PDF response into a readable message.
+ *
+ * `apiClient.raw` hands back non-OK responses untouched, so the JSON error
+ * envelope has to be unwrapped here.
+ */
+async function readPdfError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: string };
+    if (body?.message) return body.message;
+  } catch {
+    // Not JSON — fall through to the status text.
+  }
+  return response.statusText || `HTTP ${response.status}`;
+}

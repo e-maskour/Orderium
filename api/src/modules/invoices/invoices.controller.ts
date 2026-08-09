@@ -26,6 +26,7 @@ import { ApiRes } from '../../common/api-response';
 import { INV } from '../../common/response-codes';
 import { Public } from '../auth/decorators/public.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Invoices')
 @Controller('invoices')
@@ -36,6 +37,7 @@ export class InvoicesController {
   @Serialize(InvoiceListResponseDto)
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
   @ApiResponse({ status: 200, description: 'Invoices retrieved' })
+  @RequirePermission('invoices.view')
   async findAll(
     @Body() filterDto: FilterInvoicesDto,
     @Query('page') page?: string,
@@ -79,6 +81,7 @@ export class InvoicesController {
   @Post('aggregates')
   @ApiOperation({ summary: 'Get financial aggregates for filtered invoices' })
   @ApiResponse({ status: 200, description: 'Invoice aggregates retrieved' })
+  @RequirePermission('invoices.view')
   async getAggregates(
     @Body() filterDto: FilterInvoicesDto,
     @Query('direction') direction?: string,
@@ -109,6 +112,7 @@ export class InvoicesController {
     summary: 'Get all invoices (legacy - use POST /list instead)',
   })
   @ApiResponse({ status: 200, description: 'Invoices retrieved' })
+  @RequirePermission('invoices.view')
   async findAllLegacy(
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
@@ -146,6 +150,7 @@ export class InvoicesController {
   @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get invoice analytics with chart data and KPIs' })
   @ApiResponse({ status: 200, description: 'Analytics retrieved' })
+  @RequirePermission('invoices.view')
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -163,6 +168,7 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Get invoice by ID' })
   @ApiResponse({ status: 200, description: 'Invoice retrieved' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
+  @RequirePermission('invoices.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.findOne(id);
     return ApiRes(INV.DETAIL, invoice);
@@ -173,6 +179,7 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Create a new invoice' })
   @ApiResponse({ status: 201, description: 'Invoice created' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
+  @RequirePermission('invoices.create')
   async create(@Body() createInvoiceDto: CreateInvoiceDto) {
     const invoice = await this.invoicesService.create(createInvoiceDto);
     return ApiRes(INV.CREATED, invoice);
@@ -183,6 +190,7 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Update an invoice' })
   @ApiResponse({ status: 200, description: 'Invoice updated' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
+  @RequirePermission('invoices.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
@@ -196,6 +204,7 @@ export class InvoicesController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: 200, description: 'Invoice deleted' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
+  @RequirePermission('invoices.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.invoicesService.remove(id);
     return ApiRes(INV.DELETED, null);
@@ -207,6 +216,7 @@ export class InvoicesController {
     summary: 'Validate an invoice (change from draft to unpaid)',
   })
   @ApiResponse({ status: 200, description: 'Invoice validated' })
+  @RequirePermission('invoices.validate')
   async validate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.validate(id);
     return ApiRes(INV.VALIDATED, invoice);
@@ -216,6 +226,7 @@ export class InvoicesController {
   @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({ summary: 'Devalidate an invoice (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Invoice devalidated' })
+  @RequirePermission('invoices.cancel')
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.devalidate(id);
     return ApiRes(INV.DEVALIDATED, invoice);
@@ -224,6 +235,7 @@ export class InvoicesController {
   @Post(':id/share')
   @ApiOperation({ summary: 'Generate a shareable public link for an invoice' })
   @ApiResponse({ status: 200, description: 'Share link generated' })
+  @RequirePermission('invoices.export')
   async generateShareLink(@Param('id', ParseIntPipe) id: number) {
     const result = await this.invoicesService.generateShareLink(id);
     return ApiRes(INV.SHARED, result);
@@ -245,6 +257,7 @@ export class InvoicesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke share link for an invoice' })
   @ApiResponse({ status: 200, description: 'Share link revoked' })
+  @RequirePermission('invoices.export')
   async revokeShareLink(@Param('id', ParseIntPipe) id: number) {
     await this.invoicesService.revokeShareLink(id);
     return ApiRes(INV.SHARE_REVOKED, null);
@@ -257,6 +270,7 @@ export class InvoicesController {
   )
   @ApiOperation({ summary: 'Export invoices to XLSX file' })
   @ApiResponse({ status: 200, description: 'Export successful' })
+  @RequirePermission('invoices.export')
   async exportToXlsx(
     @Res() res: Response,
     @Query('supplierId') supplierId?: string,

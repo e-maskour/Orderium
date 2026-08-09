@@ -3,15 +3,17 @@ import { Link } from 'react-router-dom';
 import { BarChart2 } from 'lucide-react';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../lib/i18n';
 
 interface ReportCard {
-  title: string;
-  description: string;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
   path: string;
 }
 
 interface DomainSection {
-  domain: string;
+  domainKey: TranslationKey;
   icon: string;
   color: string;
   reports: ReportCard[];
@@ -19,212 +21,212 @@ interface DomainSection {
 
 const DOMAINS: DomainSection[] = [
   {
-    domain: 'Ventes',
+    domainKey: 'analyticsDomainSales',
     icon: 'pi pi-chart-line',
     color: 'blue',
     reports: [
       {
-        title: "Chiffre d'affaires",
-        description: 'Revenu par période avec évolution',
+        titleKey: 'analyticsSalesRevenueTitle',
+        descriptionKey: 'analyticsSalesRevenueDescription',
         path: '/analytics/sales/revenue',
       },
       {
-        title: 'Top produits vendus',
-        description: 'Classement des produits les plus performants',
+        titleKey: 'analyticsTopProductsTitle',
+        descriptionKey: 'analyticsTopProductsDescription',
         path: '/analytics/sales/top-products',
       },
       {
-        title: 'Ventes par client',
-        description: 'Montant total commandé par client',
+        titleKey: 'analyticsSalesByCustomerTitle',
+        descriptionKey: 'analyticsSalesByCustomerDescription',
         path: '/analytics/sales/by-customer',
       },
       {
-        title: 'Ventes par catégorie',
-        description: "Répartition du chiffre d'affaires par catégorie",
+        titleKey: 'analyticsSalesByCategoryTitle',
+        descriptionKey: 'analyticsSalesByCategoryDescription',
         path: '/analytics/sales/by-category',
       },
       {
-        title: 'Ventes par caisse',
-        description: 'Performance par point de vente',
+        titleKey: 'analyticsSalesByPosTitle',
+        descriptionKey: 'analyticsSalesByPosDescription',
         path: '/analytics/sales/by-pos',
       },
     ],
   },
   {
-    domain: 'Achats',
+    domainKey: 'analyticsDomainPurchases',
     icon: 'pi pi-shopping-bag',
     color: 'orange',
     reports: [
       {
-        title: 'Achats par période',
-        description: 'Évolution des dépenses fournisseurs',
+        titleKey: 'analyticsPurchasesByPeriodTitle',
+        descriptionKey: 'analyticsPurchasesByPeriodDescription',
         path: '/analytics/purchases/by-period',
       },
       {
-        title: 'Top fournisseurs',
-        description: 'Fournisseurs avec le plus de commandes',
+        titleKey: 'analyticsTopSuppliersTitle',
+        descriptionKey: 'analyticsTopSuppliersDescription',
         path: '/analytics/purchases/top-suppliers',
       },
       {
-        title: 'Achats par produit',
-        description: 'Produits les plus achetés',
+        titleKey: 'analyticsPurchasesByProductTitle',
+        descriptionKey: 'analyticsPurchasesByProductDescription',
         path: '/analytics/purchases/by-product',
       },
     ],
   },
   {
-    domain: 'Factures',
+    domainKey: 'analyticsDomainInvoices',
     icon: 'pi pi-file',
     color: 'purple',
     reports: [
       {
-        title: 'Journal de vente',
-        description: 'Toutes les factures clients',
+        titleKey: 'analyticsInvoicesJournalVenteTitle',
+        descriptionKey: 'analyticsInvoicesJournalVenteDescription',
         path: '/analytics/invoices/journal-vente',
       },
       {
-        title: "Journal d'achat",
-        description: 'Toutes les factures fournisseurs',
+        titleKey: 'analyticsInvoicesJournalAchatTitle',
+        descriptionKey: 'analyticsInvoicesJournalAchatDescription',
         path: '/analytics/invoices/journal-achat',
       },
       {
-        title: 'Bilan TVA',
-        description: 'Déclaration TVA par taux',
+        titleKey: 'analyticsTvaSummaryTitle',
+        descriptionKey: 'analyticsTvaSummaryDescription',
         path: '/analytics/invoices/tva',
       },
       {
-        title: 'Factures impayées',
-        description: 'Factures en attente de règlement',
+        titleKey: 'analyticsOutstandingInvoicesTitle',
+        descriptionKey: 'analyticsOutstandingInvoicesDescription',
         path: '/analytics/invoices/outstanding',
       },
       {
-        title: 'Balance âgée',
-        description: 'Retards de paiement par tranche',
+        titleKey: 'analyticsInvoiceAgingTitle',
+        descriptionKey: 'analyticsInvoiceAgingDescription',
         path: '/analytics/invoices/aging',
       },
     ],
   },
   {
-    domain: 'Paiements',
+    domainKey: 'analyticsDomainPayments',
     icon: 'pi pi-credit-card',
     color: 'green',
     reports: [
       {
-        title: 'Flux de trésorerie',
-        description: 'Entrées et sorties cumulées',
+        titleKey: 'analyticsCashflowTitle',
+        descriptionKey: 'analyticsCashflowDescription',
         path: '/analytics/payments/cashflow',
       },
       {
-        title: 'Paiements par mode',
-        description: 'Répartition espèces / virement / chèque',
+        titleKey: 'analyticsPaymentsByMethodTitle',
+        descriptionKey: 'analyticsPaymentsByMethodDescription',
         path: '/analytics/payments/by-method',
       },
       {
-        title: 'Entrées vs Sorties',
-        description: 'Comparaison encaissements et décaissements',
+        titleKey: 'analyticsInOutFlowTitle',
+        descriptionKey: 'analyticsInOutFlowDescription',
         path: '/analytics/payments/in-out',
       },
     ],
   },
   {
-    domain: 'Clients',
+    domainKey: 'analyticsDomainClients',
     icon: 'pi pi-users',
     color: 'teal',
     reports: [
       {
-        title: 'Top clients',
-        description: "Meilleurs clients par chiffre d'affaires",
+        titleKey: 'analyticsTopClientsTitle',
+        descriptionKey: 'analyticsTopClientsDescription',
         path: '/analytics/clients/top',
       },
       {
-        title: 'Balance âgée clients',
-        description: 'Créances clients par ancienneté',
+        titleKey: 'analyticsClientAgingTitle',
+        descriptionKey: 'analyticsClientAgingDescription',
         path: '/analytics/clients/aging',
       },
       {
-        title: 'Clients inactifs',
-        description: 'Clients sans commande récente',
+        titleKey: 'analyticsInactiveClientsTitle',
+        descriptionKey: 'analyticsInactiveClientsDescription',
         path: '/analytics/clients/inactive',
       },
       {
-        title: 'Relevé de compte',
-        description: "Historique complet d'un client",
+        titleKey: 'analyticsClientStatementTitle',
+        descriptionKey: 'analyticsClientStatementDescription',
         path: '/analytics/clients/statement',
       },
     ],
   },
   {
-    domain: 'Fournisseurs',
+    domainKey: 'analyticsDomainSuppliers',
     icon: 'pi pi-truck',
     color: 'yellow',
     reports: [
       {
-        title: 'Top fournisseurs',
-        description: "Fournisseurs par volume d'achats",
+        titleKey: 'analyticsTopSuppliersTitle',
+        descriptionKey: 'analyticsTopSuppliersDescription',
         path: '/analytics/suppliers/top',
       },
       {
-        title: 'Balance âgée fournisseurs',
-        description: 'Dettes fournisseurs par ancienneté',
+        titleKey: 'analyticsSupplierAgingTitle',
+        descriptionKey: 'analyticsSupplierAgingDescription',
         path: '/analytics/suppliers/aging',
       },
       {
-        title: 'Relevé de compte',
-        description: "Historique complet d'un fournisseur",
+        titleKey: 'analyticsSupplierStatementTitle',
+        descriptionKey: 'analyticsSupplierStatementDescription',
         path: '/analytics/suppliers/statement',
       },
     ],
   },
   {
-    domain: 'Stock',
+    domainKey: 'analyticsDomainStock',
     icon: 'pi pi-box',
     color: 'cyan',
     reports: [
       {
-        title: 'Valorisation du stock',
-        description: 'Valeur totale du stock par produit',
+        titleKey: 'analyticsStockValuationTitle',
+        descriptionKey: 'analyticsStockValuationDescription',
         path: '/analytics/stock/valuation',
       },
       {
-        title: 'Stock faible',
-        description: "Produits sous le seuil d'alerte",
+        titleKey: 'analyticsLowStockTitle',
+        descriptionKey: 'analyticsLowStockDescription',
         path: '/analytics/stock/low-stock',
       },
       {
-        title: 'Journal des mouvements',
-        description: 'Historique entrées / sorties / transferts',
+        titleKey: 'analyticsStockMovementsTitle',
+        descriptionKey: 'analyticsStockMovementsDescription',
         path: '/analytics/stock/movements',
       },
       {
-        title: 'Stock dormant',
-        description: 'Produits sans mouvement récent',
+        titleKey: 'analyticsSlowDeadStockTitle',
+        descriptionKey: 'analyticsSlowDeadStockDescription',
         path: '/analytics/stock/slow-dead',
       },
       {
-        title: 'Stock par entrepôt',
-        description: 'Répartition du stock par dépôt',
+        titleKey: 'analyticsStockByWarehouseTitle',
+        descriptionKey: 'analyticsStockByWarehouseDescription',
         path: '/analytics/stock/by-warehouse',
       },
     ],
   },
   {
-    domain: 'Produits',
+    domainKey: 'analyticsDomainProducts',
     icon: 'pi pi-tag',
     color: 'pink',
     reports: [
       {
-        title: 'Performance produits',
-        description: 'Quantités vendues et CA par produit',
+        titleKey: 'analyticsProductPerformanceTitle',
+        descriptionKey: 'analyticsProductPerformanceDescription',
         path: '/analytics/products/performance',
       },
       {
-        title: 'Analyse des marges',
-        description: 'Marge brute par produit',
+        titleKey: 'analyticsMarginAnalysisTitle',
+        descriptionKey: 'analyticsMarginAnalysisDescription',
         path: '/analytics/products/margin',
       },
       {
-        title: 'Produits jamais vendus',
-        description: 'Articles sans aucune vente',
+        titleKey: 'analyticsNeverSoldProductsTitle',
+        descriptionKey: 'analyticsNeverSoldProductsDescription',
         path: '/analytics/products/never-sold',
       },
     ],
@@ -259,13 +261,15 @@ const DOMAIN_COLORS: Record<string, { icon: string; bg: string; border: string; 
 };
 
 const AnalyticsHub: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         <PageHeader
           icon={BarChart2}
-          title="Analytiques & Rapports"
-          subtitle="Vue d'ensemble de tous les rapports disponibles"
+          title={t('analyticsPageTitle')}
+          subtitle={t('analyticsPageSubtitle')}
         />
 
         <div className="flex flex-column gap-3">
@@ -273,7 +277,7 @@ const AnalyticsHub: React.FC = () => {
             const dc = DOMAIN_COLORS[domain.color] ?? DOMAIN_COLORS.blue;
             return (
               <div
-                key={domain.domain}
+                key={domain.domainKey}
                 style={{
                   background: '#ffffff',
                   borderRadius: 'var(--erp-radius-lg)',
@@ -301,10 +305,10 @@ const AnalyticsHub: React.FC = () => {
                   >
                     <i className={domain.icon} style={{ fontSize: '0.875rem', color: dc.icon }} />
                   </div>
-                  <h3 className="text-base font-bold text-900 m-0">{domain.domain}</h3>
+                  <h3 className="text-base font-bold text-900 m-0">{t(domain.domainKey)}</h3>
                   <span
                     style={{
-                      marginLeft: 'auto',
+                      marginInlineStart: 'auto',
                       background: dc.badge,
                       color: '#fff',
                       borderRadius: '9999px',
@@ -313,7 +317,15 @@ const AnalyticsHub: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    {domain.reports.length} rapport{domain.reports.length > 1 ? 's' : ''}
+                    {domain.reports.length > 1
+                      ? t('analyticsReportCountPlural').replace(
+                          '{count}',
+                          String(domain.reports.length),
+                        )
+                      : t('analyticsReportCountSingular').replace(
+                          '{count}',
+                          String(domain.reports.length),
+                        )}
                   </span>
                 </div>
 
@@ -357,9 +369,11 @@ const AnalyticsHub: React.FC = () => {
                           }}
                         >
                           <div className="flex align-items-center justify-content-between">
-                            <p className="font-semibold text-800 m-0 text-sm">{report.title}</p>
+                            <p className="font-semibold text-800 m-0 text-sm">
+                              {t(report.titleKey)}
+                            </p>
                             <i
-                              className="pi pi-arrow-right text-400"
+                              className="pi pi-arrow-right text-400 analytics-report-card__arrow"
                               style={{ fontSize: '0.75rem' }}
                             />
                           </div>
@@ -367,7 +381,7 @@ const AnalyticsHub: React.FC = () => {
                             className="text-500 m-0"
                             style={{ fontSize: '0.75rem', lineHeight: 1.4 }}
                           >
-                            {report.description}
+                            {t(report.descriptionKey)}
                           </p>
                         </div>
                       </Link>

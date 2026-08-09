@@ -25,6 +25,10 @@ import { ApiRes } from '../../common/api-response';
 import { NOT } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import {
+  RequirePermission,
+  NoPermissionRequired,
+} from '../auth/decorators/permissions.decorator';
 
 /** Notification types that delivery persons may see */
 const DELIVERY_PORTAL_TYPES = [
@@ -60,6 +64,7 @@ export class NotificationsController {
     status: 200,
     description: 'Notifications retrieved successfully',
   })
+  @RequirePermission('notifications.view')
   async getNotifications(
     @Req() req: Request,
     @Query('userType') userType?: string,
@@ -133,6 +138,7 @@ export class NotificationsController {
     status: 200,
     description: 'Notification statistics retrieved successfully',
   })
+  @RequirePermission('notifications.view')
   async getStats(
     @Req() req: Request,
     @Query('userId') userId?: string,
@@ -154,6 +160,7 @@ export class NotificationsController {
     status: 200,
     description: 'Unread count retrieved successfully',
   })
+  @RequirePermission('notifications.view')
   async getUnreadCount(
     @Req() req: Request,
     @Query('userType') userType?: string,
@@ -185,6 +192,7 @@ export class NotificationsController {
     status: 200,
     description: 'User notifications retrieved successfully',
   })
+  @RequirePermission('notifications.view')
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
     @Query('limit') limit?: string,
@@ -203,6 +211,7 @@ export class NotificationsController {
     status: 200,
     description: 'Notification preferences retrieved',
   })
+  @RequirePermission('notifications.view')
   getPreferences() {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_DETAIL, {
@@ -224,6 +233,7 @@ export class NotificationsController {
   @Patch('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
   @ApiResponse({ status: 200, description: 'Notification preferences updated' })
+  @NoPermissionRequired()
   updatePreferences(@Body() preferences: Record<string, boolean>) {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_UPDATED, preferences);
@@ -237,6 +247,7 @@ export class NotificationsController {
     description: 'Notification retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
+  @RequirePermission('notifications.view')
   async getNotification(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
     if (!notification) {
@@ -249,6 +260,7 @@ export class NotificationsController {
   @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
+  @NoPermissionRequired()
   async markAsRead(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.markAsRead(id);
     return ApiRes(NOT.MARKED_READ, notification);
@@ -257,6 +269,7 @@ export class NotificationsController {
   @Patch('mark-many-read')
   @ApiOperation({ summary: 'Mark multiple notifications as read' })
   @ApiResponse({ status: 200, description: 'Notifications marked as read' })
+  @NoPermissionRequired()
   async markManyAsRead(@Body('ids') ids: number[]) {
     const updated = await this.notificationsService.markManyAsRead(ids);
     return ApiRes(NOT.MARKED_MANY_READ, { updated });
@@ -265,6 +278,7 @@ export class NotificationsController {
   @Patch('mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
+  @NoPermissionRequired()
   async markAllAsRead(
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
@@ -282,6 +296,7 @@ export class NotificationsController {
   @Serialize(NotificationResponseDto)
   @ApiOperation({ summary: 'Archive notification' })
   @ApiResponse({ status: 200, description: 'Notification archived' })
+  @NoPermissionRequired()
   async archive(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.archive(id);
     return ApiRes(NOT.ARCHIVED, notification);
@@ -290,6 +305,7 @@ export class NotificationsController {
   @Patch('archive-many')
   @ApiOperation({ summary: 'Archive multiple notifications' })
   @ApiResponse({ status: 200, description: 'Notifications archived' })
+  @NoPermissionRequired()
   async archiveMany(@Body('ids') ids: number[]) {
     const updated = await this.notificationsService.archiveMany(ids);
     return ApiRes(NOT.ARCHIVED_MANY, { updated });
@@ -298,6 +314,7 @@ export class NotificationsController {
   @Delete('delete-many')
   @ApiOperation({ summary: 'Delete multiple notifications' })
   @ApiResponse({ status: 200, description: 'Notifications deleted' })
+  @RequirePermission('notifications.manage')
   async deleteMany(@Body('ids') ids: number[]) {
     const deleted = await this.notificationsService.deleteMany(ids);
     return ApiRes(NOT.DELETED_MANY, { deleted });
@@ -306,6 +323,7 @@ export class NotificationsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete notification' })
   @ApiResponse({ status: 200, description: 'Notification deleted' })
+  @RequirePermission('notifications.manage')
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.notificationsService.delete(id);
     return ApiRes(NOT.DELETED, null);
@@ -314,6 +332,7 @@ export class NotificationsController {
   @Post('test')
   @ApiOperation({ summary: 'Send test notification' })
   @ApiResponse({ status: 200, description: 'Test notification sent' })
+  @RequirePermission('notifications.send')
   async sendTestNotification() {
     // Send a test notification
     await this.notificationsService.create({
@@ -332,6 +351,7 @@ export class NotificationsController {
   @Post('device-token/:userId')
   @ApiOperation({ summary: 'Register device token for push notifications' })
   @ApiResponse({ status: 200, description: 'Device token registered' })
+  @NoPermissionRequired()
   async registerDeviceToken(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: RegisterDeviceTokenDto,
@@ -346,6 +366,7 @@ export class NotificationsController {
   @Delete('device-token')
   @ApiOperation({ summary: 'Unregister device token' })
   @ApiResponse({ status: 200, description: 'Device token unregistered' })
+  @NoPermissionRequired()
   async unregisterDeviceToken(@Body() dto: UnregisterDeviceTokenDto) {
     await this.pushNotificationService.unregisterDeviceToken(dto.token);
     return ApiRes(NOT.TOKEN_UNREGISTERED, null);
@@ -354,6 +375,7 @@ export class NotificationsController {
   @Get('device-token/:userId')
   @ApiOperation({ summary: 'Get user registered devices' })
   @ApiResponse({ status: 200, description: 'User devices retrieved' })
+  @NoPermissionRequired()
   async getUserDevices(@Param('userId', ParseIntPipe) userId: number) {
     const devices = await this.pushNotificationService.getUserDevices(userId);
     return ApiRes(NOT.TOKEN_LIST, devices);
@@ -362,6 +384,7 @@ export class NotificationsController {
   @Patch('device-token/:token/refresh')
   @ApiOperation({ summary: 'Refresh device token last used timestamp' })
   @ApiResponse({ status: 200, description: 'Device token refreshed' })
+  @NoPermissionRequired()
   async refreshDeviceToken(@Param('token') token: string) {
     await this.pushNotificationService.updateLastUsed(token);
     return ApiRes(NOT.TOKEN_REFRESHED, null);

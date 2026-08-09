@@ -18,12 +18,23 @@ export const API_ROUTES = {
   // ─── Categories ────────────────────────────────────────────
   CATEGORIES: {
     LIST: '/api/categories',
+    PAGINATED: '/api/categories/paginated',
     HIERARCHY: '/api/categories/hierarchy',
     BY_TYPE: (type: string) => `/api/categories/type/${type}`,
     DETAIL: (id: number) => `/api/categories/${id}`,
     CREATE: '/api/categories',
     UPDATE: (id: number) => `/api/categories/${id}`,
     DELETE: (id: number) => `/api/categories/${id}`,
+  },
+
+  // ─── Brands ────────────────────────────────────────────────
+  BRANDS: {
+    LIST: '/api/brands',
+    DETAIL: (id: number) => `/api/brands/${id}`,
+    PRODUCTS: (id: number) => `/api/brands/${id}/products`,
+    CREATE: '/api/brands',
+    UPDATE: (id: number) => `/api/brands/${id}`,
+    DELETE: (id: number) => `/api/brands/${id}`,
   },
 
   // ─── Products ──────────────────────────────────────────────
@@ -63,6 +74,7 @@ export const API_ROUTES = {
     SHARE: (id: number) => `/api/orders/${id}/share`,
     SHARED: (token: string) => `/api/orders/shared/${token}`,
     CHANGE_STATUS: (id: number) => `/api/orders/${id}/status`,
+    MERGE_SUMMARY: '/api/orders/merge-summary',
   },
 
   // ─── Invoices ──────────────────────────────────────────────
@@ -178,6 +190,8 @@ export const API_ROUTES = {
 
   // ─── Reports / Analytics ───────────────────────────────────
   REPORTS: {
+    /** POST — renders any report as a branded PDF. See PDF_KEYS for the keys. */
+    PDF: (reportKey: string) => `/api/reports/pdf/${reportKey}`,
     SALES: {
       REVENUE: '/api/reports/sales/revenue',
       REVENUE_XLSX: '/api/reports/sales/revenue/xlsx',
@@ -377,6 +391,16 @@ export const API_ROUTES = {
     COMPLETE: '/api/onboarding/complete',
   },
 
+  // ─── Access Control ────────────────────────────────────────
+  ACCESS: {
+    /** Module/action/level registry driving the role matrix */
+    MODULES: '/api/access/modules',
+    /** The caller's effective permissions — resolved server-side, always live */
+    ME: '/api/access/me',
+    /** Re-sync the catalogue and preset roles from the registry */
+    SYNC: '/api/access/sync',
+  },
+
   // ─── Permissions ───────────────────────────────────────────
   PERMISSIONS: {
     LIST: '/api/permissions',
@@ -410,6 +434,13 @@ export const API_ROUTES = {
     REJECT: (id: number) => `/api/portal/admin/users/${id}/reject`,
   },
 
+  // ─── Client access requests (portal sign-ups) ──────────────
+  CLIENT_REQUESTS: {
+    LIST: '/api/portal/admin/users',
+    APPROVE: (id: number) => `/api/portal/admin/users/${id}/approve`,
+    REJECT: (id: number) => `/api/portal/admin/users/${id}/reject`,
+  },
+
   // ─── Printers ──────────────────────────────────────────────
   PRINTERS: {
     LIST: '/api/printers',
@@ -430,5 +461,6 @@ export const API_ROUTES = {
   PDF: {
     REGENERATE: (type: 'invoice' | 'quote' | 'delivery-note', id: number) =>
       `/api/pdf/regenerate/${type}/${id}`,
+    ORDERS_MERGE: '/api/pdf/orders-merge',
   },
 } as const;

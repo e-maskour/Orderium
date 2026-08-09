@@ -39,6 +39,7 @@ const MOBILE_TABS: MobileTab[] = [
     activePaths: [
       '/products',
       '/categories',
+      '/brands',
       '/warehouses',
       '/stock-movements',
       '/inventory-adjustments',
@@ -118,7 +119,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="mobile-bottom-nav lg:hidden" aria-label="Navigation mobile">
+      <nav className="mobile-bottom-nav lg:hidden" aria-label={t('mobileNavigation')}>
         {MOBILE_TABS.map((tab) => {
           const active = isTabActive(tab);
           return (

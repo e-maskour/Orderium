@@ -18,6 +18,7 @@ import { PaymentResponseDto } from './dto/payment-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { PAY } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Payments')
 @Serialize(PaymentResponseDto)
@@ -29,6 +30,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Create a new payment' })
   @ApiResponse({ status: 201, description: 'Payment created' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
+  @RequirePermission('payments.create')
   async create(@Body() createPaymentDto: CreatePaymentDto) {
     const payment = await this.paymentsService.create(createPaymentDto);
     return ApiRes(PAY.CREATED, payment);
@@ -39,6 +41,7 @@ export class PaymentsController {
   @ApiQuery({ name: 'invoiceId', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Payments retrieved' })
+  @RequirePermission('payments.view')
   async findAll(
     @Query('invoiceId', new ParseIntPipe({ optional: true }))
     invoiceId?: number,
@@ -54,6 +57,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get payment by ID' })
   @ApiResponse({ status: 200, description: 'Payment retrieved' })
   @ApiResponse({ status: 404, description: 'Payment not found' })
+  @RequirePermission('payments.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const payment = await this.paymentsService.findOne(id);
     return ApiRes(PAY.DETAIL, payment);
@@ -62,6 +66,7 @@ export class PaymentsController {
   @Get('invoice/:invoiceId/total')
   @ApiOperation({ summary: 'Get total paid for an invoice' })
   @ApiResponse({ status: 200, description: 'Total paid retrieved' })
+  @RequirePermission('payments.view')
   async getTotalPaid(@Param('invoiceId', ParseIntPipe) invoiceId: number) {
     const totalPaid = await this.paymentsService.getTotalPaid(invoiceId);
     return ApiRes(PAY.TOTAL_PAID, totalPaid);
@@ -71,6 +76,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Update a payment' })
   @ApiResponse({ status: 200, description: 'Payment updated' })
   @ApiResponse({ status: 404, description: 'Payment not found' })
+  @RequirePermission('payments.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePaymentDto: UpdatePaymentDto,
@@ -84,6 +90,7 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: 200, description: 'Payment deleted' })
   @ApiResponse({ status: 404, description: 'Payment not found' })
+  @RequirePermission('payments.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.paymentsService.remove(id);
     return ApiRes(PAY.DELETED, null);

@@ -8,9 +8,6 @@ export type TenantStatus =
   | 'deleted';
 
 export type SubscriptionPlan = 'trial' | 'basic' | 'pro' | 'enterprise';
-export type PaymentStatus = 'pending' | 'validated' | 'rejected' | 'refunded';
-export type PaymentMethod = 'bank_transfer' | 'cash' | 'check' | 'card' | 'other';
-export type BillingCycle = 'monthly' | 'yearly';
 
 export interface Tenant {
   id: number;
@@ -122,42 +119,6 @@ export interface UpdateTenantInput {
   maxUsers?: number;
   autoRenew?: boolean;
   settings?: Record<string, unknown>;
-}
-
-export interface Payment {
-  id: string;
-  tenantId: number;
-  tenant?: Pick<Tenant, 'id' | 'name' | 'slug'>;
-  amount: number;
-  currency: string;
-  paymentMethod: PaymentMethod | null;
-  planName: string;
-  billingCycle: BillingCycle;
-  periodStart: string;
-  periodEnd: string;
-  status: PaymentStatus;
-  validatedBy: string | null;
-  validatedAt: string | null;
-  rejectionReason: string | null;
-  referenceNumber: string | null;
-  receiptUrl: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreatePaymentInput {
-  amount: number;
-  currency?: string;
-  paymentMethod?: PaymentMethod;
-  planName: SubscriptionPlan;
-  billingCycle: BillingCycle;
-  periodStart: string;
-  periodEnd: string;
-  referenceNumber?: string;
-  receiptUrl?: string;
-  notes?: string;
-  validateImmediately?: boolean;
 }
 
 export interface SubscriptionPlanData {

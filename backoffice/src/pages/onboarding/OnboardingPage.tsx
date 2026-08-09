@@ -13,15 +13,18 @@ import WelcomeScreen from './WelcomeScreen';
 import CompanyStep from './CompanyStep';
 import AdminStep from './AdminStep';
 import SuccessScreen from './SuccessScreen';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../lib/i18n';
 
 type WizardStep = 'welcome' | 'company' | 'admin' | 'success';
 
-const STEPS: { key: WizardStep; label: string }[] = [
-  { key: 'company', label: 'Company Profile' },
-  { key: 'admin', label: 'Admin Account' },
+const STEPS: { key: WizardStep; labelKey: TranslationKey }[] = [
+  { key: 'company', labelKey: 'onboardingStepCompanyTitle' },
+  { key: 'admin', labelKey: 'onboardingStepAdminTitle' },
 ];
 
 function ProgressBar({ current }: { current: WizardStep }) {
+  const { t } = useLanguage();
   const idx = STEPS.findIndex((s) => s.key === current);
   if (idx === -1) return null;
 
@@ -89,7 +92,7 @@ function ProgressBar({ current }: { current: WizardStep }) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {step.label}
+                  {t(step.labelKey)}
                 </span>
               </div>
 
@@ -115,6 +118,7 @@ function ProgressBar({ current }: { current: WizardStep }) {
 }
 
 export default function OnboardingPage() {
+  const { t } = useLanguage();
   const [step, setStep] = useState<WizardStep>('welcome');
   const [companyData, setCompanyData] = useState<ICompany | null>(null);
 
@@ -124,7 +128,7 @@ export default function OnboardingPage() {
       setCompanyData(data);
       setStep('admin');
     } catch (err: any) {
-      const msg: string = err?.message ?? 'Failed to save company profile';
+      const msg: string = err?.message ?? t('companyProfileSaveError');
       if (msg.includes('already exists') || err?.status === 409) {
         // Company already exists → move forward
         setCompanyData(data);
@@ -155,10 +159,10 @@ export default function OnboardingPage() {
         // Non-critical — continue to success screen
       }
 
-      toastSuccess('Admin account created successfully!');
+      toastSuccess(t('adminAccountCreated'));
       setStep('success');
     } catch (err: any) {
-      const msg: string = err?.message ?? 'Failed to create admin account';
+      const msg: string = err?.message ?? t('adminAccountCreateError');
       toastError(msg);
     }
   };
@@ -171,12 +175,12 @@ export default function OnboardingPage() {
   const stepTitles: Record<WizardStep, { title: string; subtitle: string }> = {
     welcome: { title: '', subtitle: '' },
     company: {
-      title: 'Company Profile',
-      subtitle: 'Step 1 of 2 — Basic business information',
+      title: t('onboardingStepCompanyTitle'),
+      subtitle: t('onboardingStepCompanySubtitle'),
     },
     admin: {
-      title: 'Admin Account',
-      subtitle: 'Step 2 of 2 — Your administrator credentials',
+      title: t('onboardingStepAdminTitle'),
+      subtitle: t('onboardingStepAdminSubtitle'),
     },
     success: { title: '', subtitle: '' },
   };
@@ -254,7 +258,7 @@ export default function OnboardingPage() {
         )}
         {step === 'success' && (
           <SuccessScreen
-            companyName={companyData?.companyName ?? 'Your Company'}
+            companyName={companyData?.companyName ?? t('yourCompany')}
             companyLogo={companyData?.logo}
           />
         )}

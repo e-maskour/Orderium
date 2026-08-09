@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { Tenant } from '../modules/tenant/tenant.entity';
 import { Payment } from '../modules/tenant-lifecycle/entities/payment.entity';
+import { PaymentInstallment } from '../modules/tenant-lifecycle/entities/payment-installment.entity';
 import { SubscriptionPlan } from '../modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from '../modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from '../modules/super-admin/entities/migration-log.entity';
@@ -28,6 +29,7 @@ export const MasterDataSource = new DataSource({
   entities: [
     Tenant,
     Payment,
+    PaymentInstallment,
     SubscriptionPlan,
     TenantActivityLog,
     MigrationRunLog,

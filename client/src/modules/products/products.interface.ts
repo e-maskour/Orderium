@@ -26,6 +26,7 @@ export interface GetProductsParams {
   pageSize?: number;
   search?: string;
   categoryId?: number | null;
+  brandId?: number | null;
 }
 
 export interface ProductsResponse {

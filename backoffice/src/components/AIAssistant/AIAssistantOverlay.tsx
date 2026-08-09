@@ -10,6 +10,7 @@ import { MessageThread } from './MessageThread';
 import { InputArea } from './InputArea';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { PanelState } from '../../types/aiAssistant';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AIAssistantOverlayProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface AIAssistantOverlayProps {
 }
 
 export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const { messages, isStreaming, error, sendMessage, cancelStream, clearConversation } =
     useAIAssistant();
 
@@ -141,7 +143,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <MessageSquare style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
-            <h2 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>AI Assistant</h2>
+            <h2 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>{t('aiAssistant')}</h2>
             {isStreaming && (
               <span className="animate-pulse" style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                 Thinking...
@@ -171,7 +173,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, 
               text
               rounded
               onClick={onClose}
-              tooltip="Close (ESC)"
+              tooltip={t('aiCloseEsc')}
               icon={<X style={{ width: '1rem', height: '1rem' }} />}
               style={{ width: '2rem', height: '2rem', padding: 0 }}
             />
@@ -188,7 +190,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, 
             }}
           >
             <p style={{ fontSize: '0.875rem', color: '#dc2626', margin: 0 }}>
-              {error.message || 'An error occurred'}
+              {error.message || t('aiErrorOccurred')}
             </p>
           </div>
         )}

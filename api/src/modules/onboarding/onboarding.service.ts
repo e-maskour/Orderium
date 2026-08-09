@@ -7,10 +7,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Configuration } from '../configurations/entities/configuration.entity';
 import { Portal } from '../portal/entities/portal.entity';
+import { Role } from '../roles/entities/role.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { TenantService } from '../tenant/tenant.service';
+import { AccessControlService } from '../access/access-control.service';
+import { AccessSyncService } from '../access/access-sync.service';
+import { ADMINISTRATOR_ROLE } from '../../common/access/access-presets';
 
 @Injectable()
 export class OnboardingService {
@@ -18,6 +22,8 @@ export class OnboardingService {
     private readonly tenantConnService: TenantConnectionService,
     private readonly tenantService: TenantService,
     private readonly jwtService: JwtService,
+    private readonly accessControl: AccessControlService,
+    private readonly accessSync: AccessSyncService,
   ) {}
 
   private get configRepository() {
@@ -26,6 +32,10 @@ export class OnboardingService {
 
   private get portalRepository() {
     return this.tenantConnService.getRepository(Portal);
+  }
+
+  private get roleRepository() {
+    return this.tenantConnService.getRepository(Role);
   }
 
   async getStatus() {
@@ -149,6 +159,20 @@ export class OnboardingService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    // The founding admin must land holding the Administrator role. Permission
+    // enforcement is fail-closed, so a first user created without one would be
+    // locked out of the tenant they just created. Sync first in case the
+    // catalogue has not been seeded for this database yet.
+    let administrator = await this.roleRepository.findOne({
+      where: { name: ADMINISTRATOR_ROLE },
+    });
+    if (!administrator) {
+      await this.accessSync.sync();
+      administrator = await this.roleRepository.findOne({
+        where: { name: ADMINISTRATOR_ROLE },
+      });
+    }
+
     const portal = this.portalRepository.create({
       phoneNumber: dto.phoneNumber,
       name: dto.fullName,
@@ -159,15 +183,18 @@ export class OnboardingService {
       isActive: true,
       userType: 'admin',
       status: 'approved',
+      roles: administrator ? [administrator] : [],
     });
 
     const saved = await this.portalRepository.save(portal);
+    await this.accessControl.invalidate();
 
     const token = this.jwtService.sign({
       sub: saved.id,
       phoneNumber: saved.phoneNumber,
       isAdmin: true,
       isCustomer: false,
+      scope: 'admin',
     });
 
     return {

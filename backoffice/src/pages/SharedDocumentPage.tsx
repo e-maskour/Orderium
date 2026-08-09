@@ -67,7 +67,7 @@ export default function SharedDocumentPage() {
         setItems(result.items || []);
       }
     } catch (err: any) {
-      setError(err.message || 'Document introuvable ou lien expiré.');
+      setError(err.message || t('documentNotFoundOrExpired'));
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function SharedDocumentPage() {
               margin: '0 auto 1rem',
             }}
           />
-          <p style={{ color: '#475569' }}>Chargement du document...</p>
+          <p style={{ color: '#475569' }}>{t('loadingDocument')}</p>
         </div>
       </div>
     );
@@ -142,9 +142,7 @@ export default function SharedDocumentPage() {
           >
             Lien invalide
           </h2>
-          <p style={{ color: '#475569' }}>
-            {error || "Ce document n'est pas disponible ou le lien a expiré."}
-          </p>
+          <p style={{ color: '#475569' }}>{error || t('documentUnavailableBody')}</p>
         </div>
       </div>
     );
@@ -405,7 +403,7 @@ export default function SharedDocumentPage() {
               />
               <Column
                 field="total"
-                header="Total TTC"
+                header={t('totalInclTax')}
                 headerStyle={{
                   textAlign: 'right',
                   padding: '0.75rem 1rem',
@@ -447,7 +445,7 @@ export default function SharedDocumentPage() {
                   padding: '0.375rem 0',
                 }}
               >
-                <span style={{ color: '#64748b' }}>Sous-total HT</span>
+                <span style={{ color: '#64748b' }}>{t('subtotalExclTax')}</span>
                 <span style={{ fontWeight: 600, color: '#334155' }}>
                   {formatAmount(subtotal, 2)} {t('currency')}
                 </span>
@@ -478,7 +476,7 @@ export default function SharedDocumentPage() {
                 }}
               >
                 <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>
-                  Total TTC
+                  {t('totalInclTax')}
                 </span>
                 <span style={{ fontWeight: 800, color: '#235ae4', fontSize: '1.125rem' }}>
                   {formatAmount(total, 2)} {t('currency')}

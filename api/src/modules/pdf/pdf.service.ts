@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { chromium, Browser } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote } from '../quotes/entities/quote.entity';
@@ -16,12 +16,15 @@ import {
   renderFooterTemplate,
 } from './templates/document.template';
 import { renderReceiptTemplate } from './templates/receipt.template';
+import { renderOrdersMergeTemplate } from './templates/orders-merge.template';
 import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { Order } from '../orders/entities/order.entity';
 import { MinioProvider } from '../images/providers/minio.provider';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { extractPartnerInfo, mapDocumentItems } from './pdf.helpers';
+import { buildOrdersMergeSummary } from '../orders/orders.helpers';
+import type { MergeSummaryResult } from '../orders/orders.helpers';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 
@@ -235,6 +238,111 @@ export class PDFService implements OnModuleDestroy {
       );
 
     return { pdfBuffer, fileName };
+  }
+
+  /**
+   * Consolidated A4 recap of several orders: each order header followed by all
+   * of its items, then a grand total. Read-only — nothing is persisted.
+   */
+  async generateOrdersMergePDF(
+    orderIds: number[],
+    lang: 'fr' | 'ar' = 'fr',
+  ): Promise<PDFGenerationResult> {
+    const uniqueIds = [...new Set(orderIds)];
+    const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
+    const cacheKey = `pdf:${tenantSlug}:orders-merge:${[...uniqueIds]
+      .sort((a, b) => a - b)
+      .join('-')}:${lang}`;
+
+    const cached = await this.cacheManager.get<{
+      pdfBase64: string;
+      fileName: string;
+    }>(cacheKey);
+    if (cached) {
+      this.logger.debug(`PDF cache HIT: ${cacheKey}`);
+      return {
+        pdfBuffer: Buffer.from(cached.pdfBase64, 'base64'),
+        fileName: cached.fileName,
+      };
+    }
+
+    const orders = await this.orderRepository.find({
+      where: { id: In(uniqueIds) },
+      relations: ['customer', 'supplier', 'items', 'items.product'],
+    });
+
+    if (orders.length === 0) {
+      throw new NotFoundException('None of the selected orders were found');
+    }
+
+    const summary = buildOrdersMergeSummary(orders, uniqueIds);
+    const pdfBuffer = await this.renderOrdersMergePDF(summary, lang);
+    const fileName = `Recapitulatif_Commandes_${summary.orderCount}.pdf`;
+
+    this.cacheManager
+      .set(
+        cacheKey,
+        { pdfBase64: pdfBuffer.toString('base64'), fileName },
+        PDFService.PDF_CACHE_TTL_MS,
+      )
+      .catch((err) =>
+        this.logger.warn(`PDF cache SET failed: ${(err as Error).message}`),
+      );
+
+    return { pdfBuffer, fileName };
+  }
+
+  private async renderOrdersMergePDF(
+    summary: MergeSummaryResult,
+    lang: 'fr' | 'ar',
+  ): Promise<Buffer> {
+    const page = await this.getNewPage({
+      viewport: { width: 794, height: 1123 },
+      deviceScaleFactor: 2,
+    });
+
+    try {
+      await page.setContent(renderOrdersMergeTemplate({ ...summary, lang }), {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      await page.evaluate(() => (document as any).fonts.ready);
+
+      const companyConfig = await this.getCompanyConfig();
+      const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
+
+      const headerTemplate = renderHeaderTemplate({
+        companyName: companyConfig.companyName || '',
+        companyLines: this.buildCompanyLines(companyConfig, lang),
+        documentLabel:
+          lang === 'ar' ? 'ملخص الطلبات' : 'RÉCAPITULATIF DE COMMANDES',
+        documentNumber: String(summary.orderCount),
+        date: new Date().toLocaleDateString(dateLocale),
+        lang,
+      });
+
+      const footerTemplate = renderFooterTemplate({
+        footerLines: this.buildCompanyFooterLines(companyConfig),
+        lang,
+      });
+
+      return await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate,
+        footerTemplate,
+        margin: {
+          top: '32mm',
+          bottom: '14mm',
+          left: '8mm',
+          right: '8mm',
+        },
+      });
+    } finally {
+      await page.close();
+    }
   }
 
   /**

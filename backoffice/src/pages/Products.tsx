@@ -5,6 +5,7 @@ import { translateUomCode } from '../lib/uom-translations';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
+import { brandsService } from '../modules/brands';
 import type { IProduct } from '../modules/products/products.interface';
 import {
   Plus,
@@ -60,11 +61,13 @@ export default function Products() {
 
   const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedBrandIds, setSelectedBrandIds] = useState<number[]>([]);
 
   const [appliedFilters, setAppliedFilters] = useState({
     name: '',
     stockFilter: undefined as 'negative' | 'zero' | 'positive' | undefined,
     categoryIds: [] as number[],
+    brandIds: [] as number[],
   });
 
   useEffect(() => {
@@ -85,6 +88,11 @@ export default function Products() {
 
   const categoriesList = (categories as any)?.categories || categories || [];
 
+  const { data: brands = [] } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsService.getAll(),
+  });
+
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', appliedFilters, currentPage, pageSize],
     queryFn: () =>
@@ -92,6 +100,7 @@ export default function Products() {
         search: appliedFilters.name,
         stockFilter: appliedFilters.stockFilter,
         categoryIds: appliedFilters.categoryIds,
+        brandIds: appliedFilters.brandIds,
         page: currentPage,
         limit: pageSize,
       }),
@@ -252,9 +261,9 @@ export default function Products() {
 
   const stockFilterOptions = [
     { label: t('all'), value: 'all' },
-    { label: 'Negative Stock', value: 'negative' },
-    { label: 'Zero Stock', value: 'zero' },
-    { label: 'Positive Stock', value: 'positive' },
+    { label: t('stockNegative'), value: 'negative' },
+    { label: t('stockZero'), value: 'zero' },
+    { label: t('stockPositive'), value: 'positive' },
   ];
 
   return (
@@ -410,6 +419,29 @@ export default function Products() {
                 options={[
                   { label: t('all'), value: null },
                   ...(categoriesList as any[]).map((c: any) => ({ label: c.name, value: c.id })),
+                ]}
+                optionLabel="label"
+                optionValue="value"
+                style={{ height: '3rem', minWidth: '10rem', fontSize: '0.875rem', width: '100%' }}
+              />
+            </div>
+
+            {/* Brand dropdown */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                {t('brand')}
+              </span>
+              <Dropdown
+                value={selectedBrandIds[0] ?? null}
+                onChange={(e) => {
+                  const ids = e.value != null ? [e.value as number] : [];
+                  setSelectedBrandIds(ids);
+                  setAppliedFilters((prev) => ({ ...prev, brandIds: ids }));
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { label: t('all'), value: null },
+                  ...brands.map((b) => ({ label: b.name, value: b.id })),
                 ]}
                 optionLabel="label"
                 optionValue="value"
@@ -738,6 +770,29 @@ export default function Products() {
                       </span>
                     );
                   }}
+                />
+                <Column
+                  header={t('brand')}
+                  body={(product: IProduct) =>
+                    product.brand ? (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          backgroundColor: '#f0fdf4',
+                          color: '#15803d',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {product.brand.name}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>—</span>
+                    )
+                  }
                 />
                 <Column
                   header={t('categories')}

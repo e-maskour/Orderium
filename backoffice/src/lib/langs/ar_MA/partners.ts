@@ -85,4 +85,14 @@ export default {
   visibleInSystem: 'مرئي ونشط في النظام',
   hiddenFromSystem: 'مخفي وغير نشط في النظام',
   partnerInfo: 'معلومات الشريك',
+
+  // ─── Partner KPI cards ────────────────────────────────────
+  totalInvoicesKpi: 'مجموع الفواتير',
+  totalInvoiceRevenueKpi: 'رقم المعاملات المفوتر',
+  unpaidInvoicesKpi: 'غير المدفوع من الفواتير',
+  totalDeliveryNotesKpi: 'مجموع سندات التسليم',
+  totalDeliveryNoteRevenueKpi: 'رقم المعاملات على السندات',
+  unpaidDeliveryNotesKpi: 'غير المدفوع من السندات',
+  noSupplierFound: 'لم يتم العثور على أي مورّد',
+  walkInCustomer: 'عميل عابر',
 };

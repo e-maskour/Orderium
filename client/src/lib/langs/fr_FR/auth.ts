@@ -46,6 +46,13 @@ export default {
   accountRejectedDesc:
     "Votre compte a été refusé par un administrateur. Veuillez contacter le support pour plus d'informations.",
 
+  // Account status page
+  checkAgain: 'Vérifier à nouveau',
+  backToLogin: 'Retour à la connexion',
+  stillPending: 'Votre compte est toujours en attente de validation.',
+  accountApprovedToast: 'Votre compte a été approuvé. Vous pouvez maintenant vous connecter.',
+  contactSupport: 'Contactez notre support pour comprendre la raison du refus.',
+
   // Login page UI
   clientPortal: 'Portail Client',
   secureCustomerAccess: 'Accès Client Sécurisé',

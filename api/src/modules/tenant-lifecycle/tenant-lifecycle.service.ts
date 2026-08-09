@@ -18,15 +18,9 @@ import {
   TenantStatus,
   SubscriptionPlan,
 } from '../tenant/tenant.entity';
-import { Payment } from './entities/payment.entity';
 import { SubscriptionPlan as SubscriptionPlanEntity } from './entities/subscription-plan.entity';
 import { TenantActivityLog } from './entities/tenant-activity-log.entity';
-import {
-  CreatePaymentDto,
-  ValidatePaymentDto,
-  RejectPaymentDto,
-  UpdatePlanDto,
-} from './dto/lifecycle.dto';
+import { UpdatePlanDto } from './dto/lifecycle.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { TenantService } from '../tenant/tenant.service';
 
@@ -48,9 +42,6 @@ export class TenantLifecycleService {
   constructor(
     @InjectRepository(Tenant, 'master')
     private readonly tenantRepo: Repository<Tenant>,
-
-    @InjectRepository(Payment, 'master')
-    private readonly paymentRepo: Repository<Payment>,
 
     @InjectRepository(SubscriptionPlanEntity, 'master')
     private readonly planRepo: Repository<SubscriptionPlanEntity>,
@@ -238,175 +229,51 @@ export class TenantLifecycleService {
     return updated;
   }
 
-  // ─── Payments ──────────────────────────────────────────────────────────────
+  // ─── Subscription activation ───────────────────────────────────────────────
 
-  async createPayment(
+  /**
+   * Rolls a tenant onto a paid plan and period.
+   *
+   * Called by SubscriptionBillingService once an obligation is fully settled
+   * by its installments. Activation is a consequence of the balance reaching
+   * zero, not of any single payment being recorded — which is why it no
+   * longer lives on a per-payment "validate" call.
+   */
+  async activateFromPayment(
     tenantId: number,
-    dto: CreatePaymentDto,
+    planName: string,
+    periodStart: string,
+    periodEnd: string,
     performedBy?: string,
-  ): Promise<Payment> {
-    await this.getTenantOrThrow(tenantId);
-    const payment = this.paymentRepo.create({
-      tenantId,
-      amount: dto.amount,
-      currency: dto.currency ?? 'MAD',
-      paymentMethod: (dto.paymentMethod as any) ?? null,
-      planName: dto.planName,
-      billingCycle: dto.billingCycle as any,
-      periodStart: dto.periodStart,
-      periodEnd: dto.periodEnd,
-      referenceNumber: dto.referenceNumber ?? null,
-      receiptUrl: dto.receiptUrl ?? null,
-      notes: dto.notes ?? null,
-      status: 'pending',
-    });
-    const saved = await this.paymentRepo.save(payment);
-    await this.logActivity(
-      tenantId,
-      'payment_recorded',
-      {
-        amount: dto.amount,
-        currency: dto.currency ?? 'MAD',
-        plan: dto.planName,
-      },
-      performedBy,
-    );
-    if (dto.validateImmediately) {
-      return this.validatePayment(
-        saved.id,
-        { validatedBy: performedBy },
-        performedBy,
-      );
-    }
-    return saved;
-  }
+  ): Promise<Tenant> {
+    const tenant = await this.getTenantOrThrow(tenantId);
+    const plan = await this.planRepo.findOne({ where: { name: planName } });
 
-  async listPayments(tenantId: number): Promise<Payment[]> {
-    await this.getTenantOrThrow(tenantId);
-    return this.paymentRepo.find({
-      where: { tenantId },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  async listAllPayments(filters: {
-    status?: string;
-    from?: string;
-    to?: string;
-  }): Promise<Payment[]> {
-    const qb = this.paymentRepo
-      .createQueryBuilder('p')
-      .leftJoinAndSelect('p.tenant', 'tenant')
-      .orderBy('p.createdAt', 'DESC');
-
-    if (filters.status) {
-      qb.andWhere('p.status = :status', { status: filters.status });
-    }
-    if (filters.from) {
-      qb.andWhere('p.createdAt >= :from', { from: filters.from });
-    }
-    if (filters.to) {
-      qb.andWhere('p.createdAt <= :to', { to: filters.to });
-    }
-    return qb.getMany();
-  }
-
-  async validatePayment(
-    paymentId: string,
-    dto: ValidatePaymentDto,
-    performedBy?: string,
-  ): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-    });
-    if (!payment) throw new NotFoundException(`Payment ${paymentId} not found`);
-    if (payment.status !== 'pending') {
-      throw new BadRequestException(`Payment is already ${payment.status}`);
-    }
-
-    payment.status = 'validated';
-    payment.validatedBy = dto.validatedBy ?? performedBy ?? null;
-    payment.validatedAt = new Date();
-    const saved = await this.paymentRepo.save(payment);
-
-    // Activate tenant with subscription dates from payment
-    const tenant = await this.getTenantOrThrow(payment.tenantId);
-    const plan = await this.planRepo.findOne({
-      where: { name: payment.planName },
-    });
-    tenant.status = 'active';
+    // Captured before the overwrite — the previous code read it after and so
+    // always recorded 'active' as the previous status.
     tenant.previousStatus = tenant.status;
+    tenant.status = 'active';
     tenant.statusChangedAt = new Date();
-    tenant.subscriptionPlan = payment.planName as SubscriptionPlan;
-    tenant.subscriptionStartedAt = new Date(payment.periodStart);
-    tenant.subscriptionEndsAt = new Date(payment.periodEnd);
+    tenant.subscriptionPlan = planName as SubscriptionPlan;
+    tenant.subscriptionStartedAt = new Date(periodStart);
+    tenant.subscriptionEndsAt = new Date(periodEnd);
     tenant.isActive = true;
+    tenant.disabledAt = null;
+
     if (plan) {
       tenant.maxUsers = plan.maxUsers;
       tenant.maxProducts = plan.maxProducts;
       tenant.maxOrdersPerMonth = plan.maxOrdersPerMonth;
       tenant.maxStorageMb = plan.maxStorageMb;
     }
-    await this.tenantRepo.save(tenant);
+
+    const saved = await this.tenantRepo.save(tenant);
     await this.setRedisStatus(tenant.slug, 'active');
     this.tenantService.evictFromCache(tenant.slug);
     await this.logActivity(
-      tenant.id,
-      'payment_validated',
-      {
-        paymentId,
-        amount: payment.amount,
-        plan: payment.planName,
-        periodEnd: payment.periodEnd,
-        validatedBy: payment.validatedBy,
-      },
-      performedBy,
-    );
-
-    return saved;
-  }
-
-  async rejectPayment(
-    paymentId: string,
-    dto: RejectPaymentDto,
-    performedBy?: string,
-  ): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-    });
-    if (!payment) throw new NotFoundException(`Payment ${paymentId} not found`);
-    if (payment.status !== 'pending') {
-      throw new BadRequestException(`Payment is already ${payment.status}`);
-    }
-    payment.status = 'rejected';
-    payment.rejectionReason = dto.reason;
-    const saved = await this.paymentRepo.save(payment);
-    await this.logActivity(
-      payment.tenantId,
-      'payment_rejected',
-      { paymentId, reason: dto.reason },
-      performedBy,
-    );
-    return saved;
-  }
-
-  async refundPayment(
-    paymentId: string,
-    performedBy?: string,
-  ): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-    });
-    if (!payment) throw new NotFoundException(`Payment ${paymentId} not found`);
-    if (payment.status !== 'validated') {
-      throw new BadRequestException('Only validated payments can be refunded');
-    }
-    payment.status = 'refunded';
-    const saved = await this.paymentRepo.save(payment);
-    await this.logActivity(
-      payment.tenantId,
-      'payment_refunded',
-      { paymentId },
+      tenantId,
+      'subscription_activated',
+      { plan: planName, periodStart, periodEnd },
       performedBy,
     );
     return saved;

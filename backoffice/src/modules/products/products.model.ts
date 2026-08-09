@@ -26,6 +26,8 @@ export class Product implements IProduct {
   purchaseTax?: number;
   warehouseId?: number | null;
   warehouse?: any;
+  brandId?: number | null;
+  brand?: any;
 
   constructor(
     data: IProduct & {
@@ -40,6 +42,8 @@ export class Product implements IProduct {
       purchaseTax?: number;
       warehouseId?: number | null;
       warehouse?: any;
+      brandId?: number | null;
+      brand?: any;
     },
   ) {
     this.id = data.id;
@@ -67,6 +71,8 @@ export class Product implements IProduct {
     this.purchaseTax = data.purchaseTax;
     this.warehouseId = data.warehouseId;
     this.warehouse = data.warehouse;
+    this.brandId = data.brandId ?? null;
+    this.brand = data.brand ?? null;
   }
 
   // Getters
@@ -157,6 +163,14 @@ export class Product implements IProduct {
     return this.categories.map((c: any) => c.name ?? c);
   }
 
+  get hasBrand(): boolean {
+    return this.brandId != null;
+  }
+
+  get brandName(): string {
+    return this.brand?.name ?? '';
+  }
+
   // Static factory method
   static fromApiResponse(data: any): Product {
     return new Product({
@@ -185,6 +199,8 @@ export class Product implements IProduct {
       purchaseTax: data.purchaseTax ?? undefined,
       warehouseId: data.warehouseId,
       warehouse: data.warehouse,
+      brandId: data.brandId ?? null,
+      brand: data.brand ?? null,
     });
   }
 

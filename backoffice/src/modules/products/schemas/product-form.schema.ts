@@ -44,6 +44,7 @@ export const productFormSchema = z.object({
   saleUnitId: z.number().nullable().optional(),
   purchaseUnitId: z.number().nullable().optional(),
   categoryIds: z.number().array(),
+  brandId: z.number().nullable().optional(),
   warehouseId: z
     .number()
     .nullable()

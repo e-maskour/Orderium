@@ -226,7 +226,7 @@ describe('ProductsService', () => {
       await service.findAll(1, 10, 'widget');
 
       expect(productRepo._qb.andWhere).toHaveBeenCalledWith(
-        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search)',
+        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search OR brand.name ILIKE :search)',
         { search: '%widget%' },
       );
     });

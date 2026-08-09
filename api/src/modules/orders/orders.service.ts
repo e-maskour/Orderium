@@ -44,8 +44,10 @@ import {
   buildDeliveryStatusCounts,
   buildOrderStatusCounts,
   buildOrderExportRows,
+  buildOrdersMergeSummary,
   ORDER_XLSX_COL_WIDTHS,
 } from './orders.helpers';
+import type { MergeSummaryResult } from './orders.helpers';
 import {
   ORDER_LIST_FIELDS,
   CUSTOMER_SUMMARY_FIELDS,
@@ -75,6 +77,30 @@ export class OrdersService {
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
+  }
+
+  /**
+   * Product ids this customer orders most, by total quantity across all their
+   * orders. Powers the storefront "buy again" rail — returns [] for a customer
+   * with no order history, which the caller renders as a hidden section.
+   */
+  async findMostOrderedProductIds(
+    customerId: number,
+    limit = 3,
+  ): Promise<number[]> {
+    const rows = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.product', 'product')
+      .select('product.id', 'productId')
+      .addSelect('SUM(item.quantity)', 'quantity')
+      .where('order.customerId = :customerId', { customerId })
+      .groupBy('product.id')
+      .orderBy('quantity', 'DESC')
+      .limit(limit)
+      .getRawMany<{ productId: string; quantity: string }>();
+
+    return rows.map((row) => parseInt(row.productId, 10));
   }
 
   private get orderItemRepository(): Repository<OrderItem> {
@@ -579,6 +605,26 @@ export class OrdersService {
       totalRemaining: parseFloat(aggResult?.totalRemaining || '0'),
       totalSubtotal: parseFloat(aggResult?.totalSubtotal || '0'),
     };
+  }
+
+  /**
+   * Consolidated recap of several orders (order header + full item list each).
+   * Read-only: nothing is created, modified or linked. Used by the backoffice
+   * merge modal and by the merge PDF.
+   */
+  async getMergeSummary(ids: number[]): Promise<MergeSummaryResult> {
+    const uniqueIds = [...new Set(ids)];
+
+    const orders = await this.orderRepository.find({
+      where: { id: In(uniqueIds) },
+      relations: ['customer', 'supplier', 'items', 'items.product'],
+    });
+
+    if (orders.length === 0) {
+      throw new NotFoundException('None of the selected orders were found');
+    }
+
+    return buildOrdersMergeSummary(orders, uniqueIds);
   }
 
   async getOrderById(id: number): Promise<Record<string, unknown>> {

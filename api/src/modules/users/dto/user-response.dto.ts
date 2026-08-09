@@ -47,7 +47,8 @@ export class UserResponseDto {
   @Expose()
   avatarUrl: string | null;
 
-  @ApiPropertyOptional()
+  /** @deprecated Kept for one release; read `roles` instead. */
+  @ApiPropertyOptional({ deprecated: true })
   @Expose()
   roleId: number | null;
 
@@ -55,10 +56,19 @@ export class UserResponseDto {
   @Expose()
   customerId: number | null;
 
-  @ApiPropertyOptional({ type: RoleSummaryDto })
+  /** @deprecated Kept for one release; read `roles` instead. */
+  @ApiPropertyOptional({ type: RoleSummaryDto, deprecated: true })
   @Expose()
   @Type(() => RoleSummaryDto)
   role: RoleSummaryDto | null;
+
+  @ApiProperty({
+    type: [RoleSummaryDto],
+    description: 'All access groups held by this user',
+  })
+  @Expose()
+  @Type(() => RoleSummaryDto)
+  roles: RoleSummaryDto[];
 
   @ApiProperty()
   @Expose()

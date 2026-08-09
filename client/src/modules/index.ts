@@ -1,6 +1,12 @@
 // Auth Module
 export * from './auth';
 
+// Brands Module
+export * from './brands';
+
+// Company Module
+export * from './company';
+
 // Orders Module
 export * from './orders';
 

@@ -7,6 +7,7 @@
 import { InputText } from 'primereact/inputtext';
 import { Search, X } from 'lucide-react';
 import { cx } from './cx';
+import { useLanguage } from '../../context/LanguageContext';
 
 export interface SearchInputProps {
   value: string;
@@ -23,13 +24,15 @@ export interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = 'Search…',
+  placeholder,
   onClear,
   className,
   autoFocus,
   disabled,
   ariaLabel,
 }: SearchInputProps) {
+  const { t } = useLanguage();
+  const resolvedPlaceholder = placeholder ?? t('searchPlaceholderDefault');
   const handleClear = () => (onClear ? onClear() : onChange(''));
 
   return (
@@ -38,11 +41,11 @@ export function SearchInput({
       <InputText
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className="ui-search__input"
         autoFocus={autoFocus}
         disabled={disabled}
-        aria-label={ariaLabel ?? placeholder}
+        aria-label={ariaLabel ?? resolvedPlaceholder}
         type="search"
       />
       {value !== '' && !disabled && (
@@ -50,7 +53,7 @@ export function SearchInput({
           type="button"
           className="ui-search__clear"
           onClick={handleClear}
-          aria-label="Clear search"
+          aria-label={t('clearSearch')}
         >
           <X aria-hidden="true" />
         </button>

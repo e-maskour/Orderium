@@ -5,6 +5,7 @@ import { ApiRes } from '../../../common/api-response';
 import { RPT } from '../../../common/response-codes';
 import { PaymentReportsService } from './payment-reports.service';
 import { ReportFilterDto } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Payments')
 @Controller('reports/payments')
@@ -14,6 +15,7 @@ export class PaymentReportsController {
   @Get('cashflow')
   @ApiOperation({ summary: 'Cashflow — daily inflows vs outflows' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_payments.view')
   async getCashflow(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.PAYMENTS_CASHFLOW,
@@ -24,6 +26,7 @@ export class PaymentReportsController {
   @Get('by-method')
   @ApiOperation({ summary: 'Payments grouped by payment method' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_payments.view')
   async getByMethod(@Query() filter: ReportFilterDto) {
     return ApiRes(
       RPT.PAYMENTS_BY_METHOD,
@@ -34,6 +37,7 @@ export class PaymentReportsController {
   @Get('in-out-flow')
   @ApiOperation({ summary: 'Encaissements vs Décaissements summary' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_payments.view')
   async getInOutFlow(@Query() filter: ReportFilterDto) {
     return ApiRes(RPT.PAYMENTS_IN_OUT, await this.service.getInOutFlow(filter));
   }
@@ -44,6 +48,7 @@ export class PaymentReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export cashflow as XLSX' })
+  @RequirePermission('reports_payments.export')
   async getCashflowXlsx(
     @Query() filter: ReportFilterDto,
     @Res() res: Response,

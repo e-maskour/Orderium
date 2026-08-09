@@ -242,8 +242,8 @@ export default function UnitsOfMeasure() {
             keyExtractor={(uom: IUnitOfMeasure) => uom.id ?? String(uom.code)}
             loading={isLoading}
             totalCount={filteredUoms.length}
-            countLabel="unités"
-            emptyMessage="Aucune unité trouvée"
+            countLabel={t('uomCountLabel')}
+            emptyMessage={t('noUomFoundEmpty')}
             config={{
               topLeft: (uom: IUnitOfMeasure) => uom.name,
               topRight: (uom: IUnitOfMeasure) => uom.code,

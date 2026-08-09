@@ -6,6 +6,7 @@ import { seedPartners } from './partners.seeder';
 import { seedPortal } from './portal.seeder';
 import { seedNotificationTemplates } from './notification-templates.seeder';
 import { seedSequences } from './sequences.seeder';
+import { seedAccessControl } from './access-control.seeder';
 
 export async function runSeeders(dataSource: DataSource) {
   console.log('🌱 Running database seeders...\n');
@@ -18,6 +19,7 @@ export async function runSeeders(dataSource: DataSource) {
     await seedConfigurations(dataSource);
     await seedSequences(dataSource);
     await seedNotificationTemplates(dataSource);
+    await seedAccessControl(dataSource);
 
     console.log('\n✅ All seeders completed successfully');
   } catch (error) {
@@ -41,6 +43,7 @@ export async function runTenantSeeders(dataSource: DataSource) {
     await seedConfigurations(dataSource);
     await seedSequences(dataSource);
     await seedNotificationTemplates(dataSource);
+    await seedAccessControl(dataSource);
 
     console.log('\n✅ Tenant seeders completed successfully');
   } catch (error) {

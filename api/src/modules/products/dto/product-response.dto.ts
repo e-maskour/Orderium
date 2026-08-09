@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  BrandSummaryDto,
   CategorySummaryDto,
   UomSummaryDto,
 } from '../../../common/dto/summary.dto';
@@ -111,6 +112,15 @@ export class ProductResponseDto {
   @Type(() => UomSummaryDto)
   purchaseUnitOfMeasure: UomSummaryDto | null;
 
+  @ApiPropertyOptional()
+  @Expose()
+  brandId: number | null;
+
+  @ApiPropertyOptional({ type: BrandSummaryDto })
+  @Expose()
+  @Type(() => BrandSummaryDto)
+  brand: BrandSummaryDto | null;
+
   @ApiProperty({ type: [CategorySummaryDto] })
   @Expose()
   @Type(() => CategorySummaryDto)
@@ -162,6 +172,11 @@ export class ProductClientResponseDto {
   @ApiProperty()
   @Expose()
   isEnabled: boolean;
+
+  @ApiPropertyOptional({ type: BrandSummaryDto })
+  @Expose()
+  @Type(() => BrandSummaryDto)
+  brand: BrandSummaryDto | null;
 
   @ApiProperty({ type: [CategorySummaryDto] })
   @Expose()

@@ -5,6 +5,7 @@ import { ApiRes } from '../../../common/api-response';
 import { RPT } from '../../../common/response-codes';
 import { SalesReportsService } from './sales-reports.service';
 import { SalesReportFilterDto } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Sales')
 @Controller('reports/sales')
@@ -14,6 +15,7 @@ export class SalesReportsController {
   @Get('revenue')
   @ApiOperation({ summary: 'Sales revenue by period' })
   @ApiResponse({ status: 200, description: 'Sales revenue report' })
+  @RequirePermission('reports_sales.view')
   async getRevenue(@Query() filter: SalesReportFilterDto) {
     const data = await this.service.getRevenueReport(filter);
     return ApiRes(RPT.SALES_REVENUE, data);
@@ -22,6 +24,7 @@ export class SalesReportsController {
   @Get('top-products')
   @ApiOperation({ summary: 'Top products by revenue & quantity' })
   @ApiResponse({ status: 200, description: 'Top products report' })
+  @RequirePermission('reports_sales.view')
   async getTopProducts(@Query() filter: SalesReportFilterDto) {
     const data = await this.service.getTopProducts(filter);
     return ApiRes(RPT.SALES_TOP_PRODUCTS, data);
@@ -30,6 +33,7 @@ export class SalesReportsController {
   @Get('by-customer')
   @ApiOperation({ summary: 'Sales grouped by customer' })
   @ApiResponse({ status: 200, description: 'Sales by customer report' })
+  @RequirePermission('reports_sales.view')
   async getByCustomer(@Query() filter: SalesReportFilterDto) {
     const data = await this.service.getSalesByCustomer(filter);
     return ApiRes(RPT.SALES_BY_CUSTOMER, data);
@@ -38,6 +42,7 @@ export class SalesReportsController {
   @Get('by-category')
   @ApiOperation({ summary: 'Sales grouped by product category' })
   @ApiResponse({ status: 200, description: 'Sales by category report' })
+  @RequirePermission('reports_sales.view')
   async getByCategory(@Query() filter: SalesReportFilterDto) {
     const data = await this.service.getSalesByCategory(filter);
     return ApiRes(RPT.SALES_BY_CATEGORY, data);
@@ -46,6 +51,7 @@ export class SalesReportsController {
   @Get('by-pos')
   @ApiOperation({ summary: 'Sales by channel / POS origin' })
   @ApiResponse({ status: 200, description: 'Sales by POS/channel report' })
+  @RequirePermission('reports_sales.view')
   async getByPos(@Query() filter: SalesReportFilterDto) {
     const data = await this.service.getSalesByPos(filter);
     return ApiRes(RPT.SALES_BY_POS, data);
@@ -60,6 +66,7 @@ export class SalesReportsController {
   )
   @ApiOperation({ summary: 'Export sales revenue report as XLSX' })
   @ApiResponse({ status: 200, description: 'XLSX file' })
+  @RequirePermission('reports_sales.export')
   async getRevenueXlsx(
     @Query() filter: SalesReportFilterDto,
     @Res() res: Response,

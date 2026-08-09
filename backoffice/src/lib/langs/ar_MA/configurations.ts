@@ -345,4 +345,45 @@ export default {
   printerLastSeen: 'آخر ظهور',
   // Delete
   deletePrinter: 'حذف',
+
+  // ─── Printers ─────────────────────────────────────────────
+  printerBrandGeneric: 'عام',
+  printerConnectionNetwork: 'الشبكة',
+  printerPaper80: '80 مم (تذكرة)',
+  printerDocReceipt: 'تذكرة الصندوق',
+  printerDocDeliveryNote: 'سند التسليم',
+  printerDocPurchaseOrder: 'سند الطلب',
+  printerTestCustomer: 'عميل تجريبي',
+  printerTestProductA: 'المنتج أ',
+  printerTestProductB: 'المنتج ب',
+  printerTestLine: 'هذه طباعة تجريبية',
+  printerViaBrowser: 'الطباعة عبر المتصفح',
+  printerNetworkScan: 'مسح الشبكة',
+  printerDesktopSuffix: ' (حاسوب)',
+  printerMobileSuffix: ' (هاتف)',
+  printerQzDetected: ' — تم اكتشاف QZ Tray ✓',
+  printerHelpUsb: 'ثبّت QZ Tray ووصّل الطابعة عبر USB: سيتم اكتشافها تلقائيًا.',
+  printerHelpEpson:
+    'وصّل الطابعة بنفس الشبكة وأدخل عنوان IP في الإعدادات. المنفذ الافتراضي هو 8008.',
+  printerHelpWebprnt: 'فعّل WebPRNT في إعدادات الطابعة ثم أدخل عنوان IP. المنفذ الافتراضي هو 80.',
+  printerHelpAirprint: 'لا حاجة لأي إعداد: تستخدم الطباعة نافذة المتصفح الأصلية مع AirPrint.',
+  printerHelpMopria: 'لا حاجة لأي إعداد: تستخدم الطباعة نافذة المتصفح الأصلية مع Mopria.',
+  confirmDeletePrinter: 'حذف هذه الطابعة؟',
+
+  // ─── Configuration cards & empty states ───────────────────
+  companyInformation: 'معلومات الشركة',
+  companyInformationDescription: 'إدارة معلومات شركتك',
+  noCurrencyConfigured: 'لم يتم إعداد أي عملة',
+  noPaymentTermConfigured: 'لم يتم إعداد أي شرط دفع',
+  noTaxRateConfigured: 'لم يتم إعداد أي نسبة ضريبة',
+  noUomFoundEmpty: 'لم يتم العثور على أي وحدة',
+  uomCountLabel: 'وحدات',
+  legalFormSoleTrader: 'مقاولة فردية',
+
+  // ─── Document types (inventory settings) ──────────────────
+  docTypePurchaseInvoice: 'فاتورة شراء',
+  docTypePurchaseOrder: 'سند شراء',
+  docTypeSalesInvoice: 'فاتورة بيع',
+  docTypeDeliveryNote: 'سند التسليم',
+  browser: 'المتصفح',
 };

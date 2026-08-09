@@ -24,6 +24,20 @@ export interface PortalUser {
   deliveryId?: number;
 }
 
+/** Registration never returns a token — the account awaits admin approval. */
+export interface RegisterResponse {
+  user: {
+    id: number;
+    phoneNumber: string;
+    name?: string;
+    customerId?: number;
+    isCustomer: boolean;
+    isAdmin: boolean;
+    status: 'pending' | 'approved' | 'rejected';
+  };
+  message?: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   user: PortalUser;

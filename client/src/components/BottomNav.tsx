@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import { HOME_PATH, SHOP_PATH } from '@/common/routes';
 import { useCart } from '@/context/CartContext';
 import { Home, ClipboardList, ShoppingBag, Settings, User } from 'lucide-react';
 
@@ -7,6 +8,8 @@ export const BottomNav = () => {
   const { t, dir } = useLanguage();
   const { itemCount, openCart } = useCart();
   const location = useLocation();
+  // The landing page and the shop are both "browse" surfaces — keep the tab lit on either.
+  const isBrowseActive = location.pathname === HOME_PATH || location.pathname === SHOP_PATH;
 
   const tabs = [
     { to: '/', icon: Home, label: t('catalog') || 'Catalogue' },
@@ -45,7 +48,7 @@ export const BottomNav = () => {
           gap: '0.2rem',
           padding: '0.5rem 0',
           textDecoration: 'none',
-          color: location.pathname === '/' ? '#059669' : '#9ca3af',
+          color: isBrowseActive ? '#059669' : '#9ca3af',
           fontWeight: 600,
           fontSize: '0.625rem',
           letterSpacing: '0.02em',
@@ -55,7 +58,7 @@ export const BottomNav = () => {
       >
         <Home
           size={22}
-          strokeWidth={location.pathname === '/' ? 2.5 : 2}
+          strokeWidth={isBrowseActive ? 2.5 : 2}
           style={{ transition: 'stroke-width 0.15s' }}
         />
         <span>{tabs[0].label}</span>

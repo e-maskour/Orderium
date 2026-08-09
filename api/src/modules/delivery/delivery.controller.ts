@@ -27,6 +27,7 @@ import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { ApiRes } from '../../common/api-response';
 import { DLV } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Delivery')
 @Controller('delivery')
@@ -54,6 +55,7 @@ export class DeliveryController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'List of delivery persons' })
+  @RequirePermission('delivery.view')
   async getAllDeliveryPersons(
     @Query('search') search?: string,
     @Query('isActive') isActive?: string,
@@ -72,6 +74,7 @@ export class DeliveryController {
   @ApiOperation({ summary: 'Get a delivery person by ID' })
   @ApiResponse({ status: 200, description: 'Delivery person details' })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
+  @RequirePermission('delivery.view')
   async getDeliveryPersonById(@Param('id', ParseIntPipe) id: number) {
     const deliveryPerson = await this.deliveryService.getDeliveryPersonById(id);
     return ApiRes(DLV.PERSON_DETAIL, deliveryPerson);
@@ -84,6 +87,7 @@ export class DeliveryController {
     status: 201,
     description: 'Delivery person created successfully',
   })
+  @RequirePermission('delivery.create')
   async createDeliveryPerson(@Body() createDto: CreateDeliveryPersonDto) {
     const deliveryPerson =
       await this.deliveryService.createDeliveryPerson(createDto);
@@ -98,6 +102,7 @@ export class DeliveryController {
     description: 'Delivery person updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
+  @RequirePermission('delivery.edit')
   async updateDeliveryPerson(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateDeliveryPersonDto,
@@ -117,6 +122,7 @@ export class DeliveryController {
     description: 'Delivery person deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
+  @RequirePermission('delivery.delete')
   async deleteDeliveryPerson(@Param('id', ParseIntPipe) id: number) {
     await this.deliveryService.deleteDeliveryPerson(id);
     return ApiRes(DLV.PERSON_DELETED, null);
@@ -126,6 +132,7 @@ export class DeliveryController {
   @Serialize(OrderDeliveryAdminResponseDto)
   @ApiOperation({ summary: 'Get all delivery orders' })
   @ApiResponse({ status: 200, description: 'List of delivery orders' })
+  @RequirePermission('delivery.view')
   async getOrderDeliveries(@Query('limit') limit?: string) {
     const limitNum = Math.min(
       100,
@@ -144,6 +151,7 @@ export class DeliveryController {
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @RequirePermission('delivery.view')
   async getDeliveryPersonOrders(
     @Param('id', ParseIntPipe) id: number,
     @Query('page') page?: string,
@@ -190,6 +198,7 @@ export class DeliveryController {
   @Serialize(OrderDeliveryAdminResponseDto)
   @ApiOperation({ summary: 'Assign order to delivery person' })
   @ApiResponse({ status: 200, description: 'Order assigned successfully' })
+  @RequirePermission('delivery.assign')
   async assignToDelivery(
     @Body() body: { OrderId: number; DeliveryPersonId: number },
   ) {
@@ -203,6 +212,7 @@ export class DeliveryController {
   @Post('unassign/:orderId')
   @ApiOperation({ summary: 'Unassign order from delivery person' })
   @ApiResponse({ status: 200, description: 'Order unassigned successfully' })
+  @RequirePermission('delivery.assign')
   async unassignOrder(@Param('orderId', ParseIntPipe) orderId: number) {
     await this.deliveryService.unassignOrder(orderId);
     return ApiRes(DLV.UNASSIGNED, null);
@@ -214,6 +224,7 @@ export class DeliveryController {
     status: 200,
     description: 'Order status updated successfully',
   })
+  @RequirePermission('delivery.edit')
   async updateOrderStatus(
     @Param('orderId', ParseIntPipe) orderId: number,
     @Param('deliveryPersonId', ParseIntPipe) deliveryPersonId: number,

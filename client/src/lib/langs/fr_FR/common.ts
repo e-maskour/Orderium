@@ -145,6 +145,39 @@ export default {
   oopsPageNotFound: 'Oops! Page non trouvée',
   returnToHome: "Retour à l'accueil",
 
+  // Browse (landing page + shop filters)
+  browseTitle: 'Que cherchez-vous ?',
+  browseSubtitle: 'Choisissez une marque ou une catégorie pour commencer',
+  brands: 'Marques',
+  categories: 'Catégories',
+  allBrands: 'Toutes les marques',
+  allCategories: 'Toutes les catégories',
+  seeAllProducts: 'Voir tous les produits',
+  noBrands: 'Aucune marque disponible',
+  noCategories: 'Aucune catégorie disponible',
+  filterByBrand: 'Filtrer par marque',
+  filterByCategory: 'Filtrer par catégorie',
+  clearFilters: 'Effacer les filtres',
+  brandImageOf: 'Logo de {name}',
+  categoryImageOf: 'Image de {name}',
+
+  // Landing page — discovery band + product rails
+  heroTitle: 'Refaites le plein en quelques taps.',
+  browseEyebrow: 'Catalogue',
+  browseByBrand: 'Par marque',
+  browseByCategory: 'Par catégorie',
+  reorderTitle: 'Commander à nouveau',
+  reorderEyebrow: 'Vos habitudes',
+  reorderSubtitle: 'Ce que vous commandez le plus souvent',
+  topSellersTitle: 'Les plus vendus',
+  topSellersEyebrow: 'Chez les épiciers',
+  topSellersSubtitle: 'Ce qui part le plus vite ce mois-ci',
+  newArrivalsTitle: 'Nouveautés',
+  newArrivalsEyebrow: 'Vient d’arriver',
+  newArrivalsSubtitle: 'Les derniers produits ajoutés au catalogue',
+  seeAll: 'Voir tout',
+  rankLabel: 'Rang {rank}',
+
   // Accessibility
   goBack: 'Retour',
 };

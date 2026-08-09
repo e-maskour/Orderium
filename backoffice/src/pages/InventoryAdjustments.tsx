@@ -229,7 +229,7 @@ export default function InventoryAdjustments() {
       setValidateTotal(listing.total || 0);
       setValidateWarehouseId(adj.warehouseId);
     } catch {
-      toastError(t('errorPrefix') + ': impossible de charger les lignes');
+      toastError(t('errorPrefix') + t('adjustmentLinesLoadError'));
       closeDialog();
     } finally {
       setIsLoadingLines(false);

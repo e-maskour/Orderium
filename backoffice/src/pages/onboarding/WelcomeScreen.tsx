@@ -1,10 +1,13 @@
 import { Building2, Clock } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface WelcomeScreenProps {
   onStart: () => void;
 }
 
 export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+  const { t } = useLanguage();
+
   return (
     <div style={{ textAlign: 'center', padding: '2rem 0' }}>
       {/* Logo */}
@@ -32,10 +35,10 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             margin: '0 0 0.5rem',
           }}
         >
-          Welcome to Morocom
+          {t('onboardingWelcomeTitle')}
         </h1>
         <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-          Let's set up your business in just 2 steps
+          {t('onboardingWelcomeSubtitle')}
         </p>
       </div>
 
@@ -50,8 +53,16 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         }}
       >
         {[
-          { step: 1, title: 'Company Profile', desc: 'Tell us about your business' },
-          { step: 2, title: 'Admin Account', desc: 'Create your administrator login' },
+          {
+            step: 1,
+            title: t('onboardingStepCompanyTitle'),
+            desc: t('onboardingStepCompanyDesc'),
+          },
+          {
+            step: 2,
+            title: t('onboardingStepAdminTitle'),
+            desc: t('onboardingStepAdminDesc'),
+          },
         ].map(({ step, title, desc }) => (
           <div
             key={step}
@@ -105,7 +116,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         }}
       >
         <Clock size={14} />
-        <span>Takes about 2 minutes</span>
+        <span>{t('onboardingTimeEstimate')}</span>
       </div>
 
       {/* CTA */}
@@ -133,7 +144,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 14px rgba(35,90,228,0.4)';
         }}
       >
-        Get Started →
+        {t('onboardingGetStarted')}
       </button>
       <div
         style={{
@@ -147,7 +158,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         }}
       >
         <Building2 size={13} />
-        <span>Free to set up, no credit card required</span>
+        <span>{t('onboardingNoCreditCard')}</span>
       </div>
     </div>
   );

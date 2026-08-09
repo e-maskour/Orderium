@@ -354,4 +354,49 @@ export default {
   printerLastSeen: 'Vu',
   // Delete
   deletePrinter: 'Supprimer',
+
+  // ─── Printers ─────────────────────────────────────────────
+  printerBrandGeneric: 'Générique',
+  printerConnectionNetwork: 'Réseau',
+  printerPaper80: '80 mm (ticket)',
+  printerDocReceipt: 'Ticket de caisse',
+  printerDocDeliveryNote: 'Bon de livraison',
+  printerDocPurchaseOrder: 'Bon de commande',
+  printerTestCustomer: 'Client test',
+  printerTestProductA: 'Produit A',
+  printerTestProductB: 'Produit B',
+  printerTestLine: "Ceci est un test d'impression",
+  printerViaBrowser: 'Impression via le navigateur',
+  printerNetworkScan: 'Scan réseau',
+  printerDesktopSuffix: ' (ordinateur)',
+  printerMobileSuffix: ' (mobile)',
+  printerQzDetected: ' — QZ Tray détecté ✓',
+  printerHelpUsb:
+    "Installez QZ Tray et connectez l'imprimante USB : elle sera détectée automatiquement.",
+  printerHelpEpson:
+    "Connectez l'imprimante au même réseau. Renseignez l'IP dans les paramètres. Le port par défaut est 8008.",
+  printerHelpWebprnt:
+    "Activez WebPRNT dans les paramètres de l'imprimante puis renseignez l'IP. Le port par défaut est 80.",
+  printerHelpAirprint:
+    "Aucune configuration nécessaire : l'impression utilise le dialogue natif du navigateur avec AirPrint.",
+  printerHelpMopria:
+    "Aucune configuration nécessaire : l'impression utilise le dialogue natif du navigateur avec Mopria.",
+  confirmDeletePrinter: 'Supprimer cette imprimante ?',
+
+  // ─── Configuration cards & empty states ───────────────────
+  companyInformation: 'Informations entreprise',
+  companyInformationDescription: 'Gérer les informations de votre entreprise',
+  noCurrencyConfigured: 'Aucune devise configurée',
+  noPaymentTermConfigured: 'Aucune condition configurée',
+  noTaxRateConfigured: 'Aucun taux configuré',
+  noUomFoundEmpty: 'Aucune unité trouvée',
+  uomCountLabel: 'unités',
+  legalFormSoleTrader: 'Entreprise individuelle',
+
+  // ─── Document types (inventory settings) ──────────────────
+  docTypePurchaseInvoice: "Facture d'achat",
+  docTypePurchaseOrder: "Bon d'achat",
+  docTypeSalesInvoice: 'Facture de vente',
+  docTypeDeliveryNote: 'Bon de livraison',
+  browser: 'Navigateur',
 };

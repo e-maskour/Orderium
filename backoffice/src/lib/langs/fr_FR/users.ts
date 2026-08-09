@@ -56,4 +56,33 @@ export default {
   rejected: 'Rejeté',
   userApproved: 'Utilisateur approuvé avec succès',
   userRejected: 'Utilisateur rejeté avec succès',
+
+  // ─── Users page (previously untranslated) ─────────────────
+  activate: 'Activer',
+  deactivate: 'Désactiver',
+  reject: 'Rejeter',
+  confirmDeactivateUser: 'Désactiver cet utilisateur ?',
+  confirmActivateUser: 'Activer cet utilisateur ?',
+  confirmRejectUser: 'Rejeter cet accès portail ?',
+  confirmApproveUser: 'Approuver cet accès portail ?',
+  noUsersFound: 'Aucun utilisateur trouvé',
+  usersCountLabel: 'utilisateurs',
+  userCountLabel: 'utilisateur',
+  confirmDeleteUsersPlural: 'Supprimer {count} utilisateur(s) ?',
+
+  // ─── Client access requests (portal sign-ups) ────────────
+  clientRequests: 'Demandes clients',
+  clientRequestsSubtitle: 'Approuvez ou refusez les comptes créés depuis le portail client',
+  clientRequestsCountLabel: 'demandes',
+  searchClientRequests: 'Rechercher par nom ou téléphone…',
+  clearSearch: 'Effacer la recherche',
+  approveRequest: 'Approuver',
+  declineRequest: 'Refuser',
+  confirmDeclineRequest: 'Refuser cette demande d’accès ?',
+  noClientRequests: 'Aucune demande client',
+  requestedOn: 'Demandé le',
+  bulkApprove: 'Approuver la sélection',
+  bulkDecline: 'Refuser la sélection',
+  requestApproved: 'Demande approuvée',
+  requestDeclined: 'Demande refusée',
 };

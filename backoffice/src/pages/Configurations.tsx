@@ -19,8 +19,8 @@ export default function Configurations() {
   const { t } = useLanguage();
   const configModules = [
     {
-      name: 'Informations Entreprise',
-      description: 'Gérer les informations de votre entreprise',
+      name: t('companyInformation'),
+      description: t('companyInformationDescription'),
       icon: Building2,
       path: '/configurations/company',
       color: '#6366f1',

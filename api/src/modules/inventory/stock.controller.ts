@@ -5,6 +5,7 @@ import { StockQuantResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { STK } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Inventory - Stock')
 @Serialize(StockQuantResponseDto)
@@ -15,6 +16,7 @@ export class StockController {
   @Get()
   @ApiOperation({ summary: 'Get all stock (aggregated across warehouses)' })
   @ApiResponse({ status: 200, description: 'Aggregated stock quantities' })
+  @RequirePermission('stock.view')
   async getAllStock() {
     const stock = await this.stockService.getAllStock();
     return ApiRes(STK.LIST, stock);
@@ -26,6 +28,7 @@ export class StockController {
   })
   @ApiResponse({ status: 200, description: 'Product stock by warehouse' })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @RequirePermission('stock.view')
   async getProductStock(@Param('productId') productId: string) {
     const stock = await this.stockService.getProductStock(+productId);
     return ApiRes(STK.BY_PRODUCT, stock);
@@ -35,6 +38,7 @@ export class StockController {
   @ApiOperation({ summary: 'Get all stock at a specific warehouse' })
   @ApiResponse({ status: 200, description: 'Stock at warehouse' })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
+  @RequirePermission('stock.view')
   async getWarehouseStock(@Param('warehouseId') warehouseId: string) {
     const stock = await this.stockService.getWarehouseStock(+warehouseId);
     return ApiRes(STK.BY_WAREHOUSE, stock);
@@ -43,6 +47,7 @@ export class StockController {
   @Get('product/:productId/warehouse/:warehouseId')
   @ApiOperation({ summary: 'Get stock for a product at a specific warehouse' })
   @ApiResponse({ status: 200, description: 'Stock quantity details' })
+  @RequirePermission('stock.view')
   async getStockAtWarehouse(
     @Param('productId') productId: string,
     @Param('warehouseId') warehouseId: string,
@@ -58,6 +63,7 @@ export class StockController {
   @ApiOperation({ summary: 'Get low stock products' })
   @ApiResponse({ status: 200, description: 'Products with low stock' })
   @ApiQuery({ name: 'threshold', required: false, type: Number })
+  @RequirePermission('stock.view')
   async getLowStockProducts(@Query('threshold') threshold?: string) {
     const products = await this.stockService.getLowStockProducts(
       threshold ? +threshold : 10,
@@ -68,6 +74,7 @@ export class StockController {
   @Get('value')
   @ApiOperation({ summary: 'Get total stock value' })
   @ApiResponse({ status: 200, description: 'Stock value and product count' })
+  @RequirePermission('stock.view')
   async getStockValue() {
     const value = await this.stockService.getStockValue();
     return ApiRes(STK.VALUE, value);
@@ -77,6 +84,7 @@ export class StockController {
   @ApiOperation({ summary: 'Reserve stock for an order' })
   @ApiResponse({ status: 200, description: 'Stock reserved successfully' })
   @ApiResponse({ status: 400, description: 'Insufficient available stock' })
+  @RequirePermission('stock.transfer')
   async reserveStock(
     @Body() body: { productId: number; warehouseId: number; quantity: number },
   ) {
@@ -91,6 +99,7 @@ export class StockController {
   @Post('unreserve')
   @ApiOperation({ summary: 'Unreserve stock' })
   @ApiResponse({ status: 200, description: 'Stock unreserved successfully' })
+  @RequirePermission('stock.transfer')
   async unreserveStock(
     @Body() body: { productId: number; warehouseId: number; quantity: number },
   ) {

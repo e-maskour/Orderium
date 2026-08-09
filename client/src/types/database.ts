@@ -4,5 +4,6 @@ export type { Product, GetProductsParams, ProductsResponse } from '@/modules/pro
 // Additional database-related types can be added here
 export type ProductFilters = {
   categoryId: number | null;
+  brandId: number | null;
   search: string;
 };

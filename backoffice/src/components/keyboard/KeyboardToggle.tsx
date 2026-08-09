@@ -1,11 +1,13 @@
 import React from 'react';
 import { useKeyboard } from '../../hooks/useKeyboard';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * KeyboardToggle — global floating action button (bottom-right of every page).
  * Renders via a portal in App.tsx so it is always on screen.
  */
 export function KeyboardToggle() {
+  const { t } = useLanguage();
   const { isVisible, hideKeyboard, showKeyboard } = useKeyboard();
 
   const handleClick = () => {
@@ -23,7 +25,7 @@ export function KeyboardToggle() {
         type="button"
         onClick={handleClick}
         onMouseDown={(e) => e.preventDefault()}
-        aria-label={isVisible ? 'Masquer le clavier' : 'Afficher le clavier'}
+        aria-label={isVisible ? t('keyboardHide') : t('keyboardShow')}
         aria-pressed={isVisible}
         className={`pk-fab${isVisible ? ' pk-fab--active' : ''}`}
       >

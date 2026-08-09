@@ -7,6 +7,7 @@ import { frenchLayout } from './layouts/french';
 import { arabicLayout } from './layouts/arabic';
 import { numericLayout } from './layouts/numeric';
 import { symbolsLayout } from './layouts/symbols';
+import { useLanguage } from '../../context/LanguageContext';
 import './keyboard.css';
 
 // ─── Layout map ───────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ interface KeyProps {
 }
 
 function Key({ def, mode, isShiftActive, onKey }: KeyProps) {
+  const { t } = useLanguage();
   const [pressed, setPressed] = useState(false);
   const [longPressVisible, setLongPressVisible] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,7 +123,7 @@ function Key({ def, mode, isShiftActive, onKey }: KeyProps) {
       </button>
 
       {longPressVisible && def.longPressOptions && (
-        <div className="pk-longpress-popup" role="listbox" aria-label="Accented characters">
+        <div className="pk-longpress-popup" role="listbox" aria-label={t('keyboardAccented')}>
           {def.longPressOptions.map((opt) => (
             <button
               key={opt}
@@ -183,6 +185,7 @@ interface DragStart {
 // ─── POSKeyboard ──────────────────────────────────────────────────────────────
 
 export function POSKeyboard() {
+  const { t } = useLanguage();
   const { isVisible, layout, mode, capsLock, setLayout, handleKey, hideKeyboard, theme, setTheme } =
     useKeyboard();
 
@@ -279,7 +282,7 @@ export function POSKeyboard() {
         ref={panelRef}
         className={panelClasses}
         role="dialog"
-        aria-label="Virtual keyboard"
+        aria-label={t('keyboardVirtual')}
         aria-modal="false"
         style={floatStyle}
       >
@@ -294,7 +297,7 @@ export function POSKeyboard() {
           <div className="pk-header-controls">
             <button
               className="pk-ctrl-btn"
-              aria-label={theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'}
+              aria-label={theme === 'light' ? t('keyboardDarkMode') : t('keyboardLightMode')}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             >
@@ -336,7 +339,7 @@ export function POSKeyboard() {
             </button>
             <button
               className="pk-ctrl-btn pk-close-btn"
-              aria-label="Fermer le clavier"
+              aria-label={t('keyboardClose')}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={hideKeyboard}
             >

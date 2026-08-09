@@ -6,6 +6,7 @@ interface UseProductsParams {
   pageSize?: number;
   search?: string;
   categoryId?: number | null;
+  brandId?: number | null;
 }
 
 interface UseProductsResult {
@@ -17,16 +18,17 @@ interface UseProductsResult {
 }
 
 export function useProducts(params: UseProductsParams = {}): UseProductsResult {
-  const { page = 1, pageSize = 50, search = '', categoryId = null } = params;
+  const { page = 1, pageSize = 50, search = '', categoryId = null, brandId = null } = params;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['products', page, pageSize, search, categoryId],
+    queryKey: ['products', page, pageSize, search, categoryId, brandId],
     queryFn: () =>
       productsService.getAll({
         page,
         pageSize,
         ...(search && { search }),
         ...(categoryId != null && { categoryId }),
+        ...(brandId != null && { brandId }),
       }),
     placeholderData: keepPreviousData,
   });

@@ -11,6 +11,7 @@ import {
 import { warehousesService } from '../modules/warehouses';
 import { stockService } from '../modules/stock';
 import { categoriesService } from '../modules/categories';
+import { brandsService } from '../modules/brands';
 import { taxesService } from '../modules/taxes';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
@@ -41,7 +42,7 @@ import {
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
 import { useApiErrors } from '../hooks/useApiErrors';
-import { TranslationKey } from '../lib/langs';
+import { TranslationKey } from '../lib/i18n';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -87,6 +88,7 @@ export default function ProductDetail() {
       saleUnitId: null,
       purchaseUnitId: null,
       categoryIds: [],
+      brandId: null,
       warehouseId: null,
       isService: false,
       isEnabled: true,
@@ -138,6 +140,11 @@ export default function ProductDetail() {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories', 'product'],
     queryFn: () => categoriesService.getByType('product'),
+  });
+
+  const { data: brands = [] } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsService.getAll(),
   });
 
   const { data: uoms = [] } = useQuery({
@@ -232,6 +239,7 @@ export default function ProductDetail() {
         saleUnitId: (product as any).saleUnitOfMeasure?.id ?? defaultUom?.id ?? null,
         purchaseUnitId: (product as any).purchaseUnitOfMeasure?.id ?? defaultUom?.id ?? null,
         categoryIds: productCategories.map((c: any) => c.id),
+        brandId: (product as any).brandId ?? null,
         warehouseId: product.warehouseId ?? null,
         isService: product.isService,
         isEnabled: product.isEnabled,
@@ -279,6 +287,7 @@ export default function ProductDetail() {
       purchaseTax: purchaseTaxRate?.rate ?? 0,
       warehouseId: data.warehouseId,
       categoryIds: data.categoryIds,
+      brandId: data.brandId ?? null,
       isService: data.isService,
       isEnabled: data.isEnabled,
       isPriceChangeAllowed: data.isPriceChangeAllowed,
@@ -305,6 +314,7 @@ export default function ProductDetail() {
     value: w.id,
   }));
   const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
+  const brandOptions = brands.map((b) => ({ label: b.name, value: b.id }));
   const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
 
   // ── EAN-13 real-time validation ──────────────────────────
@@ -794,6 +804,27 @@ export default function ProductDetail() {
                     )}
                   />
                   <FieldError name="warehouseId" />
+                </div>
+
+                <div className="p-field" style={{ marginBottom: '1rem' }}>
+                  <label className="p-label">{t('brand')}</label>
+                  <Controller
+                    name="brandId"
+                    control={control}
+                    render={({ field }) => (
+                      <Dropdown
+                        value={field.value ?? null}
+                        onChange={(e) => field.onChange(e.value ?? null)}
+                        onBlur={field.onBlur}
+                        options={brandOptions}
+                        placeholder={t('selectBrand')}
+                        filter
+                        showClear
+                        filterPlaceholder={t('search')}
+                        style={{ width: '100%' }}
+                      />
+                    )}
+                  />
                 </div>
 
                 <div className="p-field">

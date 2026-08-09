@@ -1,5 +1,11 @@
 import { http } from '@/services/httpClient';
-import { LoginRequest, RegisterRequest, AuthResponse, PhoneCheckResponse } from './auth.interface';
+import {
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  RegisterResponse,
+  PhoneCheckResponse,
+} from './auth.interface';
 import { PortalUser } from './auth.model';
 import { API_ROUTES } from '@/common/api-routes';
 
@@ -121,8 +127,12 @@ export class AuthService {
     return response;
   }
 
-  async register(data: RegisterRequest): Promise<AuthResponse> {
-    const raw = await http<{ data: AuthResponse }>(API_ROUTES.PORTAL.REGISTER, {
+  /**
+   * Creates a portal account. The API issues no token here — the account
+   * starts as `pending` and an admin has to approve it before login works.
+   */
+  async register(data: RegisterRequest): Promise<RegisterResponse> {
+    const raw = await http<{ data: RegisterResponse }>(API_ROUTES.PORTAL.REGISTER, {
       method: 'POST',
       body: JSON.stringify({
         ...data,
@@ -130,26 +140,7 @@ export class AuthService {
       }),
     });
 
-    const response = raw.data ?? (raw as unknown as AuthResponse);
-
-    // Transform user to model
-    if (response.user) {
-      const userModel = PortalUser.fromApiResponse(response.user);
-      const enhancedResponse = {
-        ...response,
-        user: userModel,
-      };
-
-      // Save token and user to localStorage
-      if (response.token) {
-        localStorage.setItem(TOKEN_KEY, response.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(userModel.toJSON()));
-      }
-
-      return enhancedResponse;
-    }
-
-    return response;
+    return raw.data ?? (raw as unknown as RegisterResponse);
   }
 
   logout(): void {

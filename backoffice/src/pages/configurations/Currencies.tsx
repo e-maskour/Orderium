@@ -163,7 +163,7 @@ export default function Currencies() {
             loading={isLoading}
             totalCount={currencies.length}
             countLabel="devises"
-            emptyMessage="Aucune devise configurée"
+            emptyMessage={t('noCurrencyConfigured')}
             config={{
               topLeft: (c: Currency) => `${c.code} ${c.symbol}`,
               topRight: (c: Currency) => c.name,

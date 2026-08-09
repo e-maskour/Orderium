@@ -16,7 +16,8 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
-  LayoutGrid,
+  FolderTree,
+  Tags,
   Barcode,
   Camera,
   Upload,
@@ -40,6 +41,9 @@ import {
   IPosCartItem as CartItem,
 } from '../modules/pos';
 import { categoriesService } from '../modules/categories';
+import { brandsService } from '../modules/brands';
+import { PosFilterRail } from '../components/pos/PosFilterRail';
+import { resolveMediaUrl } from '../lib/media';
 import { orderPaymentsService } from '../modules';
 import { productsService } from '../modules/products';
 import { formatCurrency } from '@orderium/ui';
@@ -50,15 +54,6 @@ export default function POS() {
   const { admin } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = admin?.isAdmin === true;
-
-  const getImageUrl = (imageUrl?: string): string | undefined => {
-    if (!imageUrl) return undefined;
-    // Full URL (MinIO or any absolute URL): use directly
-    if (imageUrl.startsWith('http')) return imageUrl;
-    // Legacy fallback: construct from MinIO public URL
-    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
-    return `${minioPublicUrl}/orderium-media/${imageUrl}`;
-  };
 
   // ── Virtual keyboard-managed search input ────────────────────────────────
   const searchKeyboard = useVirtualKeyboard({
@@ -72,6 +67,7 @@ export default function POS() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const perPage = 50;
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(() => {
@@ -103,6 +99,10 @@ export default function POS() {
   // Mobile upload — bottom sheet with inline getUserMedia camera
   const [mobileUploadProduct, setMobileUploadProduct] = useState<Product | null>(null);
   const [mobileUploading, setMobileUploading] = useState(false);
+  // Press-and-hold state for product cards (long-press opens image upload)
+  const holdRef = useRef<{ timer?: ReturnType<typeof setTimeout>; fired: boolean }>({
+    fired: false,
+  });
 
   useEffect(() => {
     try {
@@ -147,13 +147,21 @@ export default function POS() {
   }, [searchQuery]);
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
-    queryKey: ['pos-products', currentPage, perPage, debouncedSearch, selectedCategoryId],
+    queryKey: [
+      'pos-products',
+      currentPage,
+      perPage,
+      debouncedSearch,
+      selectedCategoryId,
+      selectedBrandId,
+    ],
     queryFn: () =>
       posService.getProducts({
         page: currentPage,
         perPage,
         search: debouncedSearch || undefined,
         categoryId: selectedCategoryId ?? undefined,
+        brandId: selectedBrandId ?? undefined,
       }),
     placeholderData: keepPreviousData,
   });
@@ -179,7 +187,7 @@ export default function POS() {
       }
 
       if (!hasSetDefaultCustomer.current) {
-        const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
+        const comptoirClient = partnersData.find((p: Customer) => p.name === t('walkInCustomer'));
         if (comptoirClient) {
           setSelectedCustomer(comptoirClient);
           hasSetDefaultCustomer.current = true;
@@ -195,6 +203,13 @@ export default function POS() {
     staleTime: 60_000,
   });
   const categories = categoriesData || [];
+
+  const { data: brandsData } = useQuery({
+    queryKey: ['pos-brands'],
+    queryFn: () => brandsService.getAll(),
+    staleTime: 60_000,
+  });
+  const brands = brandsData || [];
 
   const filteredProducts = products.filter(
     (p: Product) => p.isEnabled !== false && p.isService !== true,
@@ -609,7 +624,7 @@ export default function POS() {
                     >
                       {item.product.imageUrl ? (
                         <img
-                          src={getImageUrl(item.product.imageUrl)}
+                          src={resolveMediaUrl(item.product.imageUrl)}
                           alt={item.product.name}
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
@@ -1233,68 +1248,41 @@ export default function POS() {
             </div>
           </div>
 
-          {/* Category Chips */}
+          {/* ── Filter rails: category, then brand ── */}
           {categories.length > 0 && (
-            <div
-              style={{
-                backgroundColor: '#fff',
-                borderBottom: '1px solid #e5e7eb',
-                padding: '0.5rem 1rem',
-                display: 'flex',
-                gap: '0.5rem',
-                overflowX: 'auto',
-                flexShrink: 0,
+            <PosFilterRail
+              label={t('category')}
+              icon={FolderTree}
+              options={categories.map((c) => ({
+                id: c.id,
+                name: c.name,
+                imageUrl: c.imageUrl,
+              }))}
+              selectedId={selectedCategoryId}
+              onSelect={(id) => {
+                setSelectedCategoryId(id);
+                setCurrentPage(1);
               }}
-            >
-              <button
-                onClick={() => {
-                  setSelectedCategoryId(null);
-                  setCurrentPage(1);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  padding: '0.375rem 0.75rem',
-                  borderRadius: '2rem',
-                  border: selectedCategoryId === null ? '1.5px solid #235ae4' : '1px solid #e5e7eb',
-                  background: selectedCategoryId === null ? '#eef2ff' : '#fff',
-                  color: selectedCategoryId === null ? '#235ae4' : '#374151',
-                  fontWeight: selectedCategoryId === null ? 700 : 500,
-                  fontSize: '0.8125rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                <LayoutGrid style={{ width: '0.875rem', height: '0.875rem' }} />
-                {t('all')}
-              </button>
-              {categories.map((cat: any) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategoryId(cat.id);
-                    setCurrentPage(1);
-                  }}
-                  style={{
-                    padding: '0.375rem 0.75rem',
-                    borderRadius: '2rem',
-                    border:
-                      selectedCategoryId === cat.id ? '1.5px solid #235ae4' : '1px solid #e5e7eb',
-                    background: selectedCategoryId === cat.id ? '#eef2ff' : '#fff',
-                    color: selectedCategoryId === cat.id ? '#235ae4' : '#374151',
-                    fontWeight: selectedCategoryId === cat.id ? 700 : 500,
-                    fontSize: '0.8125rem',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+              allLabel={t('all')}
+            />
+          )}
+
+          {brands.length > 0 && (
+            <PosFilterRail
+              label={t('brand')}
+              icon={Tags}
+              options={brands.map((b) => ({
+                id: b.id,
+                name: b.name,
+                imageUrl: b.logoUrl,
+              }))}
+              selectedId={selectedBrandId}
+              onSelect={(id) => {
+                setSelectedBrandId(id);
+                setCurrentPage(1);
+              }}
+              allLabel={t('all')}
+            />
           )}
 
           {/* Products Grid */}
@@ -1384,18 +1372,29 @@ export default function POS() {
                   const quantity = cartItem?.quantity || 0;
                   const inCart = quantity > 0;
 
-                  // Long-press to change image (admin only)
-                  const holdRef = { timer: undefined as ReturnType<typeof setTimeout> | undefined };
+                  // Tap → quantity dialog. Press & hold → change image (admin only).
                   const startHold = () => {
                     if (!isAdmin) return;
-                    holdRef.timer = setTimeout(() => openUploadForProduct(product), 600);
+                    clearTimeout(holdRef.current.timer);
+                    holdRef.current.fired = false;
+                    holdRef.current.timer = setTimeout(() => {
+                      holdRef.current.fired = true;
+                      openUploadForProduct(product);
+                    }, 600);
                   };
-                  const cancelHold = () => clearTimeout(holdRef.timer);
+                  const cancelHold = () => clearTimeout(holdRef.current.timer);
 
                   return (
                     <div
                       key={product.id}
-                      onClick={() => openQuantityModal(product)}
+                      onClick={() => {
+                        // Swallow the click that follows a completed long-press
+                        if (holdRef.current.fired) {
+                          holdRef.current.fired = false;
+                          return;
+                        }
+                        openQuantityModal(product);
+                      }}
                       onMouseDown={startHold}
                       onMouseUp={cancelHold}
                       onMouseLeave={cancelHold}
@@ -1428,55 +1427,25 @@ export default function POS() {
                       >
                         {product.imageUrl ? (
                           <img
-                            src={getImageUrl(product.imageUrl)}
+                            src={resolveMediaUrl(product.imageUrl)}
                             alt={product.name}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                             loading="lazy"
                           />
                         ) : (
+                          // No image → neutral placeholder. Tap still opens the quantity
+                          // dialog; admins press & hold the card to upload an image.
                           <div
-                            onClick={
-                              isAdmin
-                                ? (e) => {
-                                    e.stopPropagation();
-                                    openUploadForProduct(product);
-                                  }
-                                : undefined
-                            }
                             style={{
                               width: '100%',
                               height: '100%',
                               display: 'flex',
-                              flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: '0.375rem',
                               background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                              cursor: isAdmin ? 'pointer' : 'default',
                             }}
                           >
-                            {isAdmin ? (
-                              <>
-                                <Camera
-                                  style={{ width: '1.75rem', height: '1.75rem', color: '#94a3b8' }}
-                                />
-                                <span
-                                  style={{
-                                    fontSize: '0.5625rem',
-                                    fontWeight: 600,
-                                    color: '#94a3b8',
-                                    textAlign: 'center',
-                                    lineHeight: 1.2,
-                                  }}
-                                >
-                                  {t('addPhoto')}
-                                </span>
-                              </>
-                            ) : (
-                              <Package
-                                style={{ width: '2rem', height: '2rem', color: '#cbd5e1' }}
-                              />
-                            )}
+                            <Package style={{ width: '2rem', height: '2rem', color: '#cbd5e1' }} />
                           </div>
                         )}
                         {inCart && (

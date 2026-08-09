@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTenants } from '../hooks/useTenants';
+import { usePaymentsSummary } from '../hooks/usePayments';
 
 interface Props {
   onLogout: () => void;
@@ -23,6 +24,7 @@ export function Layout({ onLogout }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { data } = useTenants({ limit: 100 });
+  const { data: paymentsSummary } = usePaymentsSummary();
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -49,6 +51,11 @@ export function Layout({ onLogout }: Props) {
   };
 
   const isTenantsActive = location.pathname.startsWith('/tenants');
+  const isPaymentsActive = location.pathname.startsWith('/payments');
+
+  // Summed across currencies deliberately: this is a count of late payments,
+  // not a monetary total.
+  const overdueCount = paymentsSummary?.reduce((sum, row) => sum + row.overdueCount, 0) ?? 0;
 
   const activeClass = 'nav-link bg-indigo-600 text-white shadow-sm shadow-indigo-500/30';
   const inactiveClass =
@@ -121,13 +128,20 @@ export function Layout({ onLogout }: Props) {
 
         <p className="nav-section-title">Billing</p>
 
-        <div className="nav-link cursor-not-allowed text-slate-400 dark:text-slate-600 select-none">
+        <NavLink to="/payments" className={() => (isPaymentsActive ? activeClass : inactiveClass)}>
           <CreditCard className="h-4 w-4 shrink-0" />
           <span className="flex-1">Payments</span>
-          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400 dark:bg-slate-800 dark:text-slate-500 tracking-wide">
-            Soon
-          </span>
-        </div>
+          {overdueCount > 0 && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                isPaymentsActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
+              }`}
+              title={`${overdueCount} payment${overdueCount !== 1 ? 's' : ''} past their due date`}
+            >
+              {overdueCount}
+            </span>
+          )}
+        </NavLink>
 
         <p className="nav-section-title">System</p>
 

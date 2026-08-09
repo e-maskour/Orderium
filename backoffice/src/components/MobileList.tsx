@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
 import { EmptyState } from './EmptyState';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface MobileCardConfig<T> {
   /** Bold primary identifier — top-left */
@@ -78,18 +79,23 @@ export function MobileList<T>({
   keyExtractor,
   onTap,
   loading,
-  emptyMessage = 'Aucun résultat trouvé',
+  emptyMessage,
   emptyIcon,
   emptyDescription,
   emptyAction,
   totalCount,
-  countLabel = 'enregistrements',
+  countLabel,
   hasMore,
   onLoadMore,
   loadingMore,
   selectedKeys,
   onToggleSelect,
 }: MobileListProps<T>) {
+  const { t } = useLanguage();
+  // Defaults live here rather than in the parameter list: they need `t`,
+  // which only exists once the hook has run.
+  const resolvedEmptyMessage = emptyMessage ?? t('noResultsFound');
+  const resolvedCountLabel = countLabel ?? t('records');
   if (loading && items.length === 0) {
     return (
       <div className="ml-list">
@@ -104,7 +110,7 @@ export function MobileList<T>({
     return (
       <EmptyState
         icon={emptyIcon}
-        title={emptyMessage}
+        title={resolvedEmptyMessage}
         description={emptyDescription}
         action={emptyAction}
         compact
@@ -118,7 +124,7 @@ export function MobileList<T>({
     <div>
       {/* Record count */}
       <p className="ml-count">
-        {displayCount} {countLabel}
+        {displayCount} {resolvedCountLabel}
       </p>
 
       <div className="ml-list">

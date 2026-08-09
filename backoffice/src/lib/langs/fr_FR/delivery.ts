@@ -42,4 +42,7 @@ export default {
   // Error Messages
   error: 'Erreur',
   passwordRequiredError: 'Le mot de passe est requis',
+
+  newDeliveryPerson: 'Nouveau livreur',
+  noDeliveryPersonFound: 'Aucun livreur trouvé',
 };

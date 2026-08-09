@@ -36,9 +36,12 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ConfigurationsModule } from './modules/configurations/configurations.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { BrandsModule } from './modules/brands/brands.module';
 import { PDFModule } from './modules/pdf/pdf.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from './modules/auth/guards/permissions.guard';
+import { AccessModule } from './modules/access/access.module';
 import { HealthModule } from './modules/health/health.module';
 import { DriveModule } from './modules/drive/drive.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
@@ -56,6 +59,7 @@ import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
 import { TenantLifecycleModule } from './modules/tenant-lifecycle/tenant-lifecycle.module';
 import { Tenant } from './modules/tenant/tenant.entity';
 import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
+import { PaymentInstallment } from './modules/tenant-lifecycle/entities/payment-installment.entity';
 import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from './modules/super-admin/entities/migration-log.entity';
@@ -118,6 +122,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
         entities: [
           Tenant,
           Payment,
+          PaymentInstallment,
           SubscriptionPlan,
           TenantActivityLog,
           MigrationRunLog,
@@ -157,6 +162,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     }),
     TenantModule,
     TenantLifecycleModule,
+    AccessModule,
     ProductsModule,
     PartnersModule,
     OrdersModule,
@@ -171,6 +177,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     ConfigurationsModule,
     InventoryModule,
     CategoriesModule,
+    BrandsModule,
     PDFModule,
     AuthModule,
     HealthModule,
@@ -190,6 +197,9 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // Runs after JwtAuthGuard so `request.user` is populated. Fail-closed:
+    // an admin-scope route that declares nothing is denied.
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppModule implements NestModule {
@@ -204,6 +214,7 @@ export class AppModule implements NestModule {
         { path: 'api/admin/tenants/(.*)', method: RequestMethod.ALL },
         { path: 'api/admin/payments', method: RequestMethod.ALL },
         { path: 'api/admin/payments/(.*)', method: RequestMethod.ALL },
+        { path: 'api/admin/installments/(.*)', method: RequestMethod.ALL },
         { path: 'api/admin/plans', method: RequestMethod.ALL },
         { path: 'api/admin/plans/(.*)', method: RequestMethod.ALL },
         { path: 'api/super-admin/migrations', method: RequestMethod.ALL },

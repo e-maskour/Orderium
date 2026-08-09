@@ -3,7 +3,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { authService } from '@/modules/auth';
+import {
+  authService,
+  accountStatusFromError,
+  getPendingPhone,
+  rememberPendingPhone,
+} from '@/modules/auth';
 import {
   loginSchema,
   LoginFormValues,
@@ -20,8 +25,6 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Clock,
-  ShieldX,
   HandMetal,
   AlertTriangle,
   User,
@@ -42,7 +45,6 @@ export default function Login() {
   const [phoneExists, setPhoneExists] = useState<boolean | null>(null);
   const [customerName, setCustomerName] = useState<string>('');
   const [customerId, setCustomerId] = useState<number | undefined>();
-  const [accountStatus, setAccountStatus] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -63,6 +65,11 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
+      return;
+    }
+    // An account created on this device is still waiting for approval.
+    if (getPendingPhone()) {
+      navigate('/account-status', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -76,12 +83,10 @@ export default function Login() {
           setPhoneExists(result.exists);
           setCustomerName(result.customerName || '');
           setCustomerId(result.customerId);
-          setAccountStatus(result.status ?? null);
         } catch {
           setPhoneExists(false);
           setCustomerName('');
           setCustomerId(undefined);
-          setAccountStatus(null);
         } finally {
           setIsCheckingPhone(false);
         }
@@ -89,7 +94,6 @@ export default function Login() {
         setPhoneExists(null);
         setCustomerName('');
         setCustomerId(undefined);
-        setAccountStatus(null);
       }
     };
     const timer = setTimeout(checkPhone, 500);
@@ -106,37 +110,32 @@ export default function Login() {
     try {
       const normalizedPhone = normalizePhoneNumber(data.phone);
       if (phoneExists === false) {
-        await registerUser({
+        const fullName = data.fullName!.trim();
+        const status = await registerUser({
           phoneNumber: normalizedPhone,
           password: data.password,
-          fullName: data.fullName!.trim(),
+          fullName,
           customerId,
           isCustomer: true,
         });
-        setAccountStatus('pending');
         notify.success(t('accountCreatedPending'));
+        navigate('/account-status', {
+          replace: true,
+          state: { status, phone: normalizedPhone, name: fullName },
+        });
       } else {
         await login({ phoneNumber: normalizedPhone, password: data.password });
         notify.success(t('loginSuccess'));
       }
     } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : '';
-      if (errMsg.includes('403')) {
-        try {
-          const bodyJson = errMsg.substring(errMsg.indexOf('{'));
-          const body = JSON.parse(bodyJson);
-          if (body.message?.toLowerCase().includes('pending')) {
-            setAccountStatus('pending');
-            return;
-          }
-          if (body.message?.toLowerCase().includes('rejected')) {
-            setAccountStatus('rejected');
-            return;
-          }
-        } catch {
-          /* couldn't parse, fall through */
-        }
-        setAccountStatus('pending');
+      // A 403 on login means the account exists but is pending or rejected.
+      const status = accountStatusFromError(error);
+      if (status) {
+        rememberPendingPhone(normalizePhoneNumber(data.phone));
+        navigate('/account-status', {
+          replace: true,
+          state: { status, phone: normalizePhoneNumber(data.phone), name: customerName },
+        });
       } else {
         notify.error(t(phoneExists === false ? 'registrationFailed' : 'loginFailed'));
       }
@@ -344,66 +343,6 @@ export default function Login() {
             noValidate
             style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
           >
-            {/* Account status banner */}
-            {(accountStatus === 'pending' || accountStatus === 'rejected') && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  padding: '1rem 1.125rem',
-                  borderRadius: '12px',
-                  background: accountStatus === 'pending' ? '#fffbeb' : '#fef2f2',
-                  border: `1.5px solid ${accountStatus === 'pending' ? '#fde68a' : '#fecaca'}`,
-                }}
-              >
-                <div
-                  style={{
-                    width: '2.25rem',
-                    height: '2.25rem',
-                    borderRadius: '0.625rem',
-                    flexShrink: 0,
-                    background: accountStatus === 'pending' ? '#fef3c7' : '#fee2e2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {accountStatus === 'pending' ? (
-                    <Clock style={{ width: '1.125rem', height: '1.125rem', color: '#d97706' }} />
-                  ) : (
-                    <ShieldX style={{ width: '1.125rem', height: '1.125rem', color: '#dc2626' }} />
-                  )}
-                </div>
-                <div>
-                  <p
-                    style={{
-                      margin: '0 0 0.25rem',
-                      fontWeight: 700,
-                      fontSize: '0.875rem',
-                      color: accountStatus === 'pending' ? '#92400e' : '#991b1b',
-                    }}
-                  >
-                    {accountStatus === 'pending'
-                      ? t('accountPendingTitle')
-                      : t('accountRejectedTitle')}
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.8125rem',
-                      lineHeight: 1.5,
-                      color: accountStatus === 'pending' ? '#a16207' : '#b91c1c',
-                    }}
-                  >
-                    {accountStatus === 'pending'
-                      ? t('accountPendingDesc')
-                      : t('accountRejectedDesc')}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Phone number */}
             <div>
               <label

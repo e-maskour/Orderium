@@ -43,6 +43,13 @@ export default {
   accountRejectedTitle: 'تم رفض الحساب',
   accountRejectedDesc: 'تم رفض حسابك من قبل المسؤول. يرجى الاتصال بالدعم لمزيد من المعلومات.',
 
+  // Account status page
+  checkAgain: 'تحقق مرة أخرى',
+  backToLogin: 'العودة إلى تسجيل الدخول',
+  stillPending: 'لا يزال حسابك في انتظار الموافقة.',
+  accountApprovedToast: 'تمت الموافقة على حسابك. يمكنك الآن تسجيل الدخول.',
+  contactSupport: 'يرجى الاتصال بالدعم لمعرفة سبب الرفض.',
+
   // Login page UI
   clientPortal: 'بوابة العملاء',
   secureCustomerAccess: 'وصول آمن للعملاء',

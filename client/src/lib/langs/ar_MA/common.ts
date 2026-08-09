@@ -145,6 +145,39 @@ export default {
   oopsPageNotFound: 'عذراً! الصفحة غير موجودة',
   returnToHome: 'العودة للصفحة الرئيسية',
 
+  // Browse (landing page + shop filters)
+  browseTitle: 'عن ماذا تبحث؟',
+  browseSubtitle: 'اختر علامة تجارية أو فئة للبدء',
+  brands: 'العلامات التجارية',
+  categories: 'الفئات',
+  allBrands: 'كل العلامات التجارية',
+  allCategories: 'كل الفئات',
+  seeAllProducts: 'عرض كل المنتجات',
+  noBrands: 'لا توجد علامات تجارية متاحة',
+  noCategories: 'لا توجد فئات متاحة',
+  filterByBrand: 'تصفية حسب العلامة التجارية',
+  filterByCategory: 'تصفية حسب الفئة',
+  clearFilters: 'مسح عوامل التصفية',
+  brandImageOf: 'شعار {name}',
+  categoryImageOf: 'صورة {name}',
+
+  // Landing page — discovery band + product rails
+  heroTitle: 'جدّد مخزونك ببضع نقرات.',
+  browseEyebrow: 'الكتالوج',
+  browseByBrand: 'حسب العلامة التجارية',
+  browseByCategory: 'حسب الفئة',
+  reorderTitle: 'اطلب مرة أخرى',
+  reorderEyebrow: 'طلباتك المعتادة',
+  reorderSubtitle: 'ما تطلبه أكثر من غيره',
+  topSellersTitle: 'الأكثر مبيعًا',
+  topSellersEyebrow: 'عند البقالين',
+  topSellersSubtitle: 'الأسرع نفادًا هذا الشهر',
+  newArrivalsTitle: 'وصل حديثًا',
+  newArrivalsEyebrow: 'جديد',
+  newArrivalsSubtitle: 'آخر المنتجات المضافة إلى الكتالوج',
+  seeAll: 'عرض الكل',
+  rankLabel: 'المرتبة {rank}',
+
   // Accessibility
   goBack: 'رجوع',
 };

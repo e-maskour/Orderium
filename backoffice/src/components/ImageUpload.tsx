@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { productsService } from '../modules/products';
 import { imagesService } from '../modules/images';
+import { resolveMediaUrl } from '../lib/media';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 
@@ -192,6 +193,11 @@ async function processImageFile(file: File): Promise<File> {
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
   currentImage?: string;
+  /**
+   * Storage key of the already-saved image. Required outside `productId` mode
+   * so removing can delete the object it points at.
+   */
+  currentPublicId?: string | null;
   onImageRemove?: () => void;
   maxSizeMB?: number;
   folder?: string;
@@ -216,6 +222,7 @@ interface UploadStatus {
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   onImageUpload,
   currentImage,
+  currentPublicId,
   onImageRemove,
   maxSizeMB = 5,
   folder = 'products',
@@ -226,14 +233,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const { t } = useLanguage();
 
-  const getFullImageUrl = (imagePath?: string): string | null => {
-    if (!imagePath) return null;
-    // Full URL (MinIO or any absolute URL): use directly
-    if (imagePath.startsWith('http')) return imagePath;
-    // Legacy fallback: construct from MinIO public URL
-    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
-    return `${minioPublicUrl}/orderium-media/${imagePath}`;
-  };
+  const getFullImageUrl = (imagePath?: string): string | null => resolveMediaUrl(imagePath) ?? null;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ state: 'idle' });
   const [dragActive, setDragActive] = useState(false);
@@ -324,7 +324,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         imageData = { url: result.imageUrl ?? '', publicId: result.publicId };
       } else {
         // Delete the previous image from storage before uploading the new one
-        const previousPublicId = uploadStatus.imageData?.publicId;
+        const previousPublicId = uploadStatus.imageData?.publicId ?? currentPublicId;
         if (previousPublicId) {
           try {
             await imagesService.delete(previousPublicId);
@@ -386,15 +386,27 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   const handleRemoveImage = async () => {
-    if (!productId) return;
     if (!localPreview && !currentImage) return;
     try {
-      await productsService.deleteImage(productId);
+      if (productId) {
+        await productsService.deleteImage(productId);
+      } else {
+        // Standalone mode (brands, categories, …): the caller owns the record,
+        // so drop the stored object and let it clear its own form fields.
+        const publicId = uploadStatus.imageData?.publicId ?? currentPublicId;
+        if (publicId) {
+          try {
+            await imagesService.delete(publicId);
+          } catch {
+            /* non-fatal — the record is cleared either way */
+          }
+        }
+      }
       setLocalPreview(null);
       setUploadStatus({ state: 'idle' });
       setImageLoadError(false);
       if (onImageRemove) onImageRemove();
-    } catch (error: any) {
+    } catch {
       setUploadStatus({ state: 'error', message: t('failedToRemoveImage') });
     }
   };

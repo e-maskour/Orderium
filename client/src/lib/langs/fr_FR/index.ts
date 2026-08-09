@@ -8,6 +8,7 @@ import profile from './profile';
 import documents from './documents';
 import notifications from './notifications';
 import location from './location';
+import support from './support';
 
 export default {
   ...common,
@@ -20,4 +21,5 @@ export default {
   ...documents,
   ...notifications,
   ...location,
+  ...support,
 };

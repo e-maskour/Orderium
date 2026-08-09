@@ -1079,3 +1079,625 @@ a,
     }
 }
 }
+/* ===== MEDIA THUMB (shared image + placeholder) ===== */
+.cl-thumb {
+    display: block;
+    object-fit: cover;
+    background: var(--cl-ground);
+    flex-shrink: 0;
+}
+
+.cl-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--cl-pri-pale) 0%, var(--cl-pri-light) 100%);
+    color: var(--cl-pri-dark);
+}
+
+.cl-thumb-icon {
+    width: 45%;
+    height: 45%;
+    max-width: 2.5rem;
+    max-height: 2.5rem;
+    opacity: 0.7;
+}
+
+/* ===== FILTER TILES (brand + category strips) ===== */
+.cl-filter-panel {
+    background: var(--cl-surface);
+    border-bottom: 1px solid var(--cl-border);
+    padding: 0.625rem 1rem 0.75rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.cl-ftile-section {
+    min-width: 0;
+}
+
+.cl-ftile-title {
+    margin: 0 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-color-secondary, #6b7280);
+}
+
+.cl-ftile-row {
+    padding-bottom: 0.125rem;
+}
+
+.cl-ftile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.3125rem 0.875rem 0.3125rem 0.3125rem;
+    border-radius: var(--cl-radius-full);
+    border: 1.5px solid var(--cl-border);
+    background: var(--cl-surface);
+    color: var(--text-color, #374151);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    min-height: 2.875rem;
+    max-width: 13rem;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+/* Mirror the inline padding for RTL, where the media sits on the right. */
+[dir='rtl'] .cl-ftile {
+    padding: 0.3125rem 0.3125rem 0.3125rem 0.875rem;
+}
+
+.cl-ftile-media {
+    width: 2.125rem;
+    height: 2.125rem;
+    flex-shrink: 0;
+    border-radius: var(--cl-radius-full);
+}
+
+.cl-ftile-media-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cl-pri-pale);
+    color: var(--cl-pri-dark);
+}
+
+.cl-ftile-media-all svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.cl-ftile-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.cl-ftile:hover {
+    border-color: var(--cl-pri);
+    box-shadow: var(--cl-shadow-sm);
+}
+
+.cl-ftile:active {
+    transform: scale(0.97);
+}
+
+.cl-ftile.active {
+    background: var(--cl-pri);
+    border-color: var(--cl-pri);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3);
+}
+
+.cl-ftile.active .cl-ftile-media-all,
+.cl-ftile.active .cl-thumb-placeholder {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+}
+
+.cl-ftile-skeleton {
+    cursor: default;
+    pointer-events: none;
+}
+
+.cl-ftile-label-skeleton {
+    display: inline-block;
+    width: 4.5rem;
+    height: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING PAGE
+   A restocking tool for Moroccan grocers, not a consumer storefront: the job
+   is to reach the next order in the fewest taps. Emerald stays the brand
+   anchor; saffron is the single accent and is spent only on section eyebrows
+   and best-seller ranks. Type is Plus Jakarta Sans / IBM Plex Arabic — both
+   already loaded by index.html and, until now, unused.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --cl-ink: #0b2f26;
+    --cl-ink-soft: #55736a;
+    --cl-saffron: #c9791b;
+    --cl-saffron-pale: #fdf1de;
+    --cl-sand: #faf6ee;
+    --cl-line-warm: #ebe4d6;
+    --cl-display: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --cl-display-ar: 'IBM Plex Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.cl-home {
+    min-height: 100vh;
+    background: var(--cl-sand);
+    color: var(--cl-ink);
+    font-family: var(--cl-display);
+}
+
+[dir='rtl'] .cl-home {
+    font-family: var(--cl-display-ar);
+}
+
+.cl-home-main {
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+}
+
+/* ── Eyebrow: the one place saffron appears in section chrome ── */
+.cl-eyebrow {
+    margin: 0 0 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cl-saffron);
+}
+
+/* ── Hero ── */
+.cl-hero {
+    position: relative;
+    overflow: hidden;
+    margin: 0 -1rem 1.5rem;
+    padding: 1.75rem 1.25rem 2rem;
+    background:
+        radial-gradient(115% 130% at 100% 0%, rgba(16, 185, 129, 0.55) 0%, transparent 55%),
+        linear-gradient(150deg, var(--cl-pri-deeper) 0%, var(--cl-pri-dark) 55%, var(--cl-pri) 100%);
+    color: #ffffff;
+}
+
+/* Faint lattice — a nod to zellige geometry, kept below the type's contrast. */
+.cl-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 14px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 14px);
+    pointer-events: none;
+}
+
+.cl-hero-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 34rem;
+}
+
+.cl-hero-greeting {
+    margin: 0 0 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.cl-hero-sub {
+    margin: 0.5rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 26rem;
+}
+
+.cl-hero-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    text-wrap: balance;
+}
+
+.cl-hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding: 0.75rem 1.375rem;
+    min-height: 2.875rem;
+    border-radius: var(--cl-radius-full);
+    background: #ffffff;
+    color: var(--cl-pri-deeper);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.cl-hero-cta:hover {
+    box-shadow: 0 12px 26px -8px rgba(0, 0, 0, 0.5);
+}
+
+.cl-hero-cta:active {
+    transform: scale(0.97);
+}
+
+.cl-hero-cta svg {
+    width: 1.0625rem;
+    height: 1.0625rem;
+}
+
+[dir='rtl'] .cl-hero-cta svg {
+    transform: scaleX(-1);
+}
+
+/* ── Discovery band: one instrument for both catalogue axes ── */
+.cl-band {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-line-warm);
+    border-radius: var(--cl-radius-xl);
+    padding: 1.25rem 1rem 1.375rem;
+    margin-bottom: 2.25rem;
+    box-shadow: 0 1px 2px rgba(11, 47, 38, 0.04);
+}
+
+.cl-band-head {
+    margin-bottom: 1rem;
+}
+
+.cl-band-title {
+    margin: 0 0 0.875rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--cl-ink);
+}
+
+.cl-segmented {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: var(--cl-radius-full);
+    background: var(--cl-sand);
+    border: 1px solid var(--cl-line-warm);
+}
+
+.cl-segment {
+    appearance: none;
+    border: none;
+    background: transparent;
+    border-radius: var(--cl-radius-full);
+    padding: 0.5rem 1rem;
+    min-height: 2.375rem;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--cl-ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cl-segment:hover {
+    color: var(--cl-ink);
+}
+
+.cl-segment.active {
+    background: var(--cl-ink);
+    color: #ffffff;
+}
+
+.cl-band-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+/* A horizontal chip reads as a list entry, not another card grid — denser and
+   quicker to scan than square tiles when the label is the payload. */
+.cl-band-tile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 3.75rem;
+    padding: 0.5rem 0.875rem 0.5rem 0.5rem;
+    border: 1px solid var(--cl-line-warm);
+    border-radius: var(--cl-radius);
+    background: var(--cl-surface);
+    color: var(--cl-ink);
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+[dir='rtl'] .cl-band-tile {
+    padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+}
+
+.cl-band-tile:hover {
+    border-color: var(--cl-pri);
+    box-shadow: 0 6px 14px -8px rgba(5, 150, 105, 0.55);
+    transform: translateY(-1px);
+}
+
+.cl-band-tile:active {
+    transform: scale(0.985);
+}
+
+.cl-band-tile-media {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+}
+
+.cl-band-tile-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.25;
+    min-width: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.cl-band-tile-skeleton {
+    pointer-events: none;
+}
+
+.cl-band-tile-skeleton .cl-band-tile-media {
+    border-radius: var(--cl-radius);
+}
+
+.cl-band-tile-name.cl-skeleton,
+.cl-skeleton.cl-band-tile-name {
+    height: 0.75rem;
+    width: 5.5rem;
+    display: block;
+}
+
+/* ── Product rails ── */
+.cl-rail {
+    margin-bottom: 2.25rem;
+}
+
+.cl-rail-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.875rem;
+}
+
+.cl-rail-heading {
+    min-width: 0;
+}
+
+.cl-rail-title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: var(--cl-ink);
+}
+
+.cl-rail-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--cl-ink-soft);
+}
+
+.cl-rail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+    min-height: 2.75rem;
+    padding: 0 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--cl-pri-dark);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.cl-rail-link:hover {
+    text-decoration: underline;
+}
+
+.cl-rail-link svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+}
+
+[dir='rtl'] .cl-rail-link svg {
+    transform: scaleX(-1);
+}
+
+.cl-rail-grid {
+    display: grid;
+    /* Three items always, but capped — a product card stretched to a third of a
+       desktop viewport reads as a billboard, not a shelf. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+@media (min-width: 640px) {
+    .cl-rail-grid {
+        grid-template-columns: repeat(3, minmax(0, 15rem));
+        justify-content: start;
+    }
+}
+
+[dir='rtl'] .cl-rail-grid {
+    justify-content: start;
+}
+
+.cl-rail-slot {
+    position: relative;
+    min-width: 0;
+    display: flex;
+}
+
+.cl-rail-slot > * {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Rank is content here, not decoration: on a best-seller shelf #1 outsells #3.
+   It is the only element that carries the accent at full strength. */
+.cl-rank {
+    position: absolute;
+    top: -0.5rem;
+    inset-inline-start: -0.375rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.375rem;
+    border-radius: var(--cl-radius-full);
+    background: var(--cl-saffron);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 4px 10px -3px rgba(201, 121, 27, 0.7);
+    pointer-events: none;
+}
+
+.cl-rail-skeleton {
+    width: 100%;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-line-warm);
+    border-radius: var(--cl-radius-lg);
+    overflow: hidden;
+}
+
+.cl-rail-skeleton-media {
+    aspect-ratio: 4 / 3;
+}
+
+.cl-rail-skeleton-line {
+    height: 0.75rem;
+    margin: 0.625rem 0.625rem 0;
+}
+
+.cl-rail-skeleton-line.short {
+    width: 45%;
+    margin-bottom: 0.875rem;
+}
+
+/* ── Breakpoints ── */
+@media (min-width: 480px) {
+    .cl-band-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 640px) {
+    .cl-home-main {
+        padding-inline: 1.5rem;
+    }
+
+    .cl-hero {
+        margin: 1.5rem 0 2rem;
+        padding: 2.5rem 2.5rem 2.75rem;
+        border-radius: var(--cl-radius-2xl);
+    }
+
+    .cl-hero-title {
+        font-size: 2.375rem;
+    }
+
+    .cl-band {
+        padding: 1.5rem 1.5rem 1.75rem;
+    }
+
+    .cl-band-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        column-gap: 1rem;
+    }
+
+    .cl-band-head .cl-eyebrow,
+    .cl-band-title {
+        grid-column: 1;
+    }
+
+    .cl-band-title {
+        margin-bottom: 0;
+    }
+
+    .cl-segmented {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+
+    .cl-rail-grid {
+        gap: 0.875rem;
+    }
+}
+
+@media (min-width: 900px) {
+    .cl-band-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cl-hero-title {
+        font-size: 2.875rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .cl-band-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .cl-rail-grid {
+        gap: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .cl-band-tile,
+    .cl-hero-cta,
+    .cl-segment {
+        transition: none;
+    }
+
+    .cl-band-tile:hover,
+    .cl-hero-cta:active,
+    .cl-band-tile:active {
+        transform: none;
+    }
+}

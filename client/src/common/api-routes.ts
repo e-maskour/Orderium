@@ -10,6 +10,11 @@ export const API_ROUTES = {
     USER_BY_PHONE: (phone: string) => `/api/portal/user/${encodeURIComponent(phone)}`,
     USER_BY_ID: (id: number) => `/api/portal/user/id/${id}`,
     CATEGORIES: '/api/portal/categories',
+    BRANDS: '/api/portal/brands',
+    TOP_SELLERS: '/api/portal/products/top-sellers',
+    NEWEST_PRODUCTS: '/api/portal/products/newest',
+    REORDER_PRODUCTS: '/api/portal/products/reorder',
+    CONFIG_COMPANY: '/api/portal/config/company',
   },
 
   ORDERS: {

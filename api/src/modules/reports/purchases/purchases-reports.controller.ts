@@ -5,6 +5,7 @@ import { ApiRes } from '../../../common/api-response';
 import { RPT } from '../../../common/response-codes';
 import { PurchasesReportsService } from './purchases-reports.service';
 import { SalesReportFilterDto } from '../dto/report-filter.dto';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Purchases')
 @Controller('reports/purchases')
@@ -14,6 +15,7 @@ export class PurchasesReportsController {
   @Get('by-period')
   @ApiOperation({ summary: 'Purchases by period' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_purchases.view')
   async getByPeriod(@Query() filter: SalesReportFilterDto) {
     return ApiRes(
       RPT.PURCHASES_BY_PERIOD,
@@ -24,6 +26,7 @@ export class PurchasesReportsController {
   @Get('top-suppliers')
   @ApiOperation({ summary: 'Top suppliers by purchase volume' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_purchases.view')
   async getTopSuppliers(@Query() filter: SalesReportFilterDto) {
     return ApiRes(
       RPT.PURCHASES_TOP_SUPPLIERS,
@@ -34,6 +37,7 @@ export class PurchasesReportsController {
   @Get('by-product')
   @ApiOperation({ summary: 'Purchases grouped by product' })
   @ApiResponse({ status: 200 })
+  @RequirePermission('reports_purchases.view')
   async getByProduct(@Query() filter: SalesReportFilterDto) {
     return ApiRes(
       RPT.PURCHASES_BY_PRODUCT,
@@ -47,6 +51,7 @@ export class PurchasesReportsController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export purchases report as XLSX' })
+  @RequirePermission('reports_purchases.export')
   async getPurchasesXlsx(
     @Query() filter: SalesReportFilterDto,
     @Res() res: Response,

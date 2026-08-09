@@ -18,6 +18,7 @@ import { PermissionResponseDto } from './dto/permission-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { PERM } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Permissions')
 @Serialize(PermissionResponseDto)
@@ -31,6 +32,7 @@ export class PermissionsController {
     status: 200,
     description: 'Permissions retrieved successfully',
   })
+  @RequirePermission('roles.view')
   async findAll() {
     const data = await this.permissionsService.findAll();
     return ApiRes(PERM.LIST, data);
@@ -43,6 +45,7 @@ export class PermissionsController {
     description: 'Permission retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
+  @RequirePermission('roles.view')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const data = await this.permissionsService.findOne(id);
     return ApiRes(PERM.DETAIL, data);
@@ -52,6 +55,7 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Create a permission' })
   @ApiResponse({ status: 201, description: 'Permission created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid permission data' })
+  @RequirePermission('roles.create')
   async create(@Body() dto: CreatePermissionDto) {
     const data = await this.permissionsService.create(dto);
     return ApiRes(PERM.CREATED, data);
@@ -64,6 +68,7 @@ export class PermissionsController {
     status: 200,
     description: 'Default permissions seeded successfully',
   })
+  @RequirePermission('roles.edit')
   async seed() {
     await this.permissionsService.seedDefaults();
     return ApiRes(PERM.SEEDED, null);
@@ -73,6 +78,7 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Update a permission' })
   @ApiResponse({ status: 200, description: 'Permission updated successfully' })
   @ApiResponse({ status: 404, description: 'Permission not found' })
+  @RequirePermission('roles.edit')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePermissionDto,
@@ -86,6 +92,7 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Delete a permission' })
   @ApiResponse({ status: 200, description: 'Permission deleted successfully' })
   @ApiResponse({ status: 404, description: 'Permission not found' })
+  @RequirePermission('roles.delete')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.permissionsService.remove(id);
     return ApiRes(PERM.DELETED, null);

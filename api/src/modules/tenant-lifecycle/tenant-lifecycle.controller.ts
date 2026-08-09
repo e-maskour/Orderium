@@ -21,9 +21,6 @@ import {
   ExtendTrialDto,
   ArchiveTenantDto,
   DeleteTenantDto,
-  CreatePaymentDto,
-  ValidatePaymentDto,
-  RejectPaymentDto,
   UpdatePlanDto,
 } from './dto/lifecycle.dto';
 
@@ -138,74 +135,6 @@ export class TenantLifecycleController {
   @ApiResponse({ status: 200, description: 'Activity log' })
   getActivity(@Param('id', ParseIntPipe) id: number) {
     return this.lifecycleService.getActivityLog(id);
-  }
-
-  // ─── Payments per tenant ───────────────────────────────────────────────────
-
-  @Post('admin/tenants/:id/payments')
-  @ApiOperation({ summary: 'Create payment for tenant' })
-  @ApiResponse({ status: 201, description: 'Payment created' })
-  createPayment(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CreatePaymentDto,
-    @Body('performedBy') performedBy?: string,
-  ) {
-    return this.lifecycleService.createPayment(id, dto, performedBy);
-  }
-
-  @Get('admin/tenants/:id/payments')
-  @ApiOperation({ summary: 'List tenant payments' })
-  @ApiResponse({ status: 200, description: 'List of payments' })
-  listPayments(@Param('id', ParseIntPipe) id: number) {
-    return this.lifecycleService.listPayments(id);
-  }
-
-  // ─── Global payments ───────────────────────────────────────────────────────
-
-  @Get('admin/payments')
-  @ApiOperation({ summary: 'List all payments' })
-  @ApiResponse({ status: 200, description: 'List of all payments' })
-  listAllPayments(
-    @Query('status') status?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    return this.lifecycleService.listAllPayments({ status, from, to });
-  }
-
-  @Post('admin/payments/:id/validate')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate payment' })
-  @ApiResponse({ status: 200, description: 'Payment validated' })
-  validatePayment(
-    @Param('id') id: string,
-    @Body() dto: ValidatePaymentDto,
-    @Body('performedBy') performedBy?: string,
-  ) {
-    return this.lifecycleService.validatePayment(id, dto, performedBy);
-  }
-
-  @Post('admin/payments/:id/reject')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reject payment' })
-  @ApiResponse({ status: 200, description: 'Payment rejected' })
-  rejectPayment(
-    @Param('id') id: string,
-    @Body() dto: RejectPaymentDto,
-    @Body('performedBy') performedBy?: string,
-  ) {
-    return this.lifecycleService.rejectPayment(id, dto, performedBy);
-  }
-
-  @Post('admin/payments/:id/refund')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refund payment' })
-  @ApiResponse({ status: 200, description: 'Payment refunded' })
-  refundPayment(
-    @Param('id') id: string,
-    @Body('performedBy') performedBy?: string,
-  ) {
-    return this.lifecycleService.refundPayment(id, performedBy);
   }
 
   // ─── Plans ──────────────────────────────────────────────────────────────────

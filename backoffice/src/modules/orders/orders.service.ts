@@ -1,4 +1,5 @@
 import { Order, OrderWithDetails } from './orders.model';
+import type { IOrdersMergeSummary } from './orders.interface';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class OrdersService {
@@ -227,6 +228,14 @@ export class OrdersService {
 
   async revokeShareLink(id: number): Promise<void> {
     await apiClient.delete(API_ROUTES.ORDERS.SHARE(id));
+  }
+
+  /** Consolidated recap of several orders with all of their items. */
+  async getMergeSummary(ids: number[]): Promise<IOrdersMergeSummary> {
+    const response = await apiClient.post<IOrdersMergeSummary>(API_ROUTES.ORDERS.MERGE_SUMMARY, {
+      ids,
+    });
+    return response.data;
   }
 }
 

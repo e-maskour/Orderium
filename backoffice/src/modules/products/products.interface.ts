@@ -19,6 +19,8 @@ export interface IProduct {
   saleUnit?: string;
   purchaseUnit?: string;
   categories?: { id: number; name: string; type?: string }[];
+  brandId?: number | null;
+  brand?: { id: number; name: string; logoUrl?: string | null } | null;
 }
 
 export interface ProductsResponse {
@@ -38,6 +40,7 @@ export interface GetProductsParams {
   code?: string;
   stockFilter?: 'negative' | 'zero' | 'positive';
   categoryIds?: number[];
+  brandIds?: number[];
   isService?: boolean;
   minPrice?: number;
   maxPrice?: number;
@@ -62,6 +65,7 @@ export interface CreateProductDTO {
   imageUrl?: string | null;
   saleUnit?: string;
   purchaseUnit?: string;
+  brandId?: number | null;
 }
 
 export interface UpdateProductDTO {
@@ -81,4 +85,5 @@ export interface UpdateProductDTO {
   imageUrl?: string | null;
   saleUnit?: string;
   purchaseUnit?: string;
+  brandId?: number | null;
 }

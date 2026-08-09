@@ -5,6 +5,7 @@ import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { AdminLayout } from '../../../components/AdminLayout';
 import { PageHeader } from '../../../components/PageHeader';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface ReportLayoutProps {
   title: string;
@@ -32,6 +33,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
   error,
 }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <AdminLayout>
@@ -71,7 +73,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
           >
             <div className="flex flex-column align-items-center gap-3">
               <ProgressSpinner style={{ width: '48px', height: '48px' }} strokeWidth="3" />
-              <span className="text-500 text-sm">Chargement du rapport…</span>
+              <span className="text-500 text-sm">{t('analyticsLoading')}</span>
             </div>
           </div>
         )}
@@ -80,11 +82,11 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
         {error && !isLoading && (
           <div
             className="erp-card flex align-items-center gap-3 p-4"
-            style={{ borderLeft: '4px solid var(--red-500)' }}
+            style={{ borderInlineStart: '4px solid var(--red-500)' }}
           >
             <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
             <div>
-              <p className="font-semibold text-900 m-0">Erreur lors du chargement</p>
+              <p className="font-semibold text-900 m-0">{t('analyticsErrorTitle')}</p>
               <p className="text-500 text-sm m-0 mt-1">{error}</p>
             </div>
           </div>
@@ -102,7 +104,9 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
                   style={{ borderBottom: '1px solid var(--erp-border)' }}
                 >
                   <i className="pi pi-chart-line text-primary" />
-                  <span className="font-semibold text-800 text-sm">Graphique</span>
+                  <span className="font-semibold text-800 text-sm">
+                    {t('analyticsSectionChart')}
+                  </span>
                 </div>
                 {chart}
               </div>
@@ -116,7 +120,9 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
                 >
                   <div className="flex align-items-center gap-2">
                     <i className="pi pi-table text-primary" />
-                    <span className="font-semibold text-800 text-sm">Données détaillées</span>
+                    <span className="font-semibold text-800 text-sm">
+                      {t('analyticsSectionTable')}
+                    </span>
                   </div>
                 </div>
                 <div className="px-3 pb-3">{table}</div>

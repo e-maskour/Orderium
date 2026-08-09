@@ -1,7 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Portal } from './entities/portal.entity';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 import * as bcrypt from 'bcrypt';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
@@ -127,21 +128,33 @@ export class PortalService {
     pageSize: number,
     status?: string,
     search?: string,
-  ): Promise<{ data: Portal[]; total: number }> {
-    const statusFilter = status ? { status: status as Portal['status'] } : {};
+    userType?: string,
+  ): Promise<{ data: AdminUserResponseDto[]; total: number }> {
+    const baseFilter: FindOptionsWhere<Portal> = {};
+    if (status) {
+      baseFilter.status = status as Portal['status'];
+    }
+    if (userType) {
+      baseFilter.userType = userType as Portal['userType'];
+    }
     const where = search
       ? [
-          { ...statusFilter, phoneNumber: ILike(`%${search}%`) },
-          { ...statusFilter, name: ILike(`%${search}%`) },
+          { ...baseFilter, phoneNumber: ILike(`%${search}%`) },
+          { ...baseFilter, name: ILike(`%${search}%`) },
         ]
-      : statusFilter;
+      : baseFilter;
     const [data, total] = await this.portalRepository.findAndCount({
       where,
+      relations: ['customer'],
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: { dateCreated: 'DESC' },
     });
-    return { data, total };
+    // Mapped rather than returned raw — the entity carries the password hash.
+    return {
+      data: data.map((user) => AdminUserResponseDto.fromEntity(user)),
+      total,
+    };
   }
 
   async updateStatus(

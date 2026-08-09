@@ -22,6 +22,7 @@ import { ImageService } from '../services/image.service';
 import { ImageResponseDto } from '../dto/image.dto';
 import { ApiRes } from '../../../common/api-response';
 import { IMG } from '../../../common/response-codes';
+import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Images')
 @Controller('images')
@@ -38,6 +39,7 @@ export class ImagesController {
     type: ImageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid file' })
+  @RequirePermission('images.upload')
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @Query('folder') folder?: string,
@@ -59,6 +61,7 @@ export class ImagesController {
   @ApiOperation({ summary: 'Delete an image by public ID' })
   @ApiResponse({ status: 200, description: 'Image deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid public ID' })
+  @RequirePermission('images.delete')
   async deleteImage(@Query('publicId') publicId?: string) {
     if (!publicId) {
       throw new BadRequestException('publicId query parameter is required');
@@ -88,6 +91,7 @@ export class ImagesController {
       },
     },
   })
+  @RequirePermission('images.view')
   getOptimizedUrl(
     @Query('url') url?: string,
     @Query('width') width?: string,
@@ -120,6 +124,7 @@ export class ImagesController {
       },
     },
   })
+  @RequirePermission('images.view')
   getThumbnailUrl(@Query('url') url?: string, @Query('size') size?: string) {
     if (!url) {
       throw new BadRequestException('url query parameter is required');
@@ -144,6 +149,7 @@ export class ImagesController {
       },
     },
   })
+  @RequirePermission('images.view')
   getProviderInfo() {
     const providerInfo = this.imageService.getProviderInfo();
 

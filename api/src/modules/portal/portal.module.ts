@@ -9,6 +9,9 @@ import { QuotesModule } from '../quotes/quotes.module';
 import { ConfigurationsModule } from '../configurations/configurations.module';
 import { PartnersModule } from '../partners/partners.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { BrandsModule } from '../brands/brands.module';
+import { ProductsModule } from '../products/products.module';
+import { StatisticsModule } from '../statistics/statistics.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
@@ -21,6 +24,9 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ConfigurationsModule,
     PartnersModule,
     CategoriesModule,
+    BrandsModule,
+    ProductsModule,
+    StatisticsModule,
     NotificationsModule,
   ],
   controllers: [PortalController],
