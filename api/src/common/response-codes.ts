@@ -1185,6 +1185,54 @@ export const MGMT = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  SUPER ADMIN — SEEDERS  (SeedersController)
+// ─────────────────────────────────────────────────────────────
+export const SEED = {
+  /** GET /super-admin/seeders/catalogue      → data: SeederCatalogueEntry[]   | metadata: null */
+  CATALOGUE: {
+    code: 'SEED200_01',
+    status: 200,
+    message: 'Seeder catalogue retrieved',
+  },
+  /** GET /super-admin/seeders                → data: TenantSeederStatus[]     | metadata: null */
+  ALL_STATUS: {
+    code: 'SEED200_02',
+    status: 200,
+    message: 'Seeder status retrieved for all tenants',
+  },
+  /** GET /super-admin/seeders/:tenantId      → data: TenantSeederStatus       | metadata: null */
+  TENANT_STATUS: {
+    code: 'SEED200_03',
+    status: 200,
+    message: 'Tenant seeder status retrieved',
+  },
+  /** POST /super-admin/seeders/:tenantId/run/:key → data: SeederRunLog        | metadata: null */
+  RUN: {
+    code: 'SEED200_04',
+    status: 200,
+    message: 'Seeder run successfully',
+  },
+  /** POST /super-admin/seeders/:tenantId/run-pending → data: SeederRunLog[]   | metadata: null */
+  RUN_TENANT: {
+    code: 'SEED200_05',
+    status: 200,
+    message: 'Pending seeders run for tenant',
+  },
+  /** POST /super-admin/seeders/run-fleet/:key → data: FleetRunResult[]        | metadata: null */
+  RUN_FLEET: {
+    code: 'SEED200_06',
+    status: 200,
+    message: 'Seeder run across all tenants',
+  },
+  /** GET /super-admin/seeders/logs           → data: SeederRunLog[]           | metadata: null */
+  LOGS: {
+    code: 'SEED200_07',
+    status: 200,
+    message: 'Seeder logs retrieved',
+  },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  DRIVE
 // ─────────────────────────────────────────────────────────────
 export const DRV = {

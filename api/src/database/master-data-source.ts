@@ -6,6 +6,7 @@ import { PaymentInstallment } from '../modules/tenant-lifecycle/entities/payment
 import { SubscriptionPlan } from '../modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from '../modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from '../modules/super-admin/entities/migration-log.entity';
+import { SeederRunLog } from '../modules/super-admin/entities/seeder-log.entity';
 
 config({ path: '.env.local' });
 config(); // fallback
@@ -33,6 +34,7 @@ export const MasterDataSource = new DataSource({
     SubscriptionPlan,
     TenantActivityLog,
     MigrationRunLog,
+    SeederRunLog,
   ],
   migrations: [__dirname + '/master-migrations/*{.ts,.js}'],
   synchronize: false,

@@ -1,31 +1,42 @@
-import { DataSource } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { Partner } from '../../modules/partners/entities/partner.entity';
+import { SeederDefinition } from './seeder.types';
 
-export async function seedPartners(dataSource: DataSource) {
-  console.log('🔄 Seeding partners...');
+/** The walk-in customer every counter sale is booked against. */
+const COMPTOIR = {
+  name: 'Client Comptoir',
+  phoneNumber: '0000000000',
+  address: 'Comptoir',
+  isEnabled: true,
+  isCustomer: true,
+  isSupplier: false,
+};
 
-  const partnerRepository = dataSource.getRepository(Partner);
+export const partnersSeeder: SeederDefinition = {
+  key: 'partners',
+  name: 'Partners',
+  description: 'Creates "Client Comptoir", the default counter-sale customer.',
 
-  // Check if "Client Comptoir" already exists
-  const existingComptoir = await partnerRepository.findOne({
-    where: { name: 'Client Comptoir' },
-  });
+  async check(m: EntityManager) {
+    const count = await m
+      .getRepository(Partner)
+      .countBy({ name: COMPTOIR.name });
+    return count > 0
+      ? { missing: 0, detail: 'Client Comptoir present' }
+      : { missing: 1, detail: 'Client Comptoir missing' };
+  },
 
-  if (existingComptoir) {
-    console.log('   ℹ️  Client Comptoir already exists, skipping...');
-    return;
-  }
-
-  // Create "Client Comptoir" - a default client for counter/cash sales
-  const comptoirClient = partnerRepository.create({
-    name: 'Client Comptoir',
-    phoneNumber: '0000000000',
-    address: 'Comptoir',
-    isEnabled: true,
-    isCustomer: true,
-    isSupplier: false,
-  });
-
-  await partnerRepository.save(comptoirClient);
-  console.log('   ✅ Client Comptoir created successfully');
-}
+  async run(m: EntityManager) {
+    const repo = m.getRepository(Partner);
+    const existing = await repo.findOne({ where: { name: COMPTOIR.name } });
+    if (existing) {
+      return {
+        created: 0,
+        pruned: 0,
+        detail: 'Client Comptoir already exists',
+      };
+    }
+    await repo.save(repo.create(COMPTOIR));
+    return { created: 1, pruned: 0, detail: 'Created Client Comptoir' };
+  },
+};

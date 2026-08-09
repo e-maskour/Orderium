@@ -63,6 +63,7 @@ import { PaymentInstallment } from './modules/tenant-lifecycle/entities/payment-
 import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from './modules/super-admin/entities/migration-log.entity';
+import { SeederRunLog } from './modules/super-admin/entities/seeder-log.entity';
 
 @Module({
   imports: [
@@ -126,6 +127,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
           SubscriptionPlan,
           TenantActivityLog,
           MigrationRunLog,
+          SeederRunLog,
         ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
@@ -219,6 +221,8 @@ export class AppModule implements NestModule {
         { path: 'api/admin/plans/(.*)', method: RequestMethod.ALL },
         { path: 'api/super-admin/migrations', method: RequestMethod.ALL },
         { path: 'api/super-admin/migrations/(.*)', method: RequestMethod.ALL },
+        { path: 'api/super-admin/seeders', method: RequestMethod.ALL },
+        { path: 'api/super-admin/seeders/(.*)', method: RequestMethod.ALL },
         { path: 'api/health', method: RequestMethod.GET },
       )
       .forRoutes('*');

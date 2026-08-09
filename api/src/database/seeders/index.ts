@@ -1,53 +1,54 @@
-import { DataSource } from 'typeorm';
-import { seedConfigurations } from './configurations.seeder';
-import { seedWarehouses } from './warehouse.seeder';
-import { seedUnitOfMeasures } from './uom.seeder';
-import { seedPartners } from './partners.seeder';
-import { seedPortal } from './portal.seeder';
-import { seedNotificationTemplates } from './notification-templates.seeder';
-import { seedSequences } from './sequences.seeder';
-import { seedAccessControl } from './access-control.seeder';
+import { DataSource, EntityManager } from 'typeorm';
+import { SEEDERS, TENANT_SEEDER_KEYS, getSeeder } from './registry';
+import { SeederDefinition, SeederOptions } from './seeder.types';
 
-export async function runSeeders(dataSource: DataSource) {
-  console.log('🌱 Running database seeders...\n');
+export { SEEDERS, TENANT_SEEDER_KEYS, getSeeder };
+export * from './seeder.types';
+
+/** Per-seeder options, keyed by seeder key. */
+export type SeederOptionsByKey = Record<string, SeederOptions>;
+
+async function runList(
+  manager: EntityManager,
+  seeders: SeederDefinition[],
+  optionsByKey: SeederOptionsByKey,
+  label: string,
+): Promise<void> {
+  console.log(`🌱 Running ${label}...\n`);
 
   try {
-    await seedWarehouses(dataSource);
-    await seedUnitOfMeasures(dataSource);
-    await seedPartners(dataSource);
-    await seedPortal(dataSource);
-    await seedConfigurations(dataSource);
-    await seedSequences(dataSource);
-    await seedNotificationTemplates(dataSource);
-    await seedAccessControl(dataSource);
-
-    console.log('\n✅ All seeders completed successfully');
+    for (const seeder of seeders) {
+      const result = await seeder.run(manager, optionsByKey[seeder.key]);
+      console.log(`  ✔ ${seeder.name}: ${result.detail}`);
+    }
+    console.log(`\n✅ ${label} completed successfully`);
   } catch (error) {
-    console.error('\n❌ Error running seeders:', error);
+    console.error(`\n❌ Error running ${label}:`, error);
     throw error;
   }
 }
 
 /**
- * Run seeders for a freshly-provisioned tenant database.
- * Portal/user seeders are intentionally excluded — tenant users are
- * created through the normal onboarding flow.
+ * Full seed, including the portal admin user.
+ *
+ * `portal` has required credential options, so callers must supply them under
+ * `optionsByKey.portal` — there is deliberately no default password.
  */
-export async function runTenantSeeders(dataSource: DataSource) {
-  console.log('🌱 Running tenant seeders...\n');
+export async function runSeeders(
+  dataSource: DataSource,
+  optionsByKey: SeederOptionsByKey = {},
+): Promise<void> {
+  return runList(dataSource.manager, SEEDERS, optionsByKey, 'database seeders');
+}
 
-  try {
-    await seedWarehouses(dataSource);
-    await seedUnitOfMeasures(dataSource);
-    await seedPartners(dataSource);
-    await seedConfigurations(dataSource);
-    await seedSequences(dataSource);
-    await seedNotificationTemplates(dataSource);
-    await seedAccessControl(dataSource);
-
-    console.log('\n✅ Tenant seeders completed successfully');
-  } catch (error) {
-    console.error('\n❌ Error running tenant seeders:', error);
-    throw error;
-  }
+/**
+ * Seed a freshly provisioned tenant database. Portal is excluded — tenant
+ * users are created through the normal onboarding flow.
+ */
+export async function runTenantSeeders(
+  dataSource: DataSource,
+  optionsByKey: SeederOptionsByKey = {},
+): Promise<void> {
+  const seeders = SEEDERS.filter((s) => TENANT_SEEDER_KEYS.includes(s.key));
+  return runList(dataSource.manager, seeders, optionsByKey, 'tenant seeders');
 }

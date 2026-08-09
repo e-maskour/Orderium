@@ -1,25 +1,47 @@
-import { DataSource } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { Warehouse } from '../../modules/inventory/entities/warehouse.entity';
+import { SeederDefinition } from './seeder.types';
 
-export async function seedWarehouses(dataSource: DataSource) {
-  const warehouseRepository = dataSource.getRepository(Warehouse);
+const DEFAULT_WAREHOUSE = {
+  name: 'Depot WH1',
+  code: 'WH1',
+  isActive: true,
+};
 
-  const defaultWarehouse = {
-    name: 'Depot WH1',
-    code: 'WH1',
-    isActive: true,
-  };
+export const warehousesSeeder: SeederDefinition = {
+  key: 'warehouses',
+  name: 'Warehouses',
+  description: 'Creates the default depot every tenant needs to hold stock.',
 
-  const existing = await warehouseRepository.findOne({
-    where: { code: defaultWarehouse.code },
-  });
+  async check(m: EntityManager) {
+    const count = await m
+      .getRepository(Warehouse)
+      .countBy({ code: DEFAULT_WAREHOUSE.code });
+    return count > 0
+      ? { missing: 0, detail: 'Default warehouse present' }
+      : {
+          missing: 1,
+          detail: `Default warehouse ${DEFAULT_WAREHOUSE.code} missing`,
+        };
+  },
 
-  if (!existing) {
-    await warehouseRepository.save(
-      warehouseRepository.create(defaultWarehouse),
-    );
-    console.log(`✓ Created default warehouse: ${defaultWarehouse.name}`);
-  } else {
-    console.log(`- Warehouse already exists: ${defaultWarehouse.name}`);
-  }
-}
+  async run(m: EntityManager) {
+    const repo = m.getRepository(Warehouse);
+    const existing = await repo.findOne({
+      where: { code: DEFAULT_WAREHOUSE.code },
+    });
+    if (existing) {
+      return {
+        created: 0,
+        pruned: 0,
+        detail: 'Default warehouse already exists',
+      };
+    }
+    await repo.save(repo.create(DEFAULT_WAREHOUSE));
+    return {
+      created: 1,
+      pruned: 0,
+      detail: `Created warehouse ${DEFAULT_WAREHOUSE.name}`,
+    };
+  },
+};

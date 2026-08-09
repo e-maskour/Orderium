@@ -10,6 +10,7 @@ import {
   X,
   ChevronRight,
   Database,
+  Sprout,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTenants } from '../hooks/useTenants';
@@ -151,6 +152,14 @@ export function Layout({ onLogout }: Props) {
         >
           <Database className="h-4 w-4 shrink-0" />
           <span className="flex-1">Migrations</span>
+        </NavLink>
+
+        <NavLink
+          to="/seeders"
+          className={({ isActive }) => (isActive ? activeClass : inactiveClass)}
+        >
+          <Sprout className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Seeders</span>
         </NavLink>
       </nav>
 

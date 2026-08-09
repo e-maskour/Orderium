@@ -9,6 +9,7 @@ import { TenantsList } from './pages/TenantsList';
 import { TenantDetail } from './pages/TenantDetail';
 import { CreateTenant } from './pages/CreateTenant';
 import { MigrationManager } from './pages/MigrationManager';
+import { SeederManager } from './pages/SeederManager';
 import { Payments } from './pages/Payments';
 import { PaymentDetail } from './pages/PaymentDetail';
 
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="payments/:id" element={<PaymentDetail />} />
             <Route path="migrations" element={<MigrationManager />} />
+            <Route path="seeders" element={<SeederManager />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
           <Route path="/login" element={<Navigate to="/" replace />} />

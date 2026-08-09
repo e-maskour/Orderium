@@ -1,3 +1,10 @@
+import { EntityManager } from 'typeorm';
+import {
+  SeederDefinition,
+  SeederOptionDef,
+  SeederOptions,
+  readBoolean,
+} from './seeder.types';
 import {
   buildPermissionCatalogue,
   ALL_PERMISSION_KEYS,
@@ -16,6 +23,27 @@ import {
  */
 export interface SqlRunner {
   query(sql: string, parameters?: unknown[]): Promise<any>;
+}
+
+/**
+ * Rows actually returned by a `… RETURNING` statement.
+ *
+ * TypeORM's postgres driver hands back `[rows, affectedCount]` for
+ * INSERT/UPDATE/DELETE, and a plain row array for SELECT. Treating the tuple
+ * as the row list made every counter below report a constant 2 — including
+ * `administratorsAssigned`, which claimed two admins had been granted the
+ * Administrator role on runs that granted none.
+ */
+function returnedRows(result: unknown): unknown[] {
+  if (
+    Array.isArray(result) &&
+    result.length === 2 &&
+    Array.isArray(result[0]) &&
+    typeof result[1] === 'number'
+  ) {
+    return result[0];
+  }
+  return Array.isArray(result) ? result : [];
 }
 
 export interface SyncAccessControlOptions {
@@ -86,7 +114,7 @@ export async function syncAccessControl(
     `DELETE FROM "permissions" WHERE "key" <> ALL($1::text[]) RETURNING "key"`,
     [ALL_PERMISSION_KEYS],
   );
-  result.permissionsPruned = Array.isArray(pruned) ? pruned.length : 0;
+  result.permissionsPruned = returnedRows(pruned).length;
   if (result.permissionsPruned) {
     log(`${result.permissionsPruned} obsolete permissions pruned`);
   }
@@ -184,7 +212,7 @@ export async function syncAccessControl(
      ON CONFLICT DO NOTHING
      RETURNING "userId"`,
   );
-  result.usersBackfilled = Array.isArray(backfilled) ? backfilled.length : 0;
+  result.usersBackfilled = returnedRows(backfilled).length;
   if (result.usersBackfilled) {
     log(`${result.usersBackfilled} user role assignments carried over`);
   }
@@ -205,9 +233,7 @@ export async function syncAccessControl(
        RETURNING "userId"`,
       [ADMINISTRATOR_ROLE],
     );
-    result.administratorsAssigned = Array.isArray(assigned)
-      ? assigned.length
-      : 0;
+    result.administratorsAssigned = returnedRows(assigned).length;
     if (result.administratorsAssigned) {
       log(
         `${result.administratorsAssigned} existing admin(s) assigned the Administrator role`,
@@ -218,14 +244,94 @@ export async function syncAccessControl(
   return result;
 }
 
-/** Seeder entry point used by `runSeeders` / `runTenantSeeders`. */
-export async function seedAccessControl(dataSource: SqlRunner): Promise<void> {
-  console.log('🔐 Seeding access control (permissions, roles)...');
-  const result = await syncAccessControl(dataSource, {
-    backfillAdministrators: true,
-    verbose: true,
-  });
-  console.log(
-    `✅ Access control seeded — ${result.permissionsUpserted} permissions, ${ROLE_PRESETS.length} preset roles`,
-  );
-}
+const BACKFILL_OPTION: SeederOptionDef = {
+  key: 'backfillAdministrators',
+  label: 'Also backfill administrators',
+  type: 'boolean',
+  danger:
+    'Grants the Administrator role to every isAdmin user that currently holds ' +
+    'no role at all. Correct once, at upgrade time. On a routine re-sync it ' +
+    'silently re-grants access to anyone whose roles were deliberately revoked.',
+};
+
+export const accessControlSeeder: SeederDefinition = {
+  key: 'access-control',
+  name: 'Access control',
+  description:
+    'Synchronises the permission catalogue and preset roles with the registry. ' +
+    'Permissions dropped from the registry are pruned; a preset role that ' +
+    'already exists keeps any tailoring it has received.',
+  options: [BACKFILL_OPTION],
+
+  async check(m: EntityManager) {
+    const presetNames = ROLE_PRESETS.map((p) => p.name);
+
+    const count = async (sql: string): Promise<number> => {
+      const rows: { count: number }[] = await m.query(sql, [
+        ALL_PERMISSION_KEYS,
+      ]);
+      return Number(rows[0]?.count ?? 0);
+    };
+
+    const presentPerms = await count(
+      'SELECT count(*)::int AS count FROM "permissions" WHERE "key" = ANY($1::text[])',
+    );
+    const obsolete = await count(
+      'SELECT count(*)::int AS count FROM "permissions" WHERE "key" <> ALL($1::text[])',
+    );
+
+    const roleRows: { count: number }[] = await m.query(
+      'SELECT count(*)::int AS count FROM "roles" WHERE "name" = ANY($1::text[])',
+      [presetNames],
+    );
+    const presentRoles = Number(roleRows[0]?.count ?? 0);
+
+    const missingPerms = ALL_PERMISSION_KEYS.length - presentPerms;
+    const missingRoles = presetNames.length - presentRoles;
+
+    // Obsolete rows count as drift: converged means "matches the registry",
+    // not merely "contains everything the registry asks for".
+    const missing = missingPerms + missingRoles + obsolete;
+
+    if (missing === 0) {
+      return {
+        missing: 0,
+        detail: `${ALL_PERMISSION_KEYS.length} permissions, ${presetNames.length} preset roles in sync`,
+      };
+    }
+
+    const parts: string[] = [];
+    if (missingPerms) parts.push(`${missingPerms} permission(s) missing`);
+    if (missingRoles) parts.push(`${missingRoles} preset role(s) missing`);
+    if (obsolete) parts.push(`${obsolete} obsolete permission(s) to prune`);
+    return { missing, detail: parts.join(', ') };
+  },
+
+  async run(m: EntityManager, options?: SeederOptions) {
+    const backfillAdministrators = readBoolean(options, BACKFILL_OPTION.key);
+
+    const result = await syncAccessControl(m, { backfillAdministrators });
+
+    const parts = [
+      `${result.permissionsUpserted} permissions upserted`,
+      `${result.rolesCreated.length} role(s) created`,
+    ];
+    if (result.permissionsPruned) {
+      parts.push(`${result.permissionsPruned} pruned`);
+    }
+    if (result.usersBackfilled) {
+      parts.push(`${result.usersBackfilled} legacy assignment(s) carried over`);
+    }
+    if (result.administratorsAssigned) {
+      parts.push(
+        `${result.administratorsAssigned} admin(s) granted Administrator`,
+      );
+    }
+
+    return {
+      created: result.permissionsUpserted + result.rolesCreated.length,
+      pruned: result.permissionsPruned,
+      detail: parts.join(', '),
+    };
+  },
+};
