@@ -51,7 +51,8 @@ export function usePrinter() {
         brand: (printer?.brand as PrinterConfig['brand']) ?? 'browser',
         ip: printer?.ip,
         port: printer?.port ?? 8008,
-        paperWidth: printer?.paperWidth ?? 80,
+        // Only two widths are supported; anything else falls back to 80mm.
+        paperWidth: printer?.paperWidth === 148 ? 148 : 80,
         name: printer?.name,
       };
 

@@ -154,22 +154,9 @@ export const RoleAccessMatrix = ({
                   const isAdvanced = advancedModules.has(mod.key);
 
                   return (
-                    <div
-                      key={mod.key}
-                      style={{
-                        padding: '0.625rem 1rem',
-                        borderBottom: '1px solid #f1f5f9',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <div style={{ minWidth: '11rem', flex: '1 1 11rem' }}>
+                    <div key={mod.key} className="ram-module">
+                      <div className="ram-module__row">
+                        <div className="ram-module__info">
                           <div
                             style={{
                               fontWeight: 600,
@@ -184,7 +171,7 @@ export const RoleAccessMatrix = ({
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <div className="ram-levels">
                           {LEVELS.map((option) => {
                             // A module with no read bundle (e.g. Point of Sale)
                             // cannot offer a Read choice.
@@ -199,13 +186,10 @@ export const RoleAccessMatrix = ({
                               <button
                                 key={option}
                                 type="button"
+                                className="ram-level-btn"
                                 disabled={disabled}
                                 onClick={() => setModuleLevel(mod, option)}
                                 style={{
-                                  padding: '0.25rem 0.625rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  borderRadius: '0.5rem',
                                   cursor: disabled ? 'not-allowed' : 'pointer',
                                   border: `1.5px solid ${selected ? LEVEL_COLORS[option] : '#e2e8f0'}`,
                                   background: selected ? LEVEL_COLORS[option] : 'transparent',
@@ -240,30 +224,16 @@ export const RoleAccessMatrix = ({
 
                         <button
                           type="button"
+                          className="ram-advanced-btn"
+                          aria-expanded={isAdvanced}
                           onClick={() => setAdvancedModules(toggleSet(advancedModules, mod.key))}
-                          style={{
-                            marginInlineStart: 'auto',
-                            background: 'none',
-                            border: 'none',
-                            color: '#235ae4',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                          }}
                         >
                           {t('roleAdvancedActions')}
                         </button>
                       </div>
 
                       {isAdvanced && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '0.375rem',
-                            marginTop: '0.5rem',
-                            paddingInlineStart: '0.25rem',
-                          }}
-                        >
+                        <div className="ram-actions">
                           {mod.actions.map((action) => {
                             const key = permissionKey(mod.key, action.key);
                             const checked = value.has(key);
@@ -272,6 +242,7 @@ export const RoleAccessMatrix = ({
                               <button
                                 key={action.key}
                                 type="button"
+                                className="ram-action-chip"
                                 disabled={disabled}
                                 title={
                                   isInherited
@@ -280,12 +251,6 @@ export const RoleAccessMatrix = ({
                                 }
                                 onClick={() => toggleAction(mod, action.key)}
                                 style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem',
-                                  padding: '0.2rem 0.5rem',
-                                  fontSize: '0.75rem',
-                                  borderRadius: '0.5rem',
                                   cursor: disabled ? 'not-allowed' : 'pointer',
                                   border: `1.5px solid ${
                                     checked ? '#235ae4' : isInherited ? '#c7d2fe' : '#e2e8f0'

@@ -312,7 +312,8 @@ const Success = () => {
         modal
         className="w-full"
         style={{ maxWidth: '40rem' }}
-        dir={dir}
+        // `dir` is not on DialogProps; the passthrough API puts it on the root.
+        pt={{ root: { dir } }}
       >
         <div
           style={{

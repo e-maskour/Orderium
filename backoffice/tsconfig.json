@@ -33,6 +33,12 @@
       ],
       "@shared-logo/*": [
         "../shared/logo/*"
+      ],
+      "@shared-print": [
+        "../shared/components"
+      ],
+      "@shared-print/*": [
+        "../shared/components/*"
       ]
     }
   },

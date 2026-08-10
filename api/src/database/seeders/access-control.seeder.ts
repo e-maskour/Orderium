@@ -64,7 +64,28 @@ export interface SyncAccessControlResult {
   rolesCreated: string[];
   usersBackfilled: number;
   administratorsAssigned: number;
+  superAdminPermissionsGranted: number;
 }
+
+/**
+ * Every permission in the catalogue, for every role flagged `isSuperAdmin`,
+ * minus what those roles already hold.
+ *
+ * A preset's permission set is written only when the role is first created, so
+ * an administrator role seeded before a module existed keeps an empty — or
+ * stale — set and shows that module as "no access" in the role matrix, even
+ * though `PermissionsGuard` waves it through on the super-admin flag. Since
+ * super-admin is all-or-nothing, topping the set up grants nothing the bypass
+ * did not already allow; it only makes the stored set tell the truth.
+ */
+const SUPER_ADMIN_MISSING_GRANTS = `
+  FROM "roles" r
+  CROSS JOIN "permissions" p
+  WHERE r."isSuperAdmin" = true
+    AND NOT EXISTS (
+      SELECT 1 FROM "role_permissions" rp
+       WHERE rp."roleId" = r."id" AND rp."permissionId" = p."id"
+    )`;
 
 /**
  * Bring a tenant database in line with the access-control registry.
@@ -91,6 +112,7 @@ export async function syncAccessControl(
     rolesCreated: [],
     usersBackfilled: 0,
     administratorsAssigned: 0,
+    superAdminPermissionsGranted: 0,
   };
 
   // ── 1. Permission catalogue ──────────────────────────────────────────────
@@ -179,6 +201,22 @@ export async function syncAccessControl(
   }
   if (result.rolesCreated.length) {
     log(`roles created: ${result.rolesCreated.join(', ')}`);
+  }
+
+  // ── 3b. Super-admin roles hold the entire catalogue ──────────────────────
+  // Unlike the tailorable presets above, this runs on every sync: a super-admin
+  // role that is missing a module is always drift, never tailoring.
+  const superAdminGrants = await q.query(
+    `INSERT INTO "role_permissions" ("roleId", "permissionId")
+     SELECT r."id", p."id" ${SUPER_ADMIN_MISSING_GRANTS}
+     ON CONFLICT DO NOTHING
+     RETURNING "roleId"`,
+  );
+  result.superAdminPermissionsGranted = returnedRows(superAdminGrants).length;
+  if (result.superAdminPermissionsGranted) {
+    log(
+      `${result.superAdminPermissionsGranted} permission(s) granted to super-admin role(s)`,
+    );
   }
 
   // ── 4. Implications (only for roles created in this run) ─────────────────
@@ -286,12 +324,17 @@ export const accessControlSeeder: SeederDefinition = {
     );
     const presentRoles = Number(roleRows[0]?.count ?? 0);
 
+    const superAdminRows: { count: number }[] = await m.query(
+      `SELECT count(*)::int AS count ${SUPER_ADMIN_MISSING_GRANTS}`,
+    );
+    const missingSuperAdmin = Number(superAdminRows[0]?.count ?? 0);
+
     const missingPerms = ALL_PERMISSION_KEYS.length - presentPerms;
     const missingRoles = presetNames.length - presentRoles;
 
     // Obsolete rows count as drift: converged means "matches the registry",
     // not merely "contains everything the registry asks for".
-    const missing = missingPerms + missingRoles + obsolete;
+    const missing = missingPerms + missingRoles + obsolete + missingSuperAdmin;
 
     if (missing === 0) {
       return {
@@ -304,6 +347,11 @@ export const accessControlSeeder: SeederDefinition = {
     if (missingPerms) parts.push(`${missingPerms} permission(s) missing`);
     if (missingRoles) parts.push(`${missingRoles} preset role(s) missing`);
     if (obsolete) parts.push(`${obsolete} obsolete permission(s) to prune`);
+    if (missingSuperAdmin) {
+      parts.push(
+        `${missingSuperAdmin} permission(s) missing on super-admin role(s)`,
+      );
+    }
     return { missing, detail: parts.join(', ') };
   },
 
@@ -318,6 +366,11 @@ export const accessControlSeeder: SeederDefinition = {
     ];
     if (result.permissionsPruned) {
       parts.push(`${result.permissionsPruned} pruned`);
+    }
+    if (result.superAdminPermissionsGranted) {
+      parts.push(
+        `${result.superAdminPermissionsGranted} granted to super-admin role(s)`,
+      );
     }
     if (result.usersBackfilled) {
       parts.push(`${result.usersBackfilled} legacy assignment(s) carried over`);

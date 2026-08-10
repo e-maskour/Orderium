@@ -365,6 +365,8 @@ export class Order implements IOrder {
       deliveryStatus: this.deliveryStatus,
       deliveryPersonId: this.deliveryPersonId,
       deliveryPersonName: this.deliveryPersonName,
+      paidAmount: this.paidAmount,
+      remainingAmount: this.remainingAmount,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     };

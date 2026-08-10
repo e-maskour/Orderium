@@ -5,6 +5,7 @@ import {
   alertAction,
   type ConfirmVariant,
 } from '@orderium/ui';
+import type { TranslationKey } from '../lib/i18n';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -160,7 +161,7 @@ function inferVariant(title: string): ConfirmVariant {
  * @param error   The caught error
  * @param t       The translation function from useLanguage()
  */
-const DELETION_ERROR_CODES = new Set([
+const DELETION_ERROR_CODES = new Set<string>([
   'PRODUCT_IN_INVOICES',
   'PRODUCT_IN_ORDERS',
   'PRODUCT_IN_QUOTES',
@@ -178,9 +179,18 @@ const DELETION_ERROR_CODES = new Set([
   'BRAND_HAS_PRODUCTS',
 ]);
 
-export function toastDeleteError(error: unknown, t: (key: string) => string): void {
+/**
+ * Every code in `DELETION_ERROR_CODES` has a matching entry in the language
+ * files, so membership in the set is what makes a raw API message a usable
+ * translation key.
+ */
+function isDeletionErrorCode(code: string): code is TranslationKey {
+  return DELETION_ERROR_CODES.has(code);
+}
+
+export function toastDeleteError(error: unknown, t: (key: TranslationKey) => string): void {
   const code = (error as Error)?.message ?? '';
-  if (DELETION_ERROR_CODES.has(code)) {
+  if (isDeletionErrorCode(code)) {
     void alertAction({
       variant: 'destructive',
       title: t('deletionBlocked'),

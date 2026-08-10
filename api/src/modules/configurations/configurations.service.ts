@@ -11,6 +11,26 @@ import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
+/**
+ * Cache keys are tenant-scoped. They used to be global, which meant one
+ * tenant's configuration could be served to another — and it also made a
+ * write that bypassed this service (the seeders) invisible until the entry
+ * aged out.
+ *
+ * Exported so anything writing configurations outside this service can evict
+ * the exact keys instead of guessing at their shape.
+ */
+export function configurationCacheKey(
+  tenantSlug: string,
+  entity: string,
+): string {
+  return `configurations:${tenantSlug}:entity:${entity}`;
+}
+
+export function configurationListCacheKey(tenantSlug: string): string {
+  return `configurations:${tenantSlug}:all`;
+}
+
 @Injectable()
 export class ConfigurationsService {
   constructor(
@@ -22,8 +42,12 @@ export class ConfigurationsService {
     return this.tenantConnService.getRepository(Configuration);
   }
 
+  private get tenantSlug(): string {
+    return this.tenantConnService.getCurrentTenantSlug();
+  }
+
   async findAll(): Promise<Configuration[]> {
-    const cacheKey = 'configurations:all';
+    const cacheKey = configurationListCacheKey(this.tenantSlug);
     const cached = await this.cacheManager.get<Configuration[]>(cacheKey);
     if (cached) return cached;
 
@@ -43,7 +67,7 @@ export class ConfigurationsService {
   }
 
   async findByEntity(entity: string): Promise<Configuration> {
-    const cacheKey = `configurations:entity:${entity}`;
+    const cacheKey = configurationCacheKey(this.tenantSlug, entity);
     const cached = await this.cacheManager.get<Configuration>(cacheKey);
     if (cached) return cached;
 
@@ -91,10 +115,12 @@ export class ConfigurationsService {
         entity: 'inventory',
         values: {
           defaultWarehouseId: null,
+          // Stock moves on order validation (bon de livraison / bon d'achat),
+          // not on invoice validation. Mirrors the configurations seeder.
           incrementStockOnInvoiceAchat: false,
           decrementStockOnInvoiceVente: false,
-          incrementStockOnOrderAchat: false,
-          decrementStockOnOrderVente: false,
+          incrementStockOnOrderAchat: true,
+          decrementStockOnOrderVente: true,
         },
       });
     }
@@ -159,9 +185,10 @@ export class ConfigurationsService {
   }
 
   private async invalidateCache(entity?: string): Promise<void> {
-    await this.cacheManager.del('configurations:all');
+    const slug = this.tenantSlug;
+    await this.cacheManager.del(configurationListCacheKey(slug));
     if (entity) {
-      await this.cacheManager.del(`configurations:entity:${entity}`);
+      await this.cacheManager.del(configurationCacheKey(slug, entity));
     }
   }
 }

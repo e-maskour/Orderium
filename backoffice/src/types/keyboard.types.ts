@@ -39,10 +39,12 @@ export interface UseVirtualKeyboardReturn {
   setValue: (value: string) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   inputProps: {
-    inputMode: 'none';
+    /** 'none' suppresses the native keyboard while the virtual one is active. */
+    inputMode: 'none' | 'text';
     readOnly: boolean;
     onFocus: () => void;
     onBlur: () => void;
+    'data-virtual-keyboard': string;
   };
 }
 

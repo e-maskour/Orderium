@@ -53,6 +53,9 @@ const mockQueryRunner = {
     save: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
+    // Reference generation reads through the transaction's own manager so
+    // rows written earlier in the same transaction are visible.
+    getRepository: jest.fn(),
   },
 };
 
@@ -169,6 +172,7 @@ describe('StockService', () => {
     mockQueryRunner.manager.save.mockReset();
     mockQueryRunner.manager.findOne.mockReset();
     mockQueryRunner.manager.create.mockReset();
+    mockQueryRunner.manager.getRepository.mockReset();
 
     // Default: manager.create returns the data object passed in
     mockQueryRunner.manager.create.mockImplementation(
@@ -176,6 +180,11 @@ describe('StockService', () => {
     );
     mockQueryRunner.manager.save.mockImplementation(
       (_Entity: unknown, data: unknown) => Promise.resolve(data),
+    );
+    // The transactional manager resolves to the same repository mocks, so
+    // tests drive reference generation through `stockMovementRepo.findOne`.
+    mockQueryRunner.manager.getRepository.mockImplementation(
+      (entity: unknown) => repoMap.get(entity) ?? mockRepository(),
     );
   });
 
@@ -913,13 +922,16 @@ describe('StockService', () => {
     });
 
     it('creates DONE movements for all valid items', async () => {
-      mockQueryRunner.manager.findOne
-        .mockResolvedValueOnce(makeProduct({ id: 1 })) // product 1 exists
-        .mockResolvedValueOnce(makeStockQuant({ availableQuantity: 50 })) // stock check
-        .mockResolvedValueOnce(null) // no prior quant → will create
-        .mockResolvedValueOnce(makeProduct({ id: 2 })) // product 2 exists
-        .mockResolvedValueOnce(makeStockQuant({ availableQuantity: 20 })) // stock check
-        .mockResolvedValueOnce(null); // no prior quant
+      // Keyed on entity rather than call order: each item triggers a variable
+      // number of findOne calls (product, availability, quant, forecast), so
+      // an ordered chain silently drifts out of alignment.
+      mockQueryRunner.manager.findOne.mockImplementation((Entity: unknown) =>
+        Promise.resolve(
+          Entity === Product
+            ? makeProduct()
+            : makeStockQuant({ availableQuantity: 50 }),
+        ),
+      );
 
       // for reference generation
       stockMovementRepo.findOne.mockResolvedValue(null);
@@ -942,31 +954,79 @@ describe('StockService', () => {
       expect(mockQueryRunner.connect).not.toHaveBeenCalled(); // no transaction started
     });
 
-    it('throws BadRequestException for outgoing movement when stock is insufficient', async () => {
-      mockQueryRunner.manager.findOne
-        .mockResolvedValueOnce(makeProduct({ id: 1 })) // product exists
-        .mockResolvedValueOnce(
-          makeStockQuant({
-            productId: 1,
-            warehouseId: 1,
-            availableQuantity: 2,
-          }),
-        ); // insufficient stock (need 10)
+    it('drives stock negative rather than blocking an outgoing movement with insufficient stock', async () => {
+      // The document is already validated when this runs — the goods have
+      // left. Refusing would lose the record, not the goods.
+      // Every line is short: 2 available against the 10 and 5 requested.
+      mockQueryRunner.manager.findOne.mockImplementation((Entity: unknown) =>
+        Promise.resolve(
+          Entity === Product
+            ? makeProduct()
+            : makeStockQuant({ availableQuantity: 2 }),
+        ),
+      );
 
       stockMovementRepo.findOne.mockResolvedValue(null);
 
-      let thrown: unknown;
-      try {
-        await service.processDocumentStockMovements(baseParams);
-      } catch (err) {
-        thrown = err;
-      }
+      const results = await service.processDocumentStockMovements(baseParams);
 
-      expect(thrown).toBeInstanceOf(BadRequestException);
-      expect((thrown as BadRequestException).message).toMatch(
-        /insufficient stock/i,
+      expect(results).toHaveLength(2);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
+    });
+
+    it('gives every line of a multi-line document a distinct reference', async () => {
+      // Regression: references were read through the non-transactional
+      // repository, so rows written earlier in the open transaction were
+      // invisible and every line got the same reference. The unique index on
+      // `reference` then rolled the whole document back and no stock moved.
+      const saved: StockMovement[] = [];
+      mockQueryRunner.manager.save.mockImplementation(
+        (Entity: unknown, data: StockMovement) => {
+          if (Entity === StockMovement) {
+            saved.push({ ...data, id: saved.length + 1 } as StockMovement);
+          }
+          return Promise.resolve(data);
+        },
       );
-      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+
+      mockQueryRunner.manager.findOne.mockImplementation((Entity: unknown) =>
+        Promise.resolve(Entity === Product ? makeProduct() : null),
+      );
+
+      // The two repositories differ in exactly the way Postgres does, which is
+      // the whole point of the regression: the transactional one sees rows
+      // written earlier in the open transaction, the plain one does not
+      // (nothing has committed yet).
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      const txMovementRepo = mockRepository();
+      txMovementRepo.findOne.mockImplementation(() =>
+        Promise.resolve(saved.length ? saved[saved.length - 1] : null),
+      );
+      mockQueryRunner.manager.getRepository.mockImplementation(
+        (entity: unknown) =>
+          entity === StockMovement ? txMovementRepo : mockRepository(),
+      );
+
+      const results = await service.processDocumentStockMovements({
+        ...baseParams,
+        items: [
+          { productId: 1, quantity: 5 },
+          { productId: 2, quantity: 7 },
+          { productId: 3, quantity: 9 },
+        ],
+      });
+
+      const year = new Date().getFullYear();
+      const references = results.map((m) => m.reference);
+      expect(references).toEqual([
+        `OUT/${year}/00001`,
+        `OUT/${year}/00002`,
+        `OUT/${year}/00003`,
+      ]);
+      expect(new Set(references).size).toBe(3);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
     });
 
     it('skips items with no productId or zero quantity', async () => {

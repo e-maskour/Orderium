@@ -59,6 +59,7 @@ import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
 import { OrdersMergeModal } from '../components/OrdersMergeModal';
+import type { OrdersMergeView } from '../components/OrdersMergeModal';
 import { MobileList } from '../components/MobileList';
 import { formatAmount } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
@@ -308,7 +309,7 @@ export default function Orders() {
       clearSelection();
     },
     onError: (error: Error) => {
-      toastDeleteError(error, t as (key: string) => string);
+      toastDeleteError(error, t);
     },
   });
 
@@ -492,9 +493,10 @@ export default function Orders() {
     setShowPDFPreview(true);
   };
 
-  // Consolidated recap of the current selection — read-only, prints as one PDF.
-  const handleMergePrint = (title: string) => {
-    const url = pdfService.getOrdersMergePDFUrl(selectedOrders, 'preview', language);
+  // Consolidated recap of the current selection — read-only, prints the tab
+  // the user is currently looking at.
+  const handleMergePrint = (title: string, view: OrdersMergeView) => {
+    const url = pdfService.getOrdersMergePDFUrl(selectedOrders, 'preview', language, view);
     setPdfUrl(url);
     setPdfTitle(title);
     setShowMergeModal(false);

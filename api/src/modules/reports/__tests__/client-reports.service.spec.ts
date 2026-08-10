@@ -231,7 +231,7 @@ describe('ClientReportsService', () => {
 
       const clientA = result.rows[0];
       expect(clientA.total).toBeCloseTo(8000, 0);
-      expect(clientA.d90plus).toBe(5000);
+      expect(clientA.over90).toBe(5000);
       expect(result.kpis.over90).toBe(5000);
     });
 

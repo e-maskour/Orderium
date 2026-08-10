@@ -15,7 +15,10 @@ import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { AccessControlService } from '../access/access-control.service';
 import { AccessSyncService } from '../access/access-sync.service';
 import { Permission } from '../permissions/entities/permission.entity';
-import { isKnownPermissionKey } from '../../common/access/access-modules';
+import {
+  ALL_PERMISSION_KEYS,
+  isKnownPermissionKey,
+} from '../../common/access/access-modules';
 
 const ROLE_RELATIONS = ['permissions', 'implies'];
 
@@ -88,13 +91,16 @@ export class RolesService {
     if (existing)
       throw new ConflictException(`Role "${dto.name}" already exists`);
 
+    const isSuperAdmin = dto.isSuperAdmin ?? false;
     const role = this.repo.create({
       name: dto.name,
       description: dto.description ?? null,
       category: dto.category ?? null,
-      isSuperAdmin: dto.isSuperAdmin ?? false,
+      isSuperAdmin,
       isSystem: false,
-      permissions: await this.resolvePermissions(dto),
+      permissions: isSuperAdmin
+        ? await this.allPermissions()
+        : await this.resolvePermissions(dto),
       implies: await this.resolveImplied(dto.impliedRoleIds),
     });
 
@@ -144,6 +150,12 @@ export class RolesService {
       role.isSuperAdmin = dto.isSuperAdmin;
     }
 
+    // Last word, whichever way the permissions were supplied: a super-admin
+    // role holds everything.
+    if (role.isSuperAdmin) {
+      role.permissions = await this.allPermissions();
+    }
+
     await this.repo.save(role);
     await this.invalidateRolesCache(id);
     return this.findOne(id);
@@ -164,6 +176,16 @@ export class RolesService {
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  /**
+   * The whole catalogue. A super-admin role bypasses every check, so anything
+   * short of this would be a stored set that lies about what the role can do —
+   * and would leave modules showing as "no access" in the role matrix. Mirrors
+   * the top-up the access-control seeder performs.
+   */
+  private allPermissions(): Promise<Permission[]> {
+    return this.permissionsService.findByKeys([...ALL_PERMISSION_KEYS]);
+  }
 
   /**
    * `permissionKeys` wins when both are supplied: the role matrix speaks in

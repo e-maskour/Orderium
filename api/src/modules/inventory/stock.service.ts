@@ -24,6 +24,26 @@ import {
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { calcAvailableQty } from './stock.helpers';
 
+export interface DocumentStockMovementParams {
+  sourceDocumentType: SourceDocumentType;
+  sourceDocumentId: number;
+  items: Array<{ productId: number; quantity: number }>;
+  warehouseId: number;
+  movementType: MovementType;
+  origin: string;
+  partnerName?: string;
+}
+
+/**
+ * Postgres unique-violation (23505). Within the document-movement
+ * transaction the only unique constraint that can be hit is the one on
+ * `stock_movements.reference`, so the code alone is specific enough — and
+ * matching on the generated constraint name (`UQ_06f0c…`) would be brittle.
+ */
+function isUniqueViolation(error: unknown): boolean {
+  return (error as { code?: string })?.code === '23505';
+}
+
 @Injectable()
 export class StockService {
   private readonly logger = new Logger(StockService.name);
@@ -695,15 +715,31 @@ export class StockService {
    *
    * All writes are wrapped in a single database transaction.
    */
-  async processDocumentStockMovements(params: {
-    sourceDocumentType: SourceDocumentType;
-    sourceDocumentId: number;
-    items: Array<{ productId: number; quantity: number }>;
-    warehouseId: number;
-    movementType: MovementType;
-    origin: string;
-    partnerName?: string;
-  }): Promise<StockMovement[]> {
+  async processDocumentStockMovements(
+    params: DocumentStockMovementParams,
+  ): Promise<StockMovement[]> {
+    // Two documents validated at the same instant (two POS tills, say) can
+    // both read the same highest reference and pick the same next one. The
+    // loser hits the unique index on `reference` and its whole transaction
+    // rolls back — the same silent stock loss as the multi-line bug, just
+    // rarer. The transaction is all-or-nothing and the idempotency guard
+    // re-runs on entry, so simply retrying is safe.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.processDocumentStockMovementsOnce(params);
+      } catch (error) {
+        if (attempt >= 3 || !isUniqueViolation(error)) throw error;
+        this.logger.warn(
+          `Movement reference collision for ${params.sourceDocumentType} ` +
+            `#${params.sourceDocumentId} (attempt ${attempt}) — retrying.`,
+        );
+      }
+    }
+  }
+
+  private async processDocumentStockMovementsOnce(
+    params: DocumentStockMovementParams,
+  ): Promise<StockMovement[]> {
     const {
       sourceDocumentType,
       sourceDocumentId,
@@ -763,7 +799,14 @@ export class StockService {
           ? (product.saleUnitId ?? product.purchaseUnitId ?? undefined)
           : (product.purchaseUnitId ?? product.saleUnitId ?? undefined);
 
-        // Stock availability check for outgoing movements
+        // Outgoing movements are allowed to drive stock negative.
+        //
+        // By the time this runs the document is already validated — a POS
+        // ticket is cashed, a bon de livraison is signed, the goods have
+        // physically left. Refusing the movement would not put them back; it
+        // would only lose the record and leave stock overstating reality. So
+        // the shortfall is recorded and surfaced as negative stock (the
+        // products list badges it) rather than blocking the document.
         if (isOutgoing) {
           const stockQuant = await queryRunner.manager.findOne(StockQuant, {
             where: { productId: item.productId, warehouseId },
@@ -772,14 +815,18 @@ export class StockService {
             ? parseFloat(stockQuant.availableQuantity.toString() || '0')
             : 0;
           if (available < item.quantity) {
-            throw new BadRequestException(
-              `Insufficient stock for product #${item.productId}. ` +
-                `Available: ${available}, Required: ${item.quantity}`,
+            this.logger.warn(
+              `Stock going negative for product #${item.productId} at warehouse #${warehouseId} ` +
+                `via ${sourceDocumentType} #${sourceDocumentId}. ` +
+                `Available: ${available}, Required: ${item.quantity}.`,
             );
           }
         }
 
-        const reference = await this.generateMovementReference(movementType);
+        const reference = await this.generateMovementReference(
+          movementType,
+          queryRunner.manager,
+        );
 
         const movement = queryRunner.manager.create(StockMovement, {
           reference,
@@ -890,7 +937,10 @@ export class StockService {
       for (const move of doneMoves) {
         const reversalType =
           reversalTypeMap[move.movementType] ?? MovementType.ADJUSTMENT;
-        const reference = await this.generateMovementReference(reversalType);
+        const reference = await this.generateMovementReference(
+          reversalType,
+          queryRunner.manager,
+        );
 
         const reversal = queryRunner.manager.create(StockMovement, {
           reference,
@@ -979,10 +1029,19 @@ export class StockService {
   }
 
   /**
-   * Generate unique movement reference number
+   * Generate unique movement reference number.
+   *
+   * `manager` MUST be supplied when generating several references inside one
+   * transaction. The lookup below reads the highest existing reference, and
+   * rows written earlier in an uncommitted transaction are only visible to
+   * that transaction's own manager. Reading through the plain repository
+   * instead hands every line of a multi-line document the same reference,
+   * which trips the unique index on `reference` and rolls the whole document
+   * back — no stock moves at all.
    */
   private async generateMovementReference(
     movementType: MovementType,
+    manager?: EntityManager,
   ): Promise<string> {
     const prefixMap = {
       [MovementType.RECEIPT]: 'IN',
@@ -1000,7 +1059,10 @@ export class StockService {
     const year = new Date().getFullYear();
 
     // Get last reference for this type
-    const lastMovement = await this.stockMovementRepository.findOne({
+    const repo = manager
+      ? manager.getRepository(StockMovement)
+      : this.stockMovementRepository;
+    const lastMovement = await repo.findOne({
       where: { movementType },
       order: { id: 'DESC' },
     });

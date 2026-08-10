@@ -129,7 +129,7 @@ export default function NotificationSettingsPage() {
       <PageHeader
         title="Paramètres des Notifications"
         subtitle="Configurez les modèles et activez/désactivez chaque type de notification"
-        icon={<Bell className="w-6 h-6" />}
+        icon={Bell}
         actions={
           <Button
             label="Réinitialiser tout"

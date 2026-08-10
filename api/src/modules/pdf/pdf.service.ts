@@ -17,6 +17,7 @@ import {
 } from './templates/document.template';
 import { renderReceiptTemplate } from './templates/receipt.template';
 import { renderOrdersMergeTemplate } from './templates/orders-merge.template';
+import type { OrdersMergeView } from './templates/orders-merge.template';
 import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { Order } from '../orders/entities/order.entity';
@@ -241,18 +242,21 @@ export class PDFService implements OnModuleDestroy {
   }
 
   /**
-   * Consolidated A4 recap of several orders: each order header followed by all
-   * of its items, then a grand total. Read-only — nothing is persisted.
+   * Consolidated A4 recap of several orders. `view` picks which of the two
+   * merge-modal tabs is printed: `detailed` renders each order header followed
+   * by all of its items, `consolidated` renders the picking list (one line per
+   * product, quantities summed). Read-only — nothing is persisted.
    */
   async generateOrdersMergePDF(
     orderIds: number[],
     lang: 'fr' | 'ar' = 'fr',
+    view: OrdersMergeView = 'detailed',
   ): Promise<PDFGenerationResult> {
     const uniqueIds = [...new Set(orderIds)];
     const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
     const cacheKey = `pdf:${tenantSlug}:orders-merge:${[...uniqueIds]
       .sort((a, b) => a - b)
-      .join('-')}:${lang}`;
+      .join('-')}:${lang}:${view}`;
 
     const cached = await this.cacheManager.get<{
       pdfBase64: string;
@@ -276,7 +280,7 @@ export class PDFService implements OnModuleDestroy {
     }
 
     const summary = buildOrdersMergeSummary(orders, uniqueIds);
-    const pdfBuffer = await this.renderOrdersMergePDF(summary, lang);
+    const pdfBuffer = await this.renderOrdersMergePDF(summary, lang, view);
     const fileName = `Recapitulatif_Commandes_${summary.orderCount}.pdf`;
 
     this.cacheManager
@@ -295,6 +299,7 @@ export class PDFService implements OnModuleDestroy {
   private async renderOrdersMergePDF(
     summary: MergeSummaryResult,
     lang: 'fr' | 'ar',
+    view: OrdersMergeView,
   ): Promise<Buffer> {
     const page = await this.getNewPage({
       viewport: { width: 794, height: 1123 },
@@ -302,10 +307,13 @@ export class PDFService implements OnModuleDestroy {
     });
 
     try {
-      await page.setContent(renderOrdersMergeTemplate({ ...summary, lang }), {
-        waitUntil: 'networkidle',
-        timeout: 30000,
-      });
+      await page.setContent(
+        renderOrdersMergeTemplate({ ...summary, lang, view }),
+        {
+          waitUntil: 'networkidle',
+          timeout: 30000,
+        },
+      );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       await page.evaluate(() => (document as any).fonts.ready);
 

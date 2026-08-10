@@ -86,13 +86,11 @@ describe('PaymentReportsService', () => {
         { day: '2025-03-01', inflow: '15000.00', outflow: '8000.00' },
         { day: '2025-03-02', inflow: '5000.00', outflow: '2000.00' },
       ];
-      mockPaymentRepo.createQueryBuilder
-        .mockReturnValueOnce(
-          makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }),
-        )
-        .mockReturnValueOnce(
-          makeQb({ getManyAndCount: jest.fn().mockResolvedValue([[], 0]) }),
-        );
+      // One query per call: a leftover second `mockReturnValueOnce` would
+      // survive `clearAllMocks` and shadow the next test's mock.
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({ getRawMany: jest.fn().mockResolvedValue(dailyRaw) }),
+      );
 
       const result = await service.getCashflow(defaultFilter);
 
@@ -101,41 +99,31 @@ describe('PaymentReportsService', () => {
       expect(result.kpis.netCashflow).toBe(10000);
     });
 
-    it('maps payment rows to direction labels', async () => {
-      const paymentRows = [
-        {
-          id: 1,
-          paymentDate: '2025-03-01',
-          amount: 5000,
-          paymentType: 'CASH',
-          notes: null,
-          customerId: 10,
-          supplierId: null,
-        },
-        {
-          id: 2,
-          paymentDate: '2025-03-02',
-          amount: 3000,
-          paymentType: 'TRANSFER',
-          notes: 'Wire',
-          customerId: null,
-          supplierId: 5,
-        },
+    // Rows are one period per day carrying both sides, not one row per payment
+    // labelled with a direction.
+    it('maps each day to inflow, outflow and net', async () => {
+      const daily = [
+        { day: '2025-03-01', inflow: '5000', outflow: '0' },
+        { day: '2025-03-02', inflow: '0', outflow: '3000' },
       ];
-      mockPaymentRepo.createQueryBuilder
-        .mockReturnValueOnce(
-          makeQb({ getRawMany: jest.fn().mockResolvedValue([]) }),
-        )
-        .mockReturnValueOnce(
-          makeQb({
-            getManyAndCount: jest.fn().mockResolvedValue([paymentRows, 2]),
-          }),
-        );
+      mockPaymentRepo.createQueryBuilder.mockReturnValue(
+        makeQb({ getRawMany: jest.fn().mockResolvedValue(daily) }),
+      );
 
       const result = await service.getCashflow(defaultFilter);
 
-      expect(result.rows[0].direction).toBe('encaissement');
-      expect(result.rows[1].direction).toBe('décaissement');
+      expect(result.rows[0]).toEqual({
+        period: '2025-03-01',
+        inflow: 5000,
+        outflow: 0,
+        net: 5000,
+      });
+      expect(result.rows[1]).toEqual({
+        period: '2025-03-02',
+        inflow: 0,
+        outflow: 3000,
+        net: -3000,
+      });
     });
   });
 

@@ -129,4 +129,132 @@ describe('buildOrdersMergeSummary', () => {
     expect(result.totalQuantity).toBe(2);
     expect(result.orders[0].items[0].unitPrice).toBe(49.75);
   });
+
+  describe('consolidated picking list', () => {
+    it('sums the same product across orders and counts the orders', () => {
+      const orders = [
+        makeOrder({
+          id: 1,
+          orderNumber: 'CMD-001',
+          items: [
+            { productId: 9, description: 'Widget', quantity: 2, total: 20 },
+          ] as never,
+        }),
+        makeOrder({
+          id: 2,
+          orderNumber: 'CMD-002',
+          items: [
+            { productId: 9, description: 'Widget', quantity: 3, total: 30 },
+          ] as never,
+        }),
+      ];
+
+      const result = buildOrdersMergeSummary(orders, [1, 2]);
+
+      expect(result.consolidated).toEqual([
+        { productId: 9, description: 'Widget', quantity: 5, orderCount: 2 },
+      ]);
+    });
+
+    it('merges a product typed differently, keeping the first spelling', () => {
+      const orders = [
+        makeOrder({
+          id: 1,
+          items: [
+            { productId: 9, description: 'Widget bleu', quantity: 1 },
+          ] as never,
+        }),
+        makeOrder({
+          id: 2,
+          items: [
+            { productId: 9, description: 'WIDGET BLEU (promo)', quantity: 4 },
+          ] as never,
+        }),
+      ];
+
+      const result = buildOrdersMergeSummary(orders, [1, 2]);
+
+      expect(result.consolidated).toHaveLength(1);
+      expect(result.consolidated[0].description).toBe('Widget bleu');
+      expect(result.consolidated[0].quantity).toBe(5);
+    });
+
+    it('counts an order once when it repeats the same product on two lines', () => {
+      const orders = [
+        makeOrder({
+          id: 1,
+          items: [
+            { productId: 9, description: 'Widget', quantity: 2 },
+            { productId: 9, description: 'Widget', quantity: 3 },
+          ] as never,
+        }),
+      ];
+
+      const result = buildOrdersMergeSummary(orders, [1]);
+
+      expect(result.consolidated).toEqual([
+        { productId: 9, description: 'Widget', quantity: 5, orderCount: 1 },
+      ]);
+    });
+
+    it('groups free-text lines on their normalised description', () => {
+      const orders = [
+        makeOrder({
+          id: 1,
+          items: [
+            { productId: null, description: 'Frais de port', quantity: 1 },
+          ] as never,
+        }),
+        makeOrder({
+          id: 2,
+          items: [
+            { productId: null, description: '  frais   de PORT ', quantity: 2 },
+            { productId: null, description: 'Emballage', quantity: 1 },
+          ] as never,
+        }),
+      ];
+
+      const result = buildOrdersMergeSummary(orders, [1, 2]);
+
+      expect(result.consolidated).toEqual([
+        {
+          productId: null,
+          description: 'Emballage',
+          quantity: 1,
+          orderCount: 1,
+        },
+        {
+          productId: null,
+          description: 'Frais de port',
+          quantity: 3,
+          orderCount: 2,
+        },
+      ]);
+    });
+
+    it('keeps distinct products apart and sorts them alphabetically', () => {
+      const orders = [
+        makeOrder({
+          id: 1,
+          items: [
+            { productId: 2, description: 'Zinc', quantity: 1 },
+            { productId: 1, description: 'Alu', quantity: 1 },
+          ] as never,
+        }),
+      ];
+
+      const result = buildOrdersMergeSummary(orders, [1]);
+
+      expect(result.consolidated.map((line) => line.description)).toEqual([
+        'Alu',
+        'Zinc',
+      ]);
+    });
+
+    it('is empty when none of the orders have items', () => {
+      const orders = [makeOrder({ id: 1, items: [] })];
+
+      expect(buildOrdersMergeSummary(orders, [1]).consolidated).toEqual([]);
+    });
+  });
 });

@@ -144,7 +144,7 @@ describe('StockReportsService', () => {
       // 100*50 + 50*20 = 5000 + 1000 = 6000
       expect(result.kpis.totalValuation).toBe(6000);
       expect(result.kpis.productCount).toBe(2);
-      expect(result.rows[0].valuationCost).toBe(5000);
+      expect(result.rows[0].totalValue).toBe(5000);
       expect(result.rows[0].valuationSale).toBe(8000);
       expect(result.kpis.totalQuantity).toBe(150);
     });
@@ -267,8 +267,8 @@ describe('StockReportsService', () => {
       const result = await service.getMovementsJournal(defaultFilter);
 
       expect(result.rows[0].productName).toBe('Widget');
-      expect(result.rows[0].dest).toBe('Main WH');
-      expect(result.rows[0].source).toBe('-');
+      expect(result.rows[0].destWarehouse).toBe('Main WH');
+      expect(result.rows[0].sourceWarehouse).toBe('-');
     });
 
     it('skips findByIds calls when movement list is empty', async () => {

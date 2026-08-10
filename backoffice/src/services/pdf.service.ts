@@ -12,6 +12,8 @@ const API_URL = API_BASE_URL_VALUE;
 
 export type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 export type PDFMode = 'preview' | 'download';
+/** Which merge-modal tab a multi-order recap PDF should render. */
+export type OrdersMergePDFView = 'consolidated' | 'detailed';
 
 interface PDFOptions {
   documentType: DocumentType;
@@ -38,10 +40,17 @@ class PDFService {
   /**
    * Get URL for the consolidated multi-order recap PDF ("merge").
    * Not a DocumentType: it targets a selection of orders, not one document.
+   * `view` mirrors the merge modal's tabs — `consolidated` prints the picking
+   * list, `detailed` prints the per-order breakdown.
    */
-  getOrdersMergePDFUrl(orderIds: number[], mode: PDFMode = 'preview', lang?: string): string {
+  getOrdersMergePDFUrl(
+    orderIds: number[],
+    mode: PDFMode = 'preview',
+    lang?: string,
+    view: OrdersMergePDFView = 'detailed',
+  ): string {
     const langParam = lang && lang !== 'fr' ? `&lang=${lang}` : '';
-    return `${API_URL}/api/pdf/orders-merge?ids=${orderIds.join(',')}&mode=${mode}${langParam}`;
+    return `${API_URL}/api/pdf/orders-merge?ids=${orderIds.join(',')}&mode=${mode}&view=${view}${langParam}`;
   }
 
   /**

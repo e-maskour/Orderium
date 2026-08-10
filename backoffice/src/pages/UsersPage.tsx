@@ -413,10 +413,13 @@ export default function UsersPage() {
           onLoadMore={() => setPage((p) => p + 1)}
           onTap={(u: User) => openEdit(u)}
           selectedKeys={new Set(selectedUsers.map((u) => u.id))}
-          onToggleSelect={(u: User) =>
-            setSelectedUsers((prev) =>
-              prev.find((x) => x.id === u.id) ? prev.filter((x) => x.id !== u.id) : [...prev, u],
-            )
+          onToggleSelect={(key) =>
+            setSelectedUsers((prev) => {
+              // MobileList hands back the key from `keyExtractor`, not the row.
+              if (prev.some((x) => x.id === key)) return prev.filter((x) => x.id !== key);
+              const user = users.find((u: User) => u.id === key);
+              return user ? [...prev, user] : prev;
+            })
           }
           config={{
             topLeft: (u: User) => u.name || u.email || '—',

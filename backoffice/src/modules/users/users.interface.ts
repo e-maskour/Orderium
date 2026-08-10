@@ -25,10 +25,12 @@ export interface User {
   dateUpdated: string;
 }
 
+// `email` accepts null as well as undefined: the form sends null to clear it,
+// and the API's `@IsOptional()` skips validation for both.
 export interface CreateUserPayload {
   name: string;
   phoneNumber: string;
-  email?: string;
+  email?: string | null;
   password: string;
   avatarUrl?: string;
   status?: UserStatus;
@@ -41,7 +43,7 @@ export interface CreateUserPayload {
 export interface UpdateUserPayload {
   name?: string;
   phoneNumber?: string;
-  email?: string;
+  email?: string | null;
   password?: string;
   avatarUrl?: string;
   status?: UserStatus;

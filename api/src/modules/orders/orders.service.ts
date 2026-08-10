@@ -364,8 +364,11 @@ export class OrdersService {
     if (isPortalOriginFinal && result) {
       const orderId = (result as any).id as number;
 
-      // Process stock for auto-validated portal orders (same logic as validate())
-      void this.processOrderStockIfConfigured(orderId);
+      // Process stock for auto-validated portal orders (same logic as validate()).
+      // Awaited, not fire-and-forget: the tenant connection is resolved from
+      // the request context, so detaching this risks it being torn down
+      // mid-flight. It swallows its own errors, so it cannot fail the order.
+      await this.processOrderStockIfConfigured(orderId);
 
       if (createOrderDto.originType === OrderOriginType.CLIENT_POS) {
         const fullOrder = await this.orderRepository.findOne({
@@ -867,8 +870,11 @@ export class OrdersService {
         });
       }
     } catch (err) {
-      this.logger.warn(
+      // Non-fatal — the order stays validated — but log at error with the
+      // stack. A swallowed warning here is how stock silently stopped moving.
+      this.logger.error(
         `Failed to process stock for order #${orderId}: ${(err as Error)?.message}`,
+        (err as Error)?.stack,
       );
     }
   }

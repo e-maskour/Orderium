@@ -3406,3 +3406,116 @@ input[type='number'] {
         transition: none;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ROLES & PERMISSIONS
+   The role modal and its access matrix pack a lot into one row;
+   below 600px each row unstacks so nothing gets squeezed.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Name + description pair inside the role modal */
+.role-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+/* ── Access matrix ── */
+.ram-module {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.ram-module__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.ram-module__info {
+    min-width: 11rem;
+    flex: 1 1 11rem;
+}
+
+.ram-levels {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.ram-level-btn {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+.ram-advanced-btn {
+    margin-inline-start: auto;
+    padding: 0;
+    background: none;
+    border: none;
+    color: #235ae4;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.ram-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+    padding-inline-start: 0.25rem;
+}
+
+.ram-action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+@media (max-width: 599px) {
+    .role-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ram-module {
+        padding: 0.75rem;
+    }
+
+    /* Module label above its level selector rather than beside it */
+    .ram-module__row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .ram-module__info {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    /* Levels share the width evenly and grow to a comfortable tap target */
+    .ram-levels {
+        flex-wrap: wrap;
+    }
+
+    .ram-level-btn {
+        flex: 1 1 4rem;
+        min-height: 2.25rem;
+    }
+
+    .ram-advanced-btn {
+        margin-inline-start: 0;
+        align-self: flex-start;
+        min-height: 2rem;
+    }
+
+    .ram-action-chip {
+        min-height: 2rem;
+        padding: 0.25rem 0.625rem;
+    }
+}

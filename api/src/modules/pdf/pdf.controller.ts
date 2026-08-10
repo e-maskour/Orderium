@@ -15,6 +15,7 @@ import { ApiRes } from '../../common/api-response';
 import { PDF } from '../../common/response-codes';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
 import { MERGE_SUMMARY_MAX_ORDERS } from '../orders/dto/merge-summary.dto';
+import type { OrdersMergeView } from './templates/orders-merge.template';
 
 @ApiTags('PDF')
 @PortalRoute()
@@ -205,12 +206,20 @@ export class PDFController {
   @ApiQuery({ name: 'ids', required: true, description: 'Comma-separated ids' })
   @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
   @ApiQuery({ name: 'lang', required: false, enum: ['fr', 'ar'] })
+  @ApiQuery({
+    name: 'view',
+    required: false,
+    enum: ['consolidated', 'detailed'],
+    description:
+      'consolidated = picking list (one line per product), detailed = per-order breakdown',
+  })
   @RequirePermission('documents.generate')
   async generateOrdersMergePDF(
     @Query('ids') ids: string,
     @Res() res: Response,
     @Query('mode') mode: 'preview' | 'download' = 'download',
     @Query('lang') lang: 'fr' | 'ar' = 'fr',
+    @Query('view') view: OrdersMergeView = 'detailed',
   ) {
     const orderIds = (ids ?? '')
       .split(',')
@@ -228,6 +237,11 @@ export class PDFController {
     if (uniqueIds.length < 2) {
       throw new BadRequestException('At least 2 orders are required');
     }
+    if (view !== 'consolidated' && view !== 'detailed') {
+      throw new BadRequestException(
+        'view must be either "consolidated" or "detailed"',
+      );
+    }
     if (uniqueIds.length > MERGE_SUMMARY_MAX_ORDERS) {
       throw new BadRequestException(
         `At most ${MERGE_SUMMARY_MAX_ORDERS} orders can be merged at once`,
@@ -236,7 +250,7 @@ export class PDFController {
 
     try {
       const { pdfBuffer, fileName } =
-        await this.pdfService.generateOrdersMergePDF(uniqueIds, lang);
+        await this.pdfService.generateOrdersMergePDF(uniqueIds, lang, view);
 
       const disposition = mode === 'preview' ? 'inline' : 'attachment';
 

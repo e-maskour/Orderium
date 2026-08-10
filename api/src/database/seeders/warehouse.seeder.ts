@@ -2,7 +2,7 @@ import { EntityManager } from 'typeorm';
 import { Warehouse } from '../../modules/inventory/entities/warehouse.entity';
 import { SeederDefinition } from './seeder.types';
 
-const DEFAULT_WAREHOUSE = {
+export const DEFAULT_WAREHOUSE = {
   name: 'Depot WH1',
   code: 'WH1',
   isActive: true,

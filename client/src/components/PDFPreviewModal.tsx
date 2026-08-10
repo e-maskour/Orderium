@@ -40,7 +40,8 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       className="w-full"
       style={{ maxWidth: '80rem', height: '95vh' }}
       contentStyle={{ padding: 0, flex: 1, overflow: 'hidden', position: 'relative' }}
-      dir={dir}
+      // `dir` is not on DialogProps; the passthrough API puts it on the root.
+      pt={{ root: { dir } }}
     >
       {isLoading && !mobile && (
         <div

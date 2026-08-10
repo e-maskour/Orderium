@@ -5,6 +5,8 @@ import { Sidebar } from 'primereact/sidebar';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Package, TrendingUp, MoreHorizontal } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { TranslationKey } from '../lib/i18n';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -12,8 +14,8 @@ interface AdminLayoutProps {
 
 interface MobileTab {
   path: string;
-  icon: React.ComponentType<{ style?: React.CSSProperties; strokeWidth?: number }>;
-  labelKey: string;
+  icon: LucideIcon;
+  labelKey: TranslationKey;
   activePaths: string[];
   exactMatch?: boolean;
 }

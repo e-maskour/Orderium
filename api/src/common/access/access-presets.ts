@@ -53,6 +53,14 @@ export const ROLE_PRESETS: RolePresetDef[] = [
     description: 'Full access to every module — bypasses all permission checks',
     category: 'settings',
     isSuperAdmin: true,
+    // The bypass alone already grants everything, but a role that stores no
+    // permission reads as "no access" in the role matrix — a module added
+    // after the role was seeded (payments, say) simply never appears on it.
+    // Holding the whole catalogue keeps the stored set honest about what the
+    // guard actually allows.
+    modules: Object.fromEntries(
+      ACCESS_MODULES.map((m) => [m.key, 'manager' as AccessLevel]),
+    ),
   },
 
   // ── Sales ladder ───────────────────────────────────────────

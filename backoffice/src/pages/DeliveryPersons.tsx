@@ -11,8 +11,9 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { deliveryPersonService } from '../modules/delivery';
-import { DeliveryPerson } from '../types';
+// The service hands back the module's `DeliveryPerson` model, not the plain
+// interface in `../types` — importing the latter made every row mismatch.
+import { deliveryPersonService, DeliveryPerson } from '../modules/delivery';
 import { useLanguage } from '../context/LanguageContext';
 import {
   toastCreated,

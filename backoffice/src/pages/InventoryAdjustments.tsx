@@ -260,6 +260,7 @@ export default function InventoryAdjustments() {
           productId: item.productId,
           productName: item.productName || `Produit #${item.productId}`,
           productCode: item.productCode,
+          uomCode: item.uomCode,
           theoreticalQuantity: parseFloat(item.theoreticalQuantity) || 0,
           countedQuantity: edited?.countedQuantity ?? parseFloat(item.theoreticalQuantity) ?? 0,
         };
@@ -287,6 +288,7 @@ export default function InventoryAdjustments() {
             productId: src.productId,
             productName: src.productName || `Produit #${src.productId}`,
             productCode: src.productCode,
+            uomCode: src.uomCode,
             theoreticalQuantity: parseFloat(src.theoreticalQuantity) || 0,
             countedQuantity: countedQty,
           },
@@ -305,7 +307,10 @@ export default function InventoryAdjustments() {
   const getStatusBadge = (status: string) => {
     const map: Record<
       string,
-      { label: string; severity: 'secondary' | 'success' | 'danger' | 'warn' | 'info' | 'contrast' }
+      {
+        label: string;
+        severity: 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'contrast';
+      }
     > = {
       draft: { label: t('adjDraft'), severity: 'secondary' },
       in_progress: { label: t('adjInProgress'), severity: 'info' },

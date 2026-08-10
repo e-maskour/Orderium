@@ -187,6 +187,8 @@ export default function ProductDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-quants', id] });
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       setShowStockCorrection(false);
       setStockCorrectionData({
         warehouseId: '',
@@ -213,6 +215,8 @@ export default function ProductDetail() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-quants', id] });
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       setShowStockTransfer(false);
       setStockTransferData({ sourceWarehouseId: '', destWarehouseId: '', quantity: '', notes: '' });
       toastUpdated(t('stockTransferredSuccessfully'));

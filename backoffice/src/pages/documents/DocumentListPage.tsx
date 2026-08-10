@@ -328,7 +328,7 @@ export default function DocumentListPage({
           await documentsService.deleteDocument(documentType, id);
           await refetch();
         } catch (error: any) {
-          toastDeleteError(error, t as (key: string) => string);
+          toastDeleteError(error, t);
         }
       },
       {

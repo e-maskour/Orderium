@@ -67,7 +67,7 @@ export default function Customers() {
       setSelectedCustomers([]);
     },
     onError: (error: Error) => {
-      toastDeleteError(error, t as (key: string) => string);
+      toastDeleteError(error, t);
     },
   });
 

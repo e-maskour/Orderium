@@ -1,20 +1,25 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { TabView, TabPanel } from 'primereact/tabview';
 import { AlertTriangle, Layers, Printer } from 'lucide-react';
 import { formatAmount } from '@orderium/ui';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../lib/i18n';
 import { ordersService } from '../modules/orders';
-import type { IMergeSummaryOrder } from '../modules/orders';
+import type { IMergeConsolidatedLine, IMergeSummaryOrder } from '../modules/orders';
+
+/** Which tab the recap is showing — also drives which PDF gets printed. */
+export type OrdersMergeView = 'consolidated' | 'detailed';
 
 interface OrdersMergeModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderIds: number[];
-  /** Fired when the user asks to print; receives the recap title. */
-  onPrint: (title: string) => void;
+  /** Fired when the user asks to print; receives the recap title and active tab. */
+  onPrint: (title: string, view: OrdersMergeView) => void;
 }
 
 const CELL_BORDER = '1px solid #f1f5f9';
@@ -145,14 +150,106 @@ function OrderBlock({ order, t, currency }: OrderBlockProps) {
   );
 }
 
+interface ConsolidatedTableProps {
+  lines: IMergeConsolidatedLine[];
+  t: (key: TranslationKey) => string;
+}
+
 /**
- * Read-only consolidated recap of the selected orders: every order with every
- * one of its items, no pagination. Nothing is created or modified — the only
- * action is printing the same recap as a PDF.
+ * Picking list: one row per product with the quantity summed across every
+ * selected order, so a single pass through the stock covers all of them.
+ */
+function ConsolidatedTable({ lines, t }: ConsolidatedTableProps) {
+  if (lines.length === 0) {
+    return (
+      <p
+        style={{
+          margin: 0,
+          padding: '2rem 0',
+          textAlign: 'center',
+          fontSize: '0.8125rem',
+          color: '#94a3b8',
+          fontStyle: 'italic',
+        }}
+      >
+        {t('mergeNoItems')}
+      </p>
+    );
+  }
+
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+      <thead>
+        <tr style={{ color: '#64748b', fontSize: '0.6875rem', textTransform: 'uppercase' }}>
+          <th style={{ textAlign: 'start', padding: '0.5rem 0.875rem', fontWeight: 600 }}>
+            {t('mergeDesignation')}
+          </th>
+          <th
+            style={{
+              textAlign: 'end',
+              padding: '0.5rem 0.75rem',
+              fontWeight: 600,
+              width: '7rem',
+            }}
+          >
+            {t('mergeTotalQty')}
+          </th>
+          <th
+            style={{
+              textAlign: 'end',
+              padding: '0.5rem 0.875rem',
+              fontWeight: 600,
+              width: '7rem',
+            }}
+          >
+            {t('mergeOrdersCount')}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map((line, index) => (
+          <tr key={`${line.productId ?? 'free'}-${index}`} style={{ borderTop: CELL_BORDER }}>
+            <td
+              style={{
+                padding: '0.5rem 0.875rem',
+                color: '#0f172a',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              {line.description}
+            </td>
+            <td
+              style={{
+                padding: '0.5rem 0.75rem',
+                textAlign: 'end',
+                fontWeight: 700,
+                color: '#0f172a',
+              }}
+            >
+              {formatAmount(line.quantity, Number.isInteger(line.quantity) ? 0 : 2)}
+            </td>
+            <td style={{ padding: '0.5rem 0.875rem', textAlign: 'end', color: '#475569' }}>
+              {line.orderCount}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/**
+ * Read-only consolidated recap of the selected orders, in two tabs: the
+ * picking list (products totalled across orders) and the per-order detail.
+ * Nothing is created or modified — the only action is printing the active tab
+ * as a PDF.
  */
 export function OrdersMergeModal({ isOpen, onClose, orderIds, onPrint }: OrdersMergeModalProps) {
   const { t, language } = useLanguage();
   const currency = language === 'ar' ? 'د.م' : 'DH';
+  // Tab 0 is the picking list — the reason most users open this modal.
+  const [activeIndex, setActiveIndex] = useState(0);
+  const view: OrdersMergeView = activeIndex === 0 ? 'consolidated' : 'detailed';
 
   // Sorted key so re-selecting the same orders in another order hits the cache.
   const queryKey = ['orders', 'merge-summary', [...orderIds].sort((a, b) => a - b)];
@@ -220,7 +317,7 @@ export function OrdersMergeModal({ isOpen, onClose, orderIds, onPrint }: OrdersM
             icon={
               <Printer style={{ width: '1rem', height: '1rem', marginInlineEnd: '0.375rem' }} />
             }
-            onClick={() => onPrint(title)}
+            onClick={() => onPrint(title, view)}
             disabled={!data || data.orders.length === 0}
           />
         </div>
@@ -262,9 +359,22 @@ export function OrdersMergeModal({ isOpen, onClose, orderIds, onPrint }: OrdersM
             </div>
           )}
 
-          {data.orders.map((order) => (
-            <OrderBlock key={order.id} order={order} t={t} currency={currency} />
-          ))}
+          <TabView
+            activeIndex={activeIndex}
+            onTabChange={(e) => setActiveIndex(e.index)}
+            pt={{
+              panelContainer: { style: { padding: '0.875rem 0 0' } },
+            }}
+          >
+            <TabPanel header={t('mergeTabConsolidated')}>
+              <ConsolidatedTable lines={data.consolidated ?? []} t={t} />
+            </TabPanel>
+            <TabPanel header={t('mergeTabDetails')}>
+              {data.orders.map((order) => (
+                <OrderBlock key={order.id} order={order} t={t} currency={currency} />
+              ))}
+            </TabPanel>
+          </TabView>
 
           <div
             style={{ borderTop: '2px solid #2563eb', paddingTop: '0.75rem', marginTop: '0.25rem' }}

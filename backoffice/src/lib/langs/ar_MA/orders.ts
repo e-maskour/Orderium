@@ -154,4 +154,8 @@ export default {
   mergeNoItems: 'لا توجد عناصر',
   mergeMissingOrders: 'طلب/طلبات غير موجودة تم تجاهلها',
   mergeLoadError: 'تعذر تحميل الملخص',
+  mergeTabConsolidated: 'المنتجات المطلوب تجميعها',
+  mergeTabDetails: 'تفاصيل كل طلب',
+  mergeTotalQty: 'الكمية الإجمالية',
+  mergeOrdersCount: 'الطلبات',
 };

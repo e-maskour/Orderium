@@ -208,21 +208,17 @@ describe('InventoryAdjustmentService (backoffice)', () => {
   // ─── validate ─────────────────────────────────────────────────────────────────
 
   describe('validate', () => {
-    it('posts validate payload with lines and returns done adjustment', async () => {
+    // Counted quantities are saved through `update` beforehand; validate itself
+    // only carries the adjustment id (and optionally the validating user).
+    it('posts the adjustment id and returns the done adjustment', async () => {
       const done = { ...adjustmentApiData, status: 'done' };
       (apiClient.post as any).mockResolvedValue(apiRes(done));
 
-      const result = await service.validate({
-        adjustmentId: 1,
-        lines: [{ productId: 1, countedQuantity: 95 }],
-      });
+      const result = await service.validate({ adjustmentId: 1 });
 
       expect(apiClient.post).toHaveBeenCalledWith(
         '/inventory/adjustments/validate',
-        expect.objectContaining({
-          adjustmentId: 1,
-          lines: expect.arrayContaining([expect.objectContaining({ productId: 1 })]),
-        }),
+        expect.objectContaining({ adjustmentId: 1 }),
       );
       expect(result.isDone).toBe(true);
     });

@@ -17,7 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../modules/statistics';
-import { ordersService } from '../modules/orders';
+import { ordersService, Order } from '../modules/orders';
 import { formatCurrency } from '../lib/formatters';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -301,7 +301,9 @@ export default function Dashboard() {
   const statistics = comprehensiveStats?.overview;
   const dailyStats = useMemo(() => comprehensiveStats?.dailyStats ?? [], [comprehensiveStats]);
   const topProducts = comprehensiveStats?.topProducts ?? [];
-  const recentOrders = recentOrdersData?.orders ?? [];
+  // `ordersService.getAll` is typed `Promise<any>`; it hands back `Order`
+  // models, so name the element type here rather than mapping over `any`.
+  const recentOrders: Order[] = recentOrdersData?.orders ?? [];
 
   // Weekly totals from dailyStats (7 days)
   const weekRevenue = useMemo(

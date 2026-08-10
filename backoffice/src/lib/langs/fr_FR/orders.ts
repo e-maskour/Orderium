@@ -157,4 +157,8 @@ export default {
   mergeNoItems: 'Aucun article',
   mergeMissingOrders: 'commande(s) introuvable(s) ont été ignorées',
   mergeLoadError: 'Impossible de charger le récapitulatif',
+  mergeTabConsolidated: 'Articles à collecter',
+  mergeTabDetails: 'Détail par commande',
+  mergeTotalQty: 'Qté totale',
+  mergeOrdersCount: 'Commandes',
 };

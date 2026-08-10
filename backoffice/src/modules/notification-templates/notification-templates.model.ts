@@ -27,8 +27,10 @@ export class NotificationTemplate implements INotificationTemplate {
     this.description = data.description;
     this.enabled = data.enabled ?? true;
     this.priority = data.priority ?? 'medium';
-    this.dateCreated = data.dateCreated || data.date_created;
-    this.dateUpdated = data.dateUpdated || data.date_updated;
+    // `fromApiResponse` already folds the snake_case variants in, so the
+    // constructor only ever sees the camelCase shape the interface declares.
+    this.dateCreated = data.dateCreated;
+    this.dateUpdated = data.dateUpdated;
   }
 
   static fromApiResponse(data: Record<string, unknown>): NotificationTemplate {

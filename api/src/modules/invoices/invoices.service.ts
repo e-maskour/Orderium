@@ -531,8 +531,11 @@ export class InvoicesService {
         }
       }
     } catch (stockError) {
-      this.logger.warn(
+      // Non-fatal — the invoice stays validated — but log at error with the
+      // stack. A swallowed warning here is how stock silently stopped moving.
+      this.logger.error(
         `Failed to process stock movements for invoice ${id}: ${(stockError as Error)?.message}`,
+        (stockError as Error)?.stack,
       );
     }
 

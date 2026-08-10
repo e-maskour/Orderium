@@ -117,7 +117,7 @@ export default function InvoicesListExample() {
               fontWeight: 600,
               color: '#0f172a',
             }}
-            body={(item: any) => `${NumberformatAmount(item.invoice.total, 2)} DH`}
+            body={(item: any) => `${formatAmount(Number(item.invoice.total), 2)} DH`}
           />
           <Column
             field="invoice.status"

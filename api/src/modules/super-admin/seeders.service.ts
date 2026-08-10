@@ -1,14 +1,21 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { SeederRunLog, SeederOperation } from './entities/seeder-log.entity';
 import { Tenant } from '../tenant/tenant.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import {
+  configurationCacheKey,
+  configurationListCacheKey,
+} from '../configurations/configurations.service';
+import { CONFIG_ENTITIES } from '../../database/seeders/configurations.seeder';
 import { SEEDERS, getSeeder } from '../../database/seeders/registry';
 import {
   SeederDefinition,
@@ -82,6 +89,8 @@ export class SeedersService {
     private readonly tenantRepo: Repository<Tenant>,
 
     private readonly tenantConnService: TenantConnectionService,
+
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   // ── Catalogue ─────────────────────────────────────────────────────────────
@@ -402,6 +411,7 @@ export class SeedersService {
     try {
       const result = await seeder.run(qr.manager, options);
       await qr.commitTransaction();
+      await this.evictConfigurationCache(tenant.slug);
 
       log.created = result.created;
       log.pruned = result.pruned;
@@ -425,6 +435,28 @@ export class SeedersService {
     }
 
     return this.logRepo.save(log);
+  }
+
+  /**
+   * Seeders write straight to the tenant database through an EntityManager, so
+   * ConfigurationsService never sees the write and its cached copy would keep
+   * serving pre-seed values for the rest of the TTL. Drop those entries here.
+   */
+  private async evictConfigurationCache(tenantSlug: string): Promise<void> {
+    try {
+      await this.cacheManager.del(configurationListCacheKey(tenantSlug));
+      await Promise.all(
+        CONFIG_ENTITIES.map((entity) =>
+          this.cacheManager.del(configurationCacheKey(tenantSlug, entity)),
+        ),
+      );
+    } catch (err) {
+      // A cache that refuses to evict is a staleness problem, not a reason to
+      // report a successful seeder run as failed.
+      this.logger.warn(
+        `Could not evict configuration cache for ${tenantSlug}: ${(err as Error).message}`,
+      );
+    }
   }
 
   private async requireTenant(tenantId: number): Promise<Tenant> {

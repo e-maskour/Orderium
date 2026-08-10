@@ -1,4 +1,7 @@
-export interface Partner {
+// A type alias rather than an interface: only aliases get an implicit index
+// signature, which is what lets the API payload be handed to
+// `Partner.fromApiResponse(data: Record<string, unknown>)` without a cast.
+export type Partner = {
   id: number;
   code?: string;
   name: string;
@@ -29,7 +32,7 @@ export interface Partner {
   wazeUrl?: string;
   deliveryAddress?: string;
   totalOrders?: number;
-}
+};
 
 export interface PartnerFormData {
   phoneNumber: string;

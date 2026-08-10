@@ -413,16 +413,39 @@ export interface MergeSummaryResult {
     partnerName: string;
     total: number;
     items: Array<{
+      productId: number | null;
       description: string;
       quantity: number;
       unitPrice: number;
       total: number;
     }>;
   }>;
+  /** Picking list: one line per product, quantities summed across orders. */
+  consolidated: Array<{
+    productId: number | null;
+    description: string;
+    quantity: number;
+    orderCount: number;
+  }>;
   orderCount: number;
   grandTotal: number;
   totalQuantity: number;
   missingIds: number[];
+}
+
+/**
+ * Group key for the picking list. Catalogue lines merge on their product so a
+ * product typed differently across orders still collapses into one row;
+ * free-text lines have no product to key on and fall back to their normalised
+ * description.
+ */
+function consolidationKey(
+  productId: number | null,
+  description: string,
+): string {
+  return productId != null
+    ? `p:${productId}`
+    : `d:${description.trim().toLowerCase().replace(/\s+/g, ' ')}`;
 }
 
 /**
@@ -454,6 +477,7 @@ export function buildOrdersMergeSummary(
         partnerName,
         total: Number(order.total) || 0,
         items: (order.items ?? []).map((item) => ({
+          productId: item.productId ?? null,
           description: item.description || item.product?.name || 'Article',
           quantity: Number(item.quantity) || 0,
           unitPrice: Number(item.unitPrice) || 0,
@@ -462,8 +486,51 @@ export function buildOrdersMergeSummary(
       };
     });
 
+  // Picking list. `orders` tracks distinct order ids so repeated lines of the
+  // same product inside one order still count that order once.
+  const grouped = new Map<
+    string,
+    {
+      productId: number | null;
+      description: string;
+      quantity: number;
+      orders: Set<number>;
+    }
+  >();
+
+  for (const order of mapped) {
+    for (const item of order.items) {
+      const key = consolidationKey(item.productId, item.description);
+      const entry = grouped.get(key);
+
+      if (entry) {
+        entry.quantity += item.quantity;
+        entry.orders.add(order.id);
+      } else {
+        grouped.set(key, {
+          productId: item.productId,
+          // First spelling encountered wins, so the label keeps its casing.
+          description: item.description,
+          quantity: item.quantity,
+          orders: new Set([order.id]),
+        });
+      }
+    }
+  }
+
+  const consolidated = [...grouped.values()]
+    .map(({ productId, description, quantity, orders: orderIds }) => ({
+      productId,
+      description,
+      quantity,
+      orderCount: orderIds.size,
+    }))
+    // Alphabetical: the list is walked front-to-back while collecting stock.
+    .sort((a, b) => a.description.localeCompare(b.description));
+
   return {
     orders: mapped,
+    consolidated,
     orderCount: mapped.length,
     grandTotal: mapped.reduce((sum, order) => sum + order.total, 0),
     totalQuantity: mapped.reduce(

@@ -234,6 +234,20 @@ export default function RolesPage() {
   const toggleSelectAllRoles = () =>
     selectedRoles.length === roles.length ? setSelectedRoles([]) : setSelectedRoles(roles);
 
+  // Mobile cards select by key, where the desktop table selects whole rows.
+  const selectedRoleIds = useMemo(
+    () => new Set<string | number>(selectedRoles.map((r) => r.id)),
+    [selectedRoles],
+  );
+
+  const toggleRoleSelection = (key: string | number) => {
+    const role = roles.find((r) => r.id === key);
+    if (!role) return;
+    setSelectedRoles((prev) =>
+      prev.some((r) => r.id === key) ? prev.filter((r) => r.id !== key) : [...prev, role],
+    );
+  };
+
   const impliedOptions = roles
     .filter((r) => r.id !== editingRole?.id)
     .map((r) => ({ label: translatedRoleName(r.name), value: r.id }));
@@ -278,12 +292,12 @@ export default function RolesPage() {
             totalCount={roles.length}
             countLabel={t('rolesCountLabel')}
             emptyMessage={t('noRolesFound')}
+            onTap={openEdit}
+            selectedKeys={selectedRoleIds}
+            onToggleSelect={toggleRoleSelection}
             config={{
               topLeft: (r: Role) => translatedRoleName(r.name),
-              topRight: (r: Role) =>
-                r.isSuperAdmin
-                  ? t('superAdminBadge')
-                  : t('rolePermissionsShort').replace('{count}', String(r.permissions.length)),
+              topRight: permCountTemplate,
               bottomLeft: (r: Role) => roleDescription(r.name, r.description || ''),
               bottomRight: (r: Role) =>
                 r.isSuperAdmin ? (
@@ -299,6 +313,23 @@ export default function RolesPage() {
                     }}
                   >
                     {t('superAdminBadge')}
+                  </span>
+                ) : r.isSystem ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.25rem 0.625rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      background: '#f1f5f9',
+                      color: '#64748b',
+                    }}
+                  >
+                    <Lock size={11} />
+                    {t('roleSystemBadge')}
                   </span>
                 ) : null,
             }}
@@ -407,7 +438,7 @@ export default function RolesPage() {
             )}
 
             {/* Name & Description */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="role-form-grid">
               <div>
                 <label
                   style={{

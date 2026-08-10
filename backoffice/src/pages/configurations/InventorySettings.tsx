@@ -36,12 +36,13 @@ interface InventoryConfig {
 type IncrementTrigger = null | 'invoice' | 'order';
 type DecrementTrigger = null | 'invoice' | 'order';
 
+// Matches the API defaults: stock moves on order validation, not on invoice.
 const DEFAULT_VALUES: InventoryConfigValues = {
   defaultWarehouseId: null,
   incrementStockOnInvoiceAchat: false,
   decrementStockOnInvoiceVente: false,
-  incrementStockOnOrderAchat: false,
-  decrementStockOnOrderVente: false,
+  incrementStockOnOrderAchat: true,
+  decrementStockOnOrderVente: true,
 };
 
 function valuestoTriggers(v: InventoryConfigValues): {

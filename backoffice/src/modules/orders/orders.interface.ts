@@ -117,10 +117,20 @@ export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
 // ─── Merge summary (consolidated recap of several orders) ──────────────────
 
 export interface IMergeSummaryItem {
+  productId: number | null;
   description: string;
   quantity: number;
   unitPrice: number;
   total: number;
+}
+
+/** One picking-list line: a product totalled across every selected order. */
+export interface IMergeConsolidatedLine {
+  productId: number | null;
+  description: string;
+  quantity: number;
+  /** How many of the selected orders contain this product. */
+  orderCount: number;
 }
 
 export interface IMergeSummaryOrder {
@@ -133,6 +143,7 @@ export interface IMergeSummaryOrder {
 
 export interface IOrdersMergeSummary {
   orders: IMergeSummaryOrder[];
+  consolidated: IMergeConsolidatedLine[];
   orderCount: number;
   grandTotal: number;
   totalQuantity: number;

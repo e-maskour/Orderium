@@ -29,11 +29,13 @@ import {
   Building,
   Tags,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { TranslationKey } from '../lib/i18n';
 
 interface TabDef {
-  labelKey: string;
+  labelKey: TranslationKey;
   to: string;
-  icon: React.ComponentType<{ style?: React.CSSProperties; strokeWidth?: number }>;
+  icon: LucideIcon;
   isActive: (pathname: string) => boolean;
 }
 

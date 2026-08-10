@@ -114,8 +114,15 @@ describe('role presets', () => {
   it('gives the administrator preset the super-admin bypass', () => {
     const admin = ROLE_PRESETS.find((p) => p.isSuperAdmin);
     expect(admin?.name).toBe('administrator');
-    // The bypass is the grant; enumerating permissions on it would be noise.
-    expect(permissionsForPreset(admin!)).toEqual([]);
+  });
+
+  it('gives the administrator preset every permission in the catalogue', () => {
+    // The bypass alone would do, but a role holding nothing renders as "no
+    // access" in the role matrix — a module added later would never show up.
+    const admin = ROLE_PRESETS.find((p) => p.isSuperAdmin);
+    expect(permissionsForPreset(admin!)).toEqual(
+      [...ALL_PERMISSION_KEYS].sort(),
+    );
   });
 
   it('gives the read-only preset no write permission anywhere', () => {

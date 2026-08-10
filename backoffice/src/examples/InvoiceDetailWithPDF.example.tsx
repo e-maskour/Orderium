@@ -187,7 +187,7 @@ export default function InvoiceDetailExample() {
               color: '#334155',
             }}
             bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', color: '#334155' }}
-            body={(item: any) => `${NumberformatAmount(item.unitPrice, 2)} DH`}
+            body={(item: any) => `${formatAmount(Number(item.unitPrice), 2)} DH`}
           />
           <Column
             field="total"
@@ -205,7 +205,7 @@ export default function InvoiceDetailExample() {
               fontWeight: 600,
               color: '#0f172a',
             }}
-            body={(item: any) => `${NumberformatAmount(item.total, 2)} DH`}
+            body={(item: any) => `${formatAmount(Number(item.total), 2)} DH`}
           />
         </DataTable>
       </div>

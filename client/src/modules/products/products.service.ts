@@ -1,10 +1,12 @@
 import { http } from '@/services/httpClient';
-import { GetProductsParams, ProductsResponse } from './products.interface';
+import { GetProductsParams } from './products.interface';
 import { Product } from './products.model';
 import { API_ROUTES } from '@/common/api-routes';
 
 export class ProductsService {
-  async getAll(params?: GetProductsParams): Promise<ProductsResponse> {
+  // Returns `Product` models, not the raw interface — `ProductsResponse` in
+  // products.interface.ts describes the plain API shape.
+  async getAll(params?: GetProductsParams): Promise<{ products: Product[]; total: number }> {
     const { page = 1, pageSize = 50, search, categoryId, brandId } = params ?? {};
 
     const queryParams = new URLSearchParams();

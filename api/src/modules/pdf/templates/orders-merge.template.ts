@@ -9,6 +9,7 @@
  */
 
 export interface OrdersMergeItem {
+  productId?: number | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -23,12 +24,24 @@ export interface OrdersMergeOrder {
   items: OrdersMergeItem[];
 }
 
+export interface OrdersMergeConsolidatedLine {
+  productId: number | null;
+  description: string;
+  quantity: number;
+  orderCount: number;
+}
+
+/** Which of the two modal tabs is being printed. */
+export type OrdersMergeView = 'consolidated' | 'detailed';
+
 export interface OrdersMergeTemplateData {
   orders: OrdersMergeOrder[];
+  consolidated?: OrdersMergeConsolidatedLine[];
   orderCount: number;
   grandTotal: number;
   totalQuantity: number;
   lang?: 'fr' | 'ar';
+  view?: OrdersMergeView;
 }
 
 function esc(value: string): string {
@@ -68,6 +81,9 @@ export function renderOrdersMergeTemplate(
         orderCount: 'عدد الطلبات',
         totalQuantity: 'إجمالي الكمية',
         grandTotal: 'المجموع الإجمالي',
+        pickingTitle: 'المنتجات المطلوب تجميعها',
+        totalQty: 'الكمية الإجمالية',
+        ordersColumn: 'الطلبات',
       }
     : {
         client: 'Client',
@@ -81,7 +97,47 @@ export function renderOrdersMergeTemplate(
         orderCount: 'Nombre de commandes',
         totalQuantity: 'Quantité totale',
         grandTotal: 'Total général',
+        pickingTitle: 'Articles à collecter',
+        totalQty: 'Qté totale',
+        ordersColumn: 'Commandes',
       };
+
+  const view: OrdersMergeView = data.view ?? 'detailed';
+
+  const consolidatedHtml = (() => {
+    const lines = data.consolidated ?? [];
+    const rowsHtml = lines.length
+      ? lines
+          .map(
+            (line, index) => `
+            <tr>
+              <td class="col-idx">${index + 1}</td>
+              <td class="col-desc bidi">${esc(line.description)}</td>
+              <td class="col-num col-total">${qty(line.quantity)}</td>
+              <td class="col-num">${line.orderCount}</td>
+            </tr>`,
+          )
+          .join('')
+      : `<tr><td class="col-empty" colspan="4">${L.noItems}</td></tr>`;
+
+    return `
+      <section class="order-block">
+        <div class="order-head">
+          <div class="order-number">${L.pickingTitle}</div>
+        </div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="col-idx">#</th>
+              <th class="col-desc">${L.designation}</th>
+              <th class="col-num">${L.totalQty}</th>
+              <th class="col-num">${L.ordersColumn}</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </section>`;
+  })();
 
   const ordersHtml = data.orders
     .map((order) => {
@@ -305,7 +361,7 @@ export function renderOrdersMergeTemplate(
         </style>
       </head>
       <body>
-        ${ordersHtml}
+        ${view === 'consolidated' ? consolidatedHtml : ordersHtml}
         <div class="summary">
           <div class="summary-title">${L.summary}</div>
           <div class="summary-row">

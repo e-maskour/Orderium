@@ -130,8 +130,9 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           show: true,
         },
         y: {
-          formatter: (value, { seriesIndex }) => {
-            if (seriesIndex === 0) {
+          // `opts` is optional in the Apex typings, so read the index off it.
+          formatter: (value, opts) => {
+            if (opts?.seriesIndex === 0) {
               // Revenue
               return formatCurrency(value, language);
             }

@@ -36,6 +36,21 @@
       ],
       "@shared-logo/*": [
         "../shared/logo/*"
+      ],
+      "@shared-print": [
+        "../shared/components"
+      ],
+      "@shared-print/*": [
+        "../shared/components/*"
+      ],
+      /* @hookform/resolvers takes zod as an unlinked peer, so TypeScript walks
+         up to the pnpm store and picks zod 4 — while this app is on zod 3.
+         Pin both importers to the same copy. */
+      "zod": [
+        "./node_modules/zod"
+      ],
+      "zod/*": [
+        "./node_modules/zod/*"
       ]
     }
   },
