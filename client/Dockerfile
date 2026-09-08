@@ -30,6 +30,8 @@ COPY shared/ui /shared/ui
 COPY shared/components /shared/components
 RUN --mount=type=cache,id=pnpm-shared-ui,target=/root/.local/share/pnpm/store \
   cd /shared/ui && pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-shared-components,target=/root/.local/share/pnpm/store \
+  cd /shared/components && pnpm install --frozen-lockfile
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY client/ .
 
