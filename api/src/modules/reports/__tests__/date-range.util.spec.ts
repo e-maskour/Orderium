@@ -2,8 +2,6 @@ import { DatePreset } from '../dto/report-filter.dto';
 import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
 
 describe('resolveDateRange', () => {
-  const DAY_MS = 86_400_000;
-
   describe('preset: TODAY', () => {
     it('returns start and end of the same day', () => {
       const { from, to } = resolveDateRange(DatePreset.TODAY);

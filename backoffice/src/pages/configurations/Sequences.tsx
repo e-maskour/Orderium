@@ -119,12 +119,6 @@ export default function Sequences() {
     { value: 'daily', label: t('resetDaily') },
   ];
 
-  const openCreateModal = () => {
-    setEditingSequence(null);
-    setFormData(EMPTY_FORM);
-    setShowModal(true);
-  };
-
   const closeModal = () => {
     setShowModal(false);
     setEditingSequence(null);

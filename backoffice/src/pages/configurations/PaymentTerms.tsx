@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Calendar, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Calendar } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   paymentTermsService,
   PaymentTerm,
@@ -29,7 +29,7 @@ export default function PaymentTerms() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [selectedRows, setSelectedRows] = useState<(PaymentTerm & { _idx: number })[]>([]);
+  const [_selectedRows, _setSelectedRows] = useState<(PaymentTerm & { _idx: number })[]>([]);
   const [formData, setFormData] = useState<IPaymentTerm>({
     key: '',
     label: '',
@@ -67,7 +67,6 @@ export default function PaymentTerms() {
   });
 
   const terms: PaymentTerm[] = config?.terms || [];
-  const defaultTerm = config?.default || '';
 
   const generateSlug = (label: string) => {
     return label

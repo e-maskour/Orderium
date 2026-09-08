@@ -2,7 +2,7 @@
  * Pure helper functions for the quotes module.
  * No database access, no injected services — inputs in, outputs out.
  */
-import { Quote, QuoteItem, QuoteStatus } from './entities/quote.entity';
+import { Quote, QuoteStatus } from './entities/quote.entity';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import {
   buildFormatPattern,

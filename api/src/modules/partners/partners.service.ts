@@ -10,7 +10,7 @@ import { Partner } from './entities/partner.entity';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { Portal } from '../portal/entities/portal.entity';
-import { Invoice, InvoiceStatus } from '../invoices/entities/invoice.entity';
+import { Invoice } from '../invoices/entities/invoice.entity';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import {

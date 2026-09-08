@@ -26,7 +26,6 @@ import { SequencesService } from '../sequences/sequences.service';
 import {
   MinPriceCheckItem,
   findMinPriceViolation,
-  getInvoiceStatusLabel,
   buildInvoiceExportRows,
   INVOICE_XLSX_COL_WIDTHS,
 } from './invoices.helpers';

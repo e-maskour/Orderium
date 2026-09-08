@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import orderiumLogo from '../assets/logo-backoffice.svg';
 import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
 import { loginSchema, type LoginFormValues } from '../modules/auth/schemas/login.schema';
 import { useApiErrors } from '../hooks/useApiErrors';
 import type { TranslationKey } from '../lib/i18n';

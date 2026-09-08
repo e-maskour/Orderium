@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Building2, Phone, Mail, Globe, MapPin, FileText, Upload, X, Loader2 } from 'lucide-react';
+import { Building2, Phone, MapPin, FileText, Upload, X, Loader2 } from 'lucide-react';
 import type { ICompany } from '../../modules/company/company.interface';
 import { useLanguage } from '../../context/LanguageContext';
 import type { TranslationKey } from '../../lib/i18n';

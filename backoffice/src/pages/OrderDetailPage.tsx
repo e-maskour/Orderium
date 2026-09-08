@@ -29,7 +29,6 @@ import {
   X,
   CreditCard,
   ChevronRight,
-  Clock,
   User,
   Receipt,
   Truck,
@@ -234,7 +233,7 @@ export default function OrderDetailPage() {
 
   const order = orderWithDetails?.order;
 
-  const { data: payments = [], refetch: refetchPayments } = useQuery({
+  const { data: payments = [] } = useQuery({
     queryKey: ['orderPayments', Number(id)],
     queryFn: () => orderPaymentsService.getByOrder(Number(id)),
     enabled: !!id,

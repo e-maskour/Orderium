@@ -19,7 +19,6 @@ import { CreateQuoteDto } from './dto/quote.dto';
 import { SequencesService } from '../sequences/sequences.service';
 import {
   findMinPriceViolation,
-  getQuoteStatusLabel,
   buildQuoteExportRows,
   QUOTE_XLSX_COL_WIDTHS,
 } from './quotes.helpers';

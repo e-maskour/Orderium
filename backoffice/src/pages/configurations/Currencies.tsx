@@ -6,7 +6,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   currenciesService,
   Currency,
@@ -29,7 +29,7 @@ export default function Currencies() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [selectedRows, setSelectedRows] = useState<(Currency & { _idx: number })[]>([]);
+  const [_selectedRows, _setSelectedRows] = useState<(Currency & { _idx: number })[]>([]);
   const [formData, setFormData] = useState<ICurrency>({
     code: '',
     name: '',
@@ -67,7 +67,6 @@ export default function Currencies() {
   });
 
   const currencies: Currency[] = config?.currencies || [];
-  const defaultCurrency = config?.default || '';
 
   const openCreateModal = () => {
     setEditingIndex(null);

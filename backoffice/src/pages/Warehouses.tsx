@@ -18,7 +18,7 @@ import {
 } from '../services/toast.service';
 
 export default function Warehouses() {
-  const { dir, t } = useLanguage();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState('');

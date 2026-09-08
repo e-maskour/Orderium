@@ -285,7 +285,6 @@ describe('InventoryAdjustment model', () => {
 
   describe('toUpdateDTO', () => {
     it('returns serializable update payload', () => {
-      const line = new AdjustmentLine(makeLine() as any);
       const adj = new InventoryAdjustment(
         makeAdjustmentData({ name: 'Test', notes: 'some note', lines: [makeLine()] }) as any,
       );

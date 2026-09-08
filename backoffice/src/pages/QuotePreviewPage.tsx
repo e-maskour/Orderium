@@ -6,7 +6,6 @@ import {
   User,
   Phone,
   MapPin,
-  CreditCard,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -33,7 +32,7 @@ export default function QuotePreviewPage() {
   const [rejecting, setRejecting] = useState(false);
   const [signedBy, setSignedBy] = useState('');
   const [clientNotes, setClientNotes] = useState('');
-  const [signed, setSigned] = useState(false);
+  const [_signed, setSigned] = useState(false);
 
   useEffect(() => {
     if (token) {

@@ -11,19 +11,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import {
-  toastDeleted,
-  toastError,
-  toastDeleteError,
-  toastConfirm,
-} from '../services/toast.service';
+import { toastDeleted, toastDeleteError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { EmptyState } from '../components/EmptyState';
 import { MobileList } from '../components/MobileList';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Fournisseurs() {
-  const { t, language, dir } = useLanguage();
+  const { t, dir } = useLanguage();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -70,12 +65,6 @@ export default function Fournisseurs() {
       toastDeleteError(error, t);
     },
   });
-
-  const toggleSelectSupplier = (id: number) => {
-    setSelectedSuppliers((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
-    );
-  };
 
   const toggleSelectAll = () => {
     if (selectedSuppliers.length === suppliers.length) {

@@ -2,21 +2,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ordersService,
   deliveryPersonService,
-  partnersService,
   orderPaymentsService,
   ORDER_PAYMENT_TYPE_LABELS,
 } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Phone,
   X,
   Search,
   Package,
-  Eye,
-  Check,
-  Square,
   UserPlus,
   UserMinus,
   ShoppingCart,
@@ -24,12 +19,9 @@ import {
   Info,
   Receipt,
   Truck,
-  Clock,
   User,
   CheckCircle,
-  AlertCircle,
   XCircle,
-  Navigation,
   Plus,
   CreditCard,
   Share2,
@@ -66,7 +58,6 @@ import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Orders() {
   const { t, language } = useLanguage();
-  const { admin } = useAuth();
   const dateOverlayRef = useRef<OverlayPanel>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 600);
   useEffect(() => {
@@ -81,7 +72,7 @@ export default function Orders() {
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [_searchInput, setSearchInput] = useState('');
   const [quickSearch, setQuickSearch] = useState('');
 
   // Debounce quick search → triggers API call
@@ -252,18 +243,12 @@ export default function Orders() {
   });
 
   const orders = ordersData.orders || [];
-  const orderStatusCounts = ordersData.orderStatusCounts || {};
   const totalCount = ordersData.totalCount || 0;
 
   const { data: deliveryPersons = [] } = useQuery({
     queryKey: ['deliveryPersons'],
     queryFn: () => deliveryPersonService.getAll(),
   });
-  const { data: partnersData } = useQuery({
-    queryKey: ['partners'],
-    queryFn: () => partnersService.getAll(),
-  });
-  const partners = partnersData?.partners || [];
 
   const assignMutation = useMutation({
     mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) =>
@@ -274,17 +259,6 @@ export default function Orders() {
     },
     onError: (error: Error) => {
       toastError(`${t('failedToAssign')}: ${error.message}`);
-    },
-  });
-
-  const unassignMutation = useMutation({
-    mutationFn: (orderId: number) => ordersService.unassignOrder(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastSuccess(t('orderUnassigned'));
-    },
-    onError: (error: Error) => {
-      toastError(`${t('failedToUnassign')}: ${error.message}`);
     },
   });
 
@@ -328,18 +302,6 @@ export default function Orders() {
     },
   });
 
-  const changeStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
-      ordersService.changeStatus(orderId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastSuccess(t('statusUpdated'));
-    },
-    onError: (error: Error) => {
-      toastError(`${t('error')}: ${error.message}`);
-    },
-  });
-
   const bulkChangeOrderStatusMutation = useMutation({
     mutationFn: async ({ orderIds, status }: { orderIds: number[]; status: string }) =>
       Promise.all(orderIds.map((id) => ordersService.changeStatus(id, status))),
@@ -352,61 +314,6 @@ export default function Orders() {
       toastError(`${t('error')}: ${error.message}`);
     },
   });
-
-  const ORDER_STATUS_WORKFLOW: Record<
-    string,
-    { value: string; label: string; bg: string; color: string; border: string }[]
-  > = {
-    confirmed: [
-      {
-        value: 'picked_up',
-        label: t('pickedUp'),
-        bg: '#f5f3ff',
-        color: '#6d28d9',
-        border: '#ddd6fe',
-      },
-      {
-        value: 'delivered',
-        label: t('delivered'),
-        bg: '#ecfdf5',
-        color: '#047857',
-        border: '#a7f3d0',
-      },
-      {
-        value: 'cancelled',
-        label: t('cancelled'),
-        bg: '#fef2f2',
-        color: '#b91c1c',
-        border: '#fecaca',
-      },
-    ],
-    picked_up: [
-      {
-        value: 'delivered',
-        label: t('delivered'),
-        bg: '#ecfdf5',
-        color: '#047857',
-        border: '#a7f3d0',
-      },
-      {
-        value: 'cancelled',
-        label: t('cancelled'),
-        bg: '#fef2f2',
-        color: '#b91c1c',
-        border: '#fecaca',
-      },
-    ],
-    delivered: [
-      {
-        value: 'cancelled',
-        label: t('cancelled'),
-        bg: '#fef2f2',
-        color: '#b91c1c',
-        border: '#fecaca',
-      },
-    ],
-    cancelled: [],
-  };
 
   const getOrderStatusBadge = (status: string | null | undefined) => {
     const map: Record<
@@ -590,71 +497,6 @@ export default function Orders() {
     };
   };
 
-  const getDeliveryStatusBadge = (deliveryStatus: string | null | undefined) => {
-    const map: Record<
-      string,
-      { label: string; icon: JSX.Element; bg: string; color: string; border: string }
-    > = {
-      pending: {
-        label: t('pending'),
-        icon: <Clock style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#f8fafc',
-        color: '#334155',
-        border: '#e2e8f0',
-      },
-      assigned: {
-        label: t('assigned'),
-        icon: <User style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#faf5ff',
-        color: '#7e22ce',
-        border: '#e9d5ff',
-      },
-      confirmed: {
-        label: t('confirmed'),
-        icon: <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#eff6ff',
-        color: '#1d4ed8',
-        border: '#bfdbfe',
-      },
-      picked_up: {
-        label: t('pickedUp'),
-        icon: <Package style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#eef2ff',
-        color: '#4338ca',
-        border: '#c7d2fe',
-      },
-      to_delivery: {
-        label: t('toDelivery'),
-        icon: <AlertCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#fffbeb',
-        color: '#b45309',
-        border: '#fde68a',
-      },
-      in_delivery: {
-        label: t('inDelivery'),
-        icon: <Navigation style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#ecfeff',
-        color: '#0e7490',
-        border: '#a5f3fc',
-      },
-      delivered: {
-        label: t('delivered'),
-        icon: <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#ecfdf5',
-        color: '#047857',
-        border: '#a7f3d0',
-      },
-      canceled: {
-        label: t('canceled'),
-        icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-        bg: '#fef2f2',
-        color: '#b91c1c',
-        border: '#fecaca',
-      },
-    };
-    return map[deliveryStatus || ''] || map.pending;
-  };
-
   const formatOrderDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -712,7 +554,7 @@ export default function Orders() {
   const [paymentType, setPaymentType] = useState<string>('cash');
   const [paymentNote, setPaymentNote] = useState<string>('');
 
-  const { data: orderPayments = [], refetch: refetchPayments } = useQuery({
+  const { data: orderPayments = [] } = useQuery({
     queryKey: ['orderPayments', paymentOrderId],
     queryFn: () => orderPaymentsService.getByOrder(paymentOrderId!),
     enabled: !!paymentOrderId,
@@ -1537,7 +1379,6 @@ export default function Orders() {
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   body={(order: any) => {
                     const osb = getOrderStatusBadge(order.status);
-                    const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                         <span

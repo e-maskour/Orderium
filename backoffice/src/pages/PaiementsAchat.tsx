@@ -24,7 +24,7 @@ import { Column } from 'primereact/column';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
-import { toastConfirm, toastError } from '../services/toast.service';
+import { toastConfirm } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatAmount } from '@orderium/ui';
@@ -196,22 +196,6 @@ export default function PaiementsAchat() {
   const getInvoiceTotal = (invoiceId: number) => {
     const inv = invoices.find((i: any) => i.invoice.id === invoiceId);
     return inv?.invoice.total || 0;
-  };
-
-  const handleDelete = async (id: number) => {
-    toastConfirm(
-      t('deletePayment'),
-      async () => {
-        try {
-          await paymentsService.delete(id);
-          queryClient.invalidateQueries({ queryKey: ['payments-achat'] });
-          queryClient.invalidateQueries({ queryKey: ['payments-achat-kpi'] });
-        } catch {
-          toastError(t('error'), { description: t('errorDeletingPayment') });
-        }
-      },
-      { description: t('confirmDeletePayment'), confirmLabel: t('delete') },
-    );
   };
 
   const handleEdit = (payment: Payment) => {

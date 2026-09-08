@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Repository, DataSource, IsNull, Not } from 'typeorm';
+import { Repository, DataSource, IsNull } from 'typeorm';
 import { MigrationRunLog } from './entities/migration-log.entity';
 import { Tenant } from '../tenant/tenant.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';

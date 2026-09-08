@@ -11,7 +11,6 @@ import {
   Logger,
   ParseIntPipe,
   DefaultValuePipe,
-  Optional,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SequencesService } from './sequences.service';

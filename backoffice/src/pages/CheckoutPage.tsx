@@ -18,19 +18,14 @@ import {
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
-import {
-  posService,
-  IPosCartItem as CartItem,
-  ICheckoutCustomer as Customer,
-  ICheckoutState,
-} from '../modules/pos';
+import { posService, ICheckoutState } from '../modules/pos';
 import { orderPaymentsService } from '../modules';
 import { formatCurrency } from '@orderium/ui';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, language, dir } = useLanguage();
+  const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const state = location.state as ICheckoutState;
 

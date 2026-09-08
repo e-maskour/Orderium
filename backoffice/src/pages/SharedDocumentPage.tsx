@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import {
-  FileText,
-  Calendar,
-  User,
-  Phone,
-  MapPin,
-  AlertCircle,
-  Download,
-  Printer,
-} from 'lucide-react';
+import { FileText, Calendar, User, Phone, MapPin, AlertCircle, Printer } from 'lucide-react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';

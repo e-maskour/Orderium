@@ -3,7 +3,6 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Button } from 'primereact/button';
-import { Divider } from 'primereact/divider';
 import {
   Settings,
   Globe,

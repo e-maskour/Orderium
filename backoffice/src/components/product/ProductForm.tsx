@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -65,8 +65,6 @@ export function ProductForm({
   const cost = watch('cost');
   const saleTaxId = watch('saleTaxId');
   const isService = watch('isService');
-  const saleUnitId = watch('saleUnitId');
-  const purchaseUnitId = watch('purchaseUnitId');
 
   /** Translates a zod message key into the active language. */
   const err = (field: keyof ProductFormValues): string | undefined => {

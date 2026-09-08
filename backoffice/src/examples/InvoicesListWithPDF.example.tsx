@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, Filter } from 'lucide-react';
 import { invoicesService } from '../modules/invoices';
 import { useLanguage } from '../context/LanguageContext';
-import PDFActionButtons, { PDFIconButtons } from '../components/PDFActionButtons';
+import { PDFIconButtons } from '../components/PDFActionButtons';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { DataTable } from 'primereact/datatable';

@@ -8,7 +8,6 @@ import { useLocation } from 'react-router-dom';
 import {
   AssistantMessage,
   OllamaChatMessage,
-  MessageStatus,
   AppContext,
   ToolCall,
   ToolResult,

@@ -1,5 +1,5 @@
 import { Company } from './company.model';
-import { ICompany, UpdateCompanyDTO } from './company.interface';
+import { UpdateCompanyDTO } from './company.interface';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class CompanyService {

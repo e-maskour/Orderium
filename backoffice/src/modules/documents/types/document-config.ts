@@ -20,38 +20,6 @@ export interface DocumentConfig {
 }
 
 // Translation keys for document configs
-const DOCUMENT_TRANSLATION_KEYS = {
-  facture_vente: {
-    title: 'salesInvoices',
-    titleShort: 'salesInvoice',
-    partnerLabel: 'client',
-  },
-  facture_achat: {
-    title: 'purchaseInvoices',
-    titleShort: 'purchaseInvoice',
-    partnerLabel: 'supplier',
-  },
-  devis_vente: {
-    title: 'quotes',
-    titleShort: 'quote',
-    partnerLabel: 'client',
-  },
-  devis_achat: {
-    title: 'priceRequests',
-    titleShort: 'priceRequest',
-    partnerLabel: 'supplier',
-  },
-  bon_livraison_vente: {
-    title: 'deliveryNotes',
-    titleShort: 'deliveryNote',
-    partnerLabel: 'client',
-  },
-  bon_livraison_achat: {
-    title: 'purchaseOrders',
-    titleShort: 'purchaseOrder',
-    partnerLabel: 'supplier',
-  },
-};
 
 export function getDocumentConfigs(
   t: (key: TranslationKey) => string,

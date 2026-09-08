@@ -2,7 +2,6 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X, ArrowLeft, FileText } from 'lucide-react';
-import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Calendar } from 'primereact/calendar';
@@ -12,7 +11,7 @@ import {
   DocumentConfig,
   DocumentItem,
 } from '../../modules/documents/types';
-import { Partner, IPartner } from '../../modules/partners';
+import { IPartner } from '../../modules/partners';
 import {
   DocumentPartnerBox,
   DocumentItemsTable,
@@ -74,7 +73,7 @@ export default function DocumentCreatePage({
     }
   }, [location.state]);
 
-  const handleSave = async (isDraft: boolean) => {
+  const handleSave = async (_isDraft: boolean) => {
     // Validation
     if (!partner) {
       toastError(`${t('pleaseSelect')} ${config.partnerLabel.toLowerCase()}`);

@@ -5,7 +5,6 @@ import { Avatar } from 'primereact/avatar';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
 import { Button } from 'primereact/button';
-import { Divider } from 'primereact/divider';
 import { User, Phone, Lock, Shield, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';

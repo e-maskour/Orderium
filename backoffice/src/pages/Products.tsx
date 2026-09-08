@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { translateUomCode } from '../lib/uom-translations';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import { brandsService } from '../modules/brands';
@@ -118,16 +118,6 @@ export default function Products() {
   };
   const totalCount = pagination.total;
   const totalPages = pagination.totalPages;
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => productsService.deleteProduct(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    },
-    onError: (error: Error) => {
-      toastDeleteError(error, t);
-    },
-  });
 
   const toggleSelectProduct = (id: number) => {
     setSelectedProducts((prev) =>
@@ -250,14 +240,6 @@ export default function Products() {
     };
     input.click();
   };
-
-  const pageSizeOptions = [
-    { label: '10', value: 10 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
-    { label: '500', value: 500 },
-    { label: '1000', value: 1000 },
-  ];
 
   const stockFilterOptions = [
     { label: t('all'), value: 'all' },

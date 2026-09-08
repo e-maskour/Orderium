@@ -42,7 +42,7 @@ export default function InventoryAdjustments() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
+  const [warehouseFilter, _setWarehouseFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '', warehouseId: 0, notes: '' });
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustment | null>(null);

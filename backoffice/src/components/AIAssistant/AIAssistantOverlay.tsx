@@ -24,7 +24,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, 
 
   const [panelState, setPanelState] = useState<PanelState>('open');
   const [size, setSize] = useState({ width: 400, height: 600 });
-  const [isResizing, setIsResizing] = useState(false);
+  const [_isResizing, setIsResizing] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {

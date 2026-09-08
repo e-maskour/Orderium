@@ -2,7 +2,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, X, Download, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, X, Download, Search } from 'lucide-react';
 import { DocumentTable } from '../../components/documents';
 import {
   ShareDocumentDialog,
@@ -297,7 +297,7 @@ export default function DocumentListPage({
           await documentsService.validateDocument(documentType, id);
           await refetch();
           toastDocument(t('pdfGenerated'));
-        } catch (error) {
+        } catch (_error) {
           toastError(t('error'), { description: t('errorValidatingDocument') });
         }
       },
@@ -312,7 +312,7 @@ export default function DocumentListPage({
         try {
           await documentsService.devalidateDocument(documentType, id);
           await refetch();
-        } catch (error) {
+        } catch (_error) {
           toastError(t('error'), { description: t('errorDevalidatingDocument') });
         }
       },
@@ -425,7 +425,7 @@ export default function DocumentListPage({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toastExported(t('exportSuccess'));
-    } catch (error) {
+    } catch (_error) {
       toastError(t('exportError'));
     }
   };

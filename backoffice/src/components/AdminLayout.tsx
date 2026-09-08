@@ -4,7 +4,7 @@ import { Header } from './Header';
 import { Sidebar } from 'primereact/sidebar';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Package, TrendingUp, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, MoreHorizontal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { TranslationKey } from '../lib/i18n';
 

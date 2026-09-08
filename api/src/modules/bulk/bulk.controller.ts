@@ -3,12 +3,11 @@ import {
   Get,
   Post,
   Param,
-  Query,
   Body,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BulkService } from './bulk.service';
 import { ApiRes } from '../../common/api-response';
 import { BULK } from '../../common/response-codes';

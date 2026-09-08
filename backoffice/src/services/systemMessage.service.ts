@@ -62,7 +62,6 @@ Your goal: Help the user accomplish their task quickly and clearly.`;
 
     return tools
       .map((tool) => {
-        const params = Object.keys(tool.parameters.properties).join(', ');
         const category = tool.category === 'write' ? '[Can modify data]' : '[View only]';
         return `- ${category} ${tool.name}: ${tool.description}`;
       })

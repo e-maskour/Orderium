@@ -4,7 +4,7 @@ import { ApexOptions } from 'apexcharts';
 import { DocumentType } from '../../modules/documents/types';
 import { DocumentItem } from '../../modules/documents/services/documents.service';
 import { useLanguage } from '../../context/LanguageContext';
-import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
+import { TrendingUp, BarChart3, LineChart } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { formatAmount } from '@orderium/ui';
 import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';

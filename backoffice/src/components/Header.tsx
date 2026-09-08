@@ -14,7 +14,6 @@ import {
   X,
   Search,
   TrendingUp,
-  TrendingDown,
   Package,
   FileCheck,
   PackageCheck,
@@ -32,13 +31,10 @@ import {
   Bell,
   Clock,
   Star,
-  Plus,
   BarChart2,
   ShoppingCart,
   History,
   HardDrive,
-  Users,
-  CreditCard,
   ChevronDown,
   User,
   Tags,
@@ -763,53 +759,6 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     window.addEventListener('resize', handler, { passive: true });
     return () => window.removeEventListener('resize', handler);
   }, []);
-
-  const subNavGroups = useMemo(
-    () => [
-      {
-        key: 'ventes',
-        label: t('sales'),
-        Icon: TrendingUp,
-        items: [
-          { path: '/devis', Icon: FileCheck, label: t('quote') },
-          { path: '/bons-livraison', Icon: PackageCheck, label: t('deliveryNote') },
-          { path: '/factures/vente', Icon: FileText, label: t('salesInvoice') },
-          { path: '/paiements-vente', Icon: Wallet, label: t('payments') },
-          { path: '/customers', Icon: UserCircle, label: t('clients') },
-        ],
-      },
-      {
-        key: 'achats',
-        label: t('purchases'),
-        Icon: TrendingDown,
-        items: [
-          { path: '/demande-prix', Icon: DollarSign, label: t('priceRequest') },
-          { path: '/bon-achat', Icon: ShoppingBag, label: t('purchaseOrder') },
-          { path: '/factures/achat', Icon: Receipt, label: t('purchaseInvoice') },
-          { path: '/paiements-achat', Icon: Wallet, label: t('payments') },
-          { path: '/fournisseurs', Icon: Truck, label: t('suppliers') },
-        ],
-      },
-      {
-        key: 'products',
-        label: t('products'),
-        Icon: Package,
-        items: [
-          { path: '/products', Icon: Package, label: t('products') },
-          { path: '/categories', Icon: FolderTree, label: t('categories') },
-          { path: '/brands', Icon: Tags, label: t('brands') },
-          { path: '/warehouses', Icon: Building2, label: t('warehouses') },
-          { path: '/stock-movements', Icon: TrendingUp, label: t('stockMovements') },
-          { path: '/inventory-adjustments', Icon: FileCheck, label: t('inventoryAdjustments') },
-        ],
-      },
-    ],
-    [t],
-  );
-
-  const isSubItemActive = (path: string) => location.pathname.startsWith(path);
-  const isGroupActive = (group: (typeof subNavGroups)[0]) =>
-    group.items.some((i) => isSubItemActive(i.path));
 
   // Filtered + scored results
   const filteredRoutes = useMemo(() => {

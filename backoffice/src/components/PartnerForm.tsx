@@ -1,16 +1,7 @@
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Building2,
-  User,
-  Phone,
-  Mail,
-  FileText,
-  SlidersHorizontal,
-  MapPin,
-  Truck,
-} from 'lucide-react';
+import { User, Phone, Mail, FileText, SlidersHorizontal, MapPin, Truck } from 'lucide-react';
 import { IPartner, CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../lib/i18n';
@@ -23,7 +14,6 @@ import {
   type PartnerFormValues,
   type PartnerFormInput,
 } from '../modules/partners/schemas/partner-form.schema';
-import { useApiErrors } from '../hooks/useApiErrors';
 import { notify } from '@orderium/ui';
 
 interface PartnerFormProps {
@@ -33,7 +23,7 @@ interface PartnerFormProps {
   isSubmitting?: boolean;
 }
 
-export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFormProps) {
+export function PartnerForm({ partner, type, onSubmit }: PartnerFormProps) {
   const { t } = useLanguage();
   const isEdit = !!partner;
 
@@ -72,7 +62,6 @@ export function PartnerForm({ partner, type, onSubmit, isSubmitting }: PartnerFo
     watch,
     formState: { errors },
   } = form;
-  const { handleApiErrors } = useApiErrors(form);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const isCompany = watch('isCompany');

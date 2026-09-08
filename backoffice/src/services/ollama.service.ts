@@ -10,7 +10,6 @@ import {
   ToolCall,
   ToolResult,
   OLLAMA_BASE_URL,
-  REQUEST_TIMEOUT,
   MAX_RETRIES,
   DEFAULT_MODEL,
 } from '../types/aiAssistant';

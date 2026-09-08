@@ -67,7 +67,6 @@ import { SeederRunLog } from './modules/super-admin/entities/seeder-log.entity';
 import { PlatformMetricsModule } from './modules/platform-metrics/platform-metrics.module';
 import { TenantDailyMetric } from './modules/platform-metrics/entities/tenant-daily-metric.entity';
 import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-health-bucket.entity';
-import { UsageTrackingInterceptor } from './modules/platform-metrics/usage-tracking.interceptor';
 
 @Module({
   imports: [

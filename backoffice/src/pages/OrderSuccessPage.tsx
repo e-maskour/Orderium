@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { CheckCircle, Home, Printer, FileText, Receipt as ReceiptIcon, Share2 } from 'lucide-react';
+import { CheckCircle, Home, Printer, FileText, Share2 } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastError, toastSuccess } from '../services/toast.service';
 import { IOrderSuccessState as SuccessState } from '../modules/pos';

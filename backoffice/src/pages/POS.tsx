@@ -26,7 +26,6 @@ import {
 import { toastError, toastConfirm, toastSuccess } from '../services/toast.service';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
-import { Badge } from 'primereact/badge';
 import { Skeleton } from 'primereact/skeleton';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';

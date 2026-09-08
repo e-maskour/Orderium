@@ -229,7 +229,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   productId,
   isLoading: externalLoading,
   disabled,
-  showPreview = true,
 }) => {
   const { t } = useLanguage();
 

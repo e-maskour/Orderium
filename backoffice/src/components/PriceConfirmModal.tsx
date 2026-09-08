@@ -29,7 +29,7 @@ export const PriceConfirmModal = ({
   t,
 }: PriceConfirmModalProps) => {
   const [price, setPrice] = useState('');
-  const [decimalMode, setDecimalMode] = useState(false);
+  const [_decimalMode, setDecimalMode] = useState(false);
 
   useEffect(() => {
     if (isOpen && product) {

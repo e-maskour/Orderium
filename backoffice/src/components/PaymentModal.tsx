@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   CreditCard,
   FileText,
-  Hash,
   Banknote,
   Building2,
   Smartphone,

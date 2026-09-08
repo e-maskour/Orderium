@@ -158,7 +158,7 @@ export function TenantStatusGuard({ children }: Props) {
 
   // Proactive blocked states.
   if (tenantInfo !== undefined && tenantInfo !== null) {
-    const { status, trialDaysRemaining, trialEndsAt } = tenantInfo;
+    const { status, trialEndsAt } = tenantInfo;
 
     if (status === 'suspended') return <BlockedScreen reason="suspended" />;
     if (status === 'disabled') return <BlockedScreen reason="disabled" />;

@@ -3,7 +3,6 @@
  */
 
 import { ToolDefinition } from '../../types/aiAssistant';
-import endpoints from '../apiEndpoints.json';
 import { apiClient } from '../../common';
 
 /**
@@ -71,7 +70,7 @@ export const getDataTool: ToolDefinition = {
     rateLimitPerMinute: 30,
   },
 
-  handler: async (params, context) => {
+  handler: async (params, _context) => {
     try {
       const { module, action = 'findAll', filters = {}, pagination = {} } = params;
 

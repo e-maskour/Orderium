@@ -3,10 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../context/LanguageContext';
-import { useDocumentCalculation } from '../../modules/documents/hooks';
 import {
   Save,
-  X,
   CheckCircle,
   XCircle,
   FileText,
@@ -29,7 +27,7 @@ import {
   DocumentConfig,
   DocumentItem,
 } from '../../modules/documents/types';
-import { Partner, IPartner } from '../../modules/partners';
+import { IPartner } from '../../modules/partners';
 import {
   DocumentPartnerBox,
   DocumentItemsTable,
@@ -53,11 +51,9 @@ import {
   toastDelivered,
   toastCancelled,
   toastDocument,
-  toastLinked,
   toastConfirm,
 } from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
-import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Calendar } from 'primereact/calendar';
@@ -95,7 +91,7 @@ export default function DocumentEditPage({
   const [date, setDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
-  const [validationDate, setValidationDate] = useState('');
+  const [_validationDate, setValidationDate] = useState('');
   const [partner, setPartner] = useState<IPartner | null>(null);
   const [items, setItems] = useState<DocumentItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -422,7 +418,7 @@ export default function DocumentEditPage({
         total: item.total || 0,
       }));
       setItems(mappedItems);
-    } catch (error) {
+    } catch (_error) {
       toastError(t('errorLoadingDocument'));
     } finally {
       setLoading(false);

@@ -10,10 +10,7 @@ import { SequenceAuditLog } from './entities/sequence-audit-log.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateSequenceDto } from './dto/create-sequence.dto';
 import { UpdateSequenceDto } from './dto/update-sequence.dto';
-import {
-  computePeriodKey,
-  computeEffectivePeriodKey,
-} from './helpers/compute-period-key';
+import { computeEffectivePeriodKey } from './helpers/compute-period-key';
 import {
   formatDocumentNumber,
   buildFormatTemplate,

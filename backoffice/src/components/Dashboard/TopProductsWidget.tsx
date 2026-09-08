@@ -1,4 +1,4 @@
-import { Package, TrendingUp, TrendingDown, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
 

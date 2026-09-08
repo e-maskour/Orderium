@@ -15,8 +15,6 @@ import {
   Building2,
   ArrowLeftRight,
   SlidersHorizontal,
-  ShoppingCart,
-  CreditCard,
   UsersRound,
   Shield,
   Settings,

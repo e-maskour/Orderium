@@ -12,18 +12,13 @@ import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import {
-  toastDeleted,
-  toastError,
-  toastDeleteError,
-  toastConfirm,
-} from '../services/toast.service';
+import { toastDeleted, toastDeleteError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Customers() {
-  const { t, language, dir } = useLanguage();
+  const { t, dir } = useLanguage();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -70,12 +65,6 @@ export default function Customers() {
       toastDeleteError(error, t);
     },
   });
-
-  const toggleSelectCustomer = (id: number) => {
-    setSelectedCustomers((prev) =>
-      prev.includes(id) ? prev.filter((cid) => cid !== id) : [...prev, id],
-    );
-  };
 
   const toggleSelectAll = () => {
     if (selectedCustomers.length === customers.length) {

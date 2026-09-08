@@ -8,11 +8,8 @@ import {
 } from '../../inventory/entities/stock-movement.entity';
 import { Warehouse } from '../../inventory/entities/warehouse.entity';
 import { Product } from '../../products/entities/product.entity';
-import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
-import {
-  StockReportFilterDto,
-  ReportFilterDto,
-} from '../dto/report-filter.dto';
+import { resolveDateRange } from '../shared/date-range.util';
+import { StockReportFilterDto } from '../dto/report-filter.dto';
 
 const TTL = 300_000;
 

@@ -1,21 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Save,
-  CheckCircle,
-  XCircle,
-  MoreHorizontal,
-  ChevronDown,
-  Eye,
-  FileDown,
-  PenTool,
-  Truck,
-  Ban,
-  Share2,
-  FileText,
-  Trash2,
-  History,
-  X,
-} from 'lucide-react';
+import { MoreHorizontal, ChevronDown } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { useLanguage } from '../../context/LanguageContext';
 

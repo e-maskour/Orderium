@@ -1,10 +1,5 @@
 import { apiClient, API_ROUTES } from '../../common';
-import {
-  IPosProduct,
-  IPosCustomer,
-  CreatePosOrderDTO,
-  IPosProductsResponse,
-} from './pos.interface';
+import { IPosCustomer, CreatePosOrderDTO, IPosProductsResponse } from './pos.interface';
 import { Order } from '../orders/orders.model';
 
 class PosService {

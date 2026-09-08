@@ -6,7 +6,6 @@ import {
   Calendar,
   Hash,
   Ruler,
-  ArrowLeft,
   Building2,
   Package,
   Printer,

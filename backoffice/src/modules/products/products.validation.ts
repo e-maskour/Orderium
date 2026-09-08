@@ -22,7 +22,7 @@ export interface ValidationErrors {
 
 export const validateProductForm = (
   formData: ProductFormData,
-  isCreating: boolean = false,
+  _isCreating: boolean = false,
 ): ValidationErrors => {
   const errors: ValidationErrors = {};
 

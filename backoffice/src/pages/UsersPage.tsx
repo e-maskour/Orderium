@@ -14,7 +14,6 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import {
   Users as UsersIcon,
-  Shield,
   Plus,
   Pencil,
   Trash2,
@@ -364,39 +363,6 @@ export default function UsersPage() {
     );
   };
 
-  const actionsTemplate = (user: User) => (
-    <div style={{ display: 'flex', gap: '0.375rem' }}>
-      <Button
-        icon={<Pencil style={{ width: '0.875rem', height: '0.875rem' }} />}
-        text
-        rounded
-        onClick={() => openEdit(user)}
-        style={{ width: '2rem', height: '2rem', color: '#235ae4' }}
-      />
-      <Button
-        icon={
-          user.isActive ? (
-            <UserX style={{ width: '0.875rem', height: '0.875rem' }} />
-          ) : (
-            <UserCheck style={{ width: '0.875rem', height: '0.875rem' }} />
-          )
-        }
-        text
-        rounded
-        onClick={() => handleToggleActive(user)}
-        style={{ width: '2rem', height: '2rem', color: user.isActive ? '#f59e0b' : '#22c55e' }}
-      />
-      <Button
-        icon={<Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />}
-        text
-        rounded
-        severity="danger"
-        onClick={() => handleDelete(user)}
-        style={{ width: '2rem', height: '2rem' }}
-      />
-    </div>
-  );
-
   const clearUserSelection = () => setSelectedUsers([]);
   const toggleSelectAllUsers = () =>
     selectedUsers.length === users.length ? setSelectedUsers([]) : setSelectedUsers(users);
@@ -575,11 +541,6 @@ export default function UsersPage() {
       </div>
     </>
   );
-
-  const roleOptions = roles.map((r) => ({
-    label: r.isSuperAdmin ? `⭐ ${translatedRoleName(r.name)}` : translatedRoleName(r.name),
-    value: r.id,
-  }));
 
   return (
     <AdminLayout>

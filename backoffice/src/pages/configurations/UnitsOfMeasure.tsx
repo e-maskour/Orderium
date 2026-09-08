@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Ruler, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Ruler } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '../../components/EmptyState';
 import {
   uomService,
@@ -30,10 +30,10 @@ export default function UnitsOfMeasure() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingUom, setEditingUom] = useState<IUnitOfMeasure | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [selectedRows, setSelectedRows] = useState<IUnitOfMeasure[]>([]);
+  const [searchTerm, _setSearchTerm] = useState('');
+  const [filterCategory, _setFilterCategory] = useState<string>('');
+  const [_showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [_selectedRows, _setSelectedRows] = useState<IUnitOfMeasure[]>([]);
   const categoryRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<CreateUomDTO>({
@@ -172,16 +172,6 @@ export default function UnitsOfMeasure() {
   );
 
   // Group UOMs by category for display
-  const groupedUoms = filteredUoms.reduce(
-    (acc: Record<string, IUnitOfMeasure[]>, uom: IUnitOfMeasure) => {
-      if (!acc[uom.category]) {
-        acc[uom.category] = [];
-      }
-      acc[uom.category].push(uom);
-      return acc;
-    },
-    {},
-  );
 
   if (isLoading) {
     return (

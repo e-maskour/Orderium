@@ -4,10 +4,7 @@ import type { Response } from 'express';
 import { ApiRes } from '../../../common/api-response';
 import { RPT } from '../../../common/response-codes';
 import { StockReportsService } from './stock-reports.service';
-import {
-  StockReportFilterDto,
-  ReportFilterDto,
-} from '../dto/report-filter.dto';
+import { StockReportFilterDto } from '../dto/report-filter.dto';
 import { RequirePermission } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('Reports — Stock')

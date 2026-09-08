@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Percent, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Percent } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   taxesService,
   TaxRate,
@@ -29,7 +29,7 @@ export default function Taxes() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [selectedRows, setSelectedRows] = useState<(TaxRate & { _idx: number })[]>([]);
+  const [_selectedRows, _setSelectedRows] = useState<(TaxRate & { _idx: number })[]>([]);
   const [formData, setFormData] = useState<ITaxRate>({
     name: '',
     rate: 0,
@@ -66,7 +66,6 @@ export default function Taxes() {
   });
 
   const rates: TaxRate[] = config?.rates || [];
-  const defaultRate = config?.defaultRate || 0;
 
   const openCreateModal = () => {
     setEditingIndex(null);

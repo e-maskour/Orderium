@@ -102,7 +102,7 @@ export const searchHelpTool: ToolDefinition = {
     rateLimitPerMinute: 20,
   },
 
-  handler: async (params, context) => {
+  handler: async (params, _context) => {
     // This would search your documentation
     // For now, return a placeholder
     return {

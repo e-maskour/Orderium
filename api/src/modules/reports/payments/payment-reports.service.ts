@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { TenantConnectionService } from '../../tenant/tenant-connection.service';
-import { Payment, PaymentType } from '../../payments/payment.entity';
+import { Payment } from '../../payments/payment.entity';
 import { resolveDateRange, toSqlDate } from '../shared/date-range.util';
 import { ReportFilterDto } from '../dto/report-filter.dto';
 

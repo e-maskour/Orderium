@@ -1,7 +1,6 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Plus, Truck, Edit2, Trash2, Search, X } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
@@ -29,7 +28,6 @@ import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function DeliveryPersons() {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -175,11 +173,6 @@ export default function DeliveryPersons() {
 
   const clearSelection = () => {
     setSelectedPersons([]);
-  };
-
-  const handleViewPerson = (person: DeliveryPerson) => {
-    // Navigate to view page if exists
-    console.log('View person:', person.id);
   };
 
   const handleEditPerson = (person: DeliveryPerson) => {

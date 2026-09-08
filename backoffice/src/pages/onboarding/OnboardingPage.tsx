@@ -167,11 +167,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleDashboard = () => {
-    // Full page reload so AuthContext reads the newly stored token
-    window.location.href = '/dashboard';
-  };
-
   const stepTitles: Record<WizardStep, { title: string; subtitle: string }> = {
     welcome: { title: '', subtitle: '' },
     company: {

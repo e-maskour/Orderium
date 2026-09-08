@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Edit,
   Trash2,
-  ChevronDown,
-  ChevronUp,
   CreditCard,
   CheckCircle,
   Eye,
@@ -20,7 +18,6 @@ import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { MobileList } from '../MobileList';
-import { useIsMobile } from '../../hooks/useIsMobile';
 import { formatAmount } from '@orderium/ui';
 
 interface Document {
@@ -88,21 +85,17 @@ interface DocumentTableProps {
 
 export function DocumentTable({
   documentType,
-  direction,
   documents,
   partnerLabel,
   itemLabel,
   onEdit,
   onDelete,
-  onDownload,
   onViewPayments,
   onValidate,
   onDevalidate,
   loading,
   showPaymentColumns = false,
   showValidationColumn = false,
-  onFiltersToggle,
-  filtersExpanded = false,
   currentPage,
   pageSize,
   totalCount,
@@ -113,7 +106,6 @@ export function DocumentTable({
   aggregates,
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
-  const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
   const selectedDocuments = selectedRows.map((r) => r.id);
   const visibleColumns = {
