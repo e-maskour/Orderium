@@ -2464,7 +2464,7 @@ input[type='number'] {
     font-size: 1.5rem !important;
     font-weight: 700 !important;
     text-align: center !important;
-    height: 3.5rem !important;
+    height: var(--control-height) !important;
     border-radius: 0.75rem !important;
     border: 2px solid #e2e8f0 !important;
 }
@@ -2792,10 +2792,8 @@ input[type='number'] {
     width: 100%;
 }
 
-/* Fixed height + vertical centering for filter dropdowns */
-.orders-filter-bar .p-dropdown {
-    height: 3rem !important;
-    min-height: 3rem !important;
+/* Vertical centering for filter selects (height comes from --control-height) */
+.orders-filter-bar .ac-select {
     align-items: center;
 }
 
@@ -2823,7 +2821,6 @@ input[type='number'] {
    ══════════════════════════════════════════════════════════ */
 [dir="rtl"] .p-dropdown .p-dropdown-label {
     text-align: right;
-}
 }
 
 /* ============================================================
@@ -3518,4 +3515,971 @@ input[type='number'] {
         min-height: 2rem;
         padding: 0.25rem 0.625rem;
     }
+}
+
+/* ============================================================
+   PRODUCT FORM — enterprise form system
+   Token-driven. Logical properties only (RTL-safe by construction).
+   Consumed by src/components/product/*
+   ============================================================ */
+
+:root {
+    /* Semantic colours — reserved for success / warning / error only */
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+    --success: #15803d;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+}
+
+/* ── Page shell ── */
+.pform-page {
+    max-inline-size: 1320px;
+    margin-inline: auto;
+    padding-block-end: var(--space-16);
+}
+
+/* ── Two-column workspace: form body + settings rail ──
+   Back-office users want density, not a narrow reading measure. The rail
+   holds the low-frequency, set-once fields so the main column stays the
+   task path. Collapses to one column below 1024px. */
+.pform-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    gap: var(--space-6);
+    align-items: start;
+}
+
+@media (max-width: 1023px) {
+    .pform-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+}
+
+.pform-col {
+    min-inline-size: 0;
+}
+
+/* Section rhythm must stay visibly larger than the field rhythm
+   (--space-5 = 20px) or the grouping stops reading. */
+.pform-col .pform-section {
+    margin-block-end: var(--space-8);
+}
+
+.pform-col .pform-section:last-child {
+    margin-block-end: 0;
+}
+
+@media (max-width: 1023px) {
+    .pform-col .pform-section:last-child {
+        margin-block-end: var(--space-8);
+    }
+}
+
+/* ── Page header: entity name, status, primary actions ── */
+.pform-hdr {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-block-end: var(--space-6);
+    padding-block: var(--space-4);
+    border-block-end: 1px solid var(--erp-border);
+}
+
+.pform-hdr__body {
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.pform-hdr__crumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-block-end: var(--space-1);
+}
+
+.pform-hdr__crumb button {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.pform-hdr__crumb button:hover {
+    color: var(--text-primary);
+}
+
+.pform-hdr__title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+.pform-hdr__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pform-hdr__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+/* ── Status pill ── */
+.pform-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    padding-inline: var(--space-2);
+    padding-block: 2px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--erp-border);
+    color: var(--text-secondary);
+    background: var(--erp-bg);
+}
+
+.pform-status--on {
+    color: var(--success);
+    background: var(--success-bg);
+    border-color: var(--success-border);
+}
+
+/* ── Section ── */
+.pform-section {
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--erp-shadow-sm);
+    /* Section rhythm is 2x the field rhythm — this is what makes grouping read */
+    margin-block-end: var(--space-10);
+}
+
+.pform-section:last-of-type {
+    margin-block-end: var(--space-6);
+}
+
+.pform-section__head {
+    margin-block-end: var(--space-5);
+}
+
+.pform-section__title {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+}
+
+.pform-section__desc {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+}
+
+/* ── Field grid ── */
+.pform-grid {
+    display: grid;
+    gap: var(--space-5);
+}
+
+.pform-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pform-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1279px) {
+    .pform-grid--3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .pform-grid--2,
+    .pform-grid--3 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ── Field ── */
+.pform-field {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+.pform-field__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--text-primary);
+    margin-block-end: var(--space-2);
+}
+
+/* Required is a text chip, never colour alone */
+.pform-field__req {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    background: var(--erp-bg);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-xs);
+    padding-inline: var(--space-1);
+    line-height: 1.6;
+}
+
+.pform-field__help {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+}
+
+/* Error: distinguished by weight + icon, not colour alone */
+.pform-field__error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-1);
+    margin-block-start: var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--danger);
+}
+
+.pform-field__error svg {
+    flex-shrink: 0;
+    margin-block-start: 1px;
+}
+
+.pform-field :is(.p-inputtext, .p-dropdown, .p-multiselect, .p-autocomplete, .p-inputnumber) {
+    inline-size: 100%;
+}
+
+.pform-field .p-inputnumber-input {
+    inline-size: 100%;
+}
+
+/* Tabular figures for money so columns align */
+.pform-field--num .p-inputtext {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Code field reads as an identifier */
+.pform-field--code .p-inputtext {
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+}
+
+.pform-inline {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+}
+
+.pform-inline > :first-child {
+    flex: 1;
+    min-inline-size: 0;
+}
+
+/* ── Switch rows ── */
+.pform-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-block-end: 1px solid var(--erp-border-light);
+}
+
+.pform-switch:last-child {
+    border-block-end: 0;
+    padding-block-end: 0;
+}
+
+.pform-switch:first-child {
+    padding-block-start: 0;
+}
+
+.pform-switch__text {
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.pform-switch__label {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+}
+
+.pform-switch__desc {
+    margin: 2px 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+}
+
+/* ── Readouts (price-with-tax, margin analysis) ── */
+.pform-readout {
+    margin-block-start: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--erp-radius-sm);
+    border: 1px solid var(--success-border);
+    background: var(--success-bg);
+    font-size: var(--text-sm);
+    color: var(--success);
+}
+
+.pform-readout strong {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--weight-semibold);
+}
+
+.pform-stats {
+    margin-block-start: var(--space-5);
+    padding-block-start: var(--space-5);
+    border-block-start: 1px solid var(--erp-border-light);
+}
+
+.pform-stats__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+}
+
+.pform-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+@media (max-width: 599px) {
+    .pform-stats__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.pform-stat {
+    text-align: start;
+}
+
+.pform-stat__label {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.pform-stat__value {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.pform-stat__value--neg {
+    color: var(--danger);
+}
+
+/* ── Form-level error summary ── */
+.pform-summary {
+    margin-block-end: var(--space-6);
+    padding: var(--space-4);
+    border: 1px solid var(--danger-border);
+    background: var(--danger-bg);
+    border-radius: var(--erp-radius-md);
+}
+
+.pform-summary:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.pform-summary__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--danger);
+}
+
+.pform-summary__list {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.pform-summary__list button {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--danger);
+    text-align: start;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* ── Sticky action bar ── */
+.pform-actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-block-start: var(--space-6);
+    padding: var(--space-4);
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-lg);
+    box-shadow: var(--erp-shadow);
+}
+
+.pform-actions__state {
+    margin-inline-end: auto;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+@media (max-width: 599px) {
+    .pform-actions {
+        flex-wrap: wrap;
+    }
+
+    .pform-actions__state {
+        inline-size: 100%;
+        margin-inline-end: 0;
+        margin-block-end: var(--space-2);
+    }
+
+    .pform-actions .p-button {
+        flex: 1;
+    }
+}
+
+/* ── Skeleton (loading), matches section shape ── */
+.pform-skel__line {
+    background: linear-gradient(90deg, #eef2f6 25%, #e2e8f0 37%, #eef2f6 63%);
+    background-size: 400% 100%;
+    animation: pform-shimmer 1.4s ease infinite;
+    border-radius: var(--erp-radius-xs);
+}
+
+@keyframes pform-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pform-skel__line {
+        animation: none;
+    }
+}
+
+/* ── Focus visibility on every interactive element ── */
+.pform-page :is(button, input, textarea, [tabindex]):focus-visible,
+.pform-page :is(.p-dropdown, .p-multiselect, .p-autocomplete):focus-within {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--erp-radius-xs);
+}
+
+/* Visually hidden but exposed to assistive technology */
+.sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ============================================================
+   PRODUCT DETAIL — stock panel
+   Same token system as .pform-*. Logical properties only.
+   ============================================================ */
+
+:root {
+    --warning: #b45309;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+}
+
+.pdetail-page {
+    max-inline-size: 1320px;
+    margin-inline: auto;
+    padding-block-end: var(--space-16);
+}
+
+/* ── Stock KPIs ── */
+.pstock-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: var(--space-3);
+    margin-block-end: var(--space-6);
+}
+
+.pstock-kpi {
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--erp-shadow-sm);
+}
+
+.pstock-kpi__label {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.pstock-kpi__value {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--leading-none);
+    color: var(--text-primary);
+}
+
+.pstock-kpi__value--ok { color: var(--success); }
+.pstock-kpi__value--warn { color: var(--warning); }
+.pstock-kpi__value--neg { color: var(--danger); }
+
+/* ── Stock panel ── */
+.pstock-panel {
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-lg);
+    box-shadow: var(--erp-shadow-sm);
+    overflow: hidden;
+}
+
+.pstock-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-block-end: 1px solid var(--erp-border-light);
+}
+
+.pstock-panel__title {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+
+.pstock-panel__count {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pstock-panel__actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.pstock-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.pstock-row {
+    padding: var(--space-4) var(--space-5);
+    border-block-end: 1px solid var(--erp-border-light);
+}
+
+.pstock-row:last-child {
+    border-block-end: 0;
+}
+
+.pstock-row__name {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+}
+
+.pstock-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+    gap: var(--space-3);
+}
+
+.pstock-metric__label {
+    margin: 0 0 2px;
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.pstock-metric__value {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.pstock-metric__value--ok { color: var(--success); }
+.pstock-metric__value--warn { color: var(--warning); }
+.pstock-metric__value--neg { color: var(--danger); }
+.pstock-metric__value--muted { color: var(--text-disabled); }
+
+/* ── Empty state ── */
+.pform-empty {
+    text-align: center;
+    padding: var(--space-12) var(--space-4);
+    color: var(--text-secondary);
+}
+
+.pform-empty__title {
+    margin: var(--space-4) 0 var(--space-1);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+}
+
+.pform-empty__desc {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* ── Dialog form rows ── */
+.pdlg-grid {
+    display: grid;
+    gap: var(--space-5);
+}
+
+.pdlg-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-block-start: var(--space-6);
+}
+
+/* ============================================================
+   DOCUMENT PAGE HEADER — shared
+   Visual match for the orders detail header (.doc-detail-hdr in
+   OrderDetailPage), rewritten with logical properties so it is
+   RTL-safe. Consumed by src/components/PageHeader.tsx.
+   ============================================================ */
+
+.doc-hdr {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: nowrap;
+    position: relative;
+    margin-block-end: var(--space-6);
+    padding: var(--space-3) var(--space-5);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(8px);
+    border-radius: var(--erp-radius-lg);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 4px 16px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.doc-hdr__back.p-button {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    flex-shrink: 0;
+    padding: 0;
+    background: #f8fafc;
+    border: 1.5px solid var(--erp-border);
+    color: var(--text-muted);
+    border-radius: var(--erp-radius-md);
+}
+
+.doc-hdr__icon {
+    inline-size: 3rem;
+    block-size: 3rem;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #235ae4 0%, #818cf8 100%);
+    border-radius: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(35, 90, 228, 0.35);
+    color: #fff;
+}
+
+.doc-hdr__body {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+}
+
+.doc-hdr__crumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-block-end: 0.2rem;
+}
+
+.doc-hdr__crumb-parent {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.doc-hdr__crumb-parent:hover {
+    color: var(--text-secondary);
+}
+
+.doc-hdr__crumb-sep {
+    font-size: var(--text-xs);
+    color: #cbd5e1;
+}
+
+.doc-hdr__crumb-current {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    color: var(--orderium-primary, #235ae4);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.doc-hdr__title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-hdr__badges {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Pill badge, matching the orders status/date badges */
+.doc-hdr__badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4375rem;
+    padding: 0.4375rem var(--space-3);
+    border-radius: var(--radius-pill);
+    background: #f8fafc;
+    border: 1.5px solid var(--erp-border);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+
+.doc-hdr__badge--on {
+    background: var(--success-bg);
+    border-color: var(--success-border);
+    color: var(--success);
+}
+
+.doc-hdr__badge--off {
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+    color: var(--danger);
+}
+
+@media (max-width: 767px) {
+    .doc-hdr {
+        padding: var(--space-2) var(--space-3);
+        gap: var(--space-2);
+        border-radius: var(--erp-radius);
+        margin-block-end: var(--space-3);
+        flex-wrap: wrap;
+    }
+
+    .doc-hdr__icon,
+    .doc-hdr__title {
+        display: none !important;
+    }
+
+    .doc-hdr__crumb {
+        margin-block-end: 0;
+    }
+
+    .doc-hdr__badges {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.4375rem;
+        inline-size: 100%;
+    }
+
+    .doc-hdr__badges::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* ============================================================
+   AUTOCOMPLETE SELECT — project-wide selection control
+   AutoComplete nests an <input> inside a wrapper span, so width has to be
+   pushed down explicitly to match the Dropdown it replaces.
+   ============================================================ */
+
+.ac-select.p-autocomplete {
+    display: flex;
+    inline-size: 100%;
+}
+
+.ac-select .p-autocomplete-input,
+.ac-select .p-autocomplete-multiple-container {
+    inline-size: 100%;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+/* Keep the trailing toggle square and flush with the input */
+.ac-select .p-autocomplete-dropdown {
+    flex-shrink: 0;
+}
+
+/* Chips wrap instead of stretching the field */
+.ac-select--multi .p-autocomplete-multiple-container {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+/* Invalid state parity with the other inputs */
+.ac-select.p-invalid .p-autocomplete-input {
+    border-color: var(--danger);
+}
+
+/* ============================================================
+   CONTROL HEIGHT — one height for every input in the app
+   Matches the AutoComplete (the app's standard select), so an input,
+   a select, a number field and a date field all line up on a row.
+   Multi-line controls (textarea, chip containers) use it as a floor
+   and grow from there.
+   ============================================================ */
+
+:root {
+    /* 46px — the intrinsic height of .p-autocomplete in the Lara theme */
+    --control-height: 2.875rem;
+}
+
+/* Wrapper elements PrimeReact puts around an input */
+.p-autocomplete,
+.p-inputnumber,
+.p-password,
+.p-calendar,
+.p-inputgroup > .p-inputtext {
+    block-size: var(--control-height);
+}
+
+/* The actual single-line fields */
+input.p-inputtext,
+.p-autocomplete .p-autocomplete-input,
+.p-inputnumber .p-inputnumber-input,
+.p-password .p-password-input,
+.p-calendar > .p-inputtext,
+.p-autocomplete-dropdown.p-button,
+.p-calendar .p-datepicker-trigger.p-button {
+    block-size: var(--control-height);
+    /* Height is fixed, so vertical padding must not add to it */
+    padding-block: 0;
+}
+
+/* Multi-value fields: start at the standard height, grow with content */
+.p-autocomplete-multiple-container,
+.p-chips-multiple-container {
+    min-block-size: var(--control-height);
+    block-size: auto;
+    padding-block: var(--space-1);
+}
+
+/* Textareas keep their row-based sizing but never sit below the floor */
+textarea.p-inputtext {
+    block-size: auto;
+    min-block-size: var(--control-height);
+    padding-block: var(--space-2);
+}
+
+/* Buttons sitting on an input row (e.g. the code generate button) match it */
+.pform-inline > .p-button,
+.p-inputgroup > .p-button {
+    block-size: var(--control-height);
+    flex-shrink: 0;
 }

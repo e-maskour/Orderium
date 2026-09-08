@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { IPartner } from '../../modules/partners/partners.interface';
 import { partnersService } from '../../modules/partners/partners.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { Phone, MapPin, Truck, CreditCard } from 'lucide-react';
+import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';
 
 interface DocumentPartnerBoxProps {
   direction: 'vente' | 'achat';
@@ -157,7 +157,7 @@ export function DocumentPartnerBox({
               {partnerName || <span style={{ color: '#94a3b8' }}>—</span>}
             </div>
           ) : (
-            <Dropdown
+            <AutoCompleteSelect
               value={partnerId ? String(partnerId) : null}
               options={partners.map((partner) => ({
                 value: String(partner.id),
@@ -170,12 +170,6 @@ export function DocumentPartnerBox({
                 '{partner}',
                 partnerLabel.toLowerCase(),
               )}
-              emptyFilterMessage={t('invoice.noPartnerFound').replace(
-                '{partner}',
-                partnerLabel.toLowerCase(),
-              )}
-              filter
-              showClear
               style={{ width: '100%', height: '2.5rem' }}
             />
           )}

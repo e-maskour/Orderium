@@ -7,6 +7,8 @@ export default {
   logout: 'تسجيل الخروج',
   invalidCredentials: 'بيانات الدخول غير صحيحة',
   enterYourPassword: 'أدخل كلمة المرور',
+  showPassword: 'إظهار كلمة المرور',
+  hidePassword: 'إخفاء كلمة المرور',
   loginFailed: 'فشل تسجيل الدخول',
   accessDenied: 'تم رفض الوصول: مطلوب بيانات اعتماد المسؤول',
 

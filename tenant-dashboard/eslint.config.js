@@ -26,7 +26,16 @@ export default [
       ...prettierConfig.rules,
       "prettier/prettier": "error",
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/static-components": "off",
     }

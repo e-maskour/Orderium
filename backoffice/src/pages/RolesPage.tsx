@@ -8,7 +8,6 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { MultiSelect } from 'primereact/multiselect';
 import { EmptyState } from '../components/EmptyState';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Tag } from 'primereact/tag';
@@ -27,6 +26,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { useAccessLabels } from '../hooks/useAccessLabels';
 import { accessService } from '../modules/access';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
+import { AutoCompleteMultiSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function RolesPage() {
   const { t, dir } = useLanguage();
@@ -496,12 +496,11 @@ export default function RolesPage() {
               <p style={{ margin: '0 0 0.375rem', fontSize: '0.75rem', color: '#94a3b8' }}>
                 {t('roleImpliedHelp')}
               </p>
-              <MultiSelect
+              <AutoCompleteMultiSelect
                 value={impliedRoleIds}
                 options={impliedOptions}
                 onChange={(e) => setImpliedRoleIds(e.value as number[])}
                 display="chip"
-                filter
                 placeholder={t('roleImplied')}
                 style={{ width: '100%', borderRadius: '0.5rem' }}
               />

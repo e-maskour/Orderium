@@ -8,9 +8,11 @@ import {
   CreditCard,
   Menu,
   X,
-  ChevronRight,
   Database,
   Sprout,
+  Activity,
+  BarChart3,
+  HeartPulse,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTenants } from '../hooks/useTenants';
@@ -126,6 +128,33 @@ export function Layout({ onLogout }: Props) {
             </span>
           </NavLink>
         )}
+
+        <p className="nav-section-title">Monitoring</p>
+
+        <NavLink
+          to="/monitoring"
+          end
+          className={({ isActive }) => (isActive ? activeClass : inactiveClass)}
+        >
+          <BarChart3 className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Overview</span>
+        </NavLink>
+
+        <NavLink
+          to="/monitoring/tenants"
+          className={({ isActive }) => (isActive ? activeClass : inactiveClass)}
+        >
+          <Activity className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Tenant Usage</span>
+        </NavLink>
+
+        <NavLink
+          to="/monitoring/health"
+          className={({ isActive }) => (isActive ? activeClass : inactiveClass)}
+        >
+          <HeartPulse className="h-4 w-4 shrink-0" />
+          <span className="flex-1">App Health</span>
+        </NavLink>
 
         <p className="nav-section-title">Billing</p>
 

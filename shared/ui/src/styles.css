@@ -23,6 +23,57 @@
     font-style: normal;
 }
 
+/* ============================================================
+   RTL — logical positioning for PrimeReact input icons
+   ------------------------------------------------------------
+   PrimeReact's theme pins overlay icons (clear "X", filter/search,
+   loader) with the PHYSICAL `right` offset and reserves their space
+   with `padding-right`. Under dir="rtl" the value text is aligned to
+   the right, so the icon and the text land on the same side and
+   overlap (measured: 16px overlap on a clearable Dropdown).
+
+   `inset-inline` / `padding-inline` take a start/end pair and resolve
+   per writing direction, so one rule is correct in both LTR and RTL.
+   Values mirror the upstream theme exactly; LTR rendering is unchanged.
+   ============================================================ */
+
+/* ── Dropdown: clear icon + label space ── */
+.p-dropdown .p-dropdown-clear-icon {
+    inset-inline: auto 3rem;
+}
+
+.p-dropdown.p-dropdown-clearable .p-dropdown-label {
+    padding-inline: 0.75rem 1.75rem;
+}
+
+/* ── Dropdown panel: filter (search) icon + input space ── */
+.p-dropdown-panel .p-dropdown-header .p-dropdown-filter-icon {
+    inset-inline: auto 0.75rem;
+}
+
+.p-dropdown-panel .p-dropdown-header .p-dropdown-filter {
+    padding-inline: 0.75rem 1.75rem;
+    margin-inline: 0 -1.75rem;
+}
+
+/* ── MultiSelect panel: filter (search) icon + input space ── */
+.p-multiselect-panel .p-multiselect-header .p-multiselect-filter-container .p-multiselect-filter-icon {
+    inset-inline: auto 0.75rem;
+}
+
+.p-multiselect-panel .p-multiselect-header .p-multiselect-filter-container .p-inputtext {
+    padding-inline: 0.75rem 1.75rem;
+}
+
+/* ── AutoComplete: loading spinner ── */
+.p-autocomplete .p-autocomplete-loader {
+    inset-inline: auto 0.75rem;
+}
+
+.p-autocomplete.p-autocomplete-dd .p-autocomplete-loader {
+    inset-inline: auto 3.75rem;
+}
+
 /* Google Fonts — loaded via <link> in each app's index.html for parallel loading.
    Do NOT use @import here — it blocks CSS parsing until the font CSS is fetched. */
 
@@ -154,6 +205,20 @@ body {
 [lang='ar'] * {
     font-family: var(--font-arabic);
     line-height: 1.75;
+}
+
+/* Icon fonts are exempt from the Arabic text font above.
+   A PrimeIcon glyph is a Private Use Area codepoint that exists only in the
+   `primeicons` font, bound by primeicons' own `.pi` rule. That rule and
+   `[lang='ar'] *` both compute to specificity (0,1,0), so the one above won on
+   source order and replaced every icon in the Arabic UI with a tofu box.
+   These selectors are (0,2,0), so they restore the icon font and its metrics
+   without needing !important. Matches any element carrying `.pi` — PrimeReact
+   renders button icons as <span class="p-button-icon pi ...">, not just <i>. */
+[lang='ar'] .pi,
+[dir='rtl'] .pi {
+    font-family: 'primeicons';
+    line-height: 1;
 }
 
 /* ============================================================

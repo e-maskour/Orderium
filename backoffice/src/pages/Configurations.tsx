@@ -10,6 +10,7 @@ import {
   Building2,
   Package,
   Printer,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -18,6 +19,13 @@ import { useLanguage } from '../context/LanguageContext';
 export default function Configurations() {
   const { t } = useLanguage();
   const configModules = [
+    {
+      name: t('generalParams'),
+      description: t('generalParamsDescription'),
+      icon: SlidersHorizontal,
+      path: '/configurations/general',
+      color: '#0ea5e9',
+    },
     {
       name: t('companyInformation'),
       description: t('companyInformationDescription'),

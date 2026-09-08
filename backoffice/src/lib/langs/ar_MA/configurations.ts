@@ -386,4 +386,13 @@ export default {
   docTypeSalesInvoice: 'فاتورة بيع',
   docTypeDeliveryNote: 'سند التسليم',
   browser: 'المتصفح',
+
+  // ─── General params ───────────────────────────────────────
+  generalParams: 'الإعدادات العامة',
+  generalParamsDescription: 'التفضيلات العامة للتطبيق',
+  generalParamsSaved: 'تم حفظ الإعدادات العامة',
+  generalParamDefaultLanguage: 'اللغة الافتراضية',
+  generalParamDefaultLanguageDescription: 'لغة بدء التطبيق للمستخدمين الذين لم يختاروا لغتهم بعد',
+  generalParamKeyboardEnabled: 'لوحة المفاتيح الافتراضية',
+  generalParamKeyboardEnabledDescription: 'إظهار لوحة المفاتيح على الشاشة وزرها العائم في الأسفل',
 };

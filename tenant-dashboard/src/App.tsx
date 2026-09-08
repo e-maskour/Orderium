@@ -11,6 +11,9 @@ import { CreateTenant } from './pages/CreateTenant';
 import { MigrationManager } from './pages/MigrationManager';
 import { SeederManager } from './pages/SeederManager';
 import { Payments } from './pages/Payments';
+import { Monitoring } from './pages/Monitoring';
+import { TenantUsage } from './pages/TenantUsage';
+import { Health } from './pages/Health';
 import { PaymentDetail } from './pages/PaymentDetail';
 
 const queryClient = new QueryClient({
@@ -53,6 +56,9 @@ export default function App() {
             <Route path="tenants" element={<TenantsList />} />
             <Route path="tenants/new" element={<CreateTenant />} />
             <Route path="tenants/:id" element={<TenantDetail />} />
+            <Route path="monitoring" element={<Monitoring />} />
+            <Route path="monitoring/tenants" element={<TenantUsage />} />
+            <Route path="monitoring/health" element={<Health />} />
             <Route path="payments" element={<Payments />} />
             <Route path="payments/:id" element={<PaymentDetail />} />
             <Route path="migrations" element={<MigrationManager />} />

@@ -11,7 +11,7 @@ import {
   getDeviceInfo,
   getPlatform,
 } from '../services/firebase';
-import { http, API_BASE_URL } from '../services/httpClient';
+import { http } from '../services/httpClient';
 import { API_ROUTES } from '../common/api-routes';
 
 export type NotificationPermissionStatus = NotificationPermission | 'unsupported' | 'loading';

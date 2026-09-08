@@ -784,6 +784,18 @@ export const CFG = {
     status: 200,
     message: 'Company Info Updated',
   },
+  /** GET /configurations/entity/general                       → data: generalParams    | metadata: null */
+  GENERAL_DETAIL: {
+    code: 'CFG200_11',
+    status: 200,
+    message: 'General Params Retrieved',
+  },
+  /** PATCH /configurations/entity/general                     → data: generalParams    | metadata: null */
+  GENERAL_UPDATED: {
+    code: 'CFG200_12',
+    status: 200,
+    message: 'General Params Updated',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -1779,3 +1791,58 @@ export function httpStatusToErrorDef(httpStatus: number): ResponseDef {
       return ERR.INTERNAL_ERROR;
   }
 }
+
+/**
+ * Platform metrics — cross-tenant monitoring and usage analytics.
+ * Super-admin only; served from `orderium_master`.
+ */
+export const PLM = {
+  /** GET  /admin/metrics/overview          → data: PlatformOverview      | metadata: null */
+  OVERVIEW: {
+    code: 'PLM200_01',
+    status: 200,
+    message: 'Platform Overview Retrieved',
+  },
+  /** GET  /admin/metrics/tenants           → data: TenantMetricRow[]     | metadata: null */
+  TENANTS: {
+    code: 'PLM200_02',
+    status: 200,
+    message: 'Tenant Metrics Retrieved',
+  },
+  /** GET  /admin/metrics/tenants/:id       → data: TenantMetricRow       | metadata: null */
+  TENANT_DETAIL: {
+    code: 'PLM200_03',
+    status: 200,
+    message: 'Tenant Metrics Detail Retrieved',
+  },
+  /** GET  /admin/metrics/tenants/:id/series → data: TenantSeries         | metadata: null */
+  SERIES: {
+    code: 'PLM200_04',
+    status: 200,
+    message: 'Tenant Metric Series Retrieved',
+  },
+  /** GET  /admin/metrics/health            → data: PlatformHealth        | metadata: null */
+  HEALTH: {
+    code: 'PLM200_05',
+    status: 200,
+    message: 'Platform Health Retrieved',
+  },
+  /** POST /admin/metrics/collect           → data: CollectionRunResult   | metadata: null */
+  COLLECT: {
+    code: 'PLM200_06',
+    status: 200,
+    message: 'Metrics Collection Completed',
+  },
+  /** POST /admin/metrics/tenants/:id/collect → data: TenantDailyMetric   | metadata: null */
+  COLLECT_ONE: {
+    code: 'PLM200_07',
+    status: 200,
+    message: 'Tenant Metrics Refreshed',
+  },
+  /** GET  /admin/metrics/status            → data: CollectionStatus      | metadata: null */
+  STATUS: {
+    code: 'PLM200_08',
+    status: 200,
+    message: 'Collection Status Retrieved',
+  },
+} as const satisfies Record<string, ResponseDef>;

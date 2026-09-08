@@ -25,7 +25,7 @@ export function AddressInput({
   googleMapsUrl,
   wazeUrl,
 }: AddressInputProps) {
-  const { language, dir, t } = useLanguage();
+  const { language, t } = useLanguage();
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(googleMapsUrl || null);
   const [wazeLink, setWazeLink] = useState<string | null>(wazeUrl || null);
@@ -109,7 +109,7 @@ export function AddressInput({
 
           onChange(formattedAddress, latitude, longitude);
           notify.success(t('locationDetected'));
-        } catch (error) {
+        } catch (_error) {
           const fallbackAddress = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
           onChange(fallbackAddress, latitude, longitude);
           notify.warning(t('coordinatesSaved'));

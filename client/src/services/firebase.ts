@@ -219,9 +219,6 @@ export function getDeviceInfo(): {
 export function getPlatform(): 'web' | 'android' | 'ios' {
   const userAgent = navigator.userAgent;
 
-  // Check if running as PWA on mobile
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
   if (userAgent.includes('Android')) {
     return 'android';
   } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {

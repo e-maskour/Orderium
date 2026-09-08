@@ -9,7 +9,6 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Dropdown } from 'primereact/dropdown';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // The service hands back the module's `DeliveryPerson` model, not the plain
 // interface in `../types` — importing the latter made every row mismatch.
@@ -26,6 +25,7 @@ import {
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Modal } from '../components/Modal';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function DeliveryPersons() {
   const { t } = useLanguage();
@@ -337,7 +337,7 @@ export default function DeliveryPersons() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('status')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.value)}
                 options={statusFilterOptions}

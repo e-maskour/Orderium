@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ onCartClick }: HeaderProps) => {
-  const { t, dir } = useLanguage();
+  const { t } = useLanguage();
   const { itemCount, openCart } = useCart();
   const { user } = useAuth();
 

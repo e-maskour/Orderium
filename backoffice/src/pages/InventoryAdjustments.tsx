@@ -19,7 +19,6 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
-import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag as PTag } from 'primereact/tag';
@@ -37,6 +36,7 @@ import {
 import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function InventoryAdjustments() {
   const { t } = useLanguage();
@@ -384,7 +384,7 @@ export default function InventoryAdjustments() {
               }}
             >
               {/* Status Filter */}
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.value)}
                 options={[
@@ -1444,7 +1444,7 @@ export default function InventoryAdjustments() {
             >
               {t('adjWarehouse')} <span style={{ color: '#ef4444' }}>*</span>
             </label>
-            <Dropdown
+            <AutoCompleteSelect
               value={createForm.warehouseId || null}
               onChange={(e) => setCreateForm({ ...createForm, warehouseId: e.value })}
               options={warehouses.map((wh) => ({ label: wh.name, value: wh.id }))}

@@ -7,6 +7,8 @@ export default {
   logout: 'Déconnexion',
   invalidCredentials: 'Identifiants invalides',
   enterYourPassword: 'Entrez votre mot de passe',
+  showPassword: 'Afficher le mot de passe',
+  hidePassword: 'Masquer le mot de passe',
   loginFailed: 'Échec de connexion',
   accessDenied: 'Accès refusé: Identifiants administrateur requis',
 

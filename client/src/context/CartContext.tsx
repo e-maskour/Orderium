@@ -61,7 +61,10 @@ interface CartContextType {
   clearCart: () => void;
   getItemQuantity: (productId: number) => number;
   subtotal: number;
+  /** Number of distinct products in the cart (not the sum of quantities). */
   itemCount: number;
+  /** Sum of the quantities of every cart line. */
+  totalQuantity: number;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -132,7 +135,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const subtotal = items.reduce((sum, item) => sum + (item.product.price || 0) * item.quantity, 0);
 
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = items.length;
+
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <CartContext.Provider
@@ -145,6 +150,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getItemQuantity,
         subtotal,
         itemCount,
+        totalQuantity,
         isCartOpen,
         openCart,
         closeCart,

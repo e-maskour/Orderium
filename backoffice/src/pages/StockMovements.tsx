@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dialog } from 'primereact/dialog';
@@ -32,6 +31,7 @@ import { translateUomCode } from '../lib/uom-translations';
 import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function StockMovements() {
   const { t, language } = useLanguage();
@@ -210,7 +210,7 @@ export default function StockMovements() {
             {/* Dropdowns — share remaining 50% on desktop, full width on mobile */}
             <div style={{ flex: '1 1 40%', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               {/* Type Filter */}
-              <Dropdown
+              <AutoCompleteSelect
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.value)}
                 options={typeOptions}
@@ -220,7 +220,7 @@ export default function StockMovements() {
               />
 
               {/* Status Filter */}
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.value)}
                 options={statusOptions}

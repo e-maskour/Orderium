@@ -40,6 +40,10 @@
         @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-red-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:opacity-50 active:scale-[0.97];
     }
 
+    .btn-warning {
+        @apply inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-amber-600 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:opacity-50 active:scale-[0.97];
+    }
+
     .btn-ghost {
         @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100;
     }
@@ -78,6 +82,34 @@
     /* ── Sidebar icon button ── */
     .icon-btn {
         @apply flex items-center justify-center rounded-xl transition-all duration-150;
+    }
+
+    /* ── Modal panel ──────────────────────────────────────────
+       Caps the panel against the *dynamic* viewport height so it
+       never slides under the mobile browser chrome; the plain vh
+       declaration is the fallback for engines without dvh. The
+       subtracted amount mirrors the overlay padding (p-4 / sm:p-6).
+       ──────────────────────────────────────────────────────── */
+    .modal-panel {
+        max-height: calc(100vh - 2rem);
+        max-height: calc(100dvh - 2rem);
+    }
+
+    @media (min-width: 640px) {
+        .modal-panel {
+            max-height: calc(100vh - 3rem);
+            max-height: calc(100dvh - 3rem);
+        }
+    }
+
+    /* Under roughly 250px of height the header, the footer and the body's own
+       padding cannot fit at all. Capping the panel there would clip the action
+       buttons out of reach, so release the cap and let the overlay scroll the
+       whole dialog instead — nothing becomes unreachable. */
+    @media (max-height: 320px) {
+        .modal-panel {
+            max-height: none;
+        }
     }
 }
 
@@ -220,4 +252,18 @@
 .glass {
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+/* ── Reduced motion ──────────────────────────────────────────
+   Entry animations are decorative; honouring the OS setting also
+   removes the lingering transform that `animation-fill-mode: both`
+   would otherwise leave on animated containers.
+   ──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+    .animate-fade-in,
+    .animate-fade-in-left,
+    .animate-scale-in,
+    .animate-slide-down {
+        animation: none !important;
+    }
 }

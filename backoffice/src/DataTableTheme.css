@@ -304,7 +304,7 @@
 .p-datatable.p-component .p-paginator .p-paginator-first,
 .p-datatable.p-component .p-paginator .p-paginator-last {
     min-width: 1.75rem !important;
-    height: 1.75rem !important;
+    height: var(--control-height) !important;
     width: 1.75rem !important;
     border-radius: 0.4rem !important;
     padding: 0 !important;
@@ -361,7 +361,7 @@
 
 /* Rows-per-page dropdown */
 .p-datatable.p-component .p-paginator .p-paginator-rpp-dropdown {
-    height: 1.75rem !important;
+    height: var(--control-height) !important;
     border-radius: 0.375rem !important;
     border-color: #e2e8f0 !important;
     min-width: 5rem !important;
@@ -370,7 +370,7 @@
 .p-datatable.p-component .p-paginator .p-paginator-rpp-dropdown .p-dropdown-label {
     padding: 0 0.5rem !important;
     font-size: 0.8rem !important;
-    line-height: 1.75rem !important;
+    line-height: var(--control-height) !important;
     font-weight: 500 !important;
     color: #475569 !important;
 }
@@ -464,7 +464,7 @@
     font-size: 0.8125rem;
     padding: 0.375rem 0.625rem;
     border-radius: 0.375rem;
-    height: 2rem;
+    height: var(--control-height);
     border-color: #e2e8f0;
 }
 
@@ -516,7 +516,7 @@
    ────────────────────────────────────────────── */
 .p-datatable.p-component .p-row-toggler {
     width: 1.75rem !important;
-    height: 1.75rem !important;
+    height: var(--control-height) !important;
     border-radius: 0.375rem !important;
     color: #64748b !important;
     transition: background 0.12s, color 0.12s !important;
@@ -651,7 +651,7 @@
     align-items: center;
     justify-content: center;
     width: 2rem;
-    height: 2rem;
+    height: var(--control-height);
     border-radius: 0.375rem;
     border: 1px solid transparent;
     background: transparent;
@@ -760,7 +760,7 @@
     border-radius: 0.5rem !important;
     background: #f8fafc !important;
     color: #1e293b !important;
-    height: 2.25rem !important;
+    height: var(--control-height) !important;
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s !important;
 }
 

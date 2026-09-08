@@ -19,8 +19,8 @@ import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import type { TranslationKey } from '../../lib/i18n';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
+import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
 
 const MOROCCAN_CITIES = [
   'Casablanca',
@@ -321,7 +321,7 @@ export default function CompanySettings() {
                   <label className="cs-label" htmlFor="cs-city">
                     {t('city')}
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     id="cs-city"
                     value={formData.city || ''}
                     onChange={(e) => handleChange('city', e.value)}
@@ -529,7 +529,7 @@ export default function CompanySettings() {
                   <label className="cs-label" htmlFor="cs-legal">
                     {t('legalStructure' as any)}
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     id="cs-legal"
                     value={formData.legalStructure || ''}
                     onChange={(e) => handleChange('legalStructure', e.value)}
@@ -561,7 +561,7 @@ export default function CompanySettings() {
                   <label className="cs-label" htmlFor="cs-fiscal">
                     {t('fiscalYearStart' as any)}
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     id="cs-fiscal"
                     value={formData.fiscalYearStartMonth || 1}
                     onChange={(e) => handleChange('fiscalYearStartMonth', e.value)}

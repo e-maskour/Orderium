@@ -153,15 +153,6 @@ export default function MyOrders() {
     fetchOrders();
   }, [user, currentPage, pageSize, statusFilter, t]);
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: totalCount };
-    orders.forEach((o) => {
-      const s = o.deliveryStatus || 'pending';
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return counts;
-  }, [orders, totalCount]);
-
   const BackIcon: LucideIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const PrevIcon: LucideIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
   const NextIcon: LucideIcon = dir === 'rtl' ? ChevronLeft : ChevronRight;

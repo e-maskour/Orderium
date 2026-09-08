@@ -21,6 +21,7 @@ import {
   Barcode,
   Camera,
   Upload,
+  ChevronUp,
 } from 'lucide-react';
 import { toastError, toastConfirm, toastSuccess } from '../services/toast.service';
 import { InputText } from 'primereact/inputtext';
@@ -248,7 +249,6 @@ export default function POS() {
       setCart([...cart, { product: productWithPrice, quantity, discount: 0, discountType: 0 }]);
     }
     setConfirmedPrice(null);
-    if (isMobile) setIsMobileCartOpen(true);
   };
 
   const removeFromCart = (productId: number) => {
@@ -955,8 +955,63 @@ export default function POS() {
           .pos-desktop-cart { display: none !important; }
           .pos-desktop-resize { display: none !important; }
         }
+        .pos-mobile-cart-bar {
+          position: fixed;
+          bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+          inset-inline-start: 50%;
+          transform: translateX(-50%);
+          z-index: 60;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          width: max-content;
+          max-width: calc(100vw - 2rem);
+          padding: 0.5rem 1rem 0.5rem 0.5rem;
+          border: none;
+          border-radius: 9999px;
+          cursor: pointer;
+          color: #fff;
+          background: linear-gradient(135deg, #235ae4, #1a47b8);
+          box-shadow: 0 10px 30px rgba(35,90,228,0.45), 0 2px 6px rgba(15,23,42,0.18);
+          animation: posCartBarIn 0.24s cubic-bezier(0.34,1.36,0.64,1);
+          transition: transform 0.14s ease, box-shadow 0.14s ease;
+        }
+        [dir='rtl'] .pos-mobile-cart-bar { transform: translateX(50%); padding: 0.5rem 0.5rem 0.5rem 1rem; }
+        .pos-mobile-cart-bar:active { transform: translateX(-50%) scale(0.97); }
+        [dir='rtl'] .pos-mobile-cart-bar:active { transform: translateX(50%) scale(0.97); }
+        @keyframes posCartBarIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(1rem); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .pos-mobile-cart-bar__icon {
+          position: relative;
+          flex-shrink: 0;
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.18);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pos-mobile-cart-bar__badge {
+          position: absolute;
+          top: -0.25rem;
+          inset-inline-end: -0.25rem;
+          min-width: 1.15rem;
+          height: 1.15rem;
+          padding: 0 0.25rem;
+          border-radius: 9999px;
+          background: #ef4444;
+          color: #fff;
+          font-size: 0.6875rem;
+          font-weight: 800;
+          line-height: 1.15rem;
+          text-align: center;
+          box-shadow: 0 0 0 2px #1f4fc4;
+        }
         @media (min-width: 768px) {
-          .pos-mobile-fab { display: none !important; }
+          .pos-mobile-cart-bar { display: none !important; }
         }
       `}</style>
 
@@ -1615,31 +1670,34 @@ export default function POS() {
         </main>
       </div>
 
-      {/* ═══ MOBILE: Floating Cart Button ═══ */}
-      {cart.length > 0 && (
-        <Button
-          className="pos-mobile-fab"
+      {/* ═══ MOBILE: Bottom-centered cart bar ═══ */}
+      {cart.length > 0 && !isMobileCartOpen && (
+        <button
+          type="button"
+          className="pos-mobile-cart-bar"
           onClick={() => setIsMobileCartOpen(true)}
-          icon={
+          aria-label={t('cart')}
+        >
+          <span className="pos-mobile-cart-bar__icon">
             <ShoppingCart
-              style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }}
+              style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }}
               strokeWidth={2.2}
             />
-          }
-          badge={String(cartTotalItems)}
-          style={{
-            position: 'fixed',
-            bottom: '1.25rem',
-            [dir === 'rtl' ? 'left' : 'right']: '1.25rem',
-            zIndex: 60,
-            width: '3.5rem',
-            height: '3.5rem',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-            border: 'none',
-            boxShadow: '0 6px 20px rgba(35,90,228,0.45)',
-          }}
-        />
+            <span className="pos-mobile-cart-bar__badge">{cart.length}</span>
+          </span>
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '0.625rem', fontWeight: 600, opacity: 0.75, lineHeight: 1.2 }}>
+              {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
+            </span>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 800, lineHeight: 1.3 }}>
+              {formatCurrency(total, language as 'fr' | 'ar')}
+            </span>
+          </span>
+          <ChevronUp
+            style={{ width: '1.125rem', height: '1.125rem', opacity: 0.8, flexShrink: 0 }}
+            strokeWidth={2.4}
+          />
+        </button>
       )}
 
       {/* ═══ ADMIN: Mobile image upload bottom sheet ═══ */}

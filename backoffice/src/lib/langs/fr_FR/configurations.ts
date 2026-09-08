@@ -399,4 +399,15 @@ export default {
   docTypeSalesInvoice: 'Facture de vente',
   docTypeDeliveryNote: 'Bon de livraison',
   browser: 'Navigateur',
+
+  // ─── General params ───────────────────────────────────────
+  generalParams: 'Paramètres généraux',
+  generalParamsDescription: "Préférences générales de l'application",
+  generalParamsSaved: 'Paramètres généraux enregistrés',
+  generalParamDefaultLanguage: 'Langue par défaut',
+  generalParamDefaultLanguageDescription:
+    "Langue au démarrage pour les utilisateurs n'ayant pas encore choisi la leur",
+  generalParamKeyboardEnabled: 'Clavier virtuel',
+  generalParamKeyboardEnabledDescription:
+    "Afficher le clavier à l'écran et son bouton flottant en bas à droite",
 };

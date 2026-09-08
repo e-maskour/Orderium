@@ -9,8 +9,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
-import { MultiSelect } from 'primereact/multiselect';
+import { Password } from 'primereact/password';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import {
@@ -30,6 +29,7 @@ import {
 import { EmptyState } from '../components/EmptyState';
 import {
   usersService,
+  resolvePasswordChange,
   type User,
   type CreateUserPayload,
   type UpdateUserPayload,
@@ -40,6 +40,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { rolesService, type Role } from '../modules/roles';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { useAccessLabels } from '../hooks/useAccessLabels';
+import { AutoCompleteSelect, AutoCompleteMultiSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function UsersPage() {
   const { t, dir } = useLanguage();
@@ -197,7 +198,8 @@ export default function UsersPage() {
       toastError(t('phoneRequired'));
       return;
     }
-    if (!editingUser && formPassword.length < 8) {
+    const passwordChange = resolvePasswordChange(formPassword, !!editingUser);
+    if (!passwordChange.ok) {
       toastError(t('passwordMinLength'));
       return;
     }
@@ -210,7 +212,7 @@ export default function UsersPage() {
         status: formStatus,
         roleIds: formRoleIds,
       };
-      if (formPassword.length >= 8) payload.password = formPassword;
+      if (passwordChange.password) payload.password = passwordChange.password;
       updateMutation.mutate({ id: editingUser.id, payload });
     } else {
       createMutation.mutate({
@@ -705,7 +707,7 @@ export default function UsersPage() {
               >
                 {t('role')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={roleFilter}
                 onChange={(e) => {
                   setRoleFilter(e.value);
@@ -730,7 +732,7 @@ export default function UsersPage() {
               >
                 {t('status')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.value);
@@ -881,12 +883,18 @@ export default function UsersPage() {
                 {editingUser ? t('newPassword') : t('password')}{' '}
                 {!editingUser && <span style={{ color: '#ef4444' }}>*</span>}
               </label>
-              <InputText
-                type="password"
+              <Password
                 value={formPassword}
                 onChange={(e) => setFormPassword(e.target.value)}
+                feedback={false}
+                toggleMask
                 placeholder={editingUser ? `(${t('newPassword')})` : ''}
-                style={{ width: '100%', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0' }}
+                inputStyle={{
+                  width: '100%',
+                  borderRadius: '0.5rem',
+                  border: '1.5px solid #e2e8f0',
+                }}
+                style={{ width: '100%', display: 'block' }}
               />
             </div>
 
@@ -903,7 +911,7 @@ export default function UsersPage() {
                 >
                   {t('userRoles')}
                 </label>
-                <MultiSelect
+                <AutoCompleteMultiSelect
                   value={formRoleIds}
                   options={roles.map((r) => ({
                     label: translatedRoleName(r.name),
@@ -911,7 +919,6 @@ export default function UsersPage() {
                   }))}
                   onChange={(e) => setFormRoleIds(e.value as number[])}
                   display="chip"
-                  filter
                   placeholder={t('userNoRoles')}
                   style={{ width: '100%', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0' }}
                 />
@@ -931,7 +938,7 @@ export default function UsersPage() {
                 >
                   {t('status')}
                 </label>
-                <Dropdown
+                <AutoCompleteSelect
                   value={formStatus}
                   options={[
                     { label: t('active'), value: 'active' },

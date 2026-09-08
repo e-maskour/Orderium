@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ApiResponseInterceptor } from './common/interceptors/api-response.interceptor';
+import { UsageTrackingInterceptor } from './modules/platform-metrics/usage-tracking.interceptor';
 import helmet from 'helmet';
 import * as express from 'express';
 
@@ -126,8 +127,12 @@ async function bootstrap() {
   // Global filters
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Global interceptors
+  // Global interceptors.
+  // UsageTrackingInterceptor is resolved from the container (it needs the
+  // usage tracker) and sits outermost so the duration it records covers the
+  // whole request, including response serialisation.
   app.useGlobalInterceptors(
+    app.get(UsageTrackingInterceptor),
     new LoggingInterceptor(),
     new ApiResponseInterceptor(),
   );

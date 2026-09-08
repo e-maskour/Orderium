@@ -21,6 +21,8 @@ import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 import { ConfigurationResponseDto } from './dto/configuration-response.dto';
 import { CompanyDto } from './dto/company.dto';
+import { GeneralParamsDto } from './dto/general-params.dto';
+import { GENERAL_DEFAULTS, GENERAL_ENTITY } from './general-params.constants';
 import {
   CreateSequenceDto,
   UpdateSequenceDto,
@@ -30,7 +32,10 @@ import { ApiRes } from '../../common/api-response';
 import { CFG } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
-import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import {
+  NoPermissionRequired,
+  RequirePermission,
+} from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Configurations')
 @Controller('configurations')
@@ -61,6 +66,37 @@ export class ConfigurationsController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const configuration = await this.configurationsService.findOne(id);
     return ApiRes(CFG.DETAIL, configuration);
+  }
+
+  // ── General params ────────────────────────────────────────────────────────
+  // Declared before the generic `entity/:entity` route so Nest matches these
+  // handlers first.
+
+  @Get('entity/general')
+  @ApiOperation({ summary: 'Get general params' })
+  @ApiResponse({ status: 200, description: 'General params' })
+  // General params are tenant-wide UI preferences, not sensitive data, and
+  // every authenticated user needs to read them to render correctly — a POS
+  // cashier has no `configurations.view`. Writes stay behind
+  // `configurations.edit` below.
+  @NoPermissionRequired()
+  async getGeneralParams() {
+    const configuration =
+      await this.configurationsService.findByEntity(GENERAL_ENTITY);
+    return ApiRes(CFG.GENERAL_DETAIL, configuration.values);
+  }
+
+  @Patch('entity/general')
+  @ApiOperation({ summary: 'Update general params' })
+  @ApiResponse({ status: 200, description: 'General params updated' })
+  @RequirePermission('configurations.edit')
+  async updateGeneralParams(@Body() generalDto: GeneralParamsDto) {
+    const config =
+      await this.configurationsService.findByEntity(GENERAL_ENTITY);
+    const updated = await this.configurationsService.update(config.id, {
+      values: { ...GENERAL_DEFAULTS, ...config.values, ...generalDto },
+    });
+    return ApiRes(CFG.GENERAL_UPDATED, updated.values);
   }
 
   @Get('entity/:entity')

@@ -48,7 +48,6 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { Calendar } from 'primereact/calendar';
 import { OverlayPanel } from 'primereact/overlaypanel';
-import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
@@ -63,6 +62,7 @@ import type { OrdersMergeView } from '../components/OrdersMergeModal';
 import { MobileList } from '../components/MobileList';
 import { formatAmount } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Orders() {
   const { t, language } = useLanguage();
@@ -511,7 +511,11 @@ export default function Orders() {
     prefetchPDF(pdfService.getPDFUrl('delivery-note', orderId, 'preview', language));
   }, [selectedOrders, language]);
 
-  const handleSendWhatsApp = async () => {
+  /**
+   * Share the order's PDF (delivery note or POS receipt) through the native
+   * share sheet on mobile, falling back to WhatsApp Web on desktop.
+   */
+  const handleShareDocument = async (documentType: 'receipt' | 'delivery-note') => {
     if (selectedOrders.length !== 1) return;
     const orderId = selectedOrders[0];
     const order = orders.find((o: any) => o.id === orderId);
@@ -520,9 +524,10 @@ export default function Orders() {
     const orderRef = order?.displayOrderNumber || `#${orderId}`;
     const total = order?.totalAmount != null ? `${Number(order.totalAmount).toFixed(2)} DH` : '';
     const isAr = language?.startsWith('ar');
+    const isReceipt = documentType === 'receipt';
     const message = isAr
-      ? `مرحباً، يرجى الاطلاع على وصل التسليم الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
-      : `Bonjour, veuillez trouver ci-joint le bon de livraison de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
+      ? `مرحباً، يرجى الاطلاع على ${isReceipt ? 'إيصال' : 'وصل التسليم'} الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
+      : `Bonjour, veuillez trouver ci-joint ${isReceipt ? 'le reçu' : 'le bon de livraison'} de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
 
     try {
       const token = localStorage.getItem('adminToken');
@@ -530,7 +535,7 @@ export default function Orders() {
       const tenantId = tenantMatch
         ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
         : null;
-      const url = pdfService.getPDFUrl('delivery-note', orderId, 'download', language);
+      const url = pdfService.getPDFUrl(documentType, orderId, 'download', language);
       const response = await fetch(url, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -539,7 +544,8 @@ export default function Orders() {
       });
       if (!response.ok) throw new Error(`${response.status}`);
       const blob = await response.blob();
-      const fileName = `BonLivraison_${order?.displayOrderNumber || orderId}.pdf`;
+      const prefix = isReceipt ? 'Recu' : 'BonLivraison';
+      const fileName = `${prefix}_${order?.displayOrderNumber || orderId}.pdf`;
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       // Mobile: native share sheet — lets user pick WhatsApp (or any app) with PDF attached
@@ -751,6 +757,14 @@ export default function Orders() {
   const isOrderAssigned = (order: any) => order && order.deliveryStatus === 'assigned';
   const canAssignOrder = (order: any) =>
     order && !['delivered', 'canceled', 'assigned'].includes(order.deliveryStatus);
+
+  /** POS-issued orders (admin till or customer portal) — these print a receipt, not a BL. */
+  const isPosOrder = (order: any) =>
+    order?.originType === 'CLIENT_POS' || order?.originType === 'ADMIN_POS';
+
+  /** Exactly one order selected and it was issued by a POS — gates the receipt actions. */
+  const singleSelectedIsPos =
+    selectedOrders.length === 1 && isPosOrder(orders.find((o: any) => o.id === selectedOrders[0]));
 
   const handleBulkAssign = (deliveryPersonId: string) => {
     let assigned = 0;
@@ -1154,7 +1168,7 @@ export default function Orders() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('orderSource')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={originTypeFilter}
                 onChange={(e) => applyOriginFilter(e.value)}
                 options={originTypeOptions}
@@ -1168,7 +1182,7 @@ export default function Orders() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('orderStatus')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={orderStatusFilter}
                 onChange={(e) => applyOrderStatusFilter(e.value)}
                 options={orderStatusOptions}
@@ -1792,7 +1806,8 @@ export default function Orders() {
             label: t('previewReceipt'),
             icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />,
             onClick: () => handlePreview('receipt'),
-            hidden: true,
+            // POS orders (admin till / customer portal) are the ones that have a receipt
+            hidden: !singleSelectedIsPos,
           },
           {
             id: 'preview-delivery-note',
@@ -1802,12 +1817,28 @@ export default function Orders() {
             hidden: selectedOrders.length !== 1,
           },
           {
-            id: 'send-whatsapp',
+            // One share button; the menu lets the user pick which document to send.
+            id: 'share',
             label: t('share'),
             icon: <Share2 style={{ width: '0.875rem', height: '0.875rem' }} />,
-            onClick: handleSendWhatsApp,
             variant: 'whatsapp' as const,
             hidden: selectedOrders.length !== 1,
+            items: [
+              {
+                id: 'share-receipt',
+                label: t('receipt'),
+                icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => handleShareDocument('receipt'),
+                // Only POS orders (admin till / customer portal) have a receipt
+                hidden: !singleSelectedIsPos,
+              },
+              {
+                id: 'share-delivery-note',
+                label: t('deliveryNote'),
+                icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => handleShareDocument('delivery-note'),
+              },
+            ],
           },
           {
             id: 'cancel-delivery',
@@ -2263,7 +2294,7 @@ export default function Orders() {
             >
               {t('paymentType')} *
             </label>
-            <Dropdown
+            <AutoCompleteSelect
               value={paymentType}
               onChange={(e) => setPaymentType(e.value)}
               options={Object.entries(ORDER_PAYMENT_TYPE_LABELS).map(([value, label]) => ({

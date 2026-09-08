@@ -11,14 +11,10 @@ import {
   AlertTriangle,
   Calendar,
   Clock,
-  CheckCircle,
-  XCircle,
   RotateCcw,
   Archive,
   Trash2,
-  ChevronDown,
   ChevronRight,
-  ChevronUp,
   Plus,
   Zap,
   Ban,
@@ -39,8 +35,10 @@ import {
   LayoutGrid,
   Smartphone,
   Truck,
+  BarChart3,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TenantMetricsPanel } from '../components/TenantMetricsPanel';
 import {
   useTenant,
   useTenantStats,
@@ -69,7 +67,7 @@ import { formatMoney } from '../utils/format';
 import type { UpdateTenantInput, TenantModulesConfig } from '../types/tenant';
 import { DEFAULT_MODULES } from '../types/tenant';
 
-type Tab = 'overview' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
+type Tab = 'overview' | 'metrics' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
 
 // ─────────────────────────────── helpers ─────────────────────────────────────
 
@@ -86,10 +84,6 @@ function formatDate(s: string | null) {
     month: 'short',
     year: 'numeric',
   });
-}
-
-function formatCurrency(amount: number, currency = 'MAD') {
-  return `${amount.toLocaleString()} ${currency}`;
 }
 
 // ───────────────────────── sub-components ────────────────────────────────────
@@ -138,38 +132,6 @@ function UsageMeter({
           className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
           style={{ width: `${pct}%` }}
         />
-      </div>
-    </div>
-  );
-}
-
-function InlineModal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md animate-fade-in rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        {children}
       </div>
     </div>
   );
@@ -354,6 +316,7 @@ export function TenantDetail() {
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: 'Overview', icon: <Layers className="h-4 w-4" /> },
+    { key: 'metrics', label: 'Metrics', icon: <BarChart3 className="h-4 w-4" /> },
     { key: 'subscription', label: 'Subscription', icon: <CreditCard className="h-4 w-4" /> },
     { key: 'payments', label: 'Payments', icon: <TrendingUp className="h-4 w-4" /> },
     { key: 'activity', label: 'Activity', icon: <Activity className="h-4 w-4" /> },
@@ -802,6 +765,9 @@ export function TenantDetail() {
         )}
 
         {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
+        {/* ══════════════════ METRICS TAB ══════════════════ */}
+        {activeTab === 'metrics' && <TenantMetricsPanel tenantId={tenant.id} />}
+
         {activeTab === 'subscription' && (
           <div className="space-y-6">
             {/* Plan card */}
@@ -1646,159 +1612,162 @@ export function TenantDetail() {
       />
 
       {/* Disable */}
-      {dialog === 'disable' && (
-        <InlineModal title="Disable tenant?" onClose={closeDialog}>
-          <p className="mb-3 text-sm text-slate-500">
+      <ConfirmDialog
+        open={dialog === 'disable'}
+        title="Disable tenant?"
+        description={
+          <>
             All requests to <strong>{tenant.name}</strong> will return 403. Optionally provide a
             reason.
-          </p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="Reason (optional)"
-            className="input"
-          />
-          <div className="mt-4 flex justify-end gap-3">
-            <button onClick={closeDialog} className="btn-secondary text-sm">
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={disable.isPending}
-              className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
-            >
-              {disable.isPending ? 'Disabling…' : 'Disable'}
-            </button>
-          </div>
-        </InlineModal>
-      )}
+          </>
+        }
+        confirmLabel="Disable"
+        confirmVariant="warning"
+        loadingLabel="Disabling…"
+        loading={disable.isPending}
+        onConfirm={handleConfirm}
+        onCancel={closeDialog}
+      >
+        <label htmlFor="disable-reason" className="label">
+          Reason <span className="font-normal normal-case">(optional)</span>
+        </label>
+        <input
+          id="disable-reason"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="Disabled by admin"
+          className="input"
+          autoComplete="off"
+        />
+      </ConfirmDialog>
 
       {/* Suspend */}
-      {dialog === 'suspend' && (
-        <InlineModal title="Suspend tenant?" onClose={closeDialog}>
-          <p className="mb-3 text-sm text-slate-500">
+      <ConfirmDialog
+        open={dialog === 'suspend'}
+        title="Suspend tenant?"
+        description={
+          <>
             Temporarily block all access to <strong>{tenant.name}</strong>. Optionally provide a
             reason.
-          </p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="Reason (optional)"
-            className="input"
-          />
-          <div className="mt-4 flex justify-end gap-3">
-            <button onClick={closeDialog} className="btn-secondary text-sm">
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={suspend.isPending}
-              className="btn-danger text-sm"
-            >
-              {suspend.isPending ? 'Suspending…' : 'Suspend'}
-            </button>
-          </div>
-        </InlineModal>
-      )}
+          </>
+        }
+        confirmLabel="Suspend"
+        confirmVariant="danger"
+        loadingLabel="Suspending…"
+        loading={suspend.isPending}
+        onConfirm={handleConfirm}
+        onCancel={closeDialog}
+      >
+        <label htmlFor="suspend-reason" className="label">
+          Reason <span className="font-normal normal-case">(optional)</span>
+        </label>
+        <input
+          id="suspend-reason"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="Suspended by admin"
+          className="input"
+          autoComplete="off"
+        />
+      </ConfirmDialog>
 
       {/* Archive */}
-      {dialog === 'archive' && (
-        <InlineModal title="Archive tenant?" onClose={closeDialog}>
-          <p className="mb-3 text-sm text-slate-500">
-            The DB connection will be closed. Type{' '}
-            <strong className="text-slate-800 dark:text-slate-200">{tenant.name}</strong> to
-            confirm.
-          </p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder={tenant.name}
-            className="input"
-          />
-          <div className="mt-4 flex justify-end gap-3">
-            <button onClick={closeDialog} className="btn-secondary text-sm">
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={confirmText !== tenant.name || archive.isPending}
-              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
-            >
-              {archive.isPending ? 'Archiving…' : 'Archive'}
-            </button>
-          </div>
-        </InlineModal>
-      )}
+      <ConfirmDialog
+        open={dialog === 'archive'}
+        title="Archive tenant?"
+        description="The database connection will be closed and the tenant taken offline."
+        confirmLabel="Archive"
+        confirmVariant="warning"
+        loadingLabel="Archiving…"
+        loading={archive.isPending}
+        confirmDisabled={confirmText !== tenant.name}
+        onConfirm={handleConfirm}
+        onCancel={closeDialog}
+      >
+        <label htmlFor="archive-confirm" className="label">
+          Type <span className="normal-case">{tenant.name}</span> to confirm
+        </label>
+        <input
+          id="archive-confirm"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={tenant.name}
+          className="input"
+          autoComplete="off"
+        />
+      </ConfirmDialog>
 
       {/* Delete */}
-      {dialog === 'delete' && (
-        <InlineModal title="Permanently delete tenant?" onClose={closeDialog}>
-          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800/40 dark:bg-red-900/20">
-            <p className="text-sm text-red-700 dark:text-red-400">
-              This will destroy the database, MinIO bucket, and Redis keys for{' '}
-              <strong>{tenant.name}</strong>. This action is <strong>irreversible</strong>.
-            </p>
-          </div>
-          <p className="mb-2 text-sm text-slate-500">
-            Type{' '}
-            <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs dark:bg-slate-800">
-              DELETE {tenant.name}
-            </code>{' '}
-            to confirm.
+      <ConfirmDialog
+        open={dialog === 'delete'}
+        title="Permanently delete tenant?"
+        description="This cannot be undone."
+        confirmLabel="Delete Forever"
+        confirmVariant="danger"
+        loadingLabel="Deleting…"
+        loading={softDelete.isPending}
+        confirmDisabled={confirmText !== `DELETE ${tenant.name}`}
+        onConfirm={handleConfirm}
+        onCancel={closeDialog}
+      >
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800/40 dark:bg-red-900/20">
+          <p className="text-sm text-red-700 dark:text-red-400">
+            This will destroy the database, MinIO bucket, and Redis keys for{' '}
+            <strong>{tenant.name}</strong>. This action is <strong>irreversible</strong>.
           </p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder={`DELETE ${tenant.name}`}
-            className="input font-mono"
-          />
-          <div className="mt-4 flex justify-end gap-3">
-            <button onClick={closeDialog} className="btn-secondary text-sm">
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={confirmText !== `DELETE ${tenant.name}` || softDelete.isPending}
-              className="btn-danger text-sm disabled:opacity-50"
-            >
-              {softDelete.isPending ? 'Deleting…' : 'Delete Forever'}
-            </button>
-          </div>
-        </InlineModal>
-      )}
+        </div>
+        <label htmlFor="delete-confirm" className="label mt-4">
+          Type{' '}
+          <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono normal-case tracking-normal dark:bg-slate-800">
+            DELETE {tenant.name}
+          </code>{' '}
+          to confirm
+        </label>
+        <input
+          id="delete-confirm"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={`DELETE ${tenant.name}`}
+          className="input font-mono"
+          autoComplete="off"
+        />
+      </ConfirmDialog>
 
       {/* Reset */}
-      {dialog === 'reset' && (
-        <InlineModal title="Reset tenant data?" onClose={closeDialog}>
-          <p className="mb-3 text-sm text-slate-500">
+      <ConfirmDialog
+        open={dialog === 'reset'}
+        title="Reset tenant data?"
+        description={
+          <>
             Drops and re-provisions the database for <strong>{tenant.name}</strong>. All data will
-            be permanently lost. Type <strong>RESET</strong> to confirm.
-          </p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="RESET"
-            className="input font-mono"
-          />
-          <div className="mt-4 flex justify-end gap-3">
-            <button onClick={closeDialog} className="btn-secondary text-sm">
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={confirmText !== 'RESET' || reset.isPending}
-              className="btn-danger text-sm disabled:opacity-50"
-            >
-              {reset.isPending ? 'Resetting…' : 'Reset Data'}
-            </button>
-          </div>
-        </InlineModal>
-      )}
+            be permanently lost.
+          </>
+        }
+        confirmLabel="Reset Data"
+        confirmVariant="danger"
+        loadingLabel="Resetting…"
+        loading={reset.isPending}
+        confirmDisabled={confirmText !== 'RESET'}
+        onConfirm={handleConfirm}
+        onCancel={closeDialog}
+      >
+        <label htmlFor="reset-confirm" className="label">
+          Type <span className="normal-case">RESET</span> to confirm
+        </label>
+        <input
+          id="reset-confirm"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="RESET"
+          className="input font-mono"
+          autoComplete="off"
+        />
+      </ConfirmDialog>
     </div>
   );
 }

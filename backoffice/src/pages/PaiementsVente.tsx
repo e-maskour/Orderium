@@ -17,7 +17,6 @@ import {
   X,
 } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
 import { Calendar } from 'primereact/calendar';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { DataTable } from 'primereact/datatable';
@@ -31,6 +30,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatAmount } from '@orderium/ui';
 import { EmptyState } from '../components/EmptyState';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 type DatePreset =
   | 'all'
@@ -558,7 +558,7 @@ export default function PaiementsVente() {
               >
                 {t('paymentMethod')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={paymentTypeFilter}
                 onChange={(e) => setPaymentTypeFilter(e.value)}
                 options={[

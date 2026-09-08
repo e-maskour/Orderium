@@ -7,6 +7,8 @@ import { SubscriptionPlan } from '../modules/tenant-lifecycle/entities/subscript
 import { TenantActivityLog } from '../modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from '../modules/super-admin/entities/migration-log.entity';
 import { SeederRunLog } from '../modules/super-admin/entities/seeder-log.entity';
+import { TenantDailyMetric } from '../modules/platform-metrics/entities/tenant-daily-metric.entity';
+import { TenantHealthBucket } from '../modules/platform-metrics/entities/tenant-health-bucket.entity';
 
 config({ path: '.env.local' });
 config(); // fallback
@@ -35,6 +37,8 @@ export const MasterDataSource = new DataSource({
     TenantActivityLog,
     MigrationRunLog,
     SeederRunLog,
+    TenantDailyMetric,
+    TenantHealthBucket,
   ],
   migrations: [__dirname + '/master-migrations/*{.ts,.js}'],
   synchronize: false,

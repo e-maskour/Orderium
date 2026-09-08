@@ -3,6 +3,10 @@ import { Configuration } from '../../modules/configurations/entities/configurati
 import { Warehouse } from '../../modules/inventory/entities/warehouse.entity';
 import { SeederDefinition } from './seeder.types';
 import { DEFAULT_WAREHOUSE } from './warehouse.seeder';
+import {
+  GENERAL_DEFAULTS,
+  GENERAL_ENTITY,
+} from '../../modules/configurations/general-params.constants';
 
 const DEFAULT_CONFIGURATIONS = [
   {
@@ -69,6 +73,10 @@ const DEFAULT_CONFIGURATIONS = [
       capital: 0,
       fiscalYearStartMonth: 1,
     },
+  },
+  {
+    entity: GENERAL_ENTITY,
+    values: { ...GENERAL_DEFAULTS } as Record<string, unknown>,
   },
 ];
 

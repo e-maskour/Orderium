@@ -16,8 +16,8 @@ import { warehousesService } from '../../modules/warehouses/warehouses.service';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
-import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
+import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
 
 interface InventoryConfigValues {
   defaultWarehouseId: number | null;
@@ -303,12 +303,11 @@ export default function InventorySettings() {
                 <label style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
                   {t('defaultWarehouse')}
                 </label>
-                <Dropdown
+                <AutoCompleteSelect
                   value={warehouseId}
                   options={warehouseOptions}
                   onChange={(e) => setWarehouseId(e.value ?? null)}
                   placeholder={t('selectDefaultWarehouse')}
-                  showClear
                   style={{ width: '100%', maxWidth: '24rem' }}
                 />
               </div>

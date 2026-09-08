@@ -30,12 +30,12 @@ import {
 } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -556,7 +556,7 @@ export default function Categories() {
               >
                 {t('parentCategory')}
               </label>
-              <Dropdown
+              <AutoCompleteSelect
                 id="cat-parent"
                 value={formData.parentId || ''}
                 onChange={(e) =>

@@ -1,5 +1,5 @@
 import { useTenants } from '../hooks/useTenants';
-import { SkeletonCard, SkeletonListItem } from '../components/Skeleton';
+import { SkeletonListItem } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { Link } from 'react-router-dom';
 import {

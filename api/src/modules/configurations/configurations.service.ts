@@ -7,6 +7,7 @@ import {
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Configuration } from './entities/configuration.entity';
+import { GENERAL_DEFAULTS, GENERAL_ENTITY } from './general-params.constants';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
@@ -122,6 +123,14 @@ export class ConfigurationsService {
           incrementStockOnOrderAchat: true,
           decrementStockOnOrderVente: true,
         },
+      });
+    }
+
+    // Create general params entity with defaults if it doesn't exist
+    if (!config && entity === GENERAL_ENTITY) {
+      config = await this.create({
+        entity: GENERAL_ENTITY,
+        values: { ...GENERAL_DEFAULTS },
       });
     }
 

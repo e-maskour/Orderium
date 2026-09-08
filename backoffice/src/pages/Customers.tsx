@@ -12,7 +12,6 @@ import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { Dropdown } from 'primereact/dropdown';
 import {
   toastDeleted,
   toastError,
@@ -21,6 +20,7 @@ import {
 } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Customers() {
   const { t, language, dir } = useLanguage();
@@ -271,7 +271,7 @@ export default function Customers() {
               >
                 {t('status')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.value)}
                 options={[

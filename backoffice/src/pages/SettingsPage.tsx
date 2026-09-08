@@ -3,7 +3,6 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
 import { Divider } from 'primereact/divider';
 import {
   Settings,
@@ -25,6 +24,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import type { Language } from '../lib/i18n';
 import { toastSuccess } from '../services/toast.service';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 interface NotifState {
   all: boolean;
@@ -430,17 +430,12 @@ export default function SettingsPage() {
                       {t('dateFormat')}
                     </span>
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     value={dateFormat}
                     options={dateOptions}
                     onChange={(e) => setDateFormat(e.value)}
                     style={{ width: '100%', fontFamily }}
-                    pt={{
-                      input: {
-                        dir: isRTL ? 'rtl' : 'ltr',
-                        style: { fontFamily, textAlign: isRTL ? 'right' : 'left' },
-                      },
-                    }}
+                    inputStyle={{ fontFamily, textAlign: 'start' }}
                   />
                 </div>
               </div>

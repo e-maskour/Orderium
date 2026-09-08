@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, SlidersHorizontal, X, Download } from 'lucide-react';
+import { Plus, SlidersHorizontal, X } from 'lucide-react';
 import { useTenants } from '../hooks/useTenants';
 import { TenantTable } from '../components/TenantTable';
 import { SearchBar } from '../components/SearchBar';

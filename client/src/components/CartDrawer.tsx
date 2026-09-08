@@ -197,7 +197,7 @@ const CartItemRow = ({
 
 export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerProps) => {
   const { language, t, dir } = useLanguage();
-  const { items, subtotal, itemCount, clearCart, closeCart } = useCart();
+  const { items, subtotal, itemCount, totalQuantity, clearCart, closeCart } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [initialQuantity, setInitialQuantity] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -279,7 +279,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               }}
             >
               {uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} ·{' '}
-              {itemCount} {t(itemCount === 1 ? 'piece' : 'pieces')}
+              {totalQuantity} {t(totalQuantity === 1 ? 'piece' : 'pieces')}
             </p>
           )}
         </div>

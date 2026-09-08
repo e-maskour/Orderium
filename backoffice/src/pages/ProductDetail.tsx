@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productsService } from '../modules/products';
 import {
   productFormSchema,
-  ProductFormValues,
+  type ProductFormValues,
 } from '../modules/products/schemas/product-form.schema';
 import { warehousesService } from '../modules/warehouses';
 import { stockService } from '../modules/stock';
@@ -15,23 +15,9 @@ import { brandsService } from '../modules/brands';
 import { taxesService } from '../modules/taxes';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
+import { DocPageHeader } from '../components/DocPageHeader';
 import { ImageUpload } from '../components/ImageUpload';
-import {
-  ArrowLeft,
-  Save,
-  Plus,
-  ArrowRightLeft,
-  RefreshCw,
-  ShoppingCart,
-  TrendingUp,
-  TrendingDown,
-  SlidersHorizontal,
-  Building2,
-  Tag as TagIcon,
-  Package,
-  CheckCircle,
-  Lock,
-} from 'lucide-react';
+import { Save, Plus, ArrowRightLeft, Building2, AlertCircle, Package } from 'lucide-react';
 import {
   toastSuccess,
   toastUpdated,
@@ -42,22 +28,22 @@ import {
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
 import { useApiErrors } from '../hooks/useApiErrors';
-import { TranslationKey } from '../lib/i18n';
+import type { TranslationKey } from '../lib/i18n';
 import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber } from 'primereact/inputnumber';
-import { InputSwitch } from 'primereact/inputswitch';
-import { Dropdown } from 'primereact/dropdown';
-import { AutoComplete } from 'primereact/autocomplete';
-import { MultiSelect } from 'primereact/multiselect';
-import { Message } from 'primereact/message';
-
-import { Tag as PTag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { RadioButton } from 'primereact/radiobutton';
-import { formatAmount } from '@orderium/ui';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import {
+  ProductForm,
+  ProductFormSkeleton,
+  FormErrorSummary,
+  FormField,
+  FIELD_IDS,
+  type SummaryEntry,
+} from '../components/product';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,9 +54,9 @@ export default function ProductDetail() {
 
   const [showStockCorrection, setShowStockCorrection] = useState(false);
   const [showStockTransfer, setShowStockTransfer] = useState(false);
-
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [summary, setSummary] = useState<SummaryEntry[]>([]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -95,11 +81,9 @@ export default function ProductDetail() {
       isPriceChangeAllowed: true,
     },
   });
+
   const {
-    register,
-    control,
     handleSubmit: rhfHandleSubmit,
-    watch,
     setValue,
     reset,
     formState: { errors, isDirty },
@@ -127,7 +111,7 @@ export default function ProductDetail() {
     enabled: !!id,
   });
 
-  const { data: warehouses = [], isLoading: warehousesLoading } = useQuery({
+  const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses'],
     queryFn: () => warehousesService.getAll(),
   });
@@ -264,6 +248,18 @@ export default function ProductDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uoms.length]);
 
+  // Unsaved changes guard (covers browser refresh/close)
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
   const handleRegenerateCode = async () => {
     try {
       setIsGeneratingCode(true);
@@ -278,6 +274,7 @@ export default function ProductDetail() {
   };
 
   const onSubmit = (data: ProductFormValues) => {
+    setSummary([]);
     const saleTaxRate = taxRates.find((r: any) => r.name === data.saleTaxId);
     const purchaseTaxRate = taxRates.find((r: any) => r.name === data.purchaseTaxId);
     updateMutation.mutate({
@@ -300,93 +297,57 @@ export default function ProductDetail() {
     });
   };
 
+  const fieldLabels = useMemo(
+    () =>
+      ({
+        name: t('productName'),
+        code: t('productCodeEAN13'),
+        description: t('description'),
+        price: t('price'),
+        cost: t('costPrice'),
+        minPrice: t('minPrice'),
+        warehouseId: t('warehouse'),
+      }) as Record<string, string>,
+    [t],
+  );
+
   const onInvalidSubmit = () => {
-    toastError(t('validationCheckFields' as TranslationKey));
+    // Validation errors live on the Details tab — surface it before pointing at fields
+    setActiveTabIndex(0);
+    setSummary(
+      Object.entries(errors)
+        .filter(([field]) => field in FIELD_IDS)
+        .map(([field, e]) => ({
+          fieldId: FIELD_IDS[field as keyof typeof FIELD_IDS],
+          label: fieldLabels[field] ?? field,
+          message: t((e as any)?.message as TranslationKey),
+        })),
+    );
+    toastError(t('validationCheckFields'));
   };
 
   const handleSave = rhfHandleSubmit(onSubmit, onInvalidSubmit);
 
-  const handleStockCorrection = () => {
-    stockCorrectionMutation.mutate(stockCorrectionData);
-  };
-  const handleStockTransfer = () => {
-    stockTransferMutation.mutate(stockTransferData);
-  };
-
-  const warehouseOptions = warehouses.map((w: any) => ({
-    label: `${w.name} (${w.code})`,
-    value: w.id,
-  }));
-  const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
-  const brandOptions = brands.map((b) => ({ label: b.name, value: b.id }));
-  const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
-
-  // ── EAN-13 real-time validation ──────────────────────────
-  const watchedCode = watch('code');
-  const ean13Valid = useMemo<boolean | null>(() => {
-    const code = watchedCode ?? '';
-    if (!code) return null;
-    if (code.length !== 13 || !/^\d{13}$/.test(code)) return false;
-    const d = code.split('').map(Number);
-    const sum = d.slice(0, 12).reduce((acc, n, i) => acc + n * (i % 2 === 0 ? 1 : 3), 0);
-    return (10 - (sum % 10)) % 10 === d[12];
-  }, [watchedCode]);
-
-  // ── Description character count ──────────────────────────
-  const watchedDescription = watch('description');
-  const descCharCount = (watchedDescription ?? '').length;
-
-  // ── Unsaved changes guard (beforeunload covers browser refresh/close) ──────
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [isDirty]);
-
-  const [saleUomSuggestions, setSaleUomSuggestions] = useState<{ label: string; value: number }[]>(
-    [],
-  );
-  const [purchaseUomSuggestions, setPurchaseUomSuggestions] = useState<
-    { label: string; value: number }[]
-  >([]);
-  const [saleUomInput, setSaleUomInput] = useState<any>(null);
-  const [purchaseUomInput, setPurchaseUomInput] = useState<any>(null);
-
-  const watchedSaleUnitId = watch('saleUnitId');
-  const watchedPurchaseUnitId = watch('purchaseUnitId');
-
-  useEffect(() => {
-    const opt = uomOptions.find((o) => o.value === watchedSaleUnitId) ?? null;
-    setSaleUomInput(opt);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedSaleUnitId, uoms.length]);
-
-  useEffect(() => {
-    const opt = uomOptions.find((o) => o.value === watchedPurchaseUnitId) ?? null;
-    setPurchaseUomInput(opt);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedPurchaseUnitId, uoms.length]);
-
-  const searchSaleUoms = (e: { query: string }) => {
-    const q = e.query.toLowerCase();
-    setSaleUomSuggestions(
-      q ? uomOptions.filter((o) => o.label.toLowerCase().includes(q)) : [...uomOptions],
-    );
+  const handleCancel = () => {
+    if (isDirty) {
+      toastConfirm(t('unsavedChangesConfirm' as TranslationKey), () => navigate('/products'), {
+        confirmLabel: t('cancel'),
+        variant: 'warning',
+      } as any);
+    } else {
+      navigate('/products');
+    }
   };
 
-  const searchPurchaseUoms = (e: { query: string }) => {
-    const q = e.query.toLowerCase();
-    setPurchaseUomSuggestions(
-      q ? uomOptions.filter((o) => o.label.toLowerCase().includes(q)) : [...uomOptions],
-    );
-  };
+  // ── Stock aggregates ──
+  const sum = (key: string) =>
+    stockQuants.reduce((s: number, q: any) => s + parseFloat(q[key]?.toString() || '0'), 0);
+  const totalOnHand = sum('quantity');
+  const totalAvailable = sum('availableQuantity');
+  const totalReserved = sum('reservedQuantity');
+  const totalIncoming = sum('incomingQuantity');
+  const totalOutgoing = sum('outgoingQuantity');
 
-  const taxOptions = taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name }));
   const warehouseDropdownOptions = warehouses.map((w: any) => ({
     label: w.name,
     value: w.id.toString(),
@@ -395,32 +356,13 @@ export default function ProductDetail() {
     .filter((wh: any) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
     .map((wh: any) => ({ label: wh.name, value: wh.id.toString() }));
 
-  const saleTaxId = watch('saleTaxId');
-  const price = watch('price');
-  const cost = watch('cost');
-  const saleTaxRate = taxRates.find((r: any) => r.name === saleTaxId)?.rate ?? 0;
-  const priceWithTax = price != null ? price * (1 + saleTaxRate / 100) : null;
-  const margin = price != null && cost != null ? price - cost : null;
-  const marginPct = margin != null && cost ? (margin / cost) * 100 : null;
-  const markupPct = margin != null && price ? (margin / price) * 100 : null;
-  const totalStock = stockQuants.reduce(
-    (sum, sq) => sum + parseFloat(sq.quantity?.toString() || '0'),
-    0,
-  );
+  const saving = updateMutation.isPending;
 
+  // ── Loading: skeleton that matches the real layout ──
   if (isLoading) {
     return (
       <AdminLayout>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '50vh',
-          }}
-        >
-          <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: '#235ae4' }}></i>
-        </div>
+        <ProductFormSkeleton />
       </AdminLayout>
     );
   }
@@ -428,224 +370,69 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <AdminLayout>
-        <div style={{ textAlign: 'center', paddingTop: '3rem' }}>
-          <p style={{ color: '#64748b' }}>Product not found</p>
+        <div className="pdetail-page">
+          <div className="pform-empty">
+            <AlertCircle size={40} strokeWidth={1.5} aria-hidden="true" />
+            <p className="pform-empty__title">{t('notFound')}</p>
+            <Button
+              type="button"
+              text
+              label={t('backToProducts')}
+              onClick={() => navigate('/products')}
+            />
+          </div>
         </div>
       </AdminLayout>
     );
   }
 
-  const fieldClass = (field: keyof ProductFormValues) => (errors[field] ? 'p-invalid' : '');
-
-  const FieldError = ({ name }: { name: keyof ProductFormValues }) => {
-    const err = errors[name];
-    if (!err?.message) return null;
-    return (
-      <small
-        role="alert"
-        style={{ display: 'block', marginTop: '0.25rem', fontSize: '0.75rem', color: '#ef4444' }}
-      >
-        {t(err.message as TranslationKey)}
-      </small>
-    );
-  };
-
-  const panel: React.CSSProperties = {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '0.875rem',
-    padding: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-  };
-
-  const iconBox = (bg: string): React.CSSProperties => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '2rem',
-    height: '2rem',
-    borderRadius: '0.5rem',
-    background: bg,
-    flexShrink: 0,
-  });
-
-  const totalOnHand = stockQuants.reduce(
-    (s, sq) => s + parseFloat(sq.quantity?.toString() || '0'),
-    0,
-  );
-  const totalAvailable = stockQuants.reduce(
-    (s, sq) => s + parseFloat(sq.availableQuantity?.toString() || '0'),
-    0,
-  );
-  const totalReserved = stockQuants.reduce(
-    (s, sq) => s + parseFloat(sq.reservedQuantity?.toString() || '0'),
-    0,
-  );
-  const totalIncoming = stockQuants.reduce(
-    (s, sq) => s + parseFloat(sq.incomingQuantity?.toString() || '0'),
-    0,
-  );
-  const totalOutgoing = stockQuants.reduce(
-    (s, sq) => s + parseFloat(sq.outgoingQuantity?.toString() || '0'),
-    0,
-  );
-
   return (
     <AdminLayout>
-      <style>{`
-        .prod-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap; position: relative; margin-bottom: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-        .prod-detail-hdr__icon { width: 2.75rem; height: 2.75rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4, #1a47b8); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(35,90,228,0.4); }
-        .prod-detail-hdr__body { flex: 1; min-width: 0; overflow: hidden; }
-        .prod-detail-hdr__crumb { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.2rem; }
-        .prod-detail-hdr__title { margin: 0; font-size: 1.125rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prod-detail-hdr__actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: nowrap; }
-        @media (max-width: 767px) {
-          .prod-detail-hdr { padding: 0.625rem 0.875rem; gap: 0.5rem; }
-          .prod-detail-hdr__icon { display: none !important; }
-          .prod-detail-hdr__title { font-size: 0.9375rem !important; font-weight: 700 !important; }
-          .prod-detail-hdr__body { flex: 1; min-width: 0; }
-          .prod-detail-hdr__crumb { display: none; }
-          .prod-detail-hdr__actions { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0.375rem; width: 100%; }
-          .prod-detail-hdr__actions::-webkit-scrollbar { display: none; }
-          .prod-detail-hdr .p-button, .prod-detail-hdr__actions .p-button { height: 2.25rem !important; min-height: 2.25rem !important; max-height: 2.25rem !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 0.8125rem !important; white-space: nowrap; }
-        }
-        @media (max-width: 479px) {
-          .prod-detail-hdr { padding: 0.5rem 0.75rem; border-radius: 0.875rem; }
-        }
-      `}</style>
-
-      {/* ── Page Header ── */}
-      <div className="prod-detail-hdr">
-        <Button
-          icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
-          onClick={() => navigate('/products')}
-          style={{
-            width: '2.25rem',
-            height: '2.25rem',
-            flexShrink: 0,
-            background: '#f8fafc',
-            border: '1.5px solid #e2e8f0',
-            color: '#64748b',
-            borderRadius: '0.625rem',
-            padding: 0,
-          }}
+      <div className="pdetail-page">
+        <DocPageHeader
+          icon={<Package size={24} />}
+          parentLabel={t('products')}
+          currentLabel={product.code || product.name}
+          title={product.name}
+          onBack={handleCancel}
+          backAriaLabel={t('backToProducts')}
+          badges={
+            <>
+              <span
+                className={`doc-hdr__badge doc-hdr__badge--${product.isEnabled ? 'on' : 'off'}`}
+              >
+                {product.isEnabled ? t('active') : t('inactive')}
+              </span>
+              {product.isService && <span className="doc-hdr__badge">{t('isService')}</span>}
+            </>
+          }
         />
-        <div className="prod-detail-hdr__icon">
-          <Package style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />
-        </div>
-        <div className="prod-detail-hdr__body">
-          <div className="prod-detail-hdr__crumb">
-            <span
-              onClick={() => navigate('/products')}
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 600,
-                color: '#94a3b8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-                cursor: 'pointer',
-              }}
-            >
-              {t('products')}
-            </span>
-            <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
-            <span
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                color: '#235ae4',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-              }}
-            >
-              {product.code || product.name}
-            </span>
-          </div>
-          <h1 className="prod-detail-hdr__title">{product.name}</h1>
-        </div>
-        <div className="prod-detail-hdr__actions">
-          <PTag
-            value={product.isEnabled ? t('active') : t('inactive')}
-            severity={product.isEnabled ? 'success' : 'danger'}
-            style={{ flexShrink: 0 }}
-          />
-          {product.isService && <PTag value="Service" severity="info" style={{ flexShrink: 0 }} />}
-          <Button
-            text
-            severity="secondary"
-            onClick={() => {
-              if (isDirty) {
-                toastConfirm(t('unsavedChangesConfirm' as any), () => navigate('/products'), {
-                  confirmLabel: 'Quitter',
-                  variant: 'warning',
-                } as any);
-              } else {
-                navigate('/products');
-              }
-            }}
-            label={t('cancel')}
-            style={{ flexShrink: 0 }}
-          />
-          <Button
-            onClick={handleSave}
-            loading={updateMutation.isPending}
-            icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
-            label={t('saveChanges')}
-            style={{ flexShrink: 0 }}
-          />
-        </div>
-      </div>
 
-      <TabView
-        activeIndex={activeTabIndex}
-        onTabChange={(e) => setActiveTabIndex(e.index)}
-        pt={{
-          root: { className: 'product-tabview' },
-          panelContainer: { style: { padding: '0.75rem 0 0', background: 'transparent' } },
-          nav: { style: { background: 'transparent' } },
-        }}
-      >
-        <TabPanel header="Information">
-          <div className="product-form-grid">
-            {/* Left */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {/* Basic Information */}
-              <div style={panel} className="product-panel">
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '1.25rem',
-                  }}
-                >
-                  <div style={iconBox('#eef2ff')}>
-                    <TagIcon style={{ width: '1rem', height: '1rem', color: '#6366f1' }} />
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '0.9375rem',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      {t('basicInformation')}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {t('panelBasicSubtitle')}
-                    </p>
-                  </div>
-                </div>
+        <TabView
+          activeIndex={activeTabIndex}
+          onTabChange={(e) => setActiveTabIndex(e.index)}
+          pt={{
+            panelContainer: { style: { padding: 'var(--space-6) 0 0', background: 'transparent' } },
+            nav: { style: { background: 'transparent' } },
+          }}
+        >
+          {/* ── Details: the shared form, identical to create ── */}
+          <TabPanel header={t('tabInformation')}>
+            <div className="pform-tabbody">
+              <form onSubmit={handleSave} noValidate>
+                <FormErrorSummary entries={summary} />
 
-                {/* Image + fields */}
-                <div
-                  style={{ display: 'grid', gap: '1.25rem', marginBottom: '1.25rem' }}
-                  className="product-img-grid"
-                >
-                  <div>
-                    {id && (
+                <ProductForm
+                  mode="edit"
+                  form={form}
+                  options={{ warehouses, taxRates, categories, brands, uoms }}
+                  currency={currency}
+                  isGeneratingCode={isGeneratingCode}
+                  onRegenerateCode={handleRegenerateCode}
+                  saving={saving}
+                  imageSlot={
+                    <div className="pform-field">
+                      <span className="pform-field__label">{t('productImage')}</span>
                       <ImageUpload
                         productId={Number(id)}
                         currentImage={(product as any)?.imageUrl}
@@ -657,1012 +444,136 @@ export default function ProductDetail() {
                           queryClient.invalidateQueries({ queryKey: ['product', id] });
                           toastDeleted(t('imageRemovedSuccessfully'));
                         }}
-                        folder="products"
-                        maxSizeMB={5}
                       />
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div className="p-field">
-                      <label className="p-label">
-                        {t('productName')} <span style={{ color: '#ef4444' }}>*</span>
-                      </label>
-                      <InputText
-                        {...register('name')}
-                        placeholder={t('enterProductName')}
-                        className={fieldClass('name')}
-                        style={{ width: '100%' }}
-                      />
-                      <FieldError name="name" />
                     </div>
-                    <div className="p-field">
-                      <label className="p-label">{t('productCodeEAN13')}</label>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <InputText
-                          {...register('code')}
-                          placeholder={t('eanBarcodeePlaceholder')}
-                          maxLength={13}
-                          className={fieldClass('code')}
-                          style={{ flex: 1, fontFamily: 'monospace', letterSpacing: '0.05em' }}
-                        />
-                        <Button
-                          type="button"
-                          outlined
-                          onClick={handleRegenerateCode}
-                          disabled={isGeneratingCode}
-                          icon={
-                            <RefreshCw
-                              className={isGeneratingCode ? 'animate-spin' : ''}
-                              style={{ width: '0.875rem', height: '0.875rem' }}
-                            />
-                          }
-                          tooltip={t('generateNewUniqueCode')}
-                          tooltipOptions={{ position: 'top' }}
-                        />
-                        {ean13Valid === true && (
-                          <CheckCircle
-                            style={{
-                              width: '1.125rem',
-                              height: '1.125rem',
-                              color: '#22c55e',
-                              alignSelf: 'center',
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                        {ean13Valid === false && (
-                          <span
-                            style={{
-                              color: '#ef4444',
-                              fontSize: '1.125rem',
-                              lineHeight: 1,
-                              alignSelf: 'center',
-                              flexShrink: 0,
-                              fontWeight: 700,
-                            }}
-                          >
-                            ✕
-                          </span>
-                        )}
-                      </div>
-                      <FieldError name="code" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-field">
-                  <label className="p-label">{t('description')}</label>
-                  <InputTextarea
-                    {...register('description')}
-                    rows={3}
-                    autoResize
-                    placeholder={t('enterProductDescription')}
-                    style={{ width: '100%', resize: 'none' }}
-                  />
-                  <small
-                    style={{
-                      color: '#94a3b8',
-                      fontSize: '0.6875rem',
-                      display: 'block',
-                      textAlign: 'right',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    {descCharCount} {descCharCount === 1 ? 'caractère' : 'caractères'}
-                  </small>
-                </div>
-              </div>
-            </div>
-
-            {/* Right sidebar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {/* Classification */}
-              <div style={panel} className="product-panel">
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '1.25rem',
-                  }}
-                >
-                  <div style={iconBox('#fff7ed')}>
-                    <Building2 style={{ width: '1rem', height: '1rem', color: '#ea580c' }} />
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '0.9375rem',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      Classification
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {t('warehouseAndCategories')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-field" style={{ marginBottom: '1rem' }}>
-                  <label className="p-label">
-                    {t('warehouse')} <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <Controller
-                    name="warehouseId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
-                        onBlur={field.onBlur}
-                        options={warehouseOptions}
-                        placeholder={t('selectOrSearchWarehouse')}
-                        filter
-                        filterPlaceholder={t('search')}
-                        className={fieldClass('warehouseId')}
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                  <FieldError name="warehouseId" />
-                </div>
-
-                <div className="p-field" style={{ marginBottom: '1rem' }}>
-                  <label className="p-label">{t('brand')}</label>
-                  <Controller
-                    name="brandId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value ?? null}
-                        onChange={(e) => field.onChange(e.value ?? null)}
-                        onBlur={field.onBlur}
-                        options={brandOptions}
-                        placeholder={t('selectBrand')}
-                        filter
-                        showClear
-                        filterPlaceholder={t('search')}
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="p-field">
-                  <label className="p-label">{t('categories')}</label>
-                  <Controller
-                    name="categoryIds"
-                    control={control}
-                    render={({ field }) => (
-                      <MultiSelect
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
-                        onBlur={field.onBlur}
-                        options={categoryOptions}
-                        placeholder={t('searchCategoriesShort' as any)}
-                        filter
-                        display="chip"
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Settings */}
-              <div style={panel} className="product-panel">
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '1.25rem',
-                  }}
-                >
-                  <div style={iconBox('#f5f3ff')}>
-                    <SlidersHorizontal
-                      style={{ width: '1rem', height: '1rem', color: '#7c3aed' }}
-                    />
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '0.9375rem',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                      }}
-                    >
-                      Settings
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {t('behaviorOptions')}
-                    </p>
-                  </div>
-                </div>
-
-                {(
-                  [
-                    {
-                      key: 'isService' as const,
-                      label: t('isService'),
-                      desc: t('serviceDescription'),
-                    },
-                    {
-                      key: 'isEnabled' as const,
-                      label: t('enabled'),
-                      desc: t('enabledDescription'),
-                    },
-                    {
-                      key: 'isPriceChangeAllowed' as const,
-                      label: t('allowPriceChange'),
-                      desc: t('allowPriceChangeDescription'),
-                    },
-                  ] as const
-                ).map(({ key, label, desc }, i, arr) => (
-                  <Controller
-                    key={key}
-                    name={key}
-                    control={control}
-                    render={({ field }) => (
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          padding: '0.75rem 0',
-                          borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p
-                            style={{
-                              fontWeight: 500,
-                              fontSize: '0.875rem',
-                              color: '#0f172a',
-                              margin: 0,
-                            }}
-                          >
-                            {label}
-                          </p>
-                          <p
-                            style={{
-                              fontSize: '0.75rem',
-                              color: '#94a3b8',
-                              margin: '0.125rem 0 0',
-                            }}
-                          >
-                            {desc}
-                          </p>
-                        </div>
-                        <InputSwitch
-                          checked={field.value}
-                          onChange={(e) => field.onChange(e.value ?? false)}
-                        />
-                      </div>
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </TabPanel>
-        <TabPanel header={t('pricing') || 'Tarification'}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Sale Price */}
-            <div style={panel} className="product-panel">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <div style={iconBox('#ecfdf5')}>
-                  <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#10b981' }} />
-                </div>
-                <div>
-                  <h3
-                    style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}
-                  >
-                    {t('salePrice')}
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                    {t('panelPriceSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <div className="product-pricing-grid">
-                <div className="p-field">
-                  <label className="p-label">
-                    {t('price')} <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <Controller
-                    name="price"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        value={field.value}
-                        onValueChange={(e) => field.onChange(e.value ?? null)}
-                        onBlur={field.onBlur}
-                        mode="decimal"
-                        minFractionDigits={2}
-                        maxFractionDigits={2}
-                        min={0}
-                        suffix={` ${currency}`}
-                        placeholder="0.00"
-                        className={fieldClass('price')}
-                        inputStyle={{ width: '100%' }}
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                  <FieldError name="price" />
-                </div>
-                <div className="p-field">
-                  <label className="p-label">{t('unit')}</label>
-                  <Controller
-                    name="saleUnitId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
-                        onBlur={field.onBlur}
-                        options={uomOptions}
-                        placeholder={t('selectUnit') || 'Sélectionner une unité'}
-                        filter
-                        showClear
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="p-field">
-                  <label className="p-label">{t('tax')}</label>
-                  <Controller
-                    name="saleTaxId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value ?? null}
-                        onChange={(e) => field.onChange(e.value ?? null)}
-                        onBlur={field.onBlur}
-                        options={taxOptions}
-                        placeholder="Aucune taxe"
-                        showClear
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              {priceWithTax != null && saleTaxRate > 0 && (
-                <div
-                  style={{
-                    marginTop: '0.875rem',
-                    padding: '0.625rem 0.875rem',
-                    background: '#f0fdf4',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #bbf7d0',
-                  }}
-                >
-                  <span style={{ fontSize: '0.8125rem', color: '#166534' }}>
-                    {t('priceWithTax')}:{' '}
-                    <strong>
-                      {formatAmount(priceWithTax, 2)} {currency}
-                    </strong>
-                  </span>
-                </div>
-              )}
-
-              <div style={{ marginTop: '1.25rem' }} className="p-field">
-                <label
-                  className="p-label"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
-                >
-                  {t('minPrice')}
-                  <i
-                    className="pi pi-info-circle"
-                    title={t('minPriceTooltip' as any)}
-                    style={{ fontSize: '0.75rem', color: '#94a3b8', cursor: 'help' }}
-                  />
-                </label>
-                <Controller
-                  name="minPrice"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      value={field.value ?? null}
-                      onValueChange={(e) => field.onChange(e.value ?? null)}
-                      onBlur={field.onBlur}
-                      mode="decimal"
-                      minFractionDigits={2}
-                      maxFractionDigits={2}
-                      min={0}
-                      suffix={` ${currency}`}
-                      placeholder="0.00"
-                      inputStyle={{ width: '100%' }}
-                      style={{ width: '100%' }}
-                    />
-                  )}
+                  }
                 />
-              </div>
-            </div>
 
-            {/* Cost Price */}
-            <div style={panel} className="product-panel">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <div style={iconBox('#eff6ff')}>
-                  <TrendingUp style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
-                </div>
-                <div>
-                  <h3
-                    style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}
-                  >
-                    {t('costPrice')}
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                    {t('panelCostSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <div className="product-pricing-grid">
-                <div className="p-field">
-                  <label className="p-label">{t('costPrice')}</label>
-                  <Controller
-                    name="cost"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        value={field.value ?? null}
-                        onValueChange={(e) => field.onChange(e.value ?? null)}
-                        onBlur={field.onBlur}
-                        mode="decimal"
-                        minFractionDigits={2}
-                        maxFractionDigits={2}
-                        min={0}
-                        suffix={` ${currency}`}
-                        placeholder="0.00"
-                        inputStyle={{ width: '100%' }}
-                        style={{ width: '100%' }}
-                      />
-                    )}
+                {/* ── Sticky action bar ── */}
+                <div className="pform-actions">
+                  <Button
+                    type="button"
+                    outlined
+                    label={t('cancel')}
+                    disabled={saving}
+                    onClick={handleCancel}
+                  />
+                  <Button
+                    type="submit"
+                    label={t('saveChanges')}
+                    loading={saving}
+                    disabled={saving || !isDirty}
+                    icon={<Save size={14} aria-hidden="true" />}
                   />
                 </div>
-                <div className="p-field">
-                  <label className="p-label">{t('unit')}</label>
-                  <Controller
-                    name="purchaseUnitId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.value)}
-                        onBlur={field.onBlur}
-                        options={uomOptions}
-                        placeholder={t('selectUnit') || 'Sélectionner une unité'}
-                        filter
-                        showClear
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="p-field">
-                  <label className="p-label">{t('tax')}</label>
-                  <Controller
-                    name="purchaseTaxId"
-                    control={control}
-                    render={({ field }) => (
-                      <Dropdown
-                        value={field.value ?? null}
-                        onChange={(e) => field.onChange(e.value ?? null)}
-                        onBlur={field.onBlur}
-                        options={taxOptions}
-                        placeholder="Aucune taxe"
-                        showClear
-                        style={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              {margin != null && (
-                <div
-                  style={{
-                    marginTop: '1.25rem',
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                    borderRadius: '0.75rem',
-                    padding: '1rem',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: '0 0 0.75rem',
-                      fontSize: '0.6875rem',
-                      fontWeight: 600,
-                      color: '#94a3b8',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.07em',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                    }}
-                  >
-                    {t('marginAnalysis')}
-                    <span
-                      style={{
-                        background: '#f1f5f9',
-                        color: '#64748b',
-                        fontSize: '0.625rem',
-                        fontWeight: 500,
-                        padding: '0.125rem 0.5rem',
-                        borderRadius: '9999px',
-                        letterSpacing: '0.03em',
-                        textTransform: 'none',
-                      }}
-                    >
-                      {t('calculatedAuto' as any)}
-                    </span>
-                  </p>
-                  <div className="margin-grid-3">
-                    {[
-                      {
-                        label: t('marginAmount'),
-                        value: `${formatAmount(margin, 2)} ${currency}`,
-                        color: margin >= 0 ? '#0f172a' : '#ef4444',
-                        border: '#f1f5f9',
-                      },
-                      {
-                        label: t('marginPercent'),
-                        value: `${marginPct?.toFixed(1) ?? '—'}%`,
-                        color: '#16a34a',
-                        border: '#dcfce7',
-                      },
-                      {
-                        label: t('markupPercent'),
-                        value: `${markupPct?.toFixed(1) ?? '—'}%`,
-                        color: '#2563eb',
-                        border: '#dbeafe',
-                      },
-                    ].map(({ label, value, color, border }) => (
-                      <div
-                        key={label}
-                        style={{
-                          background: 'white',
-                          borderRadius: '0.625rem',
-                          padding: '0.75rem 0.5rem',
-                          textAlign: 'center',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                          border: `1px solid ${border}`,
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontSize: '0.6875rem',
-                            fontWeight: 600,
-                            color: '#94a3b8',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em',
-                            margin: '0 0 0.375rem',
-                          }}
-                        >
-                          {label}
-                        </p>
-                        <p style={{ fontSize: '1.125rem', fontWeight: 700, color, margin: 0 }}>
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </form>
             </div>
-          </div>
-        </TabPanel>
-        <TabPanel header={t('stock') || 'Stock'}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* ── Summary KPI cards ── */}
-            {(() => {
-              const globalUomCode = (product as any)?.saleUnitOfMeasure?.code ?? '';
-              const kpis: {
-                label: string;
-                value: number;
-                Icon: React.ElementType;
-                color: string;
-                iconBg: string;
-                accent: string;
-              }[] = [
-                {
-                  label: t('onHand'),
-                  value: totalOnHand,
-                  Icon: Package,
-                  color: '#0f172a',
-                  iconBg: '#f1f5f9',
-                  accent: '#94a3b8',
-                },
+          </TabPanel>
+
+          {/* ── Stock: a separate concern, not part of the product form ── */}
+          <TabPanel header={t('stock')}>
+            <div className="pstock-kpis">
+              {[
+                { label: t('onHand'), value: totalOnHand, tone: '' },
                 {
                   label: t('available'),
                   value: totalAvailable,
-                  Icon: CheckCircle,
-                  color: '#059669',
-                  iconBg: '#ecfdf5',
-                  accent: '#10b981',
+                  tone: totalAvailable > 0 ? ' pstock-kpi__value--ok' : ' pstock-kpi__value--neg',
                 },
                 {
                   label: t('reserved'),
                   value: totalReserved,
-                  Icon: Lock,
-                  color: '#d97706',
-                  iconBg: '#fffbeb',
-                  accent: '#f59e0b',
+                  tone: totalReserved > 0 ? ' pstock-kpi__value--warn' : '',
                 },
-                {
-                  label: t('incoming'),
-                  value: totalIncoming,
-                  Icon: TrendingUp,
-                  color: '#2563eb',
-                  iconBg: '#eff6ff',
-                  accent: '#3b82f6',
-                },
-                {
-                  label: t('outgoing'),
-                  value: totalOutgoing,
-                  Icon: TrendingDown,
-                  color: '#ea580c',
-                  iconBg: '#fff7ed',
-                  accent: '#f97316',
-                },
-              ];
-              return (
-                <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '0.875rem',
-                    }}
-                  >
-                    {kpis.map(({ label, value, Icon, color, iconBg, accent }) => (
-                      <div
-                        key={label}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '0.875rem',
-                          padding: '1.25rem',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: '3px',
-                            background: accent,
-                            borderRadius: '0.875rem 0.875rem 0 0',
-                          }}
-                        />
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            justifyContent: 'space-between',
-                            marginBottom: '0.875rem',
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: '0.6875rem',
-                              fontWeight: 700,
-                              color: '#94a3b8',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.08em',
-                            }}
-                          >
-                            {label}
-                          </span>
-                          <div
-                            style={{
-                              width: '2rem',
-                              height: '2rem',
-                              borderRadius: '0.5rem',
-                              background: iconBg,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Icon size={14} color={color} />
-                          </div>
-                        </div>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: '1.75rem',
-                            fontWeight: 800,
-                            color,
-                            lineHeight: 1,
-                            letterSpacing: '-0.025em',
-                          }}
-                        >
-                          {value.toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  {globalUomCode && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
-                        Unité de mesure :
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          padding: '0.1875rem 0.625rem',
-                          background: '#f8fafc',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '9999px',
-                          color: '#475569',
-                          letterSpacing: '0.04em',
-                        }}
-                      >
-                        {globalUomCode}
-                      </span>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-
-            {/* ── Stock table panel ── */}
-            <div
-              style={{
-                background: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '1rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Panel header */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '1rem 1.25rem',
-                  borderBottom: '1px solid #f1f5f9',
-                  flexWrap: 'wrap',
-                  gap: '0.75rem',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '2.25rem',
-                      height: '2.25rem',
-                      borderRadius: '0.625rem',
-                      background: 'linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)',
-                      border: '1px solid #86efac',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Building2 style={{ width: '1rem', height: '1rem', color: '#16a34a' }} />
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: '0.9375rem',
-                        fontWeight: 700,
-                        color: '#0f172a',
-                      }}
-                    >
-                      {t('stockManagement')}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {stockQuants.length} {stockQuants.length === 1 ? 'entrepôt' : 'entrepôts'}
-                    </p>
-                  </div>
+                { label: t('incoming'), value: totalIncoming, tone: '' },
+                { label: t('outgoing'), value: totalOutgoing, tone: '' },
+              ].map(({ label, value, tone }) => (
+                <div className="pstock-kpi" key={label}>
+                  <p className="pstock-kpi__label">{label}</p>
+                  <p className={`pstock-kpi__value${tone}`}>{value.toFixed(2)}</p>
                 </div>
-                <div className="prod-stock-btns" style={{ display: 'flex', gap: '0.625rem' }}>
+              ))}
+            </div>
+
+            <div className="pstock-panel">
+              <div className="pstock-panel__head">
+                <div>
+                  <h2 className="pstock-panel__title">{t('stockManagement')}</h2>
+                  <p className="pstock-panel__count">
+                    {stockQuants.length} {t('warehouse')}
+                  </p>
+                </div>
+                <div className="pstock-panel__actions">
                   <Button
-                    onClick={() => setShowStockCorrection(true)}
-                    icon={<Plus style={{ width: '0.875rem', height: '0.875rem' }} />}
-                    label={t('correctStock')}
+                    type="button"
                     size="small"
                     outlined
+                    onClick={() => setShowStockCorrection(true)}
+                    icon={<Plus size={14} aria-hidden="true" />}
+                    label={t('correctStock')}
                   />
                   <Button
-                    onClick={() => setShowStockTransfer(true)}
-                    icon={<ArrowRightLeft style={{ width: '0.875rem', height: '0.875rem' }} />}
-                    label={t('transferStock')}
+                    type="button"
                     size="small"
-                    severity="help"
                     outlined
+                    onClick={() => setShowStockTransfer(true)}
+                    icon={<ArrowRightLeft size={14} aria-hidden="true" />}
+                    label={t('transferStock')}
                   />
                 </div>
               </div>
 
-              {/* Warehouse cards */}
               {stockQuants.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-                  <Building2
-                    style={{ width: 48, height: 48, margin: '0 auto 1rem', opacity: 0.25 }}
-                  />
-                  <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>
-                    {t('noStockRecordsFound')}
-                  </p>
+                <div className="pform-empty">
+                  <Building2 size={40} strokeWidth={1.5} aria-hidden="true" />
+                  <p className="pform-empty__title">{t('noStockRecordsFound')}</p>
+                  <p className="pform-empty__desc">{t('correctStock')}</p>
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.625rem',
-                    padding: '1rem 1.25rem',
-                  }}
-                >
+                <div className="pstock-list">
                   {stockQuants.map((row: any) => {
                     const onHand = parseFloat(row.quantity?.toString() || '0');
                     const available = parseFloat(row.availableQuantity?.toString() || '0');
                     const reserved = parseFloat(row.reservedQuantity?.toString() || '0');
                     const incoming = parseFloat(row.incomingQuantity?.toString() || '0');
                     const outgoing = parseFloat(row.outgoingQuantity?.toString() || '0');
-                    const isInStock = available > 0;
                     const metrics = [
-                      {
-                        label: t('onHand'),
-                        display: onHand.toFixed(2),
-                        sign: '',
-                        color: '#0f172a',
-                        dimBg: 'transparent',
-                      },
+                      { label: t('onHand'), value: onHand.toFixed(2), tone: '' },
                       {
                         label: t('available'),
-                        display: available.toFixed(2),
-                        sign: '',
-                        color: isInStock ? '#059669' : '#ef4444',
-                        dimBg: isInStock ? '#f0fdf4' : '#fef2f2',
+                        value: available.toFixed(2),
+                        tone:
+                          available > 0
+                            ? ' pstock-metric__value--ok'
+                            : ' pstock-metric__value--neg',
                       },
                       {
                         label: t('reserved'),
-                        display: reserved > 0 ? reserved.toFixed(2) : '—',
-                        sign: '',
-                        color: reserved > 0 ? '#d97706' : '#cbd5e1',
-                        dimBg: '#fffbeb',
+                        value: reserved > 0 ? reserved.toFixed(2) : '—',
+                        tone:
+                          reserved > 0
+                            ? ' pstock-metric__value--warn'
+                            : ' pstock-metric__value--muted',
                       },
                       {
                         label: t('incoming'),
-                        display: incoming > 0 ? incoming.toFixed(2) : '—',
-                        sign: incoming > 0 ? '+' : '',
-                        color: incoming > 0 ? '#2563eb' : '#cbd5e1',
-                        dimBg: '#eff6ff',
+                        value: incoming > 0 ? incoming.toFixed(2) : '—',
+                        tone: incoming > 0 ? '' : ' pstock-metric__value--muted',
                       },
                       {
                         label: t('outgoing'),
-                        display: outgoing > 0 ? outgoing.toFixed(2) : '—',
-                        sign: outgoing > 0 ? '-' : '',
-                        color: outgoing > 0 ? '#ea580c' : '#cbd5e1',
-                        dimBg: '#fff7ed',
+                        value: outgoing > 0 ? outgoing.toFixed(2) : '—',
+                        tone: outgoing > 0 ? '' : ' pstock-metric__value--muted',
                       },
                     ];
                     return (
-                      <div
-                        key={row.id ?? row.warehouse?.id}
-                        style={{
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '0.875rem',
-                          background: '#fff',
-                          overflow: 'hidden',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                        }}
-                      >
-                        {/* card header */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '0.75rem 1rem',
-                            borderBottom: '1px solid #f1f5f9',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                            <span
-                              style={{
-                                width: '0.5rem',
-                                height: '0.5rem',
-                                borderRadius: '50%',
-                                flexShrink: 0,
-                                background: isInStock ? '#22c55e' : '#d1d5db',
-                                display: 'inline-block',
-                                boxShadow: isInStock ? '0 0 0 3px #dcfce7' : 'none',
-                              }}
-                            />
-                            <span
-                              style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}
-                            >
-                              {row.warehouse?.name || t('unknown')}
-                            </span>
-                          </div>
-                          <span
-                            style={{
-                              fontSize: '0.6875rem',
-                              fontWeight: 600,
-                              padding: '0.1875rem 0.625rem',
-                              borderRadius: '9999px',
-                              background: isInStock ? '#dcfce7' : '#f1f5f9',
-                              color: isInStock ? '#15803d' : '#64748b',
-                              border: `1px solid ${isInStock ? '#bbf7d0' : '#e2e8f0'}`,
-                            }}
-                          >
-                            {isInStock ? 'En stock' : 'Rupture'}
-                          </span>
-                        </div>
-                        {/* metrics row */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
-                          {metrics.map(({ label, display, sign, color, dimBg }, i) => (
-                            <div
-                              key={label}
-                              style={{
-                                padding: '0.875rem 0.5rem',
-                                background: dimBg,
-                                borderRight: i < 4 ? '1px solid #f1f5f9' : 'none',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: '0.625rem',
-                                  fontWeight: 700,
-                                  color: '#94a3b8',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.07em',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {label}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: '1.0625rem',
-                                  fontWeight: 800,
-                                  color,
-                                  lineHeight: 1,
-                                }}
-                              >
-                                {sign}
-                                {display}
-                              </span>
+                      <div className="pstock-row" key={row.id ?? row.warehouseId}>
+                        <p className="pstock-row__name">{row.warehouse?.name ?? t('unknown')}</p>
+                        <div className="pstock-metrics">
+                          {metrics.map((m) => (
+                            <div className="pstock-metric" key={m.label}>
+                              <p className="pstock-metric__label">{m.label}</p>
+                              <p className={`pstock-metric__value${m.tone}`}>{m.value}</p>
                             </div>
                           ))}
                         </div>
@@ -1672,223 +583,206 @@ export default function ProductDetail() {
                 </div>
               )}
             </div>
-          </div>
-        </TabPanel>
-      </TabView>
+          </TabPanel>
+        </TabView>
 
-      {/* ── Stock Correction Dialog ── */}
-      <Dialog
-        visible={showStockCorrection}
-        onHide={() => setShowStockCorrection(false)}
-        header={t('correctStock')}
-        style={{ width: '32rem' }}
-        modal
-        footer={
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+        {/* ── Stock correction dialog ── */}
+        <Dialog
+          header={t('correctStock')}
+          visible={showStockCorrection}
+          onHide={() => setShowStockCorrection(false)}
+          style={{ inlineSize: '30rem', maxInlineSize: '95vw' }}
+          draggable={false}
+        >
+          <div className="pdlg-grid">
+            <FormField id="sc-warehouse" label={t('warehouse')} required>
+              {(a) => (
+                <AutoCompleteSelect
+                  inputId={a.id}
+                  value={stockCorrectionData.warehouseId}
+                  onChange={(e) =>
+                    setStockCorrectionData({ ...stockCorrectionData, warehouseId: e.value })
+                  }
+                  options={warehouseDropdownOptions}
+                  placeholder={t('selectWarehouse')}
+                />
+              )}
+            </FormField>
+
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="pform-field__label">{t('type')}</legend>
+              <div style={{ display: 'flex', gap: 'var(--space-5)' }}>
+                {(['add', 'remove'] as const).map((op) => (
+                  <div
+                    key={op}
+                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
+                  >
+                    <RadioButton
+                      inputId={`sc-op-${op}`}
+                      name="sc-operation"
+                      value={op}
+                      checked={stockCorrectionData.operation === op}
+                      onChange={(e) =>
+                        setStockCorrectionData({ ...stockCorrectionData, operation: e.value })
+                      }
+                    />
+                    <label htmlFor={`sc-op-${op}`}>{op === 'add' ? t('add') : t('remove')}</label>
+                  </div>
+                ))}
+              </div>
+            </fieldset>
+
+            <FormField id="sc-quantity" label={t('quantity')} required>
+              {(a) => (
+                <InputNumber
+                  inputId={a.id}
+                  value={stockCorrectionData.quantity ? Number(stockCorrectionData.quantity) : null}
+                  onValueChange={(e) =>
+                    setStockCorrectionData({
+                      ...stockCorrectionData,
+                      quantity: e.value?.toString() ?? '',
+                    })
+                  }
+                  mode="decimal"
+                  minFractionDigits={2}
+                  maxFractionDigits={2}
+                  min={0}
+                />
+              )}
+            </FormField>
+
+            <FormField id="sc-notes" label={t('notes')}>
+              {(a) => (
+                <InputTextarea
+                  id={a.id}
+                  rows={2}
+                  autoResize
+                  value={stockCorrectionData.notes}
+                  onChange={(e) =>
+                    setStockCorrectionData({ ...stockCorrectionData, notes: e.target.value })
+                  }
+                  style={{ inlineSize: '100%', resize: 'none' }}
+                />
+              )}
+            </FormField>
+          </div>
+
+          <div className="pdlg-actions">
             <Button
+              type="button"
               outlined
-              onClick={() => setShowStockCorrection(false)}
               label={t('cancel')}
-              style={{ flex: 1 }}
+              onClick={() => setShowStockCorrection(false)}
             />
             <Button
-              onClick={handleStockCorrection}
+              type="button"
+              label={t('correctStock')}
+              loading={stockCorrectionMutation.isPending}
               disabled={
                 !stockCorrectionData.warehouseId ||
                 !stockCorrectionData.quantity ||
                 stockCorrectionMutation.isPending
               }
-              loading={stockCorrectionMutation.isPending}
-              label={t('validate')}
-              style={{ flex: 1 }}
+              onClick={() => stockCorrectionMutation.mutate(stockCorrectionData)}
             />
           </div>
-        }
-      >
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem' }}
+        </Dialog>
+
+        {/* ── Stock transfer dialog ── */}
+        <Dialog
+          header={t('transferStock')}
+          visible={showStockTransfer}
+          onHide={() => setShowStockTransfer(false)}
+          style={{ inlineSize: '30rem', maxInlineSize: '95vw' }}
+          draggable={false}
         >
-          {warehouses.length === 0 && <Message severity="warn" text={t('noWarehouseCreateOne')} />}
-
-          <div className="p-field">
-            <label className="p-label">{t('warehouse')} *</label>
-            <Dropdown
-              value={stockCorrectionData.warehouseId}
-              onChange={(e) =>
-                setStockCorrectionData({ ...stockCorrectionData, warehouseId: e.value })
-              }
-              options={[
-                { label: warehousesLoading ? t('loading') : t('selectWarehouse'), value: '' },
-                ...warehouseDropdownOptions,
-              ]}
-              disabled={warehouses.length === 0}
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">Operation *</label>
-            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.375rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <RadioButton
-                  value="add"
-                  checked={stockCorrectionData.operation === 'add'}
-                  onChange={() =>
-                    setStockCorrectionData({ ...stockCorrectionData, operation: 'add' })
+          <div className="pdlg-grid">
+            <FormField id="st-source" label={t('selectSourceWarehouse')} required>
+              {(a) => (
+                <AutoCompleteSelect
+                  inputId={a.id}
+                  value={stockTransferData.sourceWarehouseId}
+                  onChange={(e) =>
+                    setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.value })
                   }
+                  options={warehouseDropdownOptions}
+                  placeholder={t('selectWarehouse')}
                 />
-                <span style={{ fontSize: '0.875rem' }}>{t('add')}</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <RadioButton
-                  value="remove"
-                  checked={stockCorrectionData.operation === 'remove'}
-                  onChange={() =>
-                    setStockCorrectionData({ ...stockCorrectionData, operation: 'remove' })
+              )}
+            </FormField>
+
+            <FormField id="st-dest" label={t('selectDestinationWarehouse')} required>
+              {(a) => (
+                <AutoCompleteSelect
+                  inputId={a.id}
+                  value={stockTransferData.destWarehouseId}
+                  onChange={(e) =>
+                    setStockTransferData({ ...stockTransferData, destWarehouseId: e.value })
                   }
+                  options={destWarehouseOptions}
+                  placeholder={t('selectWarehouse')}
+                  disabled={!stockTransferData.sourceWarehouseId}
                 />
-                <span style={{ fontSize: '0.875rem' }}>{t('remove')}</span>
-              </label>
-            </div>
+              )}
+            </FormField>
+
+            <FormField id="st-quantity" label={t('quantity')} required>
+              {(a) => (
+                <InputNumber
+                  inputId={a.id}
+                  value={stockTransferData.quantity ? Number(stockTransferData.quantity) : null}
+                  onValueChange={(e) =>
+                    setStockTransferData({
+                      ...stockTransferData,
+                      quantity: e.value?.toString() ?? '',
+                    })
+                  }
+                  mode="decimal"
+                  minFractionDigits={2}
+                  maxFractionDigits={2}
+                  min={0}
+                />
+              )}
+            </FormField>
+
+            <FormField id="st-notes" label={t('notes')}>
+              {(a) => (
+                <InputTextarea
+                  id={a.id}
+                  rows={2}
+                  autoResize
+                  value={stockTransferData.notes}
+                  onChange={(e) =>
+                    setStockTransferData({ ...stockTransferData, notes: e.target.value })
+                  }
+                  style={{ inlineSize: '100%', resize: 'none' }}
+                />
+              )}
+            </FormField>
           </div>
 
-          <div className="p-field">
-            <label className="p-label">{t('quantity')} *</label>
-            <InputText
-              type="number"
-              min="0"
-              value={stockCorrectionData.quantity}
-              onChange={(e) =>
-                setStockCorrectionData({ ...stockCorrectionData, quantity: e.target.value })
-              }
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">{t('unitPrice')}</label>
-            <InputText
-              type="number"
-              step="0.01"
-              min="0"
-              value={stockCorrectionData.unitPrice}
-              onChange={(e) =>
-                setStockCorrectionData({ ...stockCorrectionData, unitPrice: e.target.value })
-              }
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">{t('notes')}</label>
-            <InputText
-              value={stockCorrectionData.notes}
-              onChange={(e) =>
-                setStockCorrectionData({ ...stockCorrectionData, notes: e.target.value })
-              }
-              placeholder={`Stock correction — ${product.code || product.name}`}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
-      </Dialog>
-
-      {/* ── Stock Transfer Dialog ── */}
-      <Dialog
-        visible={showStockTransfer}
-        onHide={() => setShowStockTransfer(false)}
-        header={t('transferStock')}
-        style={{ width: '32rem' }}
-        modal
-        footer={
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="pdlg-actions">
             <Button
+              type="button"
               outlined
-              onClick={() => setShowStockTransfer(false)}
               label={t('cancel')}
-              style={{ flex: 1 }}
+              onClick={() => setShowStockTransfer(false)}
             />
             <Button
-              onClick={handleStockTransfer}
+              type="button"
+              label={t('transfer')}
+              loading={stockTransferMutation.isPending}
               disabled={
                 !stockTransferData.sourceWarehouseId ||
                 !stockTransferData.destWarehouseId ||
                 !stockTransferData.quantity ||
                 stockTransferMutation.isPending
               }
-              loading={stockTransferMutation.isPending}
-              label={t('transfer')}
-              style={{ flex: 1 }}
+              onClick={() => stockTransferMutation.mutate(stockTransferData)}
             />
           </div>
-        }
-      >
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem' }}
-        >
-          {warehouses.length === 0 && <Message severity="warn" text={t('noWarehouseCreateOne')} />}
-
-          <div className="p-field">
-            <label className="p-label">Source warehouse *</label>
-            <Dropdown
-              value={stockTransferData.sourceWarehouseId}
-              onChange={(e) =>
-                setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.value })
-              }
-              options={[
-                { label: warehousesLoading ? t('loading') : t('selectSourceWarehouse'), value: '' },
-                ...warehouseDropdownOptions,
-              ]}
-              disabled={warehouses.length === 0}
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">Destination warehouse *</label>
-            <Dropdown
-              value={stockTransferData.destWarehouseId}
-              onChange={(e) =>
-                setStockTransferData({ ...stockTransferData, destWarehouseId: e.value })
-              }
-              options={[
-                {
-                  label: warehousesLoading ? t('loading') : t('selectDestinationWarehouse'),
-                  value: '',
-                },
-                ...destWarehouseOptions,
-              ]}
-              disabled={warehouses.length === 0}
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">{t('quantity')} *</label>
-            <InputText
-              type="number"
-              min="0"
-              value={stockTransferData.quantity}
-              onChange={(e) =>
-                setStockTransferData({ ...stockTransferData, quantity: e.target.value })
-              }
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label className="p-label">{t('notes')}</label>
-            <InputText
-              value={stockTransferData.notes}
-              onChange={(e) =>
-                setStockTransferData({ ...stockTransferData, notes: e.target.value })
-              }
-              placeholder={`Stock transfer — ${product.code || product.name}`}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
-      </Dialog>
+        </Dialog>
+      </div>
     </AdminLayout>
   );
 }

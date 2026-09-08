@@ -55,3 +55,54 @@ export function addMonths(iso: string, months: number): string {
   if (date.getDate() < targetDay) date.setDate(0);
   return date.toISOString().slice(0, 10);
 }
+
+/** `1536` → `1.5 KB`. Mirrors the API's own byte formatting. */
+export function formatBytes(bytes: number | null | undefined): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+/**
+ * Compact counts for KPI tiles: `1234` → `1.2k`, `1500000` → `1.5M`.
+ * Numbers below 1000 are shown in full — rounding those loses real information.
+ */
+export function formatCompact(value: number | null | undefined): string {
+  const n = value ?? 0;
+  if (Math.abs(n) < 1000) return n.toLocaleString();
+  return new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(n);
+}
+
+/** `2026-09-06T14:03:00Z` → `6 Sep, 14:03`. Used for "as of" freshness labels. */
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+/** `2026-09-06` shifted by `days`, staying in `YYYY-MM-DD`. */
+export function shiftIso(iso: string, days: number): string {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** `2026-09-06` → `6 Sep`. Compact axis label for daily charts. */
+export function formatDayLabel(iso: string): string {
+  const date = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
+}

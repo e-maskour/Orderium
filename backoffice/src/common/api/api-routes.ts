@@ -168,6 +168,8 @@ export const API_ROUTES = {
   CONFIGURATIONS: {
     BY_ENTITY: (entity: string) => `/api/configurations/entity/${entity}`,
     UPDATE: (id: number) => `/api/configurations/${id}`,
+    GENERAL: '/api/configurations/entity/general',
+    GENERAL_UPDATE: '/api/configurations/entity/general',
   },
 
   // ─── Sequences ─────────────────────────────────────────────

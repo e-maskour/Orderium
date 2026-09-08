@@ -5,9 +5,9 @@ import { DocumentType } from '../../modules/documents/types';
 import { DocumentItem } from '../../modules/documents/services/documents.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
-import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { formatAmount } from '@orderium/ui';
+import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';
 
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
@@ -455,7 +455,7 @@ export function DocumentAnalysisChart({
             />
 
             {/* Measure selector */}
-            <Dropdown
+            <AutoCompleteSelect
               value={selectedMeasure}
               options={measureOptions}
               onChange={(e) => setSelectedMeasure(e.value as MeasureType)}
@@ -465,7 +465,7 @@ export function DocumentAnalysisChart({
             />
 
             {/* Year selector */}
-            <Dropdown
+            <AutoCompleteSelect
               value={selectedYear}
               options={availableYears.map((y) => ({ label: String(y), value: y }))}
               onChange={(e) => handleYearChange(e.value)}

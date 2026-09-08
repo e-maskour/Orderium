@@ -8,7 +8,7 @@
   "author": "Morocom Team",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "build:dev": "vite build --mode development",
     "build:analyze": "vite build --mode development && tsc --noEmit",
     "lint": "eslint .",

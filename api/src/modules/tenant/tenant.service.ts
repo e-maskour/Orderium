@@ -22,7 +22,6 @@ import { UpdateTenantModulesDto } from './dto/update-tenant-modules.dto';
 import { TenantConnectionService } from './tenant-connection.service';
 import { runTenantSeeders } from '../../database/seeders';
 import { runTenantInitScripts } from '../../database/init-scripts';
-import { Payment } from '../tenant-lifecycle/entities/payment.entity';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 
 export interface TenantUrls {
@@ -66,9 +65,6 @@ export class TenantService implements OnModuleInit {
   constructor(
     @InjectRepository(Tenant, 'master')
     private readonly tenantRepo: Repository<Tenant>,
-
-    @InjectRepository(Payment, 'master')
-    private readonly paymentRepo: Repository<Payment>,
 
     @InjectRepository(TenantActivityLog, 'master')
     private readonly activityLogRepo: Repository<TenantActivityLog>,
@@ -117,13 +113,6 @@ export class TenantService implements OnModuleInit {
       where: { tenantId },
       order: { createdAt: 'DESC' },
       take: 100,
-    });
-  }
-
-  async getPayments(tenantId: number): Promise<Payment[]> {
-    return this.paymentRepo.find({
-      where: { tenantId },
-      order: { createdAt: 'DESC' },
     });
   }
 
@@ -356,7 +345,15 @@ export class TenantService implements OnModuleInit {
       );
       const tableNames = tables.map((r) => r.table_name);
 
-      if (tableNames.includes('users')) {
+      // Users live in `portal`, not `users` — there has never been a `users`
+      // table, so the old check silently reported every tenant as having zero
+      // users. `users` is still accepted in case an older schema has one.
+      if (tableNames.includes('portal')) {
+        const [{ count }] = await ds.query<[{ count: string }]>(
+          'SELECT COUNT(*) AS count FROM portal',
+        );
+        usersCount = parseInt(count, 10);
+      } else if (tableNames.includes('users')) {
         const [{ count }] = await ds.query<[{ count: string }]>(
           'SELECT COUNT(*) AS count FROM users',
         );
@@ -506,7 +503,14 @@ export class TenantService implements OnModuleInit {
     }
   }
 
-  private async getMinioBucketSize(tenantSlug: string): Promise<number> {
+  /**
+   * Total bytes stored in a tenant's MinIO bucket.
+   *
+   * Public so the platform-metrics collector can record storage usage in its
+   * nightly snapshot without duplicating the MinIO client setup. Resolves to 0
+   * rather than throwing when the bucket is missing or MinIO is unreachable.
+   */
+  async getMinioBucketSize(tenantSlug: string): Promise<number> {
     const bucketName = `orderium-${tenantSlug}`;
     const client = this.buildMinioClient();
     let totalSize = 0;

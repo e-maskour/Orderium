@@ -34,10 +34,10 @@ import {
 } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { formatAmount } from '@orderium/ui';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Products() {
   const { t, language } = useLanguage();
@@ -408,7 +408,7 @@ export default function Products() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('categories')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={selectedCategoryIds[0] ?? null}
                 onChange={(e) => {
                   const ids = e.value != null ? [e.value as number] : [];
@@ -431,7 +431,7 @@ export default function Products() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('brand')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={selectedBrandIds[0] ?? null}
                 onChange={(e) => {
                   const ids = e.value != null ? [e.value as number] : [];
@@ -454,7 +454,7 @@ export default function Products() {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
                 {t('stock')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={stockFilter}
                 onChange={(e) => {
                   setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive');

@@ -20,12 +20,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Calendar } from 'primereact/calendar';
-import { Dropdown } from 'primereact/dropdown';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Message } from 'primereact/message';
 import { formatAmount } from '@orderium/ui';
+import { AutoCompleteSelect } from './ui/AutoCompleteSelect';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -490,7 +490,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>
               {t('invoice.paymentMethod')} *
             </label>
-            <Dropdown
+            <AutoCompleteSelect
               value={formData.paymentType}
               options={paymentTypeOptions}
               onChange={(e) => setFormData({ ...formData, paymentType: e.value })}

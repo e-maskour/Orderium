@@ -4,7 +4,6 @@ import { ArrowLeft, Pencil, Hash, RotateCcw } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
-import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +22,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
+import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -513,7 +513,7 @@ export default function Sequences() {
                   >
                     {t('entityType')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     value={formData.entityType}
                     onChange={(e) => set({ entityType: e.value as SequenceEntityType })}
                     options={entityTypeOptions}
@@ -631,7 +631,7 @@ export default function Sequences() {
                   >
                     {t('resetPeriod')}
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     value={formData.resetPeriod}
                     onChange={(e) => set({ resetPeriod: e.value })}
                     options={resetPeriodOptions}

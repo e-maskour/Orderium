@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PrimeReactProvider } from 'primereact/api';
 import backofficeConfig from './theme-preset';
 import { AuthProvider } from './context/AuthContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PushNotificationProvider } from './components/PushNotificationProvider';
 import { Toaster, ConfirmProvider, AlertProvider } from '@orderium/ui';
@@ -13,6 +13,57 @@ import { KeyboardProvider } from './context/KeyboardContext';
 import { POSKeyboard } from './components/keyboard/POSKeyboard';
 import { KeyboardToggle } from './components/keyboard/KeyboardToggle';
 import { useKeyboard } from './hooks/useKeyboard';
+import { GeneralSettingsProvider } from './context/GeneralSettingsContext';
+import { useGeneralSettings } from './hooks/useGeneralSettings';
+
+/**
+ * TenantLanguageSync — pushes the tenant's `defaultLanguage` general param into
+ * the language context.
+ *
+ * It exists as a bridge because LanguageProvider sits above AuthProvider (and
+ * therefore above GeneralSettingsProvider) and cannot read general settings
+ * itself. `applyTenantDefault` is a no-op on the active language once the user
+ * has made an explicit choice.
+ */
+function TenantLanguageSync() {
+  const { defaultLanguage, isResolved } = useGeneralSettings();
+  const { applyTenantDefault } = useLanguage();
+
+  useEffect(() => {
+    // Wait for a real answer from the server. Acting on the client-side default
+    // would overwrite a cached tenant default (say 'fr') with 'ar' on every
+    // unauthenticated visit, flipping the login screen back and forth.
+    if (!isResolved) return;
+    applyTenantDefault(defaultLanguage);
+  }, [defaultLanguage, isResolved, applyTenantDefault]);
+
+  return null;
+}
+
+/**
+ * VirtualKeyboardSurface — renders the global keyboard and its floating toggle
+ * only while the tenant's `keyboardEnabled` general param is on. Both are
+ * mounted exclusively here, so hiding them here disables the feature entirely.
+ */
+function VirtualKeyboardSurface() {
+  const { keyboardEnabled } = useGeneralSettings();
+  const { hideKeyboard } = useKeyboard();
+
+  // Collapse an open keyboard the moment the param is turned off, so
+  // re-enabling it later starts from a closed state rather than popping open.
+  useEffect(() => {
+    if (!keyboardEnabled) hideKeyboard();
+  }, [keyboardEnabled, hideKeyboard]);
+
+  if (!keyboardEnabled) return null;
+  return (
+    <>
+      <KeyboardRouteWatcher />
+      <KeyboardToggle />
+      <POSKeyboard />
+    </>
+  );
+}
 
 /** Closes the keyboard automatically when navigating away from the POS page. */
 function KeyboardRouteWatcher() {
@@ -100,6 +151,7 @@ const UnitsOfMeasure = lazy(() => import('./pages/configurations/UnitsOfMeasure'
 const CompanySettings = lazy(() => import('./pages/configurations/CompanySettings'));
 const InventorySettings = lazy(() => import('./pages/configurations/InventorySettings'));
 const Printers = lazy(() => import('./pages/configurations/Printers'));
+const GeneralSettings = lazy(() => import('./pages/configurations/GeneralSettings'));
 const Warehouses = lazy(() => import('./pages/Warehouses'));
 const StockMovements = lazy(() => import('./pages/StockMovements'));
 const InventoryAdjustments = lazy(() => import('./pages/InventoryAdjustments'));
@@ -220,805 +272,818 @@ function App() {
         <LanguageProvider>
           <KeyboardProvider>
             <AuthProvider>
-              <PushNotificationProvider />
-              <ConfirmProvider>
-                <AlertProvider>
-                  <Toaster position="bottom-right" />
-                  <BrowserRouter
-                    future={{
-                      v7_startTransition: true,
-                      v7_relativeSplatPath: true,
-                    }}
-                  >
-                    <Suspense
-                      fallback={
-                        <div
-                          className="flex align-items-center justify-content-center"
-                          style={{ height: '100vh' }}
-                        >
-                          <i
-                            className="pi pi-spin pi-spinner"
-                            style={{ fontSize: '2rem', color: 'var(--primary-color)' }}
-                          />
-                        </div>
-                      }
+              <GeneralSettingsProvider>
+                <TenantLanguageSync />
+                <PushNotificationProvider />
+                <ConfirmProvider>
+                  <AlertProvider>
+                    <Toaster position="bottom-right" />
+                    <BrowserRouter
+                      future={{
+                        v7_startTransition: true,
+                        v7_relativeSplatPath: true,
+                      }}
                     >
-                      <OnboardingGate>
-                        <Routes>
-                          {/* Public Routes - No Authentication Required */}
-                          <Route path="/onboarding" element={<OnboardingPage />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
-                          <Route path="/preview/invoice/:token" element={<SharedDocumentPage />} />
-                          <Route path="/preview/order/:token" element={<SharedDocumentPage />} />
-                          <Route
-                            path="/dashboard"
-                            element={
-                              <ProtectedRoute permission="dashboard.view">
-                                <Dashboard />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/delivery-persons"
-                            element={
-                              <ProtectedRoute permission="delivery.view">
-                                <DeliveryPersons />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/orders"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <Orders />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/orders/:id"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <OrderDetailPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/caisse"
-                            element={
-                              <ProtectedRoute permission="caisse.view">
-                                <Caisse />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/pos"
-                            element={
-                              <ProtectedRoute permission="pos.use">
-                                <POS />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/checkout"
-                            element={
-                              <ProtectedRoute permission="orders.create">
-                                <CheckoutPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/checkout/success"
-                            element={
-                              <ProtectedRoute permission="orders.create">
-                                <OrderSuccessPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/products"
-                            element={
-                              <ProtectedRoute permission="products.view">
-                                <Products />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/products/create"
-                            element={
-                              <ProtectedRoute permission="products.create">
-                                <ProductCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/products/:id"
-                            element={
-                              <ProtectedRoute permission="products.view">
-                                <ProductDetail />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/categories"
-                            element={
-                              <ProtectedRoute permission="categories.view">
-                                <Categories />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/brands"
-                            element={
-                              <ProtectedRoute permission="brands.view">
-                                <Brands />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/customers"
-                            element={
-                              <ProtectedRoute permission="partners.view">
-                                <Customers />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/customers/create"
-                            element={
-                              <ProtectedRoute permission="partners.create">
-                                <CustomerCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/customers/:id"
-                            element={
-                              <ProtectedRoute permission="partners.view">
-                                <CustomerEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/fournisseurs"
-                            element={
-                              <ProtectedRoute permission="partners.view">
-                                <Fournisseurs />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/fournisseurs/create"
-                            element={
-                              <ProtectedRoute permission="partners.create">
-                                <FournisseurCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/fournisseurs/:id"
-                            element={
-                              <ProtectedRoute permission="partners.view">
-                                <FournisseurEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          {/* Devis - New Unified System */}
-                          <Route
-                            path="/devis"
-                            element={
-                              <ProtectedRoute permission="quotes.view">
-                                <DevisVenteList />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/devis/create"
-                            element={
-                              <ProtectedRoute permission="quotes.create">
-                                <DevisVenteCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/devis/:id"
-                            element={
-                              <ProtectedRoute permission="quotes.view">
-                                <DevisVenteEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          {/* Bons de Livraison - New Unified System */}
-                          <Route
-                            path="/bons-livraison"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <BonLivraisonList />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/bons-livraison/create"
-                            element={
-                              <ProtectedRoute permission="orders.create">
-                                <BonLivraisonCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/bons-livraison/:id"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <BonLivraisonEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          {/* Legacy route redirect */}
-                          <Route
-                            path="/bon-livraison"
-                            element={<Navigate to="/bons-livraison" replace />}
-                          />
+                      <Suspense
+                        fallback={
+                          <div
+                            className="flex align-items-center justify-content-center"
+                            style={{ height: '100vh' }}
+                          >
+                            <i
+                              className="pi pi-spin pi-spinner"
+                              style={{ fontSize: '2rem', color: 'var(--primary-color)' }}
+                            />
+                          </div>
+                        }
+                      >
+                        <OnboardingGate>
+                          <Routes>
+                            {/* Public Routes - No Authentication Required */}
+                            <Route path="/onboarding" element={<OnboardingPage />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
+                            <Route
+                              path="/preview/invoice/:token"
+                              element={<SharedDocumentPage />}
+                            />
+                            <Route path="/preview/order/:token" element={<SharedDocumentPage />} />
+                            <Route
+                              path="/dashboard"
+                              element={
+                                <ProtectedRoute permission="dashboard.view">
+                                  <Dashboard />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/delivery-persons"
+                              element={
+                                <ProtectedRoute permission="delivery.view">
+                                  <DeliveryPersons />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/orders"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <Orders />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/orders/:id"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <OrderDetailPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/caisse"
+                              element={
+                                <ProtectedRoute permission="caisse.view">
+                                  <Caisse />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/pos"
+                              element={
+                                <ProtectedRoute permission="pos.use">
+                                  <POS />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/checkout"
+                              element={
+                                <ProtectedRoute permission="orders.create">
+                                  <CheckoutPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/checkout/success"
+                              element={
+                                <ProtectedRoute permission="orders.create">
+                                  <OrderSuccessPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/products"
+                              element={
+                                <ProtectedRoute permission="products.view">
+                                  <Products />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/products/create"
+                              element={
+                                <ProtectedRoute permission="products.create">
+                                  <ProductCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/products/:id"
+                              element={
+                                <ProtectedRoute permission="products.view">
+                                  <ProductDetail />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/categories"
+                              element={
+                                <ProtectedRoute permission="categories.view">
+                                  <Categories />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/brands"
+                              element={
+                                <ProtectedRoute permission="brands.view">
+                                  <Brands />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/customers"
+                              element={
+                                <ProtectedRoute permission="partners.view">
+                                  <Customers />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/customers/create"
+                              element={
+                                <ProtectedRoute permission="partners.create">
+                                  <CustomerCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/customers/:id"
+                              element={
+                                <ProtectedRoute permission="partners.view">
+                                  <CustomerEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/fournisseurs"
+                              element={
+                                <ProtectedRoute permission="partners.view">
+                                  <Fournisseurs />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/fournisseurs/create"
+                              element={
+                                <ProtectedRoute permission="partners.create">
+                                  <FournisseurCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/fournisseurs/:id"
+                              element={
+                                <ProtectedRoute permission="partners.view">
+                                  <FournisseurEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            {/* Devis - New Unified System */}
+                            <Route
+                              path="/devis"
+                              element={
+                                <ProtectedRoute permission="quotes.view">
+                                  <DevisVenteList />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/devis/create"
+                              element={
+                                <ProtectedRoute permission="quotes.create">
+                                  <DevisVenteCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/devis/:id"
+                              element={
+                                <ProtectedRoute permission="quotes.view">
+                                  <DevisVenteEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            {/* Bons de Livraison - New Unified System */}
+                            <Route
+                              path="/bons-livraison"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <BonLivraisonList />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/bons-livraison/create"
+                              element={
+                                <ProtectedRoute permission="orders.create">
+                                  <BonLivraisonCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/bons-livraison/:id"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <BonLivraisonEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            {/* Legacy route redirect */}
+                            <Route
+                              path="/bon-livraison"
+                              element={<Navigate to="/bons-livraison" replace />}
+                            />
 
-                          {/* Factures de Vente - New Unified System */}
-                          <Route
-                            path="/factures/vente"
-                            element={
-                              <ProtectedRoute permission="invoices.view">
-                                <FactureVenteList />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/factures/vente/create"
-                            element={
-                              <ProtectedRoute permission="invoices.create">
-                                <FactureVenteCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/factures/vente/:id"
-                            element={
-                              <ProtectedRoute permission="invoices.view">
-                                <FactureVenteEdit />
-                              </ProtectedRoute>
-                            }
-                          />
+                            {/* Factures de Vente - New Unified System */}
+                            <Route
+                              path="/factures/vente"
+                              element={
+                                <ProtectedRoute permission="invoices.view">
+                                  <FactureVenteList />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/factures/vente/create"
+                              element={
+                                <ProtectedRoute permission="invoices.create">
+                                  <FactureVenteCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/factures/vente/:id"
+                              element={
+                                <ProtectedRoute permission="invoices.view">
+                                  <FactureVenteEdit />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          <Route
-                            path="/paiements-vente"
-                            element={
-                              <ProtectedRoute permission="payments.view">
-                                <PaiementsVente />
-                              </ProtectedRoute>
-                            }
-                          />
+                            <Route
+                              path="/paiements-vente"
+                              element={
+                                <ProtectedRoute permission="payments.view">
+                                  <PaiementsVente />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          {/* Factures d'Achat - New Unified System */}
-                          <Route
-                            path="/factures/achat"
-                            element={
-                              <ProtectedRoute permission="invoices.view">
-                                <FactureAchatList />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/factures/achat/create"
-                            element={
-                              <ProtectedRoute permission="invoices.create">
-                                <FactureAchatCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/factures/achat/:id"
-                            element={
-                              <ProtectedRoute permission="invoices.view">
-                                <FactureAchatEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/paiements-achat"
-                            element={
-                              <ProtectedRoute permission="payments.view">
-                                <PaiementsAchat />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/demande-prix"
-                            element={
-                              <ProtectedRoute permission="quotes.view">
-                                <DemandePrix />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/demande-prix/create"
-                            element={
-                              <ProtectedRoute permission="quotes.create">
-                                <DemandeAchatCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/demande-prix/:id"
-                            element={
-                              <ProtectedRoute permission="quotes.view">
-                                <DemandeAchatEdit />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/bon-achat"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <BonAchat />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/bon-achat/create"
-                            element={
-                              <ProtectedRoute permission="orders.create">
-                                <BonAchatCreate />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/bon-achat/:id"
-                            element={
-                              <ProtectedRoute permission="orders.view">
-                                <BonAchatEdit />
-                              </ProtectedRoute>
-                            }
-                          />
+                            {/* Factures d'Achat - New Unified System */}
+                            <Route
+                              path="/factures/achat"
+                              element={
+                                <ProtectedRoute permission="invoices.view">
+                                  <FactureAchatList />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/factures/achat/create"
+                              element={
+                                <ProtectedRoute permission="invoices.create">
+                                  <FactureAchatCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/factures/achat/:id"
+                              element={
+                                <ProtectedRoute permission="invoices.view">
+                                  <FactureAchatEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/paiements-achat"
+                              element={
+                                <ProtectedRoute permission="payments.view">
+                                  <PaiementsAchat />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/demande-prix"
+                              element={
+                                <ProtectedRoute permission="quotes.view">
+                                  <DemandePrix />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/demande-prix/create"
+                              element={
+                                <ProtectedRoute permission="quotes.create">
+                                  <DemandeAchatCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/demande-prix/:id"
+                              element={
+                                <ProtectedRoute permission="quotes.view">
+                                  <DemandeAchatEdit />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/bon-achat"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <BonAchat />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/bon-achat/create"
+                              element={
+                                <ProtectedRoute permission="orders.create">
+                                  <BonAchatCreate />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/bon-achat/:id"
+                              element={
+                                <ProtectedRoute permission="orders.view">
+                                  <BonAchatEdit />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          <Route
-                            path="/configurations"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <Configurations />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/taxes"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <Taxes />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/currencies"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <Currencies />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/payment-terms"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <PaymentTerms />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/sequences"
-                            element={
-                              <ProtectedRoute permission="sequences.view">
-                                <Sequences />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/uom"
-                            element={
-                              <ProtectedRoute permission="uom.view">
-                                <UnitsOfMeasure />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/company"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <CompanySettings />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/inventory"
-                            element={
-                              <ProtectedRoute permission="configurations.view">
-                                <InventorySettings />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/configurations/printers"
-                            element={
-                              <ProtectedRoute permission="printers.view">
-                                <Printers />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/warehouses"
-                            element={
-                              <ProtectedRoute permission="warehouses.view">
-                                <Warehouses />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/stock-movements"
-                            element={
-                              <ProtectedRoute permission="stock.view">
-                                <StockMovements />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/inventory-adjustments"
-                            element={
-                              <ProtectedRoute permission="stock.view">
-                                <InventoryAdjustments />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/notifications"
-                            element={
-                              <ProtectedRoute permission="notifications.view">
-                                <Notifications />
-                              </ProtectedRoute>
-                            }
-                          />
+                            <Route
+                              path="/configurations"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <Configurations />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/taxes"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <Taxes />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/currencies"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <Currencies />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/payment-terms"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <PaymentTerms />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/general"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <GeneralSettings />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/sequences"
+                              element={
+                                <ProtectedRoute permission="sequences.view">
+                                  <Sequences />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/uom"
+                              element={
+                                <ProtectedRoute permission="uom.view">
+                                  <UnitsOfMeasure />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/company"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <CompanySettings />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/inventory"
+                              element={
+                                <ProtectedRoute permission="configurations.view">
+                                  <InventorySettings />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/configurations/printers"
+                              element={
+                                <ProtectedRoute permission="printers.view">
+                                  <Printers />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/warehouses"
+                              element={
+                                <ProtectedRoute permission="warehouses.view">
+                                  <Warehouses />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/stock-movements"
+                              element={
+                                <ProtectedRoute permission="stock.view">
+                                  <StockMovements />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/inventory-adjustments"
+                              element={
+                                <ProtectedRoute permission="stock.view">
+                                  <InventoryAdjustments />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/notifications"
+                              element={
+                                <ProtectedRoute permission="notifications.view">
+                                  <Notifications />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          <Route
-                            path="/drive"
-                            element={
-                              <ProtectedRoute permission="drive.view">
-                                <DrivePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/users"
-                            element={
-                              <ProtectedRoute permission="users.view">
-                                <UsersPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/client-requests"
-                            element={
-                              <ProtectedRoute permission="users.view">
-                                <ClientRequestsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/roles"
-                            element={
-                              <ProtectedRoute permission="roles.view">
-                                <RolesPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/profile"
-                            element={
-                              <ProtectedRoute>
-                                <ProfilePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/settings"
-                            element={
-                              <ProtectedRoute>
-                                <SettingsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/settings/notifications"
-                            element={
-                              <ProtectedRoute>
-                                <NotificationSettingsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          {/* Analytics & Reports */}
-                          <Route
-                            path="/analytics"
-                            element={
-                              <ProtectedRoute anyPermission={REPORT_VIEW_PERMISSIONS}>
-                                <AnalyticsHub />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/sales/revenue"
-                            element={
-                              <ProtectedRoute permission="reports_sales.view">
-                                <SalesRevenuePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/sales/top-products"
-                            element={
-                              <ProtectedRoute permission="reports_sales.view">
-                                <SalesTopProductsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/sales/by-customer"
-                            element={
-                              <ProtectedRoute permission="reports_sales.view">
-                                <SalesByCustomerPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/sales/by-category"
-                            element={
-                              <ProtectedRoute permission="reports_sales.view">
-                                <SalesByCategoryPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/sales/by-pos"
-                            element={
-                              <ProtectedRoute permission="reports_sales.view">
-                                <SalesByPosPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/purchases/by-period"
-                            element={
-                              <ProtectedRoute permission="reports_purchases.view">
-                                <PurchasesByPeriodPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/purchases/top-suppliers"
-                            element={
-                              <ProtectedRoute permission="reports_purchases.view">
-                                <PurchasesTopSuppliersPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/purchases/by-product"
-                            element={
-                              <ProtectedRoute permission="reports_purchases.view">
-                                <PurchasesByProductPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/invoices/journal-vente"
-                            element={
-                              <ProtectedRoute permission="reports_invoices.view">
-                                <JournalVentePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/invoices/journal-achat"
-                            element={
-                              <ProtectedRoute permission="reports_invoices.view">
-                                <JournalAchatPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/invoices/tva"
-                            element={
-                              <ProtectedRoute permission="reports_invoices.view">
-                                <TvaSummaryPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/invoices/outstanding"
-                            element={
-                              <ProtectedRoute permission="reports_invoices.view">
-                                <OutstandingInvoicesPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/invoices/aging"
-                            element={
-                              <ProtectedRoute permission="reports_invoices.view">
-                                <InvoiceAgingPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/payments/cashflow"
-                            element={
-                              <ProtectedRoute permission="reports_payments.view">
-                                <CashflowPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/payments/by-method"
-                            element={
-                              <ProtectedRoute permission="reports_payments.view">
-                                <PaymentsByMethodPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/payments/in-out"
-                            element={
-                              <ProtectedRoute permission="reports_payments.view">
-                                <InOutFlowPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/clients/top"
-                            element={
-                              <ProtectedRoute permission="reports_clients.view">
-                                <TopClientsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/clients/aging"
-                            element={
-                              <ProtectedRoute permission="reports_clients.view">
-                                <ClientAgingPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/clients/inactive"
-                            element={
-                              <ProtectedRoute permission="reports_clients.view">
-                                <InactiveClientsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/clients/statement"
-                            element={
-                              <ProtectedRoute permission="reports_clients.view">
-                                <ClientStatementPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/suppliers/top"
-                            element={
-                              <ProtectedRoute permission="reports_suppliers.view">
-                                <TopSuppliersPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/suppliers/aging"
-                            element={
-                              <ProtectedRoute permission="reports_suppliers.view">
-                                <SupplierAgingPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/suppliers/statement"
-                            element={
-                              <ProtectedRoute permission="reports_suppliers.view">
-                                <SupplierStatementPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/stock/valuation"
-                            element={
-                              <ProtectedRoute permission="reports_stock.view">
-                                <StockValuationPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/stock/low-stock"
-                            element={
-                              <ProtectedRoute permission="reports_stock.view">
-                                <LowStockPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/stock/movements"
-                            element={
-                              <ProtectedRoute permission="reports_stock.view">
-                                <StockMovementsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/stock/slow-dead"
-                            element={
-                              <ProtectedRoute permission="reports_stock.view">
-                                <SlowDeadStockPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/stock/by-warehouse"
-                            element={
-                              <ProtectedRoute permission="reports_stock.view">
-                                <StockByWarehousePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/products/performance"
-                            element={
-                              <ProtectedRoute permission="reports_products.view">
-                                <ProductPerformancePage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/products/margin"
-                            element={
-                              <ProtectedRoute permission="reports_products.view">
-                                <MarginAnalysisPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/analytics/products/never-sold"
-                            element={
-                              <ProtectedRoute permission="reports_products.view">
-                                <NeverSoldProductsPage />
-                              </ProtectedRoute>
-                            }
-                          />
+                            <Route
+                              path="/drive"
+                              element={
+                                <ProtectedRoute permission="drive.view">
+                                  <DrivePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/users"
+                              element={
+                                <ProtectedRoute permission="users.view">
+                                  <UsersPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/client-requests"
+                              element={
+                                <ProtectedRoute permission="users.view">
+                                  <ClientRequestsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/roles"
+                              element={
+                                <ProtectedRoute permission="roles.view">
+                                  <RolesPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/profile"
+                              element={
+                                <ProtectedRoute>
+                                  <ProfilePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/settings"
+                              element={
+                                <ProtectedRoute>
+                                  <SettingsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/settings/notifications"
+                              element={
+                                <ProtectedRoute>
+                                  <NotificationSettingsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            {/* Analytics & Reports */}
+                            <Route
+                              path="/analytics"
+                              element={
+                                <ProtectedRoute anyPermission={REPORT_VIEW_PERMISSIONS}>
+                                  <AnalyticsHub />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/sales/revenue"
+                              element={
+                                <ProtectedRoute permission="reports_sales.view">
+                                  <SalesRevenuePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/sales/top-products"
+                              element={
+                                <ProtectedRoute permission="reports_sales.view">
+                                  <SalesTopProductsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/sales/by-customer"
+                              element={
+                                <ProtectedRoute permission="reports_sales.view">
+                                  <SalesByCustomerPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/sales/by-category"
+                              element={
+                                <ProtectedRoute permission="reports_sales.view">
+                                  <SalesByCategoryPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/sales/by-pos"
+                              element={
+                                <ProtectedRoute permission="reports_sales.view">
+                                  <SalesByPosPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/purchases/by-period"
+                              element={
+                                <ProtectedRoute permission="reports_purchases.view">
+                                  <PurchasesByPeriodPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/purchases/top-suppliers"
+                              element={
+                                <ProtectedRoute permission="reports_purchases.view">
+                                  <PurchasesTopSuppliersPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/purchases/by-product"
+                              element={
+                                <ProtectedRoute permission="reports_purchases.view">
+                                  <PurchasesByProductPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/invoices/journal-vente"
+                              element={
+                                <ProtectedRoute permission="reports_invoices.view">
+                                  <JournalVentePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/invoices/journal-achat"
+                              element={
+                                <ProtectedRoute permission="reports_invoices.view">
+                                  <JournalAchatPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/invoices/tva"
+                              element={
+                                <ProtectedRoute permission="reports_invoices.view">
+                                  <TvaSummaryPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/invoices/outstanding"
+                              element={
+                                <ProtectedRoute permission="reports_invoices.view">
+                                  <OutstandingInvoicesPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/invoices/aging"
+                              element={
+                                <ProtectedRoute permission="reports_invoices.view">
+                                  <InvoiceAgingPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/payments/cashflow"
+                              element={
+                                <ProtectedRoute permission="reports_payments.view">
+                                  <CashflowPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/payments/by-method"
+                              element={
+                                <ProtectedRoute permission="reports_payments.view">
+                                  <PaymentsByMethodPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/payments/in-out"
+                              element={
+                                <ProtectedRoute permission="reports_payments.view">
+                                  <InOutFlowPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/clients/top"
+                              element={
+                                <ProtectedRoute permission="reports_clients.view">
+                                  <TopClientsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/clients/aging"
+                              element={
+                                <ProtectedRoute permission="reports_clients.view">
+                                  <ClientAgingPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/clients/inactive"
+                              element={
+                                <ProtectedRoute permission="reports_clients.view">
+                                  <InactiveClientsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/clients/statement"
+                              element={
+                                <ProtectedRoute permission="reports_clients.view">
+                                  <ClientStatementPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/suppliers/top"
+                              element={
+                                <ProtectedRoute permission="reports_suppliers.view">
+                                  <TopSuppliersPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/suppliers/aging"
+                              element={
+                                <ProtectedRoute permission="reports_suppliers.view">
+                                  <SupplierAgingPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/suppliers/statement"
+                              element={
+                                <ProtectedRoute permission="reports_suppliers.view">
+                                  <SupplierStatementPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/stock/valuation"
+                              element={
+                                <ProtectedRoute permission="reports_stock.view">
+                                  <StockValuationPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/stock/low-stock"
+                              element={
+                                <ProtectedRoute permission="reports_stock.view">
+                                  <LowStockPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/stock/movements"
+                              element={
+                                <ProtectedRoute permission="reports_stock.view">
+                                  <StockMovementsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/stock/slow-dead"
+                              element={
+                                <ProtectedRoute permission="reports_stock.view">
+                                  <SlowDeadStockPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/stock/by-warehouse"
+                              element={
+                                <ProtectedRoute permission="reports_stock.view">
+                                  <StockByWarehousePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/products/performance"
+                              element={
+                                <ProtectedRoute permission="reports_products.view">
+                                  <ProductPerformancePage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/products/margin"
+                              element={
+                                <ProtectedRoute permission="reports_products.view">
+                                  <MarginAnalysisPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/products/never-sold"
+                              element={
+                                <ProtectedRoute permission="reports_products.view">
+                                  <NeverSoldProductsPage />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        </Routes>
-                      </OnboardingGate>
-                    </Suspense>
+                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                          </Routes>
+                        </OnboardingGate>
+                      </Suspense>
 
-                    {/* AI Assistant - Available on all pages */}
-                    {ENABLE_CHAT_AI_AGENT && (
-                      <>
-                        {!isAIAssistantOpen && (
-                          <AIAssistantButton onClick={() => setIsAIAssistantOpen(true)} />
-                        )}
-                        <AIAssistantOverlay
-                          isOpen={isAIAssistantOpen}
-                          onClose={() => setIsAIAssistantOpen(false)}
-                        />
-                      </>
-                    )}
-                    {/* POS Virtual Keyboard — available on all pages */}
-                    <KeyboardRouteWatcher />
-                    <KeyboardToggle />
-                    <POSKeyboard />
-                  </BrowserRouter>
-                </AlertProvider>
-              </ConfirmProvider>
+                      {/* AI Assistant - Available on all pages */}
+                      {ENABLE_CHAT_AI_AGENT && (
+                        <>
+                          {!isAIAssistantOpen && (
+                            <AIAssistantButton onClick={() => setIsAIAssistantOpen(true)} />
+                          )}
+                          <AIAssistantOverlay
+                            isOpen={isAIAssistantOpen}
+                            onClose={() => setIsAIAssistantOpen(false)}
+                          />
+                        </>
+                      )}
+                      {/* POS Virtual Keyboard — available on all pages, unless
+                        disabled in Configurations → General params */}
+                      <VirtualKeyboardSurface />
+                    </BrowserRouter>
+                  </AlertProvider>
+                </ConfirmProvider>
+              </GeneralSettingsProvider>
             </AuthProvider>
           </KeyboardProvider>
         </LanguageProvider>

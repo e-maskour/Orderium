@@ -1,13 +1,47 @@
 {
   "mcpServers": {
     "code-review-graph": {
+      "type": "stdio",
       "command": "uvx",
       "args": [
         "code-review-graph",
         "serve"
       ],
-      "cwd": "/Users/emaskour/projects/Orderium",
-      "type": "stdio"
+      "cwd": "/Users/emaskour/projects/Orderium"
+    },
+    "postgres-master": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--with",
+        "mcp<2",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "postgresql://${DB_USERNAME:-postgres_user}:${DB_PASSWORD:-postgres_password}@${DB_HOST_LOCAL:-localhost}:${POSTGRES_EXPOSED_PORT:-5432}/orderium_master"
+      }
+    },
+    "postgres-demo": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--with",
+        "mcp<2",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "postgresql://${DB_USERNAME:-postgres_user}:${DB_PASSWORD:-postgres_password}@${DB_HOST_LOCAL:-localhost}:${POSTGRES_EXPOSED_PORT:-5432}/orderium_demo"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.80"
+      ]
     }
   }
 }

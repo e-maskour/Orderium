@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,9 +13,9 @@ import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 import {
   ArrowLeft,
   Package,
@@ -35,6 +36,7 @@ import {
   Calendar,
   ShoppingBag,
   RefreshCw,
+  Share2,
 } from 'lucide-react';
 
 // ─── Status config ──────────────────────────────────────────────────────────
@@ -193,6 +195,21 @@ const NEXT_ACTIONS: Record<
       border: '#a7f3d0',
     },
   ],
+};
+
+/** Shared look for the rows in the "Documents" side panel. */
+const docActionBtnStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.625rem',
+  padding: '0.625rem 0.75rem',
+  borderRadius: '0.5rem',
+  background: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  cursor: 'pointer',
+  width: '100%',
+  textAlign: 'left',
+  fontFamily: 'inherit',
 };
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -389,6 +406,60 @@ export default function OrderDetailPage() {
     setShowPDFPreview(true);
   };
 
+  /**
+   * Share the order's PDF through the native share sheet on mobile, falling
+   * back to WhatsApp Web on desktop (files can't be attached via a wa.me URL).
+   */
+  const handleShare = async (type: 'receipt' | 'delivery-note') => {
+    if (!id) return;
+    const isReceipt = type === 'receipt';
+    const orderRef = order?.displayOrderNumber || `#${id}`;
+    const total = order?.total != null ? `${Number(order.total).toFixed(2)} DH` : '';
+    const message = isAr
+      ? `مرحباً، يرجى الاطلاع على ${isReceipt ? 'إيصال' : 'وصل التسليم'} الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
+      : `Bonjour, veuillez trouver ci-joint ${isReceipt ? 'le reçu' : 'le bon de livraison'} de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
+      const tenantId = tenantMatch
+        ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
+        : null;
+      const response = await fetch(pdfService.getPDFUrl(type, Number(id), 'download', language), {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(tenantId ? { 'X-Tenant-ID': tenantId } : {}),
+        },
+      });
+      if (!response.ok) throw new Error(`${response.status}`);
+      const blob = await response.blob();
+      const fileName = `${isReceipt ? 'Recu' : 'BonLivraison'}_${orderRef.replace(/[^\w-]/g, '')}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName, text: message });
+        return;
+      }
+
+      const phone = (order?.customerPhone ?? '').replace(/[\s\-()]/g, '').replace(/^\+/, '');
+      if (phone) {
+        window.open(
+          `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+          '_blank',
+          'noopener,noreferrer',
+        );
+      } else {
+        toastError(
+          isAr ? 'لا يوجد رقم هاتف لهذا الزبون.' : 'Aucun numéro de téléphone pour ce client.',
+        );
+      }
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        toastError(isAr ? 'خطأ أثناء توليد PDF' : 'Erreur lors de la génération du PDF');
+      }
+    }
+  };
+
   // Pre-warm blob cache as soon as the order page loads
   useEffect(() => {
     if (!id) return;
@@ -459,6 +530,8 @@ export default function OrderDetailPage() {
   const statusLabel = isAr ? statusCfg.label_ar : statusCfg.label_fr;
   const nextActions = NEXT_ACTIONS[status] || [];
   const isEditable = !['delivered', 'cancelled', 'canceled'].includes(status);
+  /** POS-issued order (admin till or customer portal) — prints a receipt, not just a BL. */
+  const isPosOrder = order.originType === 'CLIENT_POS' || order.originType === 'ADMIN_POS';
 
   const orderDate = new Date(order.date || order.dateCreated);
   const formattedDate = orderDate.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
@@ -695,6 +768,26 @@ export default function OrderDetailPage() {
               </span>
             </div>
             {/* Print buttons */}
+            {isPosOrder && (
+              <>
+                <Button
+                  icon={<Receipt style={{ width: '0.875rem', height: '0.875rem' }} />}
+                  label={isAr ? 'إيصال' : 'Reçu'}
+                  onClick={() => handlePrint('receipt')}
+                  outlined
+                  size="small"
+                  style={{ flexShrink: 0 }}
+                />
+                <Button
+                  icon={<Share2 style={{ width: '0.875rem', height: '0.875rem' }} />}
+                  label={isAr ? 'مشاركة' : 'Partager'}
+                  onClick={() => handleShare('receipt')}
+                  outlined
+                  size="small"
+                  style={{ flexShrink: 0 }}
+                />
+              </>
+            )}
             <Button
               icon={<Truck style={{ width: '0.875rem', height: '0.875rem' }} />}
               label={isAr ? 'بون التسليم' : 'Bon de livraison'}
@@ -1878,7 +1971,7 @@ export default function OrderDetailPage() {
                       >
                         {t('paymentType')}
                       </label>
-                      <Dropdown
+                      <AutoCompleteSelect
                         value={paymentType}
                         onChange={(e) => setPaymentType(e.value)}
                         options={paymentTypeOptions}
@@ -1962,28 +2055,67 @@ export default function OrderDetailPage() {
                 {isAr ? 'طباعة المستندات' : 'Documents'}
               </p>
 
+              {isPosOrder && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handlePrint('receipt')}
+                    style={docActionBtnStyle}
+                  >
+                    <Receipt
+                      style={{
+                        width: '1.125rem',
+                        height: '1.125rem',
+                        color: '#235ae4',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                      {isAr ? 'إيصال' : 'Reçu'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleShare('receipt')}
+                    style={docActionBtnStyle}
+                  >
+                    <Share2
+                      style={{
+                        width: '1.125rem',
+                        height: '1.125rem',
+                        color: '#25d366',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                      {isAr ? 'مشاركة الإيصال' : 'Partager le reçu'}
+                    </span>
+                  </button>
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={() => handlePrint('delivery-note')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  cursor: 'pointer',
-                  width: '100%',
-                  textAlign: 'left',
-                  fontFamily: 'inherit',
-                }}
+                style={docActionBtnStyle}
               >
                 <Truck
                   style={{ width: '1.125rem', height: '1.125rem', color: '#235ae4', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
                   {isAr ? 'بون التسليم' : 'Bon de livraison'}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleShare('delivery-note')}
+                style={docActionBtnStyle}
+              >
+                <Share2
+                  style={{ width: '1.125rem', height: '1.125rem', color: '#25d366', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                  {isAr ? 'مشاركة الوصل' : 'Partager le bon'}
                 </span>
               </button>
               {order.isValidated && (

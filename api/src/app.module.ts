@@ -64,6 +64,10 @@ import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscripti
 import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 import { MigrationRunLog } from './modules/super-admin/entities/migration-log.entity';
 import { SeederRunLog } from './modules/super-admin/entities/seeder-log.entity';
+import { PlatformMetricsModule } from './modules/platform-metrics/platform-metrics.module';
+import { TenantDailyMetric } from './modules/platform-metrics/entities/tenant-daily-metric.entity';
+import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-health-bucket.entity';
+import { UsageTrackingInterceptor } from './modules/platform-metrics/usage-tracking.interceptor';
 
 @Module({
   imports: [
@@ -128,6 +132,8 @@ import { SeederRunLog } from './modules/super-admin/entities/seeder-log.entity';
           TenantActivityLog,
           MigrationRunLog,
           SeederRunLog,
+          TenantDailyMetric,
+          TenantHealthBucket,
         ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
@@ -190,6 +196,7 @@ import { SeederRunLog } from './modules/super-admin/entities/seeder-log.entity';
     UsersModule,
     PrintersModule,
     SuperAdminModule,
+    PlatformMetricsModule,
     BulkModule,
     QueueBoardModule,
     SequencesModule,
@@ -223,6 +230,9 @@ export class AppModule implements NestModule {
         { path: 'api/super-admin/migrations/(.*)', method: RequestMethod.ALL },
         { path: 'api/super-admin/seeders', method: RequestMethod.ALL },
         { path: 'api/super-admin/seeders/(.*)', method: RequestMethod.ALL },
+        //  • Platform metrics (super-admin, reports across ALL tenants)
+        { path: 'api/admin/metrics', method: RequestMethod.ALL },
+        { path: 'api/admin/metrics/(.*)', method: RequestMethod.ALL },
         { path: 'api/health', method: RequestMethod.GET },
       )
       .forRoutes('*');

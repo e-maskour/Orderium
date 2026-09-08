@@ -4,7 +4,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export function PushNotificationProvider() {
   const { user, isAuthenticated } = useAuth();
-  const { requestPermission, permission, token, error } = usePushNotifications(user?.id);
+  const { requestPermission, permission, error } = usePushNotifications(user?.id);
 
   const hasRequestedPermissionRef = useRef(false);
 

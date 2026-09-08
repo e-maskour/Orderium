@@ -6,7 +6,17 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getOnboardingStatus } from '../api/onboarding';
 import { LanguageToggle } from '../components/LanguageToggle';
-import { Shield, Phone, Lock, BarChart3, Package, Users, TrendingUp } from 'lucide-react';
+import {
+  Shield,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  BarChart3,
+  Package,
+  Users,
+  TrendingUp,
+} from 'lucide-react';
 import orderiumLogo from '../assets/logo-backoffice.svg';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -21,6 +31,7 @@ const BRAND_DEEP = '#0f2d7a';
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -128,6 +139,34 @@ export default function Login() {
         }
         .login-input-wrap .p-inputtext {
           padding-left: 2.75rem !important;
+        }
+        .login-input-wrap.has-toggle .p-inputtext {
+          padding-right: 2.75rem !important;
+        }
+        .login-password-toggle {
+          position: absolute;
+          right: 0.625rem;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.25rem;
+          border: none;
+          border-radius: 0.375rem;
+          background: transparent;
+          color: #94a3b8;
+          cursor: pointer;
+          z-index: 1;
+          transition: color 0.2s, background-color 0.2s;
+        }
+        .login-password-toggle:hover:not(:disabled) {
+          color: #475569;
+          background: #f1f5f9;
+        }
+        .login-password-toggle:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
         @media (max-width: 767px) {
           .login-left-panel { display: none !important; }
@@ -458,11 +497,11 @@ export default function Login() {
                 >
                   {t('password')}
                 </label>
-                <div className="login-input-wrap">
+                <div className="login-input-wrap has-toggle">
                   <Lock className="login-input-icon" style={{ width: '1rem', height: '1rem' }} />
                   <InputText
                     id="login-password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     {...register('password')}
                     placeholder={t('enterYourPassword')}
                     disabled={isLoading}
@@ -477,6 +516,21 @@ export default function Login() {
                       transition: 'border-color 0.2s',
                     }}
                   />
+                  <button
+                    type="button"
+                    className="login-password-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={isLoading}
+                    aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                    aria-pressed={showPassword}
+                    aria-controls="login-password"
+                  >
+                    {showPassword ? (
+                      <EyeOff style={{ width: '1rem', height: '1rem' }} />
+                    ) : (
+                      <Eye style={{ width: '1rem', height: '1rem' }} />
+                    )}
+                  </button>
                 </div>
                 {errors.password && (
                   <small

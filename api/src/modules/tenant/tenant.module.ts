@@ -6,7 +6,6 @@ import { TenantConnectionService } from './tenant-connection.service';
 import { TenantMiddleware } from './tenant.middleware';
 import { TenantController } from './tenant.controller';
 import { SuperAdminGuard } from './tenant.guard';
-import { Payment } from '../tenant-lifecycle/entities/payment.entity';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 
 /**
@@ -20,7 +19,7 @@ import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-
 @Module({
   imports: [
     // Registers Tenant repository against the 'master' connection only
-    TypeOrmModule.forFeature([Tenant, Payment, TenantActivityLog], 'master'),
+    TypeOrmModule.forFeature([Tenant, TenantActivityLog], 'master'),
   ],
   controllers: [TenantController],
   providers: [TenantService, TenantConnectionService, SuperAdminGuard],

@@ -13,7 +13,6 @@ import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import { DocumentType, DocumentDirection, DocumentConfig } from '../../modules/documents/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { Calendar } from 'primereact/calendar';
-import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { OverlayPanel } from 'primereact/overlaypanel';
@@ -21,6 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { ordersService } from '../../modules/orders/orders.service';
+import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
 import {
   toastExported,
   toastError,
@@ -752,7 +752,7 @@ export default function DocumentListPage({
               >
                 {t('status')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.value);

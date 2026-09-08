@@ -7,7 +7,7 @@ interface FloatingCartButtonProps {
 }
 
 export const FloatingCartButton = ({ onClick }: FloatingCartButtonProps) => {
-  const { language, t, dir } = useLanguage();
+  const { t, dir } = useLanguage();
   const { items, itemCount } = useCart();
 
   const uniqueProductCount = items.length;

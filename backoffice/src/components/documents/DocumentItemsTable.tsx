@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
-import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
@@ -14,6 +13,7 @@ import { productsService } from '../../modules/products/products.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductCatalogueModal } from '../ProductCatalogueModal';
 import { formatAmount } from '@orderium/ui';
+import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';
 
 interface DocumentItemsTableProps {
   items: DocumentItem[];
@@ -376,16 +376,13 @@ export function DocumentItemsTable({
                       : item.description || '—'}
                   </span>
                 ) : (
-                  <PrDropdown
+                  <AutoCompleteSelect
                     value={item.productId ? String(item.productId) : null}
                     options={getDropdownOptions(item)}
                     onChange={(e) => handleSelectProduct(item.id, e.value)}
                     optionLabel="label"
                     optionValue="value"
                     placeholder={t('invoice.itemDescriptionPlaceholder')}
-                    emptyFilterMessage={t('invoice.noProductsFound')}
-                    filter
-                    showClear
                     style={{ width: '100%', fontSize: '0.875rem' }}
                   />
                 )
@@ -568,7 +565,7 @@ export function DocumentItemsTable({
                       {item.tax}%
                     </span>
                   ) : (
-                    <PrDropdown
+                    <AutoCompleteSelect
                       value={item.tax}
                       options={[
                         { label: '0%', value: 0 },
@@ -756,17 +753,14 @@ export function DocumentItemsTable({
                 {/* Product */}
                 <div style={{ marginBottom: '0.75rem' }}>
                   <label className="dit-field-label">{t('invoice.descriptionHeader')}</label>
-                  <PrDropdown
+                  <AutoCompleteSelect
                     value={item.productId ? String(item.productId) : null}
                     options={getDropdownOptions(item)}
                     onChange={(e) => handleSelectProduct(item.id, e.value)}
                     optionLabel="label"
                     optionValue="value"
                     placeholder={t('invoice.itemDescriptionPlaceholder')}
-                    emptyFilterMessage={t('invoice.noProductsFound')}
                     disabled={readOnly}
-                    filter
-                    showClear
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -874,7 +868,7 @@ export function DocumentItemsTable({
                     {showTaxColumn && (
                       <div>
                         <label className="dit-field-label">{t('invoice.tax')}</label>
-                        <PrDropdown
+                        <AutoCompleteSelect
                           value={item.tax}
                           options={[
                             { label: '0%', value: 0 },

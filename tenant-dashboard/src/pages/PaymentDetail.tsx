@@ -507,45 +507,40 @@ export function PaymentDetail() {
       <PaymentForm open={editOpen} payment={payment} onClose={() => setEditOpen(false)} />
 
       {pending && (
-        <>
+        <ConfirmDialog
+          open
+          title={dialogCopy[pending.kind].title}
+          description={dialogCopy[pending.kind].description}
+          confirmLabel={dialogCopy[pending.kind].label}
+          confirmVariant={pending.kind === 'refund' ? 'warning' : 'danger'}
+          loading={
+            voidPayment.isPending ||
+            deletePayment.isPending ||
+            rejectInstallment.isPending ||
+            refundInstallment.isPending ||
+            deleteInstallment.isPending
+          }
+          confirmDisabled={needsReason && !reason.trim()}
+          onConfirm={confirmAction}
+          onCancel={() => setPending(null)}
+        >
           {needsReason && (
-            <div className="fixed inset-x-0 top-24 z-[60] mx-auto w-full max-w-md px-4">
-              <label htmlFor="action-reason" className="sr-only">
-                Reason
+            <>
+              <label htmlFor="action-reason" className="label">
+                Reason <span className="text-red-500">*</span>
               </label>
               <input
                 id="action-reason"
-                autoFocus
+                data-autofocus
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Reason (required)…"
-                className="input shadow-2xl"
+                placeholder="Recorded on the audit trail…"
+                className="input"
+                maxLength={500}
               />
-            </div>
+            </>
           )}
-          <ConfirmDialog
-            open
-            title={dialogCopy[pending.kind].title}
-            description={dialogCopy[pending.kind].description}
-            confirmLabel={dialogCopy[pending.kind].label}
-            confirmVariant={pending.kind === 'refund' ? 'warning' : 'danger'}
-            loading={
-              voidPayment.isPending ||
-              deletePayment.isPending ||
-              rejectInstallment.isPending ||
-              refundInstallment.isPending ||
-              deleteInstallment.isPending
-            }
-            onConfirm={() => {
-              if (needsReason && !reason.trim()) {
-                toast.error('A reason is required');
-                return;
-              }
-              confirmAction();
-            }}
-            onCancel={() => setPending(null)}
-          />
-        </>
+        </ConfirmDialog>
       )}
     </div>
   );

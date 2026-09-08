@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Pencil, Trash2, Ruler, Search, Filter } from 'lucide-r
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
-import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
@@ -23,6 +22,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
+import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
 
 export default function UnitsOfMeasure() {
   const { t } = useLanguage();
@@ -459,7 +459,7 @@ export default function UnitsOfMeasure() {
               >
                 {t('category')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
               </label>
-              <Dropdown
+              <AutoCompleteSelect
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.value })}
                 options={UOM_CATEGORIES.map((cat) => ({ label: cat, value: cat }))}
@@ -494,7 +494,7 @@ export default function UnitsOfMeasure() {
                   >
                     {t('baseUnit') || 'Base Unit'}
                   </label>
-                  <Dropdown
+                  <AutoCompleteSelect
                     value={formData.baseUnitId || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, baseUnitId: e.value ? parseInt(e.value) : null })
@@ -552,7 +552,7 @@ export default function UnitsOfMeasure() {
               >
                 {t('roundingPrecision') || 'Rounding Precision'}
               </label>
-              <Dropdown
+              <AutoCompleteSelect
                 value={formData.roundingPrecision}
                 onChange={(e) => setFormData({ ...formData, roundingPrecision: e.value })}
                 options={[

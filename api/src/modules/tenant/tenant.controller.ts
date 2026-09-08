@@ -55,13 +55,6 @@ export class TenantController {
     return this.tenantService.getActivity(id);
   }
 
-  @Get(':id/payments')
-  @ApiOperation({ summary: 'Get payments for a tenant' })
-  @ApiResponse({ status: 200, description: 'Payments retrieved successfully' })
-  getPayments(@Param('id', ParseIntPipe) id: number) {
-    return this.tenantService.getPayments(id);
-  }
-
   @Get(':id/stats')
   @ApiOperation({
     summary: 'Get DB size, user count, order count and storage usage',

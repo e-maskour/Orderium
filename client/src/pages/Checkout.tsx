@@ -70,11 +70,6 @@ const Checkout = () => {
 
   const isFormValid = nameValue?.trim().length > 0 && addressValue?.trim().length > 0;
 
-  const isCustomerInfoComplete =
-    nameValue?.trim().length > 0 &&
-    addressValue?.trim().length > 0 &&
-    (mapsLink != null || wazeLink != null || (latitude != null && longitude != null));
-
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
   const loadCustomerInfo = useCallback(async (portalUserId: number) => {

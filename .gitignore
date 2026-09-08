@@ -169,3 +169,8 @@ skills-lock.json
 
 # Added by graphify
 graphify-out/
+.playwright-mcp
+rtl-audit
+test-results
+perf-audit
+*.png

@@ -11,7 +11,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { Dropdown } from 'primereact/dropdown';
 import {
   toastDeleted,
   toastError,
@@ -21,6 +20,7 @@ import {
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { EmptyState } from '../components/EmptyState';
 import { MobileList } from '../components/MobileList';
+import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 
 export default function Fournisseurs() {
   const { t, language, dir } = useLanguage();
@@ -271,7 +271,7 @@ export default function Fournisseurs() {
               >
                 {t('status')}
               </span>
-              <Dropdown
+              <AutoCompleteSelect
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.value)}
                 options={[
