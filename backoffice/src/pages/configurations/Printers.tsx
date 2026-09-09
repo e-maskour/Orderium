@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -7,7 +7,6 @@ import {
   Trash2,
   Printer,
   PlayCircle,
-  Wifi,
   Usb,
   Globe,
   Monitor,
@@ -32,12 +31,8 @@ import {
   type UpdatePrinterDTO,
 } from '../../modules/printers';
 import { warehousesService } from '../../modules/warehouses';
-import {
-  printReceipt,
-  detectPlatform,
-  type PrinterConfig,
-  type ReceiptData,
-} from '@shared-print/PrintManager';
+import { usePrint } from '../../hooks/usePrint';
+import { detectPlatform } from '@shared-print/PrintManager';
 import type { TranslationKey } from '../../lib/i18n';
 
 /**
@@ -89,22 +84,6 @@ const DOC_TYPE_OPTIONS = [
   { value: 'pos', label: 'POS' },
   { value: 'stock', label: 'Stock' },
 ];
-
-/** Built per call so the printed sample follows the active language. */
-const buildDummyReceipt = (t: (k: TranslationKey) => string): ReceiptData => ({
-  storeName: 'Morocom — Test',
-  storePhone: '0600000000',
-  orderNumber: 'TEST-001',
-  date: new Date().toLocaleString(),
-  clientName: t('printerTestCustomer'),
-  items: [
-    { name: t('printerTestProductA'), qty: 2, unitPrice: 49.9, total: 99.8 },
-    { name: t('printerTestProductB'), qty: 1, unitPrice: 150.0, total: 150.0 },
-  ],
-  subtotal: 249.8,
-  total: 249.8,
-  footer: t('printerTestLine'),
-});
 
 function PrinterForm({
   printer,
@@ -475,39 +454,45 @@ export default function Printers() {
     },
   });
 
-  const handleTestPrint = async (printer: IPrinter) => {
-    const config: PrinterConfig = {
-      id: printer.id,
-      brand: printer.brand as PrinterConfig['brand'],
-      ip: printer.ip ?? undefined,
-      port: printer.port,
-      paperWidth: printer.paperWidth,
-      name: printer.name,
-    };
-    const result = await printReceipt(config, buildDummyReceipt(t));
+  /**
+   * Queues a real job against this printer rather than printing in the
+   * browser. A browser-side test proved nothing about the actual path a
+   * receipt takes, which is how silent printing appeared to work for so long.
+   */
+  const testPrint = usePrint();
+  const [testingPrinterId, setTestingPrinterId] = useState<string | null>(null);
 
-    if (result.status === 'failed') {
-      toastError(`Échec impression (${result.error ?? result.method})`);
-    } else if (result.method === 'browser') {
-      toastSuccess(t('printerViaBrowser'));
-    } else {
-      toastSuccess(`Impression envoyée → ${result.method} (${result.durationMs}ms)`);
+  const handleTestPrint = (printer: IPrinter) => {
+    if (!printer.warehouseId) {
+      toastError('Cette imprimante n’est rattachée à aucun magasin.');
+      return;
     }
-
-    printersService
-      .logPrintJob({
-        printerId: printer.id,
-        documentType: 'receipt',
-        method: result.method,
-        status: result.status,
-        durationMs: result.durationMs,
-      })
-      .catch(() => {});
-
-    if (printer.id) {
-      printersService.pingPrinter(printer.id).catch(() => {});
-    }
+    setTestingPrinterId(printer.id);
+    void testPrint.print({
+      documentType: 'receipt',
+      documentRef: 0, // test-page marker; the API renders a fixed sample
+      printerId: printer.id,
+    });
   };
+
+  useEffect(() => {
+    if (!testingPrinterId) return;
+    if (testPrint.state === 'printed') {
+      toastSuccess('Impression de test envoyée à l’imprimante.');
+      setTestingPrinterId(null);
+      testPrint.reset();
+    } else if (testPrint.state === 'offline') {
+      toastError(
+        'Aucun agent en ligne pour ce magasin — le test s’imprimera dès qu’un agent démarrera.',
+      );
+      setTestingPrinterId(null);
+      testPrint.reset();
+    } else if (testPrint.state === 'failed') {
+      toastError(`Échec de l’impression : ${testPrint.error ?? 'inconnue'}`);
+      setTestingPrinterId(null);
+      testPrint.reset();
+    }
+  }, [testPrint.state, testingPrinterId, testPrint, toastSuccess, toastError]);
 
   const handleDelete = (printer: IPrinter) => {
     toastConfirm(

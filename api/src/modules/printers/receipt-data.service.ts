@@ -38,7 +38,28 @@ export class ReceiptDataService {
     }
   }
 
+  /**
+   * documentRef 0 is the agreed test-page marker used by Settings → Printers.
+   * There is no order 0, so it must never reach the orders table.
+   */
+  private async sampleReceipt(): Promise<ReceiptData> {
+    const company = await this.company();
+    return {
+      storeName: company.companyName || 'Morocom',
+      storePhone: company.phone,
+      orderNumber: 'TEST-0001',
+      date: new Date().toLocaleString('fr-FR'),
+      clientName: 'Test',
+      items: [{ name: 'Article de test', qty: 1, unitPrice: 1, total: 1 }],
+      subtotal: 1,
+      total: 1,
+      footer: 'Impression de test',
+    };
+  }
+
   async build(orderId: number): Promise<ReceiptData> {
+    if (orderId === 0) return this.sampleReceipt();
+
     const order = await this.orders.findOne({
       where: { id: orderId },
       relations: ['items', 'items.product'],
