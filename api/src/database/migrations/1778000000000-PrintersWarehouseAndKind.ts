@@ -17,11 +17,15 @@ export class PrintersWarehouseAndKind1778000000000 implements MigrationInterface
   name = 'PrintersWarehouseAndKind1778000000000';
 
   public async up(q: QueryRunner): Promise<void> {
-    await q.query(`ALTER TABLE printers ADD COLUMN IF NOT EXISTS warehouse_id integer`);
+    await q.query(
+      `ALTER TABLE printers ADD COLUMN IF NOT EXISTS warehouse_id integer`,
+    );
     await q.query(
       `ALTER TABLE printers ADD COLUMN IF NOT EXISTS kind varchar(20) NOT NULL DEFAULT 'thermal'`,
     );
-    await q.query(`ALTER TABLE printers ADD COLUMN IF NOT EXISTS system_name varchar(120)`);
+    await q.query(
+      `ALTER TABLE printers ADD COLUMN IF NOT EXISTS system_name varchar(120)`,
+    );
 
     // Existing printers belong to the tenant's first warehouse.
     await q.query(`
@@ -35,8 +39,12 @@ export class PrintersWarehouseAndKind1778000000000 implements MigrationInterface
     `);
 
     // Narrow brand to real manufacturers.
-    await q.query(`UPDATE printers SET brand = 'generic' WHERE brand IN ('qztray', 'browser')`);
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_brand_check`);
+    await q.query(
+      `UPDATE printers SET brand = 'generic' WHERE brand IN ('qztray', 'browser')`,
+    );
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_brand_check`,
+    );
     await q.query(`
       ALTER TABLE printers ADD CONSTRAINT printers_brand_check
         CHECK (brand IN ('epson', 'star', 'generic'))
@@ -47,7 +55,9 @@ export class PrintersWarehouseAndKind1778000000000 implements MigrationInterface
     await q.query(
       `UPDATE printers SET connection_type = 'network' WHERE connection_type IN ('wifi', 'browser')`,
     );
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_connection_type_check`);
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_connection_type_check`,
+    );
     await q.query(`
       ALTER TABLE printers ADD CONSTRAINT printers_connection_type_check
         CHECK (connection_type IN ('network', 'usb', 'system'))
@@ -66,7 +76,9 @@ export class PrintersWarehouseAndKind1778000000000 implements MigrationInterface
 
     // A printer name is unique per shop, not per tenant: two branches may each
     // have a "Caisse 1".
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_name_key`);
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_name_key`,
+    );
     await q.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_printers_warehouse_name
         ON printers (warehouse_id, name)
@@ -75,16 +87,26 @@ export class PrintersWarehouseAndKind1778000000000 implements MigrationInterface
 
   public async down(q: QueryRunner): Promise<void> {
     await q.query(`DROP INDEX IF EXISTS idx_printers_warehouse_name`);
-    await q.query(`ALTER TABLE printers ADD CONSTRAINT printers_name_key UNIQUE (name)`);
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS fk_printers_warehouse`);
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_kind_check`);
+    await q.query(
+      `ALTER TABLE printers ADD CONSTRAINT printers_name_key UNIQUE (name)`,
+    );
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS fk_printers_warehouse`,
+    );
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_kind_check`,
+    );
 
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_connection_type_check`);
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_connection_type_check`,
+    );
     await q.query(`
       ALTER TABLE printers ADD CONSTRAINT printers_connection_type_check
         CHECK (connection_type IN ('wifi', 'usb', 'network', 'browser'))
     `);
-    await q.query(`ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_brand_check`);
+    await q.query(
+      `ALTER TABLE printers DROP CONSTRAINT IF EXISTS printers_brand_check`,
+    );
     await q.query(`
       ALTER TABLE printers ADD CONSTRAINT printers_brand_check
         CHECK (brand IN ('epson', 'star', 'generic', 'qztray', 'browser'))

@@ -19,13 +19,18 @@ describe('renderEscPos', () => {
   });
 
   it('pads item rows to 48 columns on 80mm paper', () => {
-    const out = renderEscPos(data, { paperWidth: 80, brand: 'epson' }).toString('binary');
+    const out = renderEscPos(data, { paperWidth: 80, brand: 'epson' }).toString(
+      'binary',
+    );
     const row = out.split('\n').find((l) => l.includes('2 x 6.00'));
     expect(row).toHaveLength(48);
   });
 
   it('pads item rows to 64 columns on 148mm paper', () => {
-    const out = renderEscPos(data, { paperWidth: 148, brand: 'epson' }).toString('binary');
+    const out = renderEscPos(data, {
+      paperWidth: 148,
+      brand: 'epson',
+    }).toString('binary');
     const row = out.split('\n').find((l) => l.includes('2 x 6.00'));
     expect(row).toHaveLength(64);
   });
@@ -57,7 +62,9 @@ describe('renderEscPos', () => {
   });
 
   it('includes the order, client and total', () => {
-    const out = renderEscPos(data, { paperWidth: 80, brand: 'epson' }).toString('binary');
+    const out = renderEscPos(data, { paperWidth: 80, brand: 'epson' }).toString(
+      'binary',
+    );
     expect(out).toContain('CMD-0001');
     expect(out).toContain('Yassine');
     expect(out).toContain('12.00 DH');

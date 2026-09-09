@@ -48,7 +48,9 @@ export class CreatePrintAgents1778000200000 implements MigrationInterface {
   }
 
   public async down(q: QueryRunner): Promise<void> {
-    await q.query(`ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS fk_print_jobs_agent`);
+    await q.query(
+      `ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS fk_print_jobs_agent`,
+    );
     await q.query(`DROP TABLE IF EXISTS print_agents`);
   }
 }

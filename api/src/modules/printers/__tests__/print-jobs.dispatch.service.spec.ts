@@ -38,8 +38,11 @@ function makeService(opts: {
   notify?: jest.Mock;
   save?: jest.Mock;
 }) {
-  const printerRepo = { findOne: jest.fn().mockResolvedValue(opts.printer ?? null) };
-  const save = opts.save ?? jest.fn(async (x) => ({ ...(x as object), id: 'j1' }));
+  const printerRepo = {
+    findOne: jest.fn().mockResolvedValue(opts.printer ?? null),
+  };
+  const save =
+    opts.save ?? jest.fn(async (x) => ({ ...(x as object), id: 'j1' }));
   const jobRepo = {
     findOne: jest.fn().mockResolvedValue(opts.existingJob ?? null),
     create: (x: unknown) => x,
@@ -49,7 +52,9 @@ function makeService(opts: {
   const svc = new PrintJobsDispatchService(
     {
       getRepository: (entity: { name: string }) =>
-        entity === PrintJob || entity.name === 'PrintJob' ? jobRepo : printerRepo,
+        entity === PrintJob || entity.name === 'PrintJob'
+          ? jobRepo
+          : printerRepo,
     } as never,
     { notify } as never,
   );
@@ -66,15 +71,26 @@ describe('PrintJobsDispatchService.enqueue', () => {
     expect(created).toBe(true);
     expect(job.printerId).toBe('p1');
     expect(save).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'queued', warehouseId: 7, attempts: 0 }),
+      expect.objectContaining({
+        status: 'queued',
+        warehouseId: 7,
+        attempts: 0,
+      }),
     );
   });
 
   it('falls back to the warehouse default printer', async () => {
     const { svc, printerRepo } = makeService({ printer: PRINTER });
-    await svc.enqueue({ documentType: 'receipt', documentRef: 12, warehouseId: 7 }, 1);
+    await svc.enqueue(
+      { documentType: 'receipt', documentRef: 12, warehouseId: 7 },
+      1,
+    );
     const where = printerRepo.findOne.mock.calls[0][0].where;
-    expect(where).toMatchObject({ warehouseId: 7, isEnabled: true, isDefault: true });
+    expect(where).toMatchObject({
+      warehouseId: 7,
+      isEnabled: true,
+      isDefault: true,
+    });
   });
 
   it('requires either a printer or a warehouse', async () => {
@@ -87,20 +103,29 @@ describe('PrintJobsDispatchService.enqueue', () => {
   it('throws when no printer handles the document type', async () => {
     const { svc } = makeService({ printer: null });
     await expect(
-      svc.enqueue({ documentType: 'receipt', documentRef: 12, warehouseId: 7 }, 1),
+      svc.enqueue(
+        { documentType: 'receipt', documentRef: 12, warehouseId: 7 },
+        1,
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('refuses a printer that is not assigned to a warehouse', async () => {
     const { svc } = makeService({ printer: { ...PRINTER, warehouseId: null } });
     await expect(
-      svc.enqueue({ documentType: 'receipt', documentRef: 12, printerId: 'p1' }, 1),
+      svc.enqueue(
+        { documentType: 'receipt', documentRef: 12, printerId: 'p1' },
+        1,
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('returns the existing job for a duplicate submission without saving', async () => {
     const existing = { id: 'j1', status: 'queued' };
-    const { svc, save } = makeService({ printer: PRINTER, existingJob: existing });
+    const { svc, save } = makeService({
+      printer: PRINTER,
+      existingJob: existing,
+    });
     const res = await svc.enqueue(
       { documentType: 'receipt', documentRef: 12, printerId: 'p1' },
       1,
@@ -112,7 +137,10 @@ describe('PrintJobsDispatchService.enqueue', () => {
   it('notifies the warehouse channel after queueing', async () => {
     const notify = jest.fn();
     const { svc } = makeService({ printer: PRINTER, notify });
-    await svc.enqueue({ documentType: 'receipt', documentRef: 12, printerId: 'p1' }, 1);
+    await svc.enqueue(
+      { documentType: 'receipt', documentRef: 12, printerId: 'p1' },
+      1,
+    );
     expect(notify).toHaveBeenCalledWith(7, 'j1');
   });
 
@@ -123,7 +151,10 @@ describe('PrintJobsDispatchService.enqueue', () => {
       existingJob: { id: 'j1' },
       notify,
     });
-    await svc.enqueue({ documentType: 'receipt', documentRef: 12, printerId: 'p1' }, 1);
+    await svc.enqueue(
+      { documentType: 'receipt', documentRef: 12, printerId: 'p1' },
+      1,
+    );
     expect(notify).not.toHaveBeenCalled();
   });
 });

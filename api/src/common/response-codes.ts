@@ -1520,9 +1520,17 @@ export const PJB = {
   /** GET /print-jobs/:id/payload       → data: EscPosPayload|PdfPayload */
   PAYLOAD: { code: 'PJB200_05', status: 200, message: 'Print Payload Ready' },
   /** POST /print-jobs/:id/result       → data: null                 | metadata: null */
-  REPORTED: { code: 'PJB200_06', status: 200, message: 'Print Result Recorded' },
+  REPORTED: {
+    code: 'PJB200_06',
+    status: 200,
+    message: 'Print Result Recorded',
+  },
   /** GET /print-jobs/pending           → data: PrintJob[]           | metadata: null */
-  PENDING: { code: 'PJB200_07', status: 200, message: 'Pending Jobs Retrieved' },
+  PENDING: {
+    code: 'PJB200_07',
+    status: 200,
+    message: 'Pending Jobs Retrieved',
+  },
   /** POST /print-jobs/:id/retry        → data: PrintJob             | metadata: null */
   RETRIED: { code: 'PJB200_08', status: 200, message: 'Print Job Requeued' },
   /** POST /print-jobs/:id/cancel       → data: PrintJob             | metadata: null */

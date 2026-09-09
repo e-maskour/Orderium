@@ -101,7 +101,9 @@ export class PrintJobsDispatchService {
 
     const existing = await this.jobs.findOne({ where: { idempotencyKey } });
     if (existing) {
-      this.logger.debug(`Duplicate submission for ${idempotencyKey}; reusing job`);
+      this.logger.debug(
+        `Duplicate submission for ${idempotencyKey}; reusing job`,
+      );
       return { job: existing, created: false };
     }
 
@@ -146,12 +148,14 @@ export class PrintJobsDispatchService {
       );
     }
     if (job.warehouseId == null) {
-      throw new BadRequestException('Job has no warehouse and cannot be routed');
+      throw new BadRequestException(
+        'Job has no warehouse and cannot be routed',
+      );
     }
 
-    const nextSeq = (job.idempotencyKey.match(/:r(\d+)$/)?.[1]
+    const nextSeq = job.idempotencyKey.match(/:r(\d+)$/)?.[1]
       ? Number(job.idempotencyKey.match(/:r(\d+)$/)![1]) + 1
-      : 1);
+      : 1;
 
     const requeued = await this.jobs.save({
       ...job,

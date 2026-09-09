@@ -35,14 +35,20 @@ export class PrintJobsQueue1778000100000 implements MigrationInterface {
 
     // Historical rows are terminal. 'fallback' meant "the silent path failed and
     // we opened the browser dialog", which did produce a printed receipt.
-    await q.query(`UPDATE print_jobs SET status = 'done' WHERE status IN ('success', 'fallback')`);
-    await q.query(`UPDATE print_jobs SET completed_at = printed_at WHERE completed_at IS NULL`);
+    await q.query(
+      `UPDATE print_jobs SET status = 'done' WHERE status IN ('success', 'fallback')`,
+    );
+    await q.query(
+      `UPDATE print_jobs SET completed_at = printed_at WHERE completed_at IS NULL`,
+    );
     await q.query(`
       UPDATE print_jobs SET idempotency_key = 'legacy-' || id::text
        WHERE idempotency_key IS NULL
     `);
 
-    await q.query(`ALTER TABLE print_jobs ALTER COLUMN idempotency_key SET NOT NULL`);
+    await q.query(
+      `ALTER TABLE print_jobs ALTER COLUMN idempotency_key SET NOT NULL`,
+    );
     await q.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_print_jobs_idempotency
         ON print_jobs (idempotency_key)
@@ -55,9 +61,13 @@ export class PrintJobsQueue1778000100000 implements MigrationInterface {
 
     // The column default was 'success', which the new constraint rejects — a
     // raw insert omitting status would fail.
-    await q.query(`ALTER TABLE print_jobs ALTER COLUMN status SET DEFAULT 'queued'`);
+    await q.query(
+      `ALTER TABLE print_jobs ALTER COLUMN status SET DEFAULT 'queued'`,
+    );
 
-    await q.query(`ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS print_jobs_status_check`);
+    await q.query(
+      `ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS print_jobs_status_check`,
+    );
     await q.query(`
       ALTER TABLE print_jobs ADD CONSTRAINT print_jobs_status_check
         CHECK (status IN ('queued','claimed','printing','done','failed','cancelled'))
@@ -65,20 +75,33 @@ export class PrintJobsQueue1778000100000 implements MigrationInterface {
   }
 
   public async down(q: QueryRunner): Promise<void> {
-    await q.query(`ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS print_jobs_status_check`);
+    await q.query(
+      `ALTER TABLE print_jobs DROP CONSTRAINT IF EXISTS print_jobs_status_check`,
+    );
     await q.query(`DROP INDEX IF EXISTS idx_print_jobs_dispatch`);
     await q.query(`DROP INDEX IF EXISTS idx_print_jobs_idempotency`);
 
-    await q.query(`ALTER TABLE print_jobs ALTER COLUMN status SET DEFAULT 'success'`);
-    await q.query(`UPDATE print_jobs SET status = 'success' WHERE status = 'done'`);
+    await q.query(
+      `ALTER TABLE print_jobs ALTER COLUMN status SET DEFAULT 'success'`,
+    );
+    await q.query(
+      `UPDATE print_jobs SET status = 'success' WHERE status = 'done'`,
+    );
     await q.query(`
       UPDATE print_jobs SET status = 'failed'
        WHERE status IN ('queued','claimed','printing','cancelled')
     `);
 
     for (const col of [
-      'completed_at', 'claimed_at', 'queued_at', 'max_attempts',
-      'attempts', 'idempotency_key', 'document_ref', 'agent_id', 'warehouse_id',
+      'completed_at',
+      'claimed_at',
+      'queued_at',
+      'max_attempts',
+      'attempts',
+      'idempotency_key',
+      'document_ref',
+      'agent_id',
+      'warehouse_id',
     ]) {
       await q.query(`ALTER TABLE print_jobs DROP COLUMN IF EXISTS ${col}`);
     }

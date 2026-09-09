@@ -42,7 +42,10 @@ describe('PrintJobsDispatchService.retry', () => {
   });
 
   it('increments the reprint sequence on a repeated retry', async () => {
-    const { svc, save } = build({ ...failedJob, idempotencyKey: 'receipt:42:p1:r1' });
+    const { svc, save } = build({
+      ...failedJob,
+      idempotencyKey: 'receipt:42:p1:r1',
+    });
     await svc.retry('j1');
     expect(save).toHaveBeenCalledWith(
       expect.objectContaining({ idempotencyKey: 'receipt:42:p1:r2' }),
@@ -65,7 +68,10 @@ describe('PrintJobsDispatchService.cancel', () => {
     const { svc, save } = build({ ...failedJob, status: 'queued' });
     await svc.cancel('j1');
     expect(save).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'cancelled', completedAt: expect.any(Date) }),
+      expect.objectContaining({
+        status: 'cancelled',
+        completedAt: expect.any(Date),
+      }),
     );
   });
 

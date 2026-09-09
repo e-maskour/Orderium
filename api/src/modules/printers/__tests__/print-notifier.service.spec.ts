@@ -39,7 +39,9 @@ describe('PrintNotifier', () => {
     const notifier = new PrintNotifier(tenantConn(), config);
     const seen: unknown[] = [];
     notifier.stream(7).subscribe((v) => seen.push(v));
-    expect(() => notifier.handleMessage('print:acme:7', 'not json')).not.toThrow();
+    expect(() =>
+      notifier.handleMessage('print:acme:7', 'not json'),
+    ).not.toThrow();
     notifier.handleMessage('print:acme:7', JSON.stringify({ jobId: 'ok' }));
     expect(seen).toEqual([{ jobId: 'ok' }]);
   });

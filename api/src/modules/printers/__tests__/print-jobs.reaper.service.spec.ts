@@ -20,7 +20,9 @@ describe('PrintJobsReaper.sweep', () => {
   it('requeues jobs stuck in claimed that still have attempts left', async () => {
     const { reaper, query } = build();
     await reaper.sweep();
-    const requeue = sqlOf(query).find((s) => s.includes("SET status = 'queued'"));
+    const requeue = sqlOf(query).find((s) =>
+      s.includes("SET status = 'queued'"),
+    );
     expect(requeue).toBeDefined();
     expect(requeue).toContain("status = 'claimed'");
     expect(requeue).toContain('attempts < max_attempts');
@@ -30,7 +32,9 @@ describe('PrintJobsReaper.sweep', () => {
     const { reaper, query } = build();
     await reaper.sweep();
     const exhausted = sqlOf(query).find(
-      (s) => s.includes("status = 'claimed'") && s.includes('attempts >= max_attempts'),
+      (s) =>
+        s.includes("status = 'claimed'") &&
+        s.includes('attempts >= max_attempts'),
     );
     expect(exhausted).toContain("SET status = 'failed'");
   });
@@ -54,7 +58,9 @@ describe('PrintJobsReaper.sweep', () => {
   it('cancels jobs that sat queued past the staleness window', async () => {
     const { reaper, query } = build();
     await reaper.sweep();
-    const cancel = sqlOf(query).find((s) => s.includes("SET status = 'cancelled'"));
+    const cancel = sqlOf(query).find((s) =>
+      s.includes("SET status = 'cancelled'"),
+    );
     expect(cancel).toBeDefined();
     expect(cancel).toContain("status = 'queued'");
   });

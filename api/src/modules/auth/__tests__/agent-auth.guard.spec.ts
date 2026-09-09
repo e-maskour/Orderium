@@ -45,7 +45,9 @@ describe('AgentAuthGuard', () => {
   const headers = { 'x-agent-id': 'a1', authorization: 'Bearer thekey' };
 
   it('rejects a request with no credentials', async () => {
-    await expect(guard.canActivate(ctx({}).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx({}).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects a request with an agent id but no key', async () => {
@@ -56,27 +58,37 @@ describe('AgentAuthGuard', () => {
 
   it('rejects an unknown agent', async () => {
     findOne.mockResolvedValue(null);
-    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects a revoked agent', async () => {
     findOne.mockResolvedValue({ ...AGENT, revokedAt: new Date() });
-    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects a disabled agent', async () => {
     findOne.mockResolvedValue({ ...AGENT, isEnabled: false });
-    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects an agent that has never been paired', async () => {
     findOne.mockResolvedValue({ ...AGENT, keyHash: null });
-    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects a wrong key', async () => {
     mockedCompare.mockResolvedValue(false);
-    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx(headers).ctx)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('attaches the agent to the request on success', async () => {

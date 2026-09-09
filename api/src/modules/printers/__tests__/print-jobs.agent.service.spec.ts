@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrintJobsAgentService } from '../print-jobs.agent.service';
 import { PrintJob } from '../entities/print-job.entity';
 
@@ -15,7 +19,9 @@ function makeService(opts: {
   const svc = new PrintJobsAgentService(
     {
       getRepository: (entity: { name: string }) =>
-        entity === PrintJob || entity.name === 'PrintJob' ? jobRepo : printerRepo,
+        entity === PrintJob || entity.name === 'PrintJob'
+          ? jobRepo
+          : printerRepo,
     } as never,
     (opts.receipt ?? {}) as never,
     (opts.pdf ?? {}) as never,
@@ -25,7 +31,9 @@ function makeService(opts: {
 
 describe('PrintJobsAgentService.claim', () => {
   it('claims only a queued job, scoped to the agent warehouse', async () => {
-    const query = jest.fn().mockResolvedValue([{ id: 'j1', status: 'claimed' }]);
+    const query = jest
+      .fn()
+      .mockResolvedValue([{ id: 'j1', status: 'claimed' }]);
     const { svc } = makeService({ jobRepo: { query } });
 
     const job = await svc.claim('j1', AGENT);
@@ -45,12 +53,16 @@ describe('PrintJobsAgentService.claim', () => {
   });
 
   it('throws Conflict when another agent won the race', async () => {
-    const { svc } = makeService({ jobRepo: { query: jest.fn().mockResolvedValue([]) } });
+    const { svc } = makeService({
+      jobRepo: { query: jest.fn().mockResolvedValue([]) },
+    });
     await expect(svc.claim('j1', AGENT)).rejects.toThrow(ConflictException);
   });
 
   it('tolerates drivers that return [rows, affected]', async () => {
-    const query = jest.fn().mockResolvedValue([[{ id: 'j1', status: 'claimed' }], 1]);
+    const query = jest
+      .fn()
+      .mockResolvedValue([[{ id: 'j1', status: 'claimed' }], 1]);
     const { svc } = makeService({ jobRepo: { query } });
     await expect(svc.claim('j1', AGENT)).resolves.toMatchObject({ id: 'j1' });
   });
@@ -68,13 +80,19 @@ describe('PrintJobsAgentService.payload', () => {
 
   it('refuses a job the agent does not hold', async () => {
     const { svc } = makeService({
-      jobRepo: { findOne: jest.fn().mockResolvedValue({ ...claimedJob, agentId: 'other' }) },
+      jobRepo: {
+        findOne: jest
+          .fn()
+          .mockResolvedValue({ ...claimedJob, agentId: 'other' }),
+      },
     });
     await expect(svc.payload('j1', AGENT)).rejects.toThrow(ForbiddenException);
   });
 
   it('throws when the job does not exist', async () => {
-    const { svc } = makeService({ jobRepo: { findOne: jest.fn().mockResolvedValue(null) } });
+    const { svc } = makeService({
+      jobRepo: { findOne: jest.fn().mockResolvedValue(null) },
+    });
     await expect(svc.payload('j1', AGENT)).rejects.toThrow(NotFoundException);
   });
 
@@ -84,13 +102,21 @@ describe('PrintJobsAgentService.payload', () => {
       jobRepo: { findOne: jest.fn().mockResolvedValue(claimedJob), update },
       printerRepo: {
         findOne: jest.fn().mockResolvedValue({
-          id: 'p1', kind: 'thermal', paperWidth: 80, brand: 'epson',
+          id: 'p1',
+          kind: 'thermal',
+          paperWidth: 80,
+          brand: 'epson',
         }),
       },
       receipt: {
         build: jest.fn().mockResolvedValue({
-          storeName: 'S', orderNumber: 'O', date: 'd', clientName: 'c',
-          items: [], subtotal: 0, total: 0,
+          storeName: 'S',
+          orderNumber: 'O',
+          date: 'd',
+          clientName: 'c',
+          items: [],
+          subtotal: 0,
+          total: 0,
         }),
       },
     });
@@ -98,7 +124,7 @@ describe('PrintJobsAgentService.payload', () => {
     const payload = await svc.payload('j1', AGENT);
 
     expect(payload.kind).toBe('escpos');
-    expect(Buffer.from(payload.dataBase64!, 'base64')[0]).toBe(0x1b);
+    expect(Buffer.from(payload.dataBase64, 'base64')[0]).toBe(0x1b);
     // Bytes are now considered sent — the job must not be auto-retried.
     expect(update).toHaveBeenCalledWith(
       { id: 'j1' },
@@ -109,7 +135,9 @@ describe('PrintJobsAgentService.payload', () => {
   it('returns a PDF for a document printer', async () => {
     const { svc } = makeService({
       jobRepo: {
-        findOne: jest.fn().mockResolvedValue({ ...claimedJob, documentType: 'bl' }),
+        findOne: jest
+          .fn()
+          .mockResolvedValue({ ...claimedJob, documentType: 'bl' }),
         update: jest.fn(),
       },
       printerRepo: {
@@ -125,7 +153,9 @@ describe('PrintJobsAgentService.payload', () => {
 
     const payload = await svc.payload('j1', AGENT);
     expect(payload.kind).toBe('pdf');
-    expect(Buffer.from(payload.dataBase64!, 'base64').toString()).toBe('%PDF-1.4');
+    expect(Buffer.from(payload.dataBase64, 'base64').toString()).toBe(
+      '%PDF-1.4',
+    );
     expect(payload.fileName).toBe('bl.pdf');
   });
 });
@@ -140,7 +170,11 @@ describe('PrintJobsAgentService.report', () => {
     });
     await svc.report('j1', AGENT, { status: 'done', durationMs: 120 });
     expect(save).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'done', durationMs: 120, completedAt: expect.any(Date) }),
+      expect.objectContaining({
+        status: 'done',
+        durationMs: 120,
+        completedAt: expect.any(Date),
+      }),
     );
   });
 
@@ -149,15 +183,25 @@ describe('PrintJobsAgentService.report', () => {
     const { svc } = makeService({
       jobRepo: { findOne: jest.fn().mockResolvedValue({ ...job }), save },
     });
-    await svc.report('j1', AGENT, { status: 'failed', durationMs: 5, error: 'out of paper' });
+    await svc.report('j1', AGENT, {
+      status: 'failed',
+      durationMs: 5,
+      error: 'out of paper',
+    });
     expect(save).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'failed', errorMessage: 'out of paper' }),
+      expect.objectContaining({
+        status: 'failed',
+        errorMessage: 'out of paper',
+      }),
     );
   });
 
   it('refuses a report from an agent that does not hold the job', async () => {
     const { svc } = makeService({
-      jobRepo: { findOne: jest.fn().mockResolvedValue({ ...job, agentId: 'other' }), save: jest.fn() },
+      jobRepo: {
+        findOne: jest.fn().mockResolvedValue({ ...job, agentId: 'other' }),
+        save: jest.fn(),
+      },
     });
     await expect(
       svc.report('j1', AGENT, { status: 'done', durationMs: 1 }),
@@ -181,23 +225,41 @@ describe('PrintJobsAgentService.pending', () => {
 
 describe('PrintJobsAgentService.payload target', () => {
   const claimed = {
-    id: 'j1', agentId: 'a1', warehouseId: 7, printerId: 'p1',
-    documentType: 'receipt', documentRef: 42,
+    id: 'j1',
+    agentId: 'a1',
+    warehouseId: 7,
+    printerId: 'p1',
+    documentType: 'receipt',
+    documentRef: 42,
   };
 
   it('tells the agent where to send the bytes', async () => {
     const { svc } = makeService({
-      jobRepo: { findOne: jest.fn().mockResolvedValue(claimed), update: jest.fn() },
+      jobRepo: {
+        findOne: jest.fn().mockResolvedValue(claimed),
+        update: jest.fn(),
+      },
       printerRepo: {
         findOne: jest.fn().mockResolvedValue({
-          id: 'p1', kind: 'thermal', paperWidth: 80, brand: 'epson',
-          connectionType: 'network', ip: '192.168.1.50', port: 9100, systemName: null,
+          id: 'p1',
+          kind: 'thermal',
+          paperWidth: 80,
+          brand: 'epson',
+          connectionType: 'network',
+          ip: '192.168.1.50',
+          port: 9100,
+          systemName: null,
         }),
       },
       receipt: {
         build: jest.fn().mockResolvedValue({
-          storeName: 'S', orderNumber: 'O', date: 'd', clientName: 'c',
-          items: [], subtotal: 0, total: 0,
+          storeName: 'S',
+          orderNumber: 'O',
+          date: 'd',
+          clientName: 'c',
+          items: [],
+          subtotal: 0,
+          total: 0,
         }),
       },
     });
@@ -217,18 +279,27 @@ describe('PrintJobsAgentService.payload target', () => {
   it('carries the target on a document payload too', async () => {
     const { svc } = makeService({
       jobRepo: {
-        findOne: jest.fn().mockResolvedValue({ ...claimed, documentType: 'bl' }),
+        findOne: jest
+          .fn()
+          .mockResolvedValue({ ...claimed, documentType: 'bl' }),
         update: jest.fn(),
       },
       printerRepo: {
         findOne: jest.fn().mockResolvedValue({
-          id: 'p2', kind: 'document', paperWidth: 148, brand: 'generic',
-          connectionType: 'system', ip: null, port: 9100, systemName: 'HP LaserJet',
+          id: 'p2',
+          kind: 'document',
+          paperWidth: 148,
+          brand: 'generic',
+          connectionType: 'system',
+          ip: null,
+          port: 9100,
+          systemName: 'HP LaserJet',
         }),
       },
       pdf: {
         generateDocumentPDF: jest.fn().mockResolvedValue({
-          pdfBuffer: Buffer.from('%PDF'), fileName: 'bl.pdf',
+          pdfBuffer: Buffer.from('%PDF'),
+          fileName: 'bl.pdf',
         }),
       },
     });
@@ -252,9 +323,15 @@ describe('PrintJobsAgentService.printers', () => {
   it('exposes only device fields, never internal ones', async () => {
     const find = jest.fn().mockResolvedValue([
       {
-        id: 'p1', warehouseId: 7, isDefault: true, documentTypes: ['receipt'],
-        connectionType: 'network', ip: '1.1.1.1', port: 9100,
-        systemName: null, paperWidth: 80,
+        id: 'p1',
+        warehouseId: 7,
+        isDefault: true,
+        documentTypes: ['receipt'],
+        connectionType: 'network',
+        ip: '1.1.1.1',
+        port: 9100,
+        systemName: null,
+        paperWidth: 80,
       },
     ]);
     const { svc } = makeService({ printerRepo: { find } });
@@ -262,11 +339,14 @@ describe('PrintJobsAgentService.printers', () => {
 
     expect(list).toEqual([
       {
-        printerId: 'p1', connectionType: 'network', ip: '1.1.1.1',
-        port: 9100, systemName: null, paperWidth: 80,
+        printerId: 'p1',
+        connectionType: 'network',
+        ip: '1.1.1.1',
+        port: 9100,
+        systemName: null,
+        paperWidth: 80,
       },
     ]);
     expect(JSON.stringify(list)).not.toContain('warehouseId');
   });
 });
-

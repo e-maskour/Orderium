@@ -17,7 +17,10 @@ export class CreatePrintJobDto {
   @IsIn(DOC_TYPES)
   documentType: DocumentType;
 
-  @ApiProperty({ description: 'Integer id of the source document', example: 42 })
+  @ApiProperty({
+    description: 'Integer id of the source document',
+    example: 42,
+  })
   @IsInt()
   @Type(() => Number)
   documentRef: number;

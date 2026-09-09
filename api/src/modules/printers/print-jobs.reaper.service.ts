@@ -43,7 +43,7 @@ export class PrintJobsReaper {
     const result: unknown = await this.jobs.query(sql);
     // Postgres drivers return either [rows, affected] or just rows.
     return Array.isArray(result) && typeof result[1] === 'number'
-      ? (result[1] as number)
+      ? result[1]
       : 0;
   }
 

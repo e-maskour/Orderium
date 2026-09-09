@@ -48,7 +48,10 @@ function toTarget(printer: Printer): DeviceTarget {
 }
 
 /** Our document types mapped onto the PDF module's vocabulary. */
-const PDF_DOCUMENT_TYPE: Record<string, 'invoice' | 'quote' | 'delivery-note' | 'receipt'> = {
+const PDF_DOCUMENT_TYPE: Record<
+  string,
+  'invoice' | 'quote' | 'delivery-note' | 'receipt'
+> = {
   receipt: 'receipt',
   pos: 'receipt',
   bl: 'delivery-note',
@@ -96,17 +99,24 @@ export class PrintJobsAgentService {
     );
 
     // Postgres drivers differ: some return the rows array, others [rows, count].
-    const rows = (Array.isArray((result as unknown[])[0])
-      ? (result as unknown[][])[0]
-      : result) as PrintJob[];
+    const rows = (
+      Array.isArray((result as unknown[])[0])
+        ? (result as unknown[][])[0]
+        : result
+    ) as PrintJob[];
 
     if (!rows?.length) {
-      throw new ConflictException('Job is not queued, or another agent claimed it');
+      throw new ConflictException(
+        'Job is not queued, or another agent claimed it',
+      );
     }
     return rows[0];
   }
 
-  private async ownedJob(jobId: string, agent: AuthenticatedAgent): Promise<PrintJob> {
+  private async ownedJob(
+    jobId: string,
+    agent: AuthenticatedAgent,
+  ): Promise<PrintJob> {
     const job = await this.jobs.findOne({ where: { id: jobId } });
     if (!job) throw new NotFoundException('Print job not found');
     if (job.agentId !== agent.id || job.warehouseId !== agent.warehouseId) {
@@ -121,10 +131,15 @@ export class PrintJobsAgentService {
    * After this point the job is never auto-retried: the agent may have already
    * written to the printer, and a duplicate receipt is worse than a missing one.
    */
-  async payload(jobId: string, agent: AuthenticatedAgent): Promise<PrintPayload> {
+  async payload(
+    jobId: string,
+    agent: AuthenticatedAgent,
+  ): Promise<PrintPayload> {
     const job = await this.ownedJob(jobId, agent);
 
-    const printer = await this.printerRepo.findOne({ where: { id: job.printerId! } });
+    const printer = await this.printerRepo.findOne({
+      where: { id: job.printerId! },
+    });
     if (!printer) throw new NotFoundException('Printer not found');
 
     let payload: PrintPayload;

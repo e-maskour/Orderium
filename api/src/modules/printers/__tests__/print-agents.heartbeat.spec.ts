@@ -6,7 +6,9 @@ function build() {
   const printerRepo = { update: jest.fn() };
   const svc = new PrintAgentsService({
     getRepository: (entity: { name: string }) =>
-      entity === PrintAgent || entity.name === 'PrintAgent' ? agentRepo : printerRepo,
+      entity === PrintAgent || entity.name === 'PrintAgent'
+        ? agentRepo
+        : printerRepo,
     getCurrentTenantSlug: () => 'acme',
   } as never);
   return { svc, agentRepo, printerRepo };
@@ -17,7 +19,11 @@ const AGENT = { id: 'a1', warehouseId: 7 };
 describe('PrintAgentsService.heartbeat', () => {
   it('records liveness, version and platform', async () => {
     const { svc, agentRepo } = build();
-    await svc.heartbeat(AGENT, { version: '1.0.0', platform: 'win32', printers: [] });
+    await svc.heartbeat(AGENT, {
+      version: '1.0.0',
+      platform: 'win32',
+      printers: [],
+    });
     expect(agentRepo.update).toHaveBeenCalledWith(
       { id: 'a1' },
       expect.objectContaining({

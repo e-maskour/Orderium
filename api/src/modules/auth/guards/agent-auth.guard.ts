@@ -23,9 +23,10 @@ export class AgentAuthGuard implements CanActivate {
   constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context
-      .switchToHttp()
-      .getRequest<{ headers: Record<string, string>; agent?: AuthenticatedAgent }>();
+    const req = context.switchToHttp().getRequest<{
+      headers: Record<string, string>;
+      agent?: AuthenticatedAgent;
+    }>();
 
     const agentId = req.headers['x-agent-id'];
     const key = req.headers['authorization']?.replace(/^Bearer /, '');

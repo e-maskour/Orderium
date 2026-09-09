@@ -9,7 +9,8 @@ export class CreatePrintAgentDto {
   name: string;
 
   @ApiProperty({
-    description: 'The shop this agent serves. It receives only this warehouse’s jobs.',
+    description:
+      'The shop this agent serves. It receives only this warehouse’s jobs.',
     example: 1,
   })
   @IsInt()

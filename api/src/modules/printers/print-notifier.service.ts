@@ -110,9 +110,11 @@ export class PrintNotifier implements OnModuleInit, OnModuleDestroy {
     const message = JSON.stringify({ jobId });
 
     if (this.publisher) {
-      this.publisher.publish(channel, message).catch((e: Error) =>
-        this.logger.warn(`Failed to publish to ${channel}: ${e.message}`),
-      );
+      this.publisher
+        .publish(channel, message)
+        .catch((e: Error) =>
+          this.logger.warn(`Failed to publish to ${channel}: ${e.message}`),
+        );
     } else {
       // No Redis: deliver locally so single-instance deployments still work.
       this.handleMessage(channel, message);

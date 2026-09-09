@@ -21,7 +21,10 @@ describe('PrintAgentsService.create', () => {
       save: jest.fn(async (x) => ({ ...(x as object), id: 'a1' })),
     };
     const svc = new PrintAgentsService(tenantConn(repo));
-    const { pairingCode } = await svc.create({ name: 'Caisse', warehouseId: 7 });
+    const { pairingCode } = await svc.create({
+      name: 'Caisse',
+      warehouseId: 7,
+    });
     // The slug prefix tells the agent which X-Tenant-ID to send, so the
     // operator configures nothing by hand.
     expect(pairingCode).toMatch(/^acme-[A-Z0-9]{8}$/);
@@ -41,7 +44,9 @@ describe('PrintAgentsService.create', () => {
 
   it('sets an expiry on the pairing code', async () => {
     const save = jest.fn(async (x) => ({ ...(x as object), id: 'a1' }));
-    const svc = new PrintAgentsService(tenantConn({ create: (x: unknown) => x, save }));
+    const svc = new PrintAgentsService(
+      tenantConn({ create: (x: unknown) => x, save }),
+    );
     await svc.create({ name: 'Caisse', warehouseId: 7 });
     const saved = save.mock.calls[0][0] as { pairingExpiresAt: Date };
     expect(saved.pairingExpiresAt.getTime()).toBeGreaterThan(Date.now());
@@ -57,9 +62,14 @@ describe('PrintAgentsService.pair', () => {
 
   it('rejects an unknown code', async () => {
     const svc = new PrintAgentsService(
-      tenantConn({ findOne: jest.fn().mockResolvedValue(null), save: jest.fn() }),
+      tenantConn({
+        findOne: jest.fn().mockResolvedValue(null),
+        save: jest.fn(),
+      }),
     );
-    await expect(svc.pair('acme-AAAAAAAA')).rejects.toThrow(UnauthorizedException);
+    await expect(svc.pair('acme-AAAAAAAA')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('rejects an expired code', async () => {
@@ -71,7 +81,9 @@ describe('PrintAgentsService.pair', () => {
       save: jest.fn(),
     };
     const svc = new PrintAgentsService(tenantConn(repo));
-    await expect(svc.pair('acme-AAAAAAAA')).rejects.toThrow(UnauthorizedException);
+    await expect(svc.pair('acme-AAAAAAAA')).rejects.toThrow(
+      UnauthorizedException,
+    );
     expect(repo.save).not.toHaveBeenCalled();
   });
 
@@ -104,7 +116,9 @@ describe('PrintAgentsService.pair', () => {
 
   it('accepts the code half regardless of the slug prefix', async () => {
     const findOne = jest.fn().mockResolvedValue(validAgent());
-    const svc = new PrintAgentsService(tenantConn({ findOne, save: jest.fn(async (x) => x) }));
+    const svc = new PrintAgentsService(
+      tenantConn({ findOne, save: jest.fn(async (x) => x) }),
+    );
     await svc.pair('some-tenant-ABCDEFGH');
     expect(findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { pairingCode: 'ABCDEFGH' } }),
@@ -117,7 +131,10 @@ describe('PrintAgentsService.list', () => {
     const repo = {
       find: jest.fn().mockResolvedValue([
         { id: 'a', lastSeenAt: new Date(Date.now() - 1_000) },
-        { id: 'b', lastSeenAt: new Date(Date.now() - AGENT_ONLINE_WINDOW_MS - 1_000) },
+        {
+          id: 'b',
+          lastSeenAt: new Date(Date.now() - AGENT_ONLINE_WINDOW_MS - 1_000),
+        },
         { id: 'c', lastSeenAt: null },
       ]),
     };
@@ -134,7 +151,10 @@ describe('PrintAgentsService.revoke', () => {
     await svc.revoke('a1');
     expect(update).toHaveBeenCalledWith(
       { id: 'a1' },
-      expect.objectContaining({ isEnabled: false, revokedAt: expect.any(Date) }),
+      expect.objectContaining({
+        isEnabled: false,
+        revokedAt: expect.any(Date),
+      }),
     );
   });
 

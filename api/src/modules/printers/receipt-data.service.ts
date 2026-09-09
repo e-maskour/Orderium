@@ -30,7 +30,8 @@ export class ReceiptDataService {
 
   private async company(): Promise<CompanyConfig> {
     try {
-      const config = await this.configurationsService.findByEntity('my_company');
+      const config =
+        await this.configurationsService.findByEntity('my_company');
       return (config?.values ?? {}) as CompanyConfig;
     } catch {
       return {};
@@ -54,7 +55,10 @@ export class ReceiptDataService {
       storeName: company.companyName || 'Morocom',
       storePhone: company.phone,
       orderNumber:
-        order.receiptNumber ?? order.orderNumber ?? order.documentNumber ?? `#${order.id}`,
+        order.receiptNumber ??
+        order.orderNumber ??
+        order.documentNumber ??
+        `#${order.id}`,
       date: new Date(date).toLocaleString('fr-FR'),
       clientName: order.customerName ?? 'Client',
       clientPhone: order.customerPhone ?? undefined,

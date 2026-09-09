@@ -65,7 +65,9 @@ export class PrintAgentsController {
   @AgentRoute()
   @NoPermissionRequired()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @ApiOperation({ summary: 'Exchange a pairing code for a permanent agent key' })
+  @ApiOperation({
+    summary: 'Exchange a pairing code for a permanent agent key',
+  })
   @ApiResponse({ status: 200, description: 'Print agent paired' })
   @ApiResponse({ status: 401, description: 'Invalid or expired pairing code' })
   async pair(@Body() dto: PairAgentDto) {

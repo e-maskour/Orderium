@@ -59,7 +59,8 @@ export class CreatePrinterDto {
   @ApiProperty({
     enum: KINDS,
     example: 'thermal',
-    description: 'thermal speaks ESC/POS; document takes a PDF via the OS spooler',
+    description:
+      'thermal speaks ESC/POS; document takes a PDF via the OS spooler',
   })
   @IsEnum(KINDS)
   kind: PrinterKind;

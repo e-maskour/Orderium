@@ -41,14 +41,23 @@ export class PrintJobsController {
   @Post()
   @ApiOperation({ summary: 'Queue a document for printing' })
   @ApiResponse({ status: 201, description: 'Print job queued' })
-  @ApiResponse({ status: 200, description: 'An identical job was already queued' })
-  @ApiResponse({ status: 404, description: 'No enabled printer for this document type' })
+  @ApiResponse({
+    status: 200,
+    description: 'An identical job was already queued',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No enabled printer for this document type',
+  })
   @RequirePermission('printers.print')
   async create(
     @Body() dto: CreatePrintJobDto,
     @Request() req: { user: { id: number; sub: number } },
   ) {
-    const { job, created } = await this.dispatch.enqueue(dto, req.user?.id ?? null);
+    const { job, created } = await this.dispatch.enqueue(
+      dto,
+      req.user?.id ?? null,
+    );
     return ApiRes(created ? PJB.CREATED : PJB.DUPLICATE, job);
   }
 
@@ -86,7 +95,9 @@ export class PrintJobsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get one print job (used to poll a print’s status)' })
+  @ApiOperation({
+    summary: 'Get one print job (used to poll a print’s status)',
+  })
   @ApiResponse({ status: 200, description: 'Print job retrieved' })
   @ApiResponse({ status: 404, description: 'Print job not found' })
   @RequirePermission('printers.view')
@@ -106,7 +117,10 @@ export class PrintJobsController {
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel a job that has not reached a device' })
   @ApiResponse({ status: 200, description: 'Print job cancelled' })
-  @ApiResponse({ status: 400, description: 'Job is not in a cancellable state' })
+  @ApiResponse({
+    status: 400,
+    description: 'Job is not in a cancellable state',
+  })
   @RequirePermission('printers.print')
   async cancel(@Param('id', ParseUUIDPipe) id: string) {
     return ApiRes(PJB.CANCELLED, await this.dispatch.cancel(id));

@@ -3,7 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class PairAgentDto {
   @ApiProperty({
-    description: 'The pairing string shown in the backoffice, `<tenantSlug>-<code>`',
+    description:
+      'The pairing string shown in the backoffice, `<tenantSlug>-<code>`',
     example: 'acme-4F7K2Q9X',
   })
   @IsString()
