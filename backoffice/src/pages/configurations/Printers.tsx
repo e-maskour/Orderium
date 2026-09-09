@@ -399,12 +399,44 @@ export default function Printers() {
 
   const [showModal, setShowModal] = useState(false);
   const [editingPrinter, setEditingPrinter] = useState<IPrinter | null>(null);
-  const [activeTab, setActiveTab] = useState<'printers' | 'history'>('printers');
+  const [activeTab, setActiveTab] = useState<'printers' | 'agents' | 'history'>(
+    'printers',
+  );
   const [jobsPage, setJobsPage] = useState(1);
 
   const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses'],
     queryFn: () => warehousesService.getAll(),
+  });
+
+  // ── Agents ─────────────────────────────────────────────
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentWarehouse, setNewAgentWarehouse] = useState<number>(0);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+
+  const { data: agents = [] } = useQuery({
+    queryKey: ['print-agents'],
+    queryFn: () => printersService.getAgents(),
+    enabled: activeTab === 'agents',
+    // Online state comes from a 30s heartbeat; refresh so a shop coming back
+    // online becomes visible without a manual reload.
+    refetchInterval: activeTab === 'agents' ? 15_000 : false,
+  });
+
+  const createAgentMutation = useMutation({
+    mutationFn: (dto: { name: string; warehouseId: number }) =>
+      printersService.createAgent(dto),
+    onSuccess: (res) => {
+      // Shown once and never retrievable again.
+      setPairingCode(res.pairingCode);
+      void queryClient.invalidateQueries({ queryKey: ['print-agents'] });
+    },
+  });
+
+  const revokeAgentMutation = useMutation({
+    mutationFn: (id: string) => printersService.revokeAgent(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['print-agents'] }),
   });
 
   const { data: printers = [], isLoading } = useQuery({
@@ -573,7 +605,7 @@ export default function Printers() {
             marginBottom: '1.5rem',
           }}
         >
-          {(['printers', 'history'] as const).map((tab) => (
+          {(['printers', 'agents', 'history'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -590,7 +622,11 @@ export default function Printers() {
                 marginBottom: -2,
               }}
             >
-              {tab === 'printers' ? t('printers') : t('printHistory')}
+              {tab === 'printers'
+                ? t('printers')
+                : tab === 'agents'
+                  ? 'Agents'
+                  : t('printHistory')}
             </button>
           ))}
         </div>
@@ -735,6 +771,107 @@ export default function Printers() {
                         />
                       </button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'agents' && (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: '1rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+                Un agent tourne sur une machine du magasin et pilote les
+                imprimantes que le navigateur ne peut pas atteindre. Un agent ne
+                reçoit que les travaux de son magasin.
+              </p>
+              <button
+                onClick={() => {
+                  setNewAgentName('');
+                  setNewAgentWarehouse(warehouses[0]?.id ?? 0);
+                  setPairingCode(null);
+                  setShowAgentModal(true);
+                }}
+                style={{ ...btnPrimary, whiteSpace: 'nowrap' }}
+              >
+                <Plus style={{ width: 16, height: 16 }} />
+                Ajouter un agent
+              </button>
+            </div>
+
+            {agents.length === 0 ? (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '3rem',
+                  color: 'var(--text-placeholder)',
+                }}
+              >
+                Aucun agent. Ajoutez-en un pour imprimer sans boîte de dialogue.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {agents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid var(--erp-border)',
+                      borderRadius: '0.75rem',
+                      background: 'var(--erp-bg)',
+                      opacity: agent.revokedAt ? 0.5 : 1,
+                    }}
+                  >
+                    <span
+                      title={agent.online ? 'En ligne' : 'Hors ligne'}
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        flexShrink: 0,
+                        backgroundColor: agent.online ? '#059669' : '#9ca3af',
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600 }}>{agent.name}</div>
+                      <div
+                        style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}
+                      >
+                        {warehouses.find((w) => w.id === agent.warehouseId)?.name ??
+                          `Magasin ${agent.warehouseId}`}
+                        {agent.platform && ` · ${agent.platform}`}
+                        {agent.version && ` · v${agent.version}`}
+                        {agent.lastSeenAt &&
+                          ` · vu ${new Date(agent.lastSeenAt).toLocaleString()}`}
+                        {agent.revokedAt && ' · révoqué'}
+                      </div>
+                    </div>
+                    {!agent.revokedAt && (
+                      <button
+                        onClick={() => {
+                          toastConfirm(
+                            'Révoquer cet agent ? La machine cessera immédiatement de recevoir des travaux et devra être ré-appairée.',
+                            () => revokeAgentMutation.mutate(agent.id),
+                            { variant: 'destructive', confirmLabel: 'Révoquer' },
+                          );
+                        }}
+                        style={btnSecondary}
+                      >
+                        Révoquer
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -919,6 +1056,130 @@ export default function Printers() {
           </details>
         )}
       </div>
+
+      {/* Add Agent Modal */}
+      {showAgentModal && (
+        <Modal
+          isOpen={showAgentModal}
+          title={pairingCode ? 'Code d’appairage' : 'Ajouter un agent'}
+          onClose={() => {
+            setShowAgentModal(false);
+            setPairingCode(null);
+          }}
+        >
+          {pairingCode ? (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                Sur la machine du magasin, lancez :
+              </p>
+              <code
+                style={{
+                  display: 'block',
+                  padding: '0.875rem',
+                  borderRadius: '0.5rem',
+                  background: 'var(--erp-bg)',
+                  border: '1px solid var(--erp-border)',
+                  fontSize: '0.8125rem',
+                  wordBreak: 'break-all',
+                }}
+              >
+                orderium-print-agent pair --url {window.location.origin} --code{' '}
+                <strong>{pairingCode}</strong>
+              </code>
+
+              <button
+                onClick={() => void navigator.clipboard?.writeText(pairingCode)}
+                style={btnSecondary}
+              >
+                Copier le code
+              </button>
+
+              <div
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  background: '#fffbeb',
+                  border: '1px solid #fcd34d',
+                  fontSize: '0.8125rem',
+                }}
+              >
+                Ce code est valable <strong>15 minutes</strong>, ne peut servir
+                qu’une seule fois, et ne sera plus affiché après la fermeture de
+                cette fenêtre.
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowAgentModal(false);
+                  setPairingCode(null);
+                }}
+                style={btnPrimary}
+              >
+                Terminé
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                createAgentMutation.mutate({
+                  name: newAgentName,
+                  warehouseId: newAgentWarehouse,
+                });
+              }}
+              style={{ display: 'grid', gap: '1rem' }}
+            >
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+                  Nom
+                </label>
+                <input
+                  type="text"
+                  value={newAgentName}
+                  onChange={(e) => setNewAgentName(e.target.value)}
+                  placeholder="Caisse principale"
+                  required
+                  maxLength={60}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+                  Magasin
+                </label>
+                <select
+                  value={newAgentWarehouse}
+                  onChange={(e) => setNewAgentWarehouse(Number(e.target.value))}
+                  required
+                  style={inputStyle}
+                >
+                  {warehouses.length === 0 && <option value={0}>—</option>}
+                  {warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+                <small style={{ color: 'var(--text-secondary)' }}>
+                  L’agent ne recevra que les travaux de ce magasin.
+                </small>
+              </div>
+
+              <button
+                type="submit"
+                disabled={createAgentMutation.isPending || !newAgentWarehouse}
+                style={{
+                  ...btnPrimary,
+                  opacity: createAgentMutation.isPending || !newAgentWarehouse ? 0.6 : 1,
+                }}
+              >
+                {createAgentMutation.isPending ? 'Création…' : 'Créer et appairer'}
+              </button>
+            </form>
+          )}
+        </Modal>
+      )}
 
       {/* Add / Edit Modal */}
       {showModal && (
