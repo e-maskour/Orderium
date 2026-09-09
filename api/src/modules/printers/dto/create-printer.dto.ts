@@ -18,16 +18,12 @@ import type {
   ConnectionType,
   PaperWidth,
   DocumentType,
+  PrinterKind,
 } from '../entities/printer.entity';
 
-const BRANDS: PrinterBrand[] = [
-  'epson',
-  'star',
-  'generic',
-  'qztray',
-  'browser',
-];
-const CONN: ConnectionType[] = ['wifi', 'usb', 'network', 'browser'];
+const BRANDS: PrinterBrand[] = ['epson', 'star', 'generic'];
+const CONN: ConnectionType[] = ['network', 'usb', 'system'];
+const KINDS: PrinterKind[] = ['thermal', 'document'];
 const WIDTHS: PaperWidth[] = [80, 148];
 const DOC_TYPES: DocumentType[] = [
   'receipt',
@@ -48,9 +44,34 @@ export class CreatePrinterDto {
   @IsEnum(BRANDS)
   brand: PrinterBrand;
 
-  @ApiProperty({ enum: CONN, example: 'wifi' })
+  @ApiProperty({ enum: CONN, example: 'network' })
   @IsEnum(CONN)
   connectionType: ConnectionType;
+
+  @ApiProperty({
+    description: 'Which shop this printer stands in. Jobs route by warehouse.',
+    example: 1,
+  })
+  @IsInt()
+  @Type(() => Number)
+  warehouseId: number;
+
+  @ApiProperty({
+    enum: KINDS,
+    example: 'thermal',
+    description: 'thermal speaks ESC/POS; document takes a PDF via the OS spooler',
+  })
+  @IsEnum(KINDS)
+  kind: PrinterKind;
+
+  @ApiPropertyOptional({
+    description: 'OS spooler queue name, for usb/system devices',
+    example: 'EPSON TM-T20III Receipt',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  systemName?: string;
 
   @ApiPropertyOptional({ example: 'TM-T20III' })
   @IsOptional()

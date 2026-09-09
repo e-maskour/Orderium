@@ -9,8 +9,10 @@ import {
 } from 'typeorm';
 import { PrintJob } from './print-job.entity';
 
-export type PrinterBrand = 'epson' | 'star' | 'generic' | 'qztray' | 'browser';
-export type ConnectionType = 'wifi' | 'usb' | 'network' | 'browser';
+export type PrinterBrand = 'epson' | 'star' | 'generic';
+export type ConnectionType = 'network' | 'usb' | 'system';
+/** Whether the device speaks ESC/POS or takes a PDF through the OS spooler. */
+export type PrinterKind = 'thermal' | 'document';
 export type PaperWidth = 80 | 148;
 export type DocumentType =
   | 'receipt'
@@ -21,7 +23,7 @@ export type DocumentType =
   | 'stock';
 
 @Entity('printers')
-@Index(['name'], { unique: true })
+@Index(['warehouseId', 'name'], { unique: true })
 export class Printer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,6 +33,21 @@ export class Printer {
 
   @Column({ type: 'varchar', length: 20 })
   brand: PrinterBrand;
+
+  /**
+   * Nullable: a tenant with no warehouses leaves existing printers unassigned
+   * rather than blocking the migration. PrintJobsDispatchService refuses to
+   * queue a job to a printer without a warehouse.
+   */
+  @Column({ name: 'warehouse_id', type: 'int', nullable: true })
+  warehouseId: number | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'thermal' })
+  kind: PrinterKind;
+
+  /** OS spooler queue name, for usb/system devices. */
+  @Column({ name: 'system_name', type: 'varchar', length: 120, nullable: true })
+  systemName: string | null;
 
   @Column({ name: 'connection_type', type: 'varchar', length: 20 })
   connectionType: ConnectionType;
