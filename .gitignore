@@ -136,7 +136,13 @@ psd
 thumb
 sketch
 
-docs
+# Ignore the contents rather than the directory itself: git does not descend
+# into an excluded directory, so a "docs" entry would make the exception below
+# unreachable.
+docs/*
+# Design specs and implementation plans are part of the record — they explain
+# why the code is shaped the way it is, which the code cannot say.
+!docs/superpowers/
 QA Tests
 playwright
 takin-demo
