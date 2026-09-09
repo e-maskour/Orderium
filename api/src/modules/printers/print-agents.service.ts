@@ -4,7 +4,10 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { PrintAgent } from './entities/print-agent.entity';
+import { Printer } from './entities/printer.entity';
 import { CreatePrintAgentDto } from './dto/create-print-agent.dto';
+import { HeartbeatDto } from './dto/heartbeat.dto';
+import type { AuthenticatedAgent } from '../auth/decorators/current-agent.decorator';
 
 /** Three missed 30s heartbeats before an agent is considered offline. */
 export const AGENT_ONLINE_WINDOW_MS = 90_000;
@@ -25,6 +28,10 @@ export class PrintAgentsService {
 
   private get repo(): Repository<PrintAgent> {
     return this.tenantConnService.getRepository(PrintAgent);
+  }
+
+  private get printers(): Repository<Printer> {
+    return this.tenantConnService.getRepository(Printer);
   }
 
   private randomCode(len = 8): string {
@@ -105,6 +112,33 @@ export class PrintAgentsService {
       ...a,
       online: !!a.lastSeenAt && a.lastSeenAt.getTime() > cutoff,
     }));
+  }
+
+  /**
+   * Records that an agent is alive, and which of its printers it can reach.
+   *
+   * Only reachable printers are stamped: an unreachable one simply goes stale
+   * and the UI shows it offline, which is the honest signal. Printer updates
+   * are scoped by warehouse so a compromised agent cannot touch another shop.
+   */
+  async heartbeat(agent: AuthenticatedAgent, dto: HeartbeatDto): Promise<void> {
+    await this.repo.update(
+      { id: agent.id },
+      {
+        lastSeenAt: new Date(),
+        version: dto.version,
+        platform: dto.platform,
+      },
+    );
+
+    const seenAt = new Date();
+    for (const printer of dto.printers ?? []) {
+      if (!printer.reachable) continue;
+      await this.printers.update(
+        { id: printer.id, warehouseId: agent.warehouseId },
+        { lastSeenAt: seenAt },
+      );
+    }
   }
 
   async revoke(id: string): Promise<void> {

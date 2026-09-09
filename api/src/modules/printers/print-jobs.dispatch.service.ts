@@ -123,4 +123,73 @@ export class PrintJobsDispatchService {
     this.notifier.notify(printer.warehouseId, job.id);
     return { job, created: true };
   }
+
+  async findOne(id: string): Promise<PrintJob> {
+    const job = await this.jobs.findOne({ where: { id } });
+    if (!job) throw new NotFoundException('Print job not found');
+    return job;
+  }
+
+  /**
+   * Requeues a job an operator chose to retry.
+   *
+   * Only terminal jobs can be retried — requeuing something already in flight
+   * would race the agent holding it. The idempotency key gains a reprint
+   * sequence so it does not collide with the original.
+   */
+  async retry(id: string): Promise<PrintJob> {
+    const job = await this.findOne(id);
+
+    if (!['failed', 'cancelled'].includes(job.status)) {
+      throw new BadRequestException(
+        `Only failed or cancelled jobs can be retried; this one is "${job.status}"`,
+      );
+    }
+    if (job.warehouseId == null) {
+      throw new BadRequestException('Job has no warehouse and cannot be routed');
+    }
+
+    const nextSeq = (job.idempotencyKey.match(/:r(\d+)$/)?.[1]
+      ? Number(job.idempotencyKey.match(/:r(\d+)$/)![1]) + 1
+      : 1);
+
+    const requeued = await this.jobs.save({
+      ...job,
+      status: 'queued',
+      agentId: null,
+      attempts: 0,
+      claimedAt: null,
+      completedAt: null,
+      errorMessage: null,
+      queuedAt: new Date(),
+      idempotencyKey: buildIdempotencyKey(
+        job.documentType,
+        job.documentRef!,
+        job.printerId!,
+        nextSeq,
+      ),
+    });
+
+    this.notifier.notify(job.warehouseId, requeued.id);
+    return requeued;
+  }
+
+  async cancel(id: string): Promise<PrintJob> {
+    const job = await this.findOne(id);
+
+    // 'printing' is excluded on purpose: the bytes are already at the device
+    // and cancelling would misreport what physically happened.
+    if (!['queued', 'claimed'].includes(job.status)) {
+      throw new BadRequestException(
+        `Only queued or claimed jobs can be cancelled; this one is "${job.status}"`,
+      );
+    }
+
+    return this.jobs.save({
+      ...job,
+      status: 'cancelled',
+      completedAt: new Date(),
+      errorMessage: 'cancelled by operator',
+    });
+  }
 }

@@ -3,6 +3,8 @@ import {
   Get,
   Post,
   Body,
+  Param,
+  ParseUUIDPipe,
   Query,
   Request,
   Logger,
@@ -81,5 +83,32 @@ export class PrintJobsController {
       hasNext: result.meta.page < result.meta.pages,
       hasPrev: result.meta.page > 1,
     });
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get one print job (used to poll a print’s status)' })
+  @ApiResponse({ status: 200, description: 'Print job retrieved' })
+  @ApiResponse({ status: 404, description: 'Print job not found' })
+  @RequirePermission('printers.view')
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return ApiRes(PJB.DETAIL, await this.dispatch.findOne(id));
+  }
+
+  @Post(':id/retry')
+  @ApiOperation({ summary: 'Requeue a failed or cancelled job' })
+  @ApiResponse({ status: 200, description: 'Print job requeued' })
+  @ApiResponse({ status: 400, description: 'Job is not in a retryable state' })
+  @RequirePermission('printers.print')
+  async retry(@Param('id', ParseUUIDPipe) id: string) {
+    return ApiRes(PJB.RETRIED, await this.dispatch.retry(id));
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a job that has not reached a device' })
+  @ApiResponse({ status: 200, description: 'Print job cancelled' })
+  @ApiResponse({ status: 400, description: 'Job is not in a cancellable state' })
+  @RequirePermission('printers.print')
+  async cancel(@Param('id', ParseUUIDPipe) id: string) {
+    return ApiRes(PJB.CANCELLED, await this.dispatch.cancel(id));
   }
 }

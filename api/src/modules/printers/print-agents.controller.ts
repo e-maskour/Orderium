@@ -6,15 +6,22 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PrintAgentsService } from './print-agents.service';
 import { CreatePrintAgentDto } from './dto/create-print-agent.dto';
 import { PairAgentDto } from './dto/pair-agent.dto';
+import { HeartbeatDto } from './dto/heartbeat.dto';
 import { ApiRes } from '../../common/api-response';
 import { PAG } from '../../common/response-codes';
 import { AgentRoute } from '../auth/decorators/agent-route.decorator';
+import { AgentAuthGuard } from '../auth/guards/agent-auth.guard';
+import {
+  CurrentAgent,
+  type AuthenticatedAgent,
+} from '../auth/decorators/current-agent.decorator';
 import {
   RequirePermission,
   NoPermissionRequired,
@@ -63,6 +70,24 @@ export class PrintAgentsController {
   @ApiResponse({ status: 401, description: 'Invalid or expired pairing code' })
   async pair(@Body() dto: PairAgentDto) {
     return ApiRes(PAG.PAIRED, await this.service.pair(dto.pairingCode));
+  }
+
+  /**
+   * Liveness ping, every 30s. Unlike `pair`, this one IS behind
+   * AgentAuthGuard — the agent has a key by now.
+   */
+  @Post('heartbeat')
+  @AgentRoute()
+  @NoPermissionRequired()
+  @UseGuards(AgentAuthGuard)
+  @ApiOperation({ summary: 'Report agent liveness and printer reachability' })
+  @ApiResponse({ status: 200, description: 'Heartbeat recorded' })
+  async heartbeat(
+    @Body() dto: HeartbeatDto,
+    @CurrentAgent() agent: AuthenticatedAgent,
+  ) {
+    await this.service.heartbeat(agent, dto);
+    return ApiRes(PAG.HEARTBEAT, null);
   }
 
   @Delete(':id')
