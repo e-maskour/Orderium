@@ -101,7 +101,13 @@ export class JobStream {
         const parser = new SseParser((data) => {
           try {
             const { jobId } = JSON.parse(data) as { jobId: string };
-            if (jobId) this.onJob(jobId);
+            if (jobId) {
+              // Logged so delivery can be observed directly rather than
+              // inferred from timing — the payload was once silently emptied
+              // by a response interceptor and only latency hinted at it.
+              log.debug(`Job stream delivered ${jobId}`);
+              this.onJob(jobId);
+            }
           } catch {
             log.warn('Ignoring malformed job notification');
           }

@@ -141,3 +141,30 @@ only ever sees jobs for its own warehouse.
 The agent died after sending bytes to the device. The server will never retry
 this automatically, because the paper may already be out. Check the printer,
 then use Retry in the backoffice if nothing came out.
+
+## Tests
+
+```bash
+pnpm test        # unit tests, no dependencies
+pnpm test:e2e    # full stack: real API, real agent binary, fake printer
+```
+
+The end-to-end suite drives the built agent against a running dev stack and a
+socket standing in for a thermal printer. It exists because every defect found
+while building this feature was invisible to unit tests — a route shadowed by
+another controller, a response interceptor silently emptying the SSE payload,
+and a migration that recorded itself as applied without creating its tables.
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+cd print-agent && pnpm build
+
+PRINT_E2E=1 \
+E2E_DATABASE_URL=postgres://postgres_user:postgres_password@localhost:5432/orderium_demo \
+E2E_JWT_SECRET=$(docker exec orderium-api-dev sh -c 'printf "%s" "$JWT_SECRET"') \
+  pnpm test:e2e
+```
+
+It skips silently unless `PRINT_E2E=1` and both env vars are set, so a CI job
+without a database stays green. It creates its own fixtures and removes them
+afterwards.
