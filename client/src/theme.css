@@ -45,6 +45,14 @@
 }
 
 @media print {
+
+    /* Receipt paper, not A4 — without this the dialog defaults to A4 and the
+       receipt prints in the corner of a full page. */
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
     body>*:not(#morocom-receipt) {
         display: none !important;
     }
@@ -57,5 +65,4 @@
         font-family: 'Courier New', monospace;
         font-size: 12px;
     }
-}
 }
