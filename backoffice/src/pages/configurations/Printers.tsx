@@ -31,6 +31,7 @@ import {
   type CreatePrinterDTO,
   type UpdatePrinterDTO,
 } from '../../modules/printers';
+import { warehousesService } from '../../modules/warehouses';
 import {
   printReceipt,
   detectPlatform,
@@ -61,15 +62,18 @@ const BRAND_OPTIONS = [
   { value: 'epson', label: 'Epson' },
   { value: 'star', label: 'Star Micronics' },
   { value: 'generic', label: 'Générique', labelKey: 'printerBrandGeneric' },
-  { value: 'qztray', label: 'QZ Tray' },
-  { value: 'browser', label: 'Navigateur', labelKey: 'browser' },
 ] as const satisfies readonly PrinterOption[];
 
+// 'qztray' and 'browser' were transports, not brands, and no longer exist.
 const CONNECTION_OPTIONS = [
-  { value: 'wifi', label: 'WiFi', icon: Wifi },
+  { value: 'network', label: 'Réseau (IP)', labelKey: 'printerConnectionNetwork', icon: Globe },
   { value: 'usb', label: 'USB', icon: Usb },
-  { value: 'network', label: 'Réseau', labelKey: 'printerConnectionNetwork', icon: Globe },
-  { value: 'browser', label: 'Navigateur', labelKey: 'browser', icon: Monitor },
+  { value: 'system', label: 'File d’impression', icon: Monitor },
+];
+
+const KIND_OPTIONS = [
+  { value: 'thermal', label: 'Ticket (ESC/POS)' },
+  { value: 'document', label: 'Document (PDF A4)' },
 ];
 
 const PAPER_WIDTHS = [
@@ -104,10 +108,12 @@ const buildDummyReceipt = (t: (k: TranslationKey) => string): ReceiptData => ({
 
 function PrinterForm({
   printer,
+  warehouses,
   onSubmit,
   isLoading,
 }: {
   printer?: IPrinter;
+  warehouses: { id: number; name: string }[];
   onSubmit: (data: CreatePrinterDTO) => void;
   isLoading: boolean;
 }) {
@@ -116,16 +122,20 @@ function PrinterForm({
     name: printer?.name ?? '',
     brand: (printer?.brand ?? 'epson') as CreatePrinterDTO['brand'],
     connectionType: (printer?.connectionType ??
-      'wifi') as CreatePrinterDTO['connectionType'],
+      'network') as CreatePrinterDTO['connectionType'],
+    kind: (printer?.kind ?? 'thermal') as CreatePrinterDTO['kind'],
+    warehouseId: printer?.warehouseId ?? warehouses[0]?.id ?? 0,
+    systemName: printer?.systemName ?? undefined,
     model: printer?.model ?? undefined,
     ip: printer?.ip ?? undefined,
-    port: printer?.port ?? 8008,
+    port: printer?.port ?? 9100,
     paperWidth: (printer?.paperWidth as CreatePrinterDTO['paperWidth']) ?? 80,
     isDefault: printer?.isDefault ?? false,
     documentTypes: printer?.documentTypes ?? ['receipt'],
   });
 
-  const showIpField = ['wifi', 'network'].includes(form.connectionType);
+  const showIpField = form.connectionType === 'network';
+  const showSystemNameField = ['usb', 'system'].includes(form.connectionType);
 
   return (
     <form
@@ -147,6 +157,49 @@ function PrinterForm({
           maxLength={60}
           style={inputStyle}
         />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+            Magasin
+          </label>
+          <select
+            value={form.warehouseId}
+            onChange={(e) => setForm({ ...form, warehouseId: Number(e.target.value) })}
+            required
+            style={inputStyle}
+          >
+            {warehouses.length === 0 && <option value={0}>—</option>}
+            {warehouses.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+          <small style={{ color: 'var(--text-secondary)' }}>
+            Les travaux d’impression sont routés vers l’agent de ce magasin.
+          </small>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+            Type d’appareil
+          </label>
+          <select
+            value={form.kind}
+            onChange={(e) =>
+              setForm({ ...form, kind: e.target.value as CreatePrinterDTO['kind'] })
+            }
+            style={inputStyle}
+          >
+            {KIND_OPTIONS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -191,6 +244,27 @@ function PrinterForm({
           </select>
         </div>
       </div>
+
+      {showSystemNameField && (
+        <div>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+            Nom de la file d’impression
+          </label>
+          <input
+            type="text"
+            value={form.systemName ?? ''}
+            onChange={(e) => setForm({ ...form, systemName: e.target.value })}
+            placeholder="EPSON TM-T20III Receipt"
+            required
+            maxLength={120}
+            style={inputStyle}
+          />
+          <small style={{ color: 'var(--text-secondary)' }}>
+            Exactement le nom de la file dans le système : <code>Get-Printer</code>{' '}
+            (Windows) ou <code>lpstat -p</code> (Linux/macOS).
+          </small>
+        </div>
+      )}
 
       {showIpField && (
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
@@ -327,6 +401,11 @@ export default function Printers() {
   const [editingPrinter, setEditingPrinter] = useState<IPrinter | null>(null);
   const [activeTab, setActiveTab] = useState<'printers' | 'history'>('printers');
   const [jobsPage, setJobsPage] = useState(1);
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: () => warehousesService.getAll(),
+  });
 
   const { data: printers = [], isLoading } = useQuery({
     queryKey: ['printers'],
@@ -853,6 +932,7 @@ export default function Printers() {
         >
           <PrinterForm
             printer={editingPrinter ?? undefined}
+            warehouses={warehouses}
             isLoading={createMutation.isPending || updateMutation.isPending}
             onSubmit={(data) => {
               if (editingPrinter) {
