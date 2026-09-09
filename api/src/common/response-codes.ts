@@ -1527,6 +1527,12 @@ export const PJB = {
   RETRIED: { code: 'PJB200_08', status: 200, message: 'Print Job Requeued' },
   /** POST /print-jobs/:id/cancel       → data: PrintJob             | metadata: null */
   CANCELLED: { code: 'PJB200_09', status: 200, message: 'Print Job Cancelled' },
+  /** GET /print-jobs/agent/printers    → data: DeviceTarget[]       | metadata: null */
+  PRINTERS: {
+    code: 'PJB200_10',
+    status: 200,
+    message: 'Agent Printers Retrieved',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

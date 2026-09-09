@@ -68,6 +68,13 @@ export class PrintJobsAgentController {
     return ApiRes(PJB.PENDING, await this.service.pending(agent));
   }
 
+  @Get('printers')
+  @ApiOperation({ summary: 'Devices this agent is responsible for' })
+  @ApiResponse({ status: 200, description: 'Agent printers retrieved' })
+  async printers(@CurrentAgent() agent: AuthenticatedAgent) {
+    return ApiRes(PJB.PRINTERS, await this.service.printers(agent));
+  }
+
   @Post('claim/:id')
   @ApiOperation({ summary: 'Take ownership of a queued job' })
   @ApiResponse({ status: 200, description: 'Job claimed' })

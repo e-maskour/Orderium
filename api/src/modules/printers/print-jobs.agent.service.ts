@@ -15,10 +15,36 @@ import { renderEscPos } from './escpos/escpos.renderer';
 import type { AuthenticatedAgent } from '../auth/decorators/current-agent.decorator';
 import type { ReportPrintResultDto } from './dto/report-print-result.dto';
 
+/** Where the agent must send the bytes. */
+export interface DeviceTarget {
+  printerId: string;
+  connectionType: 'network' | 'usb' | 'system';
+  ip: string | null;
+  port: number;
+  systemName: string | null;
+  paperWidth: 80 | 148;
+}
+
 export interface PrintPayload {
   kind: 'escpos' | 'pdf';
   dataBase64: string;
   fileName?: string;
+  target: DeviceTarget;
+}
+
+/**
+ * Exposes only what a device needs. Routing and policy fields (warehouseId,
+ * isDefault, documentTypes) stay server-side.
+ */
+function toTarget(printer: Printer): DeviceTarget {
+  return {
+    printerId: printer.id,
+    connectionType: printer.connectionType,
+    ip: printer.ip,
+    port: printer.port,
+    systemName: printer.systemName,
+    paperWidth: printer.paperWidth,
+  };
 }
 
 /** Our document types mapped onto the PDF module's vocabulary. */
@@ -44,7 +70,7 @@ export class PrintJobsAgentService {
     return this.tenantConnService.getRepository(PrintJob);
   }
 
-  private get printers(): Repository<Printer> {
+  private get printerRepo(): Repository<Printer> {
     return this.tenantConnService.getRepository(Printer);
   }
 
@@ -98,7 +124,7 @@ export class PrintJobsAgentService {
   async payload(jobId: string, agent: AuthenticatedAgent): Promise<PrintPayload> {
     const job = await this.ownedJob(jobId, agent);
 
-    const printer = await this.printers.findOne({ where: { id: job.printerId! } });
+    const printer = await this.printerRepo.findOne({ where: { id: job.printerId! } });
     if (!printer) throw new NotFoundException('Printer not found');
 
     let payload: PrintPayload;
@@ -111,6 +137,7 @@ export class PrintJobsAgentService {
           paperWidth: printer.paperWidth,
           brand: printer.brand,
         }).toString('base64'),
+        target: toTarget(printer),
       };
     } else {
       const pdfType = PDF_DOCUMENT_TYPE[job.documentType];
@@ -127,6 +154,7 @@ export class PrintJobsAgentService {
         kind: 'pdf',
         dataBase64: pdfBuffer.toString('base64'),
         fileName,
+        target: toTarget(printer),
       };
     }
 
@@ -153,6 +181,17 @@ export class PrintJobsAgentService {
       `Job ${jobId} reported ${dto.status} by agent ${agent.id}` +
         (dto.error ? `: ${dto.error}` : ''),
     );
+  }
+
+  /**
+   * The devices this agent is responsible for. Drives the heartbeat's
+   * reachability probe, and lets the agent verify its configuration.
+   */
+  async printers(agent: AuthenticatedAgent): Promise<DeviceTarget[]> {
+    const printers = await this.printerRepo.find({
+      where: { warehouseId: agent.warehouseId, isEnabled: true },
+    });
+    return printers.map(toTarget);
   }
 
   /**

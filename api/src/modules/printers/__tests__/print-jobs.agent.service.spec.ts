@@ -178,3 +178,95 @@ describe('PrintJobsAgentService.pending', () => {
     );
   });
 });
+
+describe('PrintJobsAgentService.payload target', () => {
+  const claimed = {
+    id: 'j1', agentId: 'a1', warehouseId: 7, printerId: 'p1',
+    documentType: 'receipt', documentRef: 42,
+  };
+
+  it('tells the agent where to send the bytes', async () => {
+    const { svc } = makeService({
+      jobRepo: { findOne: jest.fn().mockResolvedValue(claimed), update: jest.fn() },
+      printerRepo: {
+        findOne: jest.fn().mockResolvedValue({
+          id: 'p1', kind: 'thermal', paperWidth: 80, brand: 'epson',
+          connectionType: 'network', ip: '192.168.1.50', port: 9100, systemName: null,
+        }),
+      },
+      receipt: {
+        build: jest.fn().mockResolvedValue({
+          storeName: 'S', orderNumber: 'O', date: 'd', clientName: 'c',
+          items: [], subtotal: 0, total: 0,
+        }),
+      },
+    });
+
+    const payload = await svc.payload('j1', AGENT);
+
+    expect(payload.target).toEqual({
+      printerId: 'p1',
+      connectionType: 'network',
+      ip: '192.168.1.50',
+      port: 9100,
+      systemName: null,
+      paperWidth: 80,
+    });
+  });
+
+  it('carries the target on a document payload too', async () => {
+    const { svc } = makeService({
+      jobRepo: {
+        findOne: jest.fn().mockResolvedValue({ ...claimed, documentType: 'bl' }),
+        update: jest.fn(),
+      },
+      printerRepo: {
+        findOne: jest.fn().mockResolvedValue({
+          id: 'p2', kind: 'document', paperWidth: 148, brand: 'generic',
+          connectionType: 'system', ip: null, port: 9100, systemName: 'HP LaserJet',
+        }),
+      },
+      pdf: {
+        generateDocumentPDF: jest.fn().mockResolvedValue({
+          pdfBuffer: Buffer.from('%PDF'), fileName: 'bl.pdf',
+        }),
+      },
+    });
+
+    const payload = await svc.payload('j1', AGENT);
+    expect(payload.target.systemName).toBe('HP LaserJet');
+    expect(payload.target.connectionType).toBe('system');
+  });
+});
+
+describe('PrintJobsAgentService.printers', () => {
+  it('lists only the printers of the agent warehouse', async () => {
+    const find = jest.fn().mockResolvedValue([]);
+    const { svc } = makeService({ printerRepo: { find } });
+    await svc.printers(AGENT);
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { warehouseId: 7, isEnabled: true } }),
+    );
+  });
+
+  it('exposes only device fields, never internal ones', async () => {
+    const find = jest.fn().mockResolvedValue([
+      {
+        id: 'p1', warehouseId: 7, isDefault: true, documentTypes: ['receipt'],
+        connectionType: 'network', ip: '1.1.1.1', port: 9100,
+        systemName: null, paperWidth: 80,
+      },
+    ]);
+    const { svc } = makeService({ printerRepo: { find } });
+    const list = await svc.printers(AGENT);
+
+    expect(list).toEqual([
+      {
+        printerId: 'p1', connectionType: 'network', ip: '1.1.1.1',
+        port: 9100, systemName: null, paperWidth: 80,
+      },
+    ]);
+    expect(JSON.stringify(list)).not.toContain('warehouseId');
+  });
+});
+
