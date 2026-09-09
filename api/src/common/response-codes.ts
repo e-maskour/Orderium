@@ -1506,7 +1506,44 @@ export const PJB = {
   /** GET /print-jobs                  → data: PrintJob[]           | metadata: PaginationMeta */
   LIST: { code: 'PJB200_01', status: 200, message: 'Print Jobs Retrieved' },
   /** POST /print-jobs                 → data: PrintJob             | metadata: null */
-  CREATED: { code: 'PJB201_01', status: 201, message: 'Print Job Logged' },
+  CREATED: { code: 'PJB201_01', status: 201, message: 'Print Job Queued' },
+  /** POST /print-jobs (duplicate key)  → data: PrintJob             | metadata: null */
+  DUPLICATE: {
+    code: 'PJB200_02',
+    status: 200,
+    message: 'Print Job Already Queued',
+  },
+  /** GET /print-jobs/:id               → data: PrintJob             | metadata: null */
+  DETAIL: { code: 'PJB200_03', status: 200, message: 'Print Job Retrieved' },
+  /** POST /print-jobs/:id/claim        → data: PrintJob             | metadata: null */
+  CLAIMED: { code: 'PJB200_04', status: 200, message: 'Print Job Claimed' },
+  /** GET /print-jobs/:id/payload       → data: EscPosPayload|PdfPayload */
+  PAYLOAD: { code: 'PJB200_05', status: 200, message: 'Print Payload Ready' },
+  /** POST /print-jobs/:id/result       → data: null                 | metadata: null */
+  REPORTED: { code: 'PJB200_06', status: 200, message: 'Print Result Recorded' },
+  /** GET /print-jobs/pending           → data: PrintJob[]           | metadata: null */
+  PENDING: { code: 'PJB200_07', status: 200, message: 'Pending Jobs Retrieved' },
+  /** POST /print-jobs/:id/retry        → data: PrintJob             | metadata: null */
+  RETRIED: { code: 'PJB200_08', status: 200, message: 'Print Job Requeued' },
+  /** POST /print-jobs/:id/cancel       → data: PrintJob             | metadata: null */
+  CANCELLED: { code: 'PJB200_09', status: 200, message: 'Print Job Cancelled' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  PAG  (PrintAgentsController)
+//  NB: PRT is taken by the Portal controller — do not reuse it.
+// ─────────────────────────────────────────────────────────────
+export const PAG = {
+  /** GET /print-agents                 → data: PrintAgentWithStatus[] | metadata: null */
+  LIST: { code: 'PAG200_01', status: 200, message: 'Print Agents Retrieved' },
+  /** POST /print-agents                → data: { agent, pairingCode } | metadata: null */
+  CREATED: { code: 'PAG201_01', status: 201, message: 'Print Agent Created' },
+  /** POST /print-agents/pair           → data: { agentId, agentKey, warehouseId } */
+  PAIRED: { code: 'PAG200_02', status: 200, message: 'Print Agent Paired' },
+  /** DELETE /print-agents/:id          → data: null                 | metadata: null */
+  REVOKED: { code: 'PAG200_03', status: 200, message: 'Print Agent Revoked' },
+  /** POST /print-agents/heartbeat      → data: null                 | metadata: null */
+  HEARTBEAT: { code: 'PAG200_04', status: 200, message: 'Heartbeat Recorded' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
