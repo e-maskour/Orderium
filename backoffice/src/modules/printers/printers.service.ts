@@ -40,7 +40,7 @@ export class PrintersService {
     durationMs?: number;
     errorMessage?: string;
   }): Promise<void> {
-    await apiClient.post(API_ROUTES.PRINT_JOBS.CREATE, dto);
+    await apiClient.post(API_ROUTES.PRINT_JOBS.LOG, dto);
   }
 
   async getPrintJobs(

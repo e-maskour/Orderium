@@ -457,6 +457,8 @@ export const API_ROUTES = {
   PRINT_JOBS: {
     LIST: '/api/print-jobs',
     CREATE: '/api/print-jobs',
+    /** Legacy browser-side print log; removed when agents ship. */
+    LOG: '/api/print-jobs/log',
   },
 
   // ─── PDF ───────────────────────────────────────────────────

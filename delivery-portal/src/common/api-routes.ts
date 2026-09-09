@@ -29,6 +29,8 @@ export const API_ROUTES = {
   PRINTERS: {
     LIST: `${BASE}/api/printers`,
     PRINT_JOBS: `${BASE}/api/print-jobs`,
+    /** Legacy browser-side print log; removed when agents ship. */
+    PRINT_JOBS_LOG: `${BASE}/api/print-jobs/log`,
   },
 
   ONBOARDING: {

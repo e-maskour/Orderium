@@ -62,7 +62,7 @@ export function usePrinter() {
       const result = await printReceipt(config, data);
 
       // Log print job
-      fetch(API_ROUTES.PRINTERS.PRINT_JOBS, {
+      fetch(API_ROUTES.PRINTERS.PRINT_JOBS_LOG, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
