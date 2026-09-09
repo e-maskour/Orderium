@@ -4491,3 +4491,14 @@ textarea.p-inputtext {
     block-size: var(--control-height);
     flex-shrink: 0;
 }
+
+/* ── Print button spinner ────────────────────────────────────── */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
