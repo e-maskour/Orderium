@@ -31,7 +31,7 @@ export class PrintAgent {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
 
-  /** argon2id hash of the agent key. Never selected unless asked for. */
+  /** bcrypt hash of the agent key. Never selected unless asked for. */
   @Column({ name: 'key_hash', type: 'text', nullable: true, select: false })
   keyHash: string | null;
 

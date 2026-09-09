@@ -7,6 +7,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_PORTAL_ROUTE_KEY } from '../decorators/portal-route.decorator';
+import { IS_AGENT_ROUTE_KEY } from '../decorators/agent-route.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -20,6 +21,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
     if (isPublic) {
+      return true;
+    }
+
+    // Print agents are unattended machines and carry no JWT. AgentAuthGuard,
+    // bound on the agent controllers, authenticates them by hashed key.
+    const isAgentRoute = this.reflector.getAllAndOverride<boolean>(
+      IS_AGENT_ROUTE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (isAgentRoute) {
       return true;
     }
 

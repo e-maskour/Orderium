@@ -3,7 +3,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * One print agent per shop machine.
  *
- * Keys are stored hashed (argon2id); the plaintext key is returned once at
+ * Keys are stored as bcrypt hashes; the plaintext key is returned once at
  * pairing time and never persisted. A pairing code is single-use with a short
  * TTL, and the partial unique index lets many agents hold NULL at once while
  * an outstanding code stays unique.
