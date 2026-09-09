@@ -49,44 +49,6 @@ export interface PrintResult {
     error?: string;
 }
 
-// ── ESC/POS builder ───────────────────────────────────────
-// Retained until the print agent ships; the API now owns the canonical
-// implementation in api/src/modules/printers/escpos/escpos.renderer.ts
-export function buildEscPos(data: ReceiptData, charWidth = 48): string[] {
-    const W = charWidth;
-    const row = (l: string, r: string) =>
-        l.padEnd(W - r.length) + r + '\n';
-
-    return [
-        '\x1B\x40',           // init
-        '\x1B\x61\x01',       // center
-        '\x1B\x21\x30',       // double size
-        data.storeName + '\n',
-        '\x1B\x21\x00',       // normal
-        ...(data.storePhone ? [data.storePhone + '\n'] : []),
-        '='.repeat(W) + '\n',
-        '\x1B\x61\x00',       // left
-        `Commande : ${data.orderNumber}\n`,
-        `Date     : ${data.date}\n`,
-        `Client   : ${data.clientName}\n`,
-        ...(data.clientPhone ? [`Tél      : ${data.clientPhone}\n`] : []),
-        '-'.repeat(W) + '\n',
-        ...data.items.flatMap(item => [
-            item.name + '\n',
-            row(`  ${item.qty} x ${item.unitPrice.toFixed(2)} DH`, `${item.total.toFixed(2)} DH`),
-        ]),
-        '='.repeat(W) + '\n',
-        '\x1B\x61\x02',       // right
-        '\x1B\x45\x01',       // bold
-        row('TOTAL :', `${data.total.toFixed(2)} DH`),
-        '\x1B\x45\x00',       // bold off
-        '\x1B\x61\x01',       // center
-        '\n' + (data.footer ?? 'Merci pour votre confiance !') + '\n',
-        '\x1B\x64\x04',       // feed 4 lines
-        '\x1D\x56\x41\x00',   // cut
-    ];
-}
-
 // ── Print ─────────────────────────────────────────────────
 /**
  * Opens the OS print dialog. The caller must have rendered <PrintableReceipt />
