@@ -11,6 +11,7 @@ import { orderPaymentsService, ORDER_PAYMENT_TYPE_LABELS } from '../modules';
 import { productsService } from '../modules/products';
 import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
+import { PrintButton } from '../components/PrintButton';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -784,6 +785,13 @@ export default function OrderDetailPage() {
                   outlined
                   size="small"
                   style={{ flexShrink: 0 }}
+                />
+                {/* Sends the receipt to the shop's printer via the agent.
+                    The Reçu button above still opens the A4 PDF preview. */}
+                <PrintButton
+                  documentType="receipt"
+                  documentRef={Number(id)}
+                  label={isAr ? 'طباعة' : 'Imprimer'}
                 />
               </>
             )}

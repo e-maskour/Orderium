@@ -9,6 +9,7 @@ import { formatCurrency } from '@orderium/ui';
 import { ordersService } from '../modules/orders/orders.service';
 import { ShareDocumentDialog } from '../components/documents/ShareDocumentDialog';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
+import { PrintButton } from '../components/PrintButton';
 import { pdfService } from '../services/pdf.service';
 
 export default function OrderSuccessPage() {
@@ -305,6 +306,20 @@ export default function OrderSuccessPage() {
               </div>
             ))}
           </div>
+
+          {/* Send the receipt to the counter printer. Deliberately not
+              automatic: a sale can complete while the operator is still with
+              the customer, and an unattended receipt is worse than a
+              deliberate one. */}
+          {resolvedOrderId != null && (
+            <div style={{ display: 'flex', marginBottom: '0.75rem' }}>
+              <PrintButton
+                documentType="receipt"
+                documentRef={resolvedOrderId}
+                label={t('print')}
+              />
+            </div>
+          )}
 
           {/* Primary actions */}
           <div style={{ display: 'flex', gap: '0.75rem' }}>
