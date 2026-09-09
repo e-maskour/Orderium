@@ -4,7 +4,9 @@
   "private": true,
   "description": "Prints Orderium documents on shop hardware the browser cannot reach",
   "main": "dist/index.js",
-  "bin": { "orderium-print-agent": "dist/index.js" },
+  "bin": {
+    "orderium-print-agent": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
@@ -13,7 +15,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "eventsource": "^5.1.1",
     "pdf-to-printer": "^5.8.1"
   },
   "devDependencies": {
