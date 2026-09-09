@@ -5,6 +5,9 @@ export class Printer implements IPrinter {
   name: string;
   brand: IPrinter['brand'];
   connectionType: IPrinter['connectionType'];
+  kind: IPrinter['kind'];
+  warehouseId: number | null;
+  systemName: string | null;
   model: string | null;
   ip: string | null;
   port: number;
@@ -21,6 +24,9 @@ export class Printer implements IPrinter {
     this.name = data.name;
     this.brand = data.brand;
     this.connectionType = data.connectionType;
+    this.kind = data.kind;
+    this.warehouseId = data.warehouseId;
+    this.systemName = data.systemName;
     this.model = data.model;
     this.ip = data.ip;
     this.port = data.port;
@@ -39,6 +45,9 @@ export class Printer implements IPrinter {
       name: data.name,
       brand: data.brand,
       connectionType: data.connectionType ?? data.connection_type,
+      kind: data.kind ?? 'thermal',
+      warehouseId: data.warehouseId ?? data.warehouse_id ?? null,
+      systemName: data.systemName ?? data.system_name ?? null,
       model: data.model ?? null,
       ip: data.ip ?? null,
       port: data.port ?? 8008,

@@ -5,5 +5,10 @@ export type {
   CreatePrinterDTO,
   UpdatePrinterDTO,
   IPrintJob,
+  PrintJobStatus,
+  IPrintAgent,
+  CreatePrintAgentDTO,
+  QueuePrintJobDTO,
   PrintJobsResponse,
 } from './printers.interface';
+export { TERMINAL_STATUSES } from './printers.interface';

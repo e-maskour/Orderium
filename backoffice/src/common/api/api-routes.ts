@@ -459,6 +459,16 @@ export const API_ROUTES = {
     CREATE: '/api/print-jobs',
     /** Legacy browser-side print log; removed when agents ship. */
     LOG: '/api/print-jobs/log',
+    DETAIL: (id: string) => `/api/print-jobs/${id}`,
+    RETRY: (id: string) => `/api/print-jobs/${id}/retry`,
+    CANCEL: (id: string) => `/api/print-jobs/${id}/cancel`,
+  },
+
+  // ─── Print Agents ──────────────────────────────────────────
+  PRINT_AGENTS: {
+    LIST: '/api/print-agents',
+    CREATE: '/api/print-agents',
+    REVOKE: (id: string) => `/api/print-agents/${id}`,
   },
 
   // ─── PDF ───────────────────────────────────────────────────
