@@ -1,0 +1,20 @@
+[Unit]
+Description=Orderium Print Agent
+Documentation=https://github.com/orderium/print-agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=orderium
+WorkingDirectory=/opt/orderium-print-agent
+ExecStart=/usr/bin/node /opt/orderium-print-agent/dist/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+# Journald captures stdout/stderr: journalctl -u orderium-print-agent -f
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
