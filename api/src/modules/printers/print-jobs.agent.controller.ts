@@ -27,15 +27,18 @@ import { NoPermissionRequired } from '../auth/decorators/permissions.decorator';
 /**
  * Endpoints a print agent calls. Authenticated by agent key, not JWT.
  *
- * Paths put the verb before the id (`claim/:id`, not `:id/claim`) so they can
- * never be shadowed by `GET /print-jobs/:id` on the operator controller,
- * whichever order Nest registers them in.
+ * Mounted under `print-jobs/agent` rather than `print-jobs` because bare
+ * literals like `pending` and `stream` would otherwise be matched by
+ * `GET /print-jobs/:id` on the JWT-protected operator controller, which
+ * registers first — the agent would get a 401 that never reached this guard.
+ * A two-segment prefix cannot collide with a single `:id` parameter whatever
+ * order Nest registers controllers in.
  */
 @ApiTags('Print Jobs (Agent)')
 @AgentRoute()
 @NoPermissionRequired()
 @UseGuards(AgentAuthGuard)
-@Controller('print-jobs')
+@Controller('print-jobs/agent')
 export class PrintJobsAgentController {
   constructor(
     private readonly service: PrintJobsAgentService,

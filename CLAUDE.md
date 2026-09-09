@@ -53,8 +53,15 @@ pnpm test:e2e                                       # E2E tests
 - JWT is required on all routes by default via `JwtAuthGuard`
 - `@PortalRoute()` — marks a route as accessible by **portal-scoped tokens** (customers, delivery persons). WITHOUT it, portal tokens receive a 403. Only add to controllers that the customer portal, delivery portal, or tenant dashboard need to call. Do NOT add to backoffice/admin-only controllers.
 - `@Public()` — bypasses JWT entirely (truly unauthenticated endpoints)
-- Controllers with `@PortalRoute()`: `portal`, `products`, `partners`, `delivery`, `orders`, `notifications`, `pdf`
-- Controllers WITHOUT `@PortalRoute()` (admin/backoffice only): all others (`categories`, `configurations`, `payments`, `invoices`, `quotes`, `images`, `roles`, `permissions`, `statistics`, `users`, `drive`, all inventory controllers, etc.)
+- `@AgentRoute()` — marks a route as authenticated by a **print-agent key** instead of a JWT. The global `JwtAuthGuard` stands aside and `AgentAuthGuard` validates an `X-Agent-Id` header plus a bearer key. Agents are unattended machines with no human token. Pair with `@NoPermissionRequired()`, since an agent has no user permissions.
+- Controllers with `@PortalRoute()`: `portal`, `products`, `partners`, `delivery`, `orders`, `notifications`, `pdf`, `printers`, `print-jobs` (the client and delivery portals both print)
+- Controllers WITHOUT `@PortalRoute()` (admin/backoffice only): all others (`categories`, `configurations`, `payments`, `invoices`, `quotes`, `images`, `roles`, `permissions`, `statistics`, `users`, `drive`, `print-agents`, all inventory controllers, etc.)
+
+### Printing
+- The browser **cannot** print silently: a page served over HTTPS may not call a printer's plain `http://` LAN endpoint (mixed content), and browsers cannot open raw sockets. Do not reintroduce Epson ePOS / Star WebPRNT / QZ Tray transports.
+- `POST /print-jobs` **queues** a job; a local print agent claims it and drives the device. `print_jobs` is the durable queue and source of truth.
+- A job in `claimed` never reached the device and may be requeued. A job in `printing` may have physically printed and must **never** be retried automatically.
+- Migrations touching tenant tables run with `pnpm migration:run:all`, never plain `migration:run`.
 
 ### Deletes
 - Hard deletes are intentional — `repository.remove()` and `repository.delete()` are both acceptable
@@ -92,7 +99,7 @@ pnpm test:e2e                                       # E2E tests
 ### API Modules (in `api/src/modules/`)
 `auth` `categories` `configurations` `delivery` `drive` `health` `images` `inventory`
 `invoices` `notifications` `onboarding` `orders` `partners` `payments` `pdf`
-`permissions` `portal` `products` `quotes` `roles` `statistics` `tenant`
+`permissions` `portal` `printers` `products` `quotes` `roles` `statistics` `tenant`
 `tenant-lifecycle` `users`
 
 ### Backoffice Modules (in `backoffice/src/modules/`)
