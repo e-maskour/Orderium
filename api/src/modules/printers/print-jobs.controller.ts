@@ -13,7 +13,6 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PrintJobsService } from './print-jobs.service';
 import { PrintJobsDispatchService } from './print-jobs.dispatch.service';
 import { CreatePrintJobDto } from './dto/create-print-job.dto';
-import { LogPrintJobDto } from './dto/log-print-job.dto';
 import { QueryPrintJobsDto } from './dto/query-print-jobs.dto';
 import { ApiRes } from '../../common/api-response';
 import { PJB } from '../../common/response-codes';
@@ -61,23 +60,6 @@ export class PrintJobsController {
     return ApiRes(created ? PJB.CREATED : PJB.DUPLICATE, job);
   }
 
-  /**
-   * Records a print that already happened in the browser.
-   *
-   * @deprecated retained for the browser fallback path until agents are rolled
-   * out; Plan 3 removes it along with the client-side print flow.
-   */
-  @Post('log')
-  @ApiOperation({ summary: 'Log a browser-side print attempt (legacy)' })
-  @ApiResponse({ status: 201, description: 'Print job logged' })
-  @RequirePermission('printers.print')
-  async log(
-    @Body() dto: LogPrintJobDto,
-    @Request() req: { user: { id: number; sub: number } },
-  ) {
-    const job = await this.printJobsService.log(req.user.id, dto);
-    return ApiRes(PJB.CREATED, job);
-  }
 
   @Get()
   @ApiOperation({ summary: 'List print job history' })

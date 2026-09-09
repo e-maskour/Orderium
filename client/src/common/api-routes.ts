@@ -55,8 +55,6 @@ export const API_ROUTES = {
   PRINTERS: {
     LIST: '/api/printers',
     PRINT_JOBS: '/api/print-jobs',
-    /** Legacy browser-side print log; removed when agents ship. */
-    PRINT_JOBS_LOG: '/api/print-jobs/log',
   },
 
   PDF: {

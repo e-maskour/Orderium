@@ -35,21 +35,7 @@ export class PrintersService {
     await apiClient.delete(API_ROUTES.PRINTERS.DELETE(id));
   }
 
-  async pingPrinter(id: string): Promise<void> {
-    await apiClient.post(API_ROUTES.PRINTERS.PING(id), {});
-  }
 
-  async logPrintJob(dto: {
-    printerId?: string;
-    documentType: string;
-    documentId?: string;
-    method?: string;
-    status: string;
-    durationMs?: number;
-    errorMessage?: string;
-  }): Promise<void> {
-    await apiClient.post(API_ROUTES.PRINT_JOBS.LOG, dto);
-  }
 
   async getPrintJobs(
     params: {

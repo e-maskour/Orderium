@@ -87,7 +87,7 @@ export function PrintButton({
         <button
           type="button"
           onClick={() => {
-            printHere();
+            printHere(documentRef, documentType);
             reset();
           }}
           title={t('printHereTooltip')}

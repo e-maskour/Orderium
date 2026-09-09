@@ -77,13 +77,4 @@ export class PrintersController {
     return ApiRes(PRI.DELETED, null);
   }
 
-  @Post(':id/ping')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update printer last_seen_at' })
-  @ApiResponse({ status: 200, description: 'Printer pinged' })
-  @RequirePermission('printers.print')
-  async ping(@Param('id', ParseUUIDPipe) id: string) {
-    await this.printersService.ping(id);
-    return ApiRes(PRI.PINGED, null);
-  }
 }

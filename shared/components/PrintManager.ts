@@ -1,73 +1,21 @@
 /**
- * PrintManager.ts — runs in the browser only
+ * Platform detection for the printer settings screen.
  *
- * The browser sandbox cannot reach a printer directly:
- *   - Epson ePOS and Star WebPRNT expose plain http:// endpoints on the LAN,
- *     which a page served over https:// may never call (mixed-content rule).
- *   - QZ Tray requires a paid signing certificate to print without a prompt,
- *     and only helps the one machine it is installed on.
+ * This file used to drive printing from the browser. It no longer can, and
+ * nothing here should try again:
  *
- * So the only transport that works from a browser is the OS print dialog.
- * Silent printing is handled server-side by the print agent; see
- * docs/superpowers/specs/2026-09-09-print-agent-design.md
+ *   - A page served over https:// may never call a printer's plain http://
+ *     LAN endpoint. The mixed-content rule blocks it with no override, which
+ *     killed the Epson ePOS and Star WebPRNT transports.
+ *   - Browsers cannot open raw sockets, so there is no way to reach a printer
+ *     directly.
+ *   - QZ Tray needs a paid signing certificate to print without a prompt and
+ *     only helps the one machine it is installed on.
+ *
+ * Printing is done by the print agent, a small service running inside the
+ * shop. See docs/superpowers/specs/2026-09-09-print-agent-design.md
  */
 
-export interface PrinterConfig {
-    id?: string;
-    brand: 'epson' | 'star' | 'generic' | 'qztray' | 'browser';
-    ip?: string;
-    port?: number;
-    name?: string;
-    paperWidth?: 80 | 148;
-}
-
-export interface ReceiptLine {
-    name: string;
-    qty: number;
-    unitPrice: number;
-    total: number;
-}
-
-export interface ReceiptData {
-    storeName: string;
-    storePhone?: string;
-    orderNumber: string;
-    date: string;
-    clientName: string;
-    clientPhone?: string;
-    items: ReceiptLine[];
-    subtotal: number;
-    discount?: number;
-    total: number;
-    footer?: string;
-}
-
-export interface PrintResult {
-    method: string;
-    status: 'success' | 'failed' | 'fallback';
-    durationMs: number;
-    error?: string;
-}
-
-// ── Print ─────────────────────────────────────────────────
-/**
- * Opens the OS print dialog. The caller must have rendered <PrintableReceipt />
- * so the dialog has an 80mm receipt to print.
- */
-export async function printReceipt(
-    _config: PrinterConfig,
-    _data: ReceiptData,
-): Promise<PrintResult> {
-    const started = Date.now();
-    window.print();
-    return {
-        method: 'browser',
-        status: 'success',
-        durationMs: Date.now() - started,
-    };
-}
-
-// ── Platform detection ────────────────────────────────────
 export function detectPlatform() {
     const ua = navigator.userAgent;
     return {

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
 import { PrintJob } from './entities/print-job.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
-import { LogPrintJobDto } from './dto/log-print-job.dto';
 import { QueryPrintJobsDto } from './dto/query-print-jobs.dto';
 
 @Injectable()
@@ -13,19 +12,6 @@ export class PrintJobsService {
     return this.tenantConnService.getRepository(PrintJob);
   }
 
-  async log(userId: number, dto: LogPrintJobDto): Promise<PrintJob> {
-    const job = this.repo.create({
-      printerId: dto.printerId ?? null,
-      documentType: dto.documentType,
-      documentId: dto.documentId ?? null,
-      method: (dto.method as PrintJob['method']) ?? null,
-      status: (dto.status as PrintJob['status']) ?? 'success',
-      durationMs: dto.durationMs ?? null,
-      errorMessage: dto.errorMessage ?? null,
-      userId,
-    });
-    return this.repo.save(job);
-  }
 
   async findAll(query: QueryPrintJobsDto) {
     const where: FindOptionsWhere<PrintJob> = {};

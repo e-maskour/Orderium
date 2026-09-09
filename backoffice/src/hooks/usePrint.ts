@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { printersService } from '../modules/printers';
 import type { IPrintJob, QueuePrintJobDTO } from '../modules/printers';
+import { pdfService } from '../services/pdf.service';
 
 export const POLL_INTERVAL_MS = 1000;
 /** After this, the job is queued but no agent has taken it — say so plainly. */
@@ -93,8 +94,21 @@ export function usePrint() {
     if (!cancelled.current) setState('offline');
   }, []);
 
-  /** The explicit fallback. Only ever runs because the operator asked. */
-  const printHere = useCallback(() => window.print(), []);
+  /**
+   * The explicit fallback. Only ever runs because the operator asked.
+   *
+   * Opens the server-rendered PDF rather than calling window.print(): the page
+   * itself contains no receipt, so printing it would emit the backoffice UI.
+   * The PDF viewer then gives the operator a real print dialog.
+   */
+  const printHere = useCallback((documentRef: number, documentType: string) => {
+    const pdfType = documentType === 'bl' ? 'delivery-note' : 'receipt';
+    window.open(
+      pdfService.getPDFUrl(pdfType as 'receipt' | 'delivery-note', documentRef, 'preview'),
+      '_blank',
+      'noopener',
+    );
+  }, []);
 
   return { print, printHere, state, job, error, reset };
 }

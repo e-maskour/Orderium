@@ -450,15 +450,12 @@ export const API_ROUTES = {
     CREATE: '/api/printers',
     UPDATE: (id: string) => `/api/printers/${id}`,
     DELETE: (id: string) => `/api/printers/${id}`,
-    PING: (id: string) => `/api/printers/${id}/ping`,
   },
 
   // ─── Print Jobs ────────────────────────────────────────────
   PRINT_JOBS: {
     LIST: '/api/print-jobs',
     CREATE: '/api/print-jobs',
-    /** Legacy browser-side print log; removed when agents ship. */
-    LOG: '/api/print-jobs/log',
     DETAIL: (id: string) => `/api/print-jobs/${id}`,
     RETRY: (id: string) => `/api/print-jobs/${id}/retry`,
     CANCEL: (id: string) => `/api/print-jobs/${id}/cancel`,
