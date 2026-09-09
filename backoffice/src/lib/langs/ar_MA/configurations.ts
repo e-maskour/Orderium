@@ -395,4 +395,50 @@ export default {
   generalParamDefaultLanguageDescription: 'لغة بدء التطبيق للمستخدمين الذين لم يختاروا لغتهم بعد',
   generalParamKeyboardEnabled: 'لوحة المفاتيح الافتراضية',
   generalParamKeyboardEnabledDescription: 'إظهار لوحة المفاتيح على الشاشة وزرها العائم في الأسفل',
+
+  // ── Print agents & queue (Phase 3) ──────────────────────────
+  printerWarehouse: 'المتجر',
+  printerWarehouseHint: 'يتم توجيه مهام الطباعة إلى وكيل هذا المتجر.',
+  printerKind: 'نوع الجهاز',
+  printerKindThermal: 'إيصال (ESC/POS)',
+  printerKindDocument: 'مستند (PDF A4)',
+  printerConnSystem: 'قائمة الطباعة',
+  printerSystemName: 'اسم قائمة الطباعة',
+  printerSystemNameHint:
+    'اسم القائمة في النظام بالضبط: Get-Printer (ويندوز) أو lpstat -p (لينكس/ماك).',
+  printerNoWarehouse: 'هذه الطابعة غير مرتبطة بأي متجر.',
+
+  printAgents: 'الوكلاء',
+  printAgentsIntro:
+    'يعمل الوكيل على جهاز داخل المتجر ويشغّل الطابعات التي لا يستطيع المتصفح الوصول إليها. يستقبل الوكيل مهام متجره فقط.',
+  addPrintAgent: 'إضافة وكيل',
+  noPrintAgents: 'لا يوجد وكيل. أضف واحدًا للطباعة دون نافذة حوار.',
+  printAgentOnline: 'متصل',
+  printAgentOffline: 'غير متصل',
+  printAgentSeen: 'آخر ظهور',
+  printAgentRevoked: 'ملغى',
+  revokePrintAgent: 'إلغاء',
+  revokePrintAgentConfirm:
+    'إلغاء هذا الوكيل؟ سيتوقف الجهاز فورًا عن استقبال المهام وسيحتاج إلى إعادة الاقتران.',
+  printAgentName: 'الاسم',
+  printAgentWarehouseHint: 'لن يستقبل الوكيل سوى مهام هذا المتجر.',
+  createAndPair: 'إنشاء واقتران',
+  creatingPrintAgent: 'جارٍ الإنشاء…',
+  pairingCode: 'رمز الاقتران',
+  pairingRunOnMachine: 'على جهاز المتجر، نفّذ:',
+  copyPairingCode: 'نسخ الرمز',
+  pairingCodeWarning:
+    'هذا الرمز صالح لمدة 15 دقيقة، ويُستخدم مرة واحدة فقط، ولن يُعرض بعد إغلاق هذه النافذة.',
+
+  printSending: 'جارٍ الإرسال…',
+  printPrinting: 'جارٍ الطباعة…',
+  printDone: 'تمت الطباعة',
+  printQueued: 'في الانتظار',
+  printFailed: 'فشل',
+  printHere: 'اطبع هنا',
+  printHereTooltip: 'فتح نافذة الطباعة في المتصفح',
+  printQueuedTooltip: 'لم يأخذ أي وكيل المهمة. ستُطبع بمجرد اتصال وكيل.',
+  testPrintSent: 'تم إرسال طباعة اختبارية إلى الطابعة.',
+  testPrintNoAgent: 'لا يوجد وكيل متصل بهذا المتجر — ستُطبع التجربة عند تشغيل وكيل.',
+  testPrintFailed: 'فشل الطباعة',
 };

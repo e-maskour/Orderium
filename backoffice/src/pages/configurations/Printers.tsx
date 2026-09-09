@@ -63,13 +63,13 @@ const BRAND_OPTIONS = [
 const CONNECTION_OPTIONS = [
   { value: 'network', label: 'Réseau (IP)', labelKey: 'printerConnectionNetwork', icon: Globe },
   { value: 'usb', label: 'USB', icon: Usb },
-  { value: 'system', label: 'File d’impression', icon: Monitor },
-];
+  { value: 'system', label: 'File d’impression', labelKey: 'printerConnSystem', icon: Monitor },
+] as const;
 
 const KIND_OPTIONS = [
-  { value: 'thermal', label: 'Ticket (ESC/POS)' },
-  { value: 'document', label: 'Document (PDF A4)' },
-];
+  { value: 'thermal', label: 'Ticket (ESC/POS)', labelKey: 'printerKindThermal' },
+  { value: 'document', label: 'Document (PDF A4)', labelKey: 'printerKindDocument' },
+] as const;
 
 const PAPER_WIDTHS = [
   { value: 80, label: '80mm (ticket)', labelKey: 'printerPaper80' },
@@ -141,7 +141,7 @@ function PrinterForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-            Magasin
+            {t('printerWarehouse')}
           </label>
           <select
             value={form.warehouseId}
@@ -157,13 +157,13 @@ function PrinterForm({
             ))}
           </select>
           <small style={{ color: 'var(--text-secondary)' }}>
-            Les travaux d’impression sont routés vers l’agent de ce magasin.
+            {t('printerWarehouseHint')}
           </small>
         </div>
 
         <div>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-            Type d’appareil
+            {t('printerKind')}
           </label>
           <select
             value={form.kind}
@@ -174,7 +174,7 @@ function PrinterForm({
           >
             {KIND_OPTIONS.map((k) => (
               <option key={k.value} value={k.value}>
-                {k.label}
+                {optionLabel(k, t)}
               </option>
             ))}
           </select>
@@ -217,7 +217,7 @@ function PrinterForm({
           >
             {CONNECTION_OPTIONS.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {optionLabel(c, t)}
               </option>
             ))}
           </select>
@@ -227,7 +227,7 @@ function PrinterForm({
       {showSystemNameField && (
         <div>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-            Nom de la file d’impression
+            {t('printerSystemName')}
           </label>
           <input
             type="text"
@@ -238,10 +238,7 @@ function PrinterForm({
             maxLength={120}
             style={inputStyle}
           />
-          <small style={{ color: 'var(--text-secondary)' }}>
-            Exactement le nom de la file dans le système : <code>Get-Printer</code>{' '}
-            (Windows) ou <code>lpstat -p</code> (Linux/macOS).
-          </small>
+          <small style={{ color: 'var(--text-secondary)' }}>{t('printerSystemNameHint')}</small>
         </div>
       )}
 
@@ -464,7 +461,7 @@ export default function Printers() {
 
   const handleTestPrint = (printer: IPrinter) => {
     if (!printer.warehouseId) {
-      toastError('Cette imprimante n’est rattachée à aucun magasin.');
+      toastError(t('printerNoWarehouse'));
       return;
     }
     setTestingPrinterId(printer.id);
@@ -478,17 +475,15 @@ export default function Printers() {
   useEffect(() => {
     if (!testingPrinterId) return;
     if (testPrint.state === 'printed') {
-      toastSuccess('Impression de test envoyée à l’imprimante.');
+      toastSuccess(t('testPrintSent'));
       setTestingPrinterId(null);
       testPrint.reset();
     } else if (testPrint.state === 'offline') {
-      toastError(
-        'Aucun agent en ligne pour ce magasin — le test s’imprimera dès qu’un agent démarrera.',
-      );
+      toastError(t('testPrintNoAgent'));
       setTestingPrinterId(null);
       testPrint.reset();
     } else if (testPrint.state === 'failed') {
-      toastError(`Échec de l’impression : ${testPrint.error ?? 'inconnue'}`);
+      toastError(`${t('testPrintFailed')} : ${testPrint.error ?? '—'}`);
       setTestingPrinterId(null);
       testPrint.reset();
     }
@@ -610,7 +605,7 @@ export default function Printers() {
               {tab === 'printers'
                 ? t('printers')
                 : tab === 'agents'
-                  ? 'Agents'
+                  ? t('printAgents')
                   : t('printHistory')}
             </button>
           ))}
@@ -775,9 +770,7 @@ export default function Printers() {
               }}
             >
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-                Un agent tourne sur une machine du magasin et pilote les
-                imprimantes que le navigateur ne peut pas atteindre. Un agent ne
-                reçoit que les travaux de son magasin.
+                {t('printAgentsIntro')}
               </p>
               <button
                 onClick={() => {
@@ -789,7 +782,7 @@ export default function Printers() {
                 style={{ ...btnPrimary, whiteSpace: 'nowrap' }}
               >
                 <Plus style={{ width: 16, height: 16 }} />
-                Ajouter un agent
+                {t('addPrintAgent')}
               </button>
             </div>
 
@@ -801,7 +794,7 @@ export default function Printers() {
                   color: 'var(--text-placeholder)',
                 }}
               >
-                Aucun agent. Ajoutez-en un pour imprimer sans boîte de dialogue.
+                {t('noPrintAgents')}
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
@@ -820,7 +813,7 @@ export default function Printers() {
                     }}
                   >
                     <span
-                      title={agent.online ? 'En ligne' : 'Hors ligne'}
+                      title={agent.online ? t('printAgentOnline') : t('printAgentOffline')}
                       style={{
                         width: 10,
                         height: 10,
@@ -835,26 +828,26 @@ export default function Printers() {
                         style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}
                       >
                         {warehouses.find((w) => w.id === agent.warehouseId)?.name ??
-                          `Magasin ${agent.warehouseId}`}
+                          `${t('printerWarehouse')} ${agent.warehouseId}`}
                         {agent.platform && ` · ${agent.platform}`}
                         {agent.version && ` · v${agent.version}`}
                         {agent.lastSeenAt &&
-                          ` · vu ${new Date(agent.lastSeenAt).toLocaleString()}`}
-                        {agent.revokedAt && ' · révoqué'}
+                          ` · ${t('printAgentSeen')} ${new Date(agent.lastSeenAt).toLocaleString()}`}
+                        {agent.revokedAt && ` · ${t('printAgentRevoked')}`}
                       </div>
                     </div>
                     {!agent.revokedAt && (
                       <button
                         onClick={() => {
                           toastConfirm(
-                            'Révoquer cet agent ? La machine cessera immédiatement de recevoir des travaux et devra être ré-appairée.',
+                            t('revokePrintAgentConfirm'),
                             () => revokeAgentMutation.mutate(agent.id),
-                            { variant: 'destructive', confirmLabel: 'Révoquer' },
+                            { variant: 'destructive', confirmLabel: t('revokePrintAgent') },
                           );
                         }}
                         style={btnSecondary}
                       >
-                        Révoquer
+                        {t('revokePrintAgent')}
                       </button>
                     )}
                   </div>
@@ -1046,7 +1039,7 @@ export default function Printers() {
       {showAgentModal && (
         <Modal
           isOpen={showAgentModal}
-          title={pairingCode ? 'Code d’appairage' : 'Ajouter un agent'}
+          title={pairingCode ? t('pairingCode') : t('addPrintAgent')}
           onClose={() => {
             setShowAgentModal(false);
             setPairingCode(null);
@@ -1055,7 +1048,7 @@ export default function Printers() {
           {pairingCode ? (
             <div style={{ display: 'grid', gap: '1rem' }}>
               <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                Sur la machine du magasin, lancez :
+                {t('pairingRunOnMachine')}
               </p>
               <code
                 style={{
@@ -1076,7 +1069,7 @@ export default function Printers() {
                 onClick={() => void navigator.clipboard?.writeText(pairingCode)}
                 style={btnSecondary}
               >
-                Copier le code
+                {t('copyPairingCode')}
               </button>
 
               <div
@@ -1088,9 +1081,7 @@ export default function Printers() {
                   fontSize: '0.8125rem',
                 }}
               >
-                Ce code est valable <strong>15 minutes</strong>, ne peut servir
-                qu’une seule fois, et ne sera plus affiché après la fermeture de
-                cette fenêtre.
+                {t('pairingCodeWarning')}
               </div>
 
               <button
@@ -1100,7 +1091,7 @@ export default function Printers() {
                 }}
                 style={btnPrimary}
               >
-                Terminé
+                {t('done')}
               </button>
             </div>
           ) : (
@@ -1116,7 +1107,7 @@ export default function Printers() {
             >
               <div>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-                  Nom
+                  {t('printAgentName')}
                 </label>
                 <input
                   type="text"
@@ -1131,7 +1122,7 @@ export default function Printers() {
 
               <div>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-                  Magasin
+                  {t('printerWarehouse')}
                 </label>
                 <select
                   value={newAgentWarehouse}
@@ -1147,7 +1138,7 @@ export default function Printers() {
                   ))}
                 </select>
                 <small style={{ color: 'var(--text-secondary)' }}>
-                  L’agent ne recevra que les travaux de ce magasin.
+                  {t('printAgentWarehouseHint')}
                 </small>
               </div>
 
@@ -1159,7 +1150,9 @@ export default function Printers() {
                   opacity: createAgentMutation.isPending || !newAgentWarehouse ? 0.6 : 1,
                 }}
               >
-                {createAgentMutation.isPending ? 'Création…' : 'Créer et appairer'}
+                {createAgentMutation.isPending
+                  ? t('creatingPrintAgent')
+                  : t('createAndPair')}
               </button>
             </form>
           )}

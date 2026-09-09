@@ -1,12 +1,14 @@
 import type { CSSProperties } from 'react';
 import { AlertTriangle, Check, Loader2, Printer } from 'lucide-react';
 import { usePrint, type PrintState } from '../hooks/usePrint';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   documentType: 'receipt' | 'bl' | 'devis' | 'bon_commande' | 'pos' | 'stock';
   documentRef: number;
   printerId?: string;
   warehouseId?: number;
+  /** Defaults to the translated "Imprimer". */
   label?: string;
   variant?: 'button' | 'icon';
 }
@@ -44,25 +46,25 @@ export function PrintButton({
   documentRef,
   printerId,
   warehouseId,
-  label = 'Imprimer',
+  label,
   variant = 'button',
 }: Props) {
+  const { t } = useLanguage();
   const { print, printHere, state, error, reset } = usePrint();
   const busy = state === 'queuing' || state === 'waiting';
+  const idleLabel = label ?? t('print');
 
   const LABELS: Record<PrintState, string> = {
-    idle: label,
-    queuing: 'Envoi…',
-    waiting: 'Impression…',
-    printed: 'Imprimé',
-    offline: 'En attente',
-    failed: 'Échec',
+    idle: idleLabel,
+    queuing: t('printSending'),
+    waiting: t('printPrinting'),
+    printed: t('printDone'),
+    offline: t('printQueued'),
+    failed: t('printFailed'),
   };
 
   const title =
-    state === 'offline'
-      ? "Aucun agent n'a pris le travail. Il s'imprimera dès qu'un agent sera en ligne."
-      : (error ?? label);
+    state === 'offline' ? t('printQueuedTooltip') : (error ?? idleLabel);
 
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -88,10 +90,10 @@ export function PrintButton({
             printHere();
             reset();
           }}
-          title="Ouvrir la boîte de dialogue d'impression du navigateur"
+          title={t('printHereTooltip')}
           style={{ ...BASE, borderColor: '#fcd34d', backgroundColor: '#fffbeb' }}
         >
-          Imprimer ici
+          {t('printHere')}
         </button>
       )}
     </span>

@@ -410,4 +410,52 @@ export default {
   generalParamKeyboardEnabled: 'Clavier virtuel',
   generalParamKeyboardEnabledDescription:
     "Afficher le clavier à l'écran et son bouton flottant en bas à droite",
+
+  // ── Print agents & queue (Phase 3) ──────────────────────────
+  printerWarehouse: 'Magasin',
+  printerWarehouseHint: 'Les travaux d’impression sont routés vers l’agent de ce magasin.',
+  printerKind: 'Type d’appareil',
+  printerKindThermal: 'Ticket (ESC/POS)',
+  printerKindDocument: 'Document (PDF A4)',
+  printerConnSystem: 'File d’impression',
+  printerSystemName: 'Nom de la file d’impression',
+  printerSystemNameHint:
+    'Exactement le nom de la file dans le système : Get-Printer (Windows) ou lpstat -p (Linux/macOS).',
+  printerNoWarehouse: 'Cette imprimante n’est rattachée à aucun magasin.',
+
+  printAgents: 'Agents',
+  printAgentsIntro:
+    'Un agent tourne sur une machine du magasin et pilote les imprimantes que le navigateur ne peut pas atteindre. Un agent ne reçoit que les travaux de son magasin.',
+  addPrintAgent: 'Ajouter un agent',
+  noPrintAgents: 'Aucun agent. Ajoutez-en un pour imprimer sans boîte de dialogue.',
+  printAgentOnline: 'En ligne',
+  printAgentOffline: 'Hors ligne',
+  printAgentSeen: 'vu',
+  printAgentRevoked: 'révoqué',
+  revokePrintAgent: 'Révoquer',
+  revokePrintAgentConfirm:
+    'Révoquer cet agent ? La machine cessera immédiatement de recevoir des travaux et devra être ré-appairée.',
+  printAgentName: 'Nom',
+  printAgentWarehouseHint: 'L’agent ne recevra que les travaux de ce magasin.',
+  createAndPair: 'Créer et appairer',
+  creatingPrintAgent: 'Création…',
+  pairingCode: 'Code d’appairage',
+  pairingRunOnMachine: 'Sur la machine du magasin, lancez :',
+  copyPairingCode: 'Copier le code',
+  pairingCodeWarning:
+    'Ce code est valable 15 minutes, ne peut servir qu’une seule fois, et ne sera plus affiché après la fermeture de cette fenêtre.',
+
+  printSending: 'Envoi…',
+  printPrinting: 'Impression…',
+  printDone: 'Imprimé',
+  printQueued: 'En attente',
+  printFailed: 'Échec',
+  printHere: 'Imprimer ici',
+  printHereTooltip: 'Ouvrir la boîte de dialogue d’impression du navigateur',
+  printQueuedTooltip:
+    'Aucun agent n’a pris le travail. Il s’imprimera dès qu’un agent sera en ligne.',
+  testPrintSent: 'Impression de test envoyée à l’imprimante.',
+  testPrintNoAgent:
+    'Aucun agent en ligne pour ce magasin — le test s’imprimera dès qu’un agent démarrera.',
+  testPrintFailed: 'Échec de l’impression',
 };
