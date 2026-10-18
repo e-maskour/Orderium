@@ -2,8 +2,10 @@ import { forwardRef, useEffect, useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { formatDecimalInput, parseDecimal } from '../utils/numberFormat';
 
-export interface DecimalInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type' | 'min' | 'max'> {
+export interface DecimalInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'type' | 'min' | 'max'
+> {
   value: number | null | undefined;
   /** Called with the parsed number (null when empty) on every valid keystroke. */
   onValueChange: (value: number | null) => void;
