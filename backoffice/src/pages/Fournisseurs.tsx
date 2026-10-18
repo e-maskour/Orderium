@@ -16,6 +16,8 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { EmptyState } from '../components/EmptyState';
 import { MobileList } from '../components/MobileList';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { PartnerAvatar } from '@/components/ui';
 
 export default function Fournisseurs() {
   const { t, dir } = useLanguage();
@@ -355,9 +357,9 @@ export default function Fournisseurs() {
               rowClassName={() => 'ord-row-clickable'}
               dataKey="id"
               paginator
-              paginatorPosition="top"
+              paginatorPosition="bottom"
               rows={25}
-              rowsPerPageOptions={[10, 25, 50, 100]}
+              rowsPerPageOptions={PAGE_SIZE_OPTIONS}
               removableSort
               emptyMessage={<EmptyState icon={Users} title={t('noSupplierFound')} compact />}
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
@@ -370,20 +372,7 @@ export default function Fournisseurs() {
                 sortable
                 body={(row: Partner) => (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div
-                      style={{
-                        width: '2rem',
-                        height: '2rem',
-                        background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)',
-                        borderRadius: '0.375rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
-                    </div>
+                    <PartnerAvatar name={row.name} />
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
                       {row.name}
                     </span>

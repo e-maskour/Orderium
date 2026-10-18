@@ -27,32 +27,24 @@ import {
 } from '../hooks/useMigrations';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { TenantMigrationStatus, MigrationRunLog, MigrationHealth } from '../types/migration';
+import { formatAmount } from '../utils/formatAmount';
+import { formatDate, formatDateTime } from '../utils/dateFormat';
 
 // ─────────────────────────────── helpers ─────────────────────────────────────
 
 function fmt(ms: number | null): string {
   if (ms === null) return '—';
   if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
+  return `${formatAmount(ms / 1000, 2)}s`;
 }
 
 function fmtDate(s: string): string {
-  return new Date(s).toLocaleString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(s);
 }
 
 function fmtTimestamp(ts: number): string {
   if (!ts) return '—';
-  return new Date(ts).toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  return formatDate(ts, '—');
 }
 
 // ─────────────────────────────── sub-components ──────────────────────────────

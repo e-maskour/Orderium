@@ -1,5 +1,6 @@
 import { Timer } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -10,8 +11,7 @@ import { API_ROUTES } from '../../../common/api/api-routes';
 import { useLanguage } from '../../../context/LanguageContext';
 import type { AgingReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const MAD = (row: Record<string, unknown>, field: string) =>
-  Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+const MAD = (row: Record<string, unknown>, field: string) => formatAmount(Number(row[field]));
 
 const SupplierAgingPage: React.FC = () => {
   const { t } = useLanguage();

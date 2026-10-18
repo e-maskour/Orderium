@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import type { ColumnBodyOptions } from 'primereact/column';
@@ -12,8 +9,10 @@ import { IProduct } from '../../modules/products/products.interface';
 import { productsService } from '../../modules/products/products.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductCatalogueModal } from '../ProductCatalogueModal';
-import { formatAmount } from '@orderium/ui';
+import { DecimalInput, formatAmount, formatQuantity } from '@orderium/ui';
 import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';
+import { RefLink } from '../ui/RefLink';
+import { entityRoutes } from '../../lib/entityRoutes';
 
 interface DocumentItemsTableProps {
   items: DocumentItem[];
@@ -75,19 +74,34 @@ const DIT_STYLES = `
   .dit-dg .p-dropdown { height: 2.5rem !important; }
   .dit-dg .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; text-align: left !important; justify-content: flex-start !important; color: #1e293b !important; font-weight: 600 !important; font-size: 0.875rem !important; padding-left: 0.5rem !important; }
   .dit-dsc {
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-    border: 1.5px solid transparent; border-radius: 6px; background: transparent;
-    width: 100%; height: 2.5rem;
-    transition: border-color 0.15s, background 0.15s;
+    display: flex; align-items: center; gap: 0.25rem;
+    border: 1px solid #cbd5e1; border-radius: 0.5rem; background: #fff;
+    width: 100%; height: 2.25rem; padding: 0 0.1875rem 0 0;
+    transition: border-color 0.15s;
   }
-  .dit-dsc:hover { border-color: #e2e8f0 !important; background: #fff !important; }
-  .dit-dsc:focus-within { border-color: var(--form-input-border-focus) !important; background: #fff !important; box-shadow: var(--form-input-shadow-focus) !important; }
-  .dit-dsc .p-inputnumber-input { width: 3.5rem !important; border: none !important; background: transparent !important; padding: 0.4rem 0.25rem !important; font-size: 0.875rem !important; text-align: center !important; box-shadow: none !important; }
+  .dit-dsc:hover { border-color: #94a3b8; }
+  .dit-dsc:focus-within { border-color: #0f172a; }
+  .dit-dsc .p-inputnumber-input,
+  .dit-dsc .p-inputnumber-input:focus,
+  .dit-dsc .p-inputnumber-input:enabled:focus {
+    flex: 1 1 auto; min-width: 0; width: auto !important; height: 100% !important;
+    border: none !important; background: transparent !important; box-shadow: none !important; outline: none;
+    padding: 0 0.25rem 0 0.5rem !important; font-size: 0.875rem !important; font-weight: 600; color: #1e293b;
+    text-align: right !important; font-variant-numeric: tabular-nums;
+  }
   .dit-dsc .p-inputnumber-input::-webkit-inner-spin-button,
   .dit-dsc .p-inputnumber-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .dit-dsc .p-inputnumber-input { -moz-appearance: textfield; }
-  .dit-dtb { padding: 0.3rem 0.5rem; min-width: 36px; border: none; cursor: pointer; background: #f1f5f9; color: #475569; font-size: 0.7rem; font-weight: 700; transition: background 0.15s; }
-  .dit-dtb:hover:not(:disabled) { background: #e2e8f0; }
+  .dit-seg { display: inline-flex; flex-shrink: 0; padding: 2px; gap: 2px; border-radius: 0.375rem; background: #f1f5f9; }
+  .dit-seg-btn {
+    min-width: 1.75rem; height: 1.5rem; padding: 0 0.375rem; border: none; border-radius: 0.25rem;
+    background: transparent; color: #64748b; font-size: 0.6875rem; font-weight: 700; line-height: 1;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .dit-seg-btn:hover:not(:disabled):not(.is-active) { color: #0f172a; }
+  .dit-seg-btn.is-active { background: #fff; color: #235ae4; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12); }
+  .dit-seg-btn:focus-visible { outline: 2px solid #235ae4; outline-offset: 1px; }
+  .dit-seg-btn:disabled { cursor: default; }
   .dit-del {
     display: flex; align-items: center; justify-content: center;
     width: 1.75rem; height: 1.75rem; border-radius: 6px;
@@ -116,6 +130,13 @@ const DIT_STYLES = `
   .dit-mob-hdr { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.875rem; background: linear-gradient(to right, #f8fafc, #f1f5f9); border-bottom: 1px solid #e2e8f0; }
   .dit-mob-body { padding: 0.875rem; }
   .dit-mob-total { margin-top: 0.875rem; padding: 0.625rem 0.875rem; background: linear-gradient(to right, #f8fafc, #f1f5f9); border: 1.5px solid #e2e8f0; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .dit-mob-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.625rem; margin-bottom: 0.75rem; }
+  .dit-mob-row.is-single { grid-template-columns: minmax(0, 1fr); }
+  .dit-mob-row > div { min-width: 0; }
+  .dit-mob-row .p-autocomplete { display: flex; width: 100%; }
+  .dit-mob-row .p-autocomplete-input { min-width: 0; }
+  .dit-mob-num { width: 100%; text-align: right; font-variant-numeric: tabular-nums; }
+  .dit-mob-row .dit-dsc { height: var(--control-height, 2.875rem); }
   .dit-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; }
   @media (max-width: 1023px) { .dit-desktop { display: none !important; } .dit-mobile { display: flex !important; } }
   @media (min-width: 1024px) { .dit-desktop { display: block !important; } .dit-mobile { display: none !important; } }
@@ -192,12 +213,36 @@ export function DocumentItemsTable({
     onItemsChange(newItems);
   };
 
+  // discountType: 1 = percentage, 0 = fixed amount
+  const renderDiscountTypeToggle = (item: DocumentItem) => (
+    <div className="dit-seg" role="group" aria-label={t('invoice.discountHeader')}>
+      {[
+        { value: 1, label: '%' },
+        { value: 0, label: currency },
+      ].map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`dit-seg-btn${item.discountType === opt.value ? ' is-active' : ''}`}
+          aria-pressed={item.discountType === opt.value}
+          disabled={readOnly}
+          onClick={() => handleItemChange(item.id, 'discountType', opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const handleSelectProduct = (itemId: string, productIdStr: string) => {
     const productId = Number(productIdStr);
     const product = products.find((p) => p.id === productId);
     if (!product) return;
+    if (items.find((item) => item.id === itemId)?.productId === product.id) return;
 
-    const existingItemIndex = items.findIndex((item) => item.productId === product.id);
+    const existingItemIndex = items.findIndex(
+      (item) => item.id !== itemId && item.productId === product.id,
+    );
 
     if (existingItemIndex !== -1) {
       const updatedItems = items.map((item, index) => {
@@ -313,6 +358,9 @@ export function DocumentItemsTable({
           <DataTable
             value={items}
             dataKey="id"
+            // Cells are memoized on rowData only, so untouched rows would keep handlers
+            // closed over a stale `items` array and drop the other lines on edit.
+            cellMemo={false}
             size="small"
             rowClassName={(item: DocumentItem) => {
               const idx = items.indexOf(item);
@@ -371,9 +419,11 @@ export function DocumentItemsTable({
               body={(item: DocumentItem) =>
                 readOnly ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                    {item.productId
-                      ? (products.find((p) => p.id === item.productId)?.name ?? item.description)
-                      : item.description || '—'}
+                    <RefLink to={item.productId ? entityRoutes.product(item.productId) : null}>
+                      {item.productId
+                        ? (products.find((p) => p.id === item.productId)?.name ?? item.description)
+                        : item.description || '—'}
+                    </RefLink>
                   </span>
                 ) : (
                   <AutoCompleteSelect
@@ -410,17 +460,15 @@ export function DocumentItemsTable({
               body={(item: DocumentItem) =>
                 readOnly ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                    {item.quantity}
+                    {formatQuantity(item.quantity)}
                   </span>
                 ) : (
-                  <InputText
-                    type="number"
-                    min={0.1}
-                    step={0.1}
-                    value={String(item.quantity)}
-                    onChange={(e) =>
-                      handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)
-                    }
+                  <DecimalInput
+                    className="p-inputtext p-component"
+                    min={0}
+                    maxFractionDigits={3}
+                    value={item.quantity}
+                    onValueChange={(v) => handleItemChange(item.id, 'quantity', v ?? 0)}
                     style={{
                       width: '100%',
                       textAlign: 'center',
@@ -458,14 +506,11 @@ export function DocumentItemsTable({
                       {formatAmount(item.unitPrice)}
                     </span>
                   ) : (
-                    <InputText
-                      type="number"
+                    <DecimalInput
+                      className="p-inputtext p-component"
                       min={0}
-                      step={0.01}
-                      value={String(item.unitPrice)}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)
-                      }
+                      value={item.unitPrice}
+                      onValueChange={(v) => handleItemChange(item.id, 'unitPrice', v ?? 0)}
                       style={{
                         width: '100%',
                         textAlign: 'center',
@@ -501,39 +546,18 @@ export function DocumentItemsTable({
                 body={(item: DocumentItem) =>
                   readOnly ? (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                      {item.discount}
+                      {formatQuantity(item.discount, 2)}
                       {item.discountType === 0 ? ` ${currency}` : '%'}
                     </span>
                   ) : (
                     <div className="dit-dsc">
-                      <InputNumber
+                      <DecimalInput
+                        className="p-inputnumber-input"
                         min={0}
-                        step={0.1}
                         value={item.discount}
-                        onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
-                        inputStyle={{
-                          width: '3.5rem',
-                          border: 'none',
-                          background: 'transparent',
-                          padding: '0.4rem 0.25rem',
-                          fontSize: '0.875rem',
-                          textAlign: 'center',
-                          boxShadow: 'none',
-                          color: '#1e293b',
-                          fontWeight: 600,
-                        }}
-                        pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
+                        onValueChange={(v) => handleItemChange(item.id, 'discount', v ?? 0)}
                       />
-                      <Button
-                        text
-                        type="button"
-                        className="dit-dtb"
-                        onClick={() =>
-                          handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)
-                        }
-                      >
-                        {item.discountType === 0 ? currency : '%'}
-                      </Button>
+                      {renderDiscountTypeToggle(item)}
                     </div>
                   )
                 }
@@ -724,7 +748,13 @@ export function DocumentItemsTable({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {item.description || t('invoice.itemDescriptionPlaceholder')}
+                    {readOnly && item.productId ? (
+                      <RefLink to={entityRoutes.product(item.productId)}>
+                        {item.description || t('invoice.itemDescriptionPlaceholder')}
+                      </RefLink>
+                    ) : (
+                      item.description || t('invoice.itemDescriptionPlaceholder')
+                    )}
                   </span>
                 </div>
                 {!readOnly && items.length > 1 && (
@@ -765,41 +795,27 @@ export function DocumentItemsTable({
                   />
                 </div>
                 {/* Qty + Price */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: showPriceColumn ? '1fr 1.5fr' : '1fr',
-                    gap: '0.625rem',
-                    marginBottom: '0.75rem',
-                  }}
-                >
+                <div className={`dit-mob-row${showPriceColumn ? '' : ' is-single'}`}>
                   <div>
                     <label className="dit-field-label">{t('invoice.quantityHeader')}</label>
-                    <InputText
-                      type="number"
-                      min={0.1}
-                      step={0.1}
-                      value={String(item.quantity)}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)
-                      }
+                    <DecimalInput
+                      className="p-inputtext p-component dit-mob-num"
+                      min={0}
+                      maxFractionDigits={3}
+                      value={item.quantity}
+                      onValueChange={(v) => handleItemChange(item.id, 'quantity', v ?? 0)}
                       readOnly={readOnly}
-                      style={{ width: '100%', textAlign: 'center' }}
                     />
                   </div>
                   {showPriceColumn && (
                     <div>
                       <label className="dit-field-label">{t('invoice.unitPriceHeader')}</label>
-                      <InputText
-                        type="number"
+                      <DecimalInput
+                        className="p-inputtext p-component dit-mob-num"
                         min={0}
-                        step={0.01}
-                        value={String(item.unitPrice)}
-                        onChange={(e) =>
-                          handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)
-                        }
+                        value={item.unitPrice}
+                        onValueChange={(v) => handleItemChange(item.id, 'unitPrice', v ?? 0)}
                         readOnly={readOnly}
-                        style={{ width: '100%' }}
                       />
                     </div>
                   )}
@@ -807,61 +823,21 @@ export function DocumentItemsTable({
                 {/* Discount + Tax */}
                 {(showDiscountColumn || showTaxColumn) && (
                   <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: showDiscountColumn && showTaxColumn ? '1fr 1fr' : '1fr',
-                      gap: '0.625rem',
-                    }}
+                    className={`dit-mob-row${showDiscountColumn && showTaxColumn ? '' : ' is-single'}`}
+                    style={{ marginBottom: 0 }}
                   >
                     {showDiscountColumn && (
                       <div>
                         <label className="dit-field-label">{t('invoice.discountHeader')}</label>
-                        <div
-                          className="dit-dsc"
-                          style={{
-                            width: '100%',
-                            border: '1.5px solid #e2e8f0',
-                            borderRadius: '6px',
-                          }}
-                        >
-                          <InputNumber
+                        <div className="dit-dsc">
+                          <DecimalInput
+                            className="p-inputnumber-input"
                             min={0}
-                            step={0.1}
                             value={item.discount}
-                            onValueChange={(e) =>
-                              handleItemChange(item.id, 'discount', e.value ?? 0)
-                            }
-                            inputStyle={{
-                              flex: 1,
-                              minWidth: 0,
-                              border: 'none',
-                              background: 'transparent',
-                              padding: '0.5rem 0.25rem',
-                              fontSize: '0.875rem',
-                              textAlign: 'center',
-                              boxShadow: 'none',
-                            }}
+                            onValueChange={(v) => handleItemChange(item.id, 'discount', v ?? 0)}
                             readOnly={readOnly}
-                            pt={{
-                              root: {
-                                style: { border: 'none', background: 'transparent', flex: 1 },
-                              },
-                            }}
                           />
-                          <button
-                            className="dit-dtb"
-                            onClick={() =>
-                              !readOnly &&
-                              handleItemChange(
-                                item.id,
-                                'discountType',
-                                item.discountType === 0 ? 1 : 0,
-                              )
-                            }
-                            disabled={readOnly}
-                          >
-                            {item.discountType === 0 ? currency : '%'}
-                          </button>
+                          {renderDiscountTypeToggle(item)}
                         </div>
                       </div>
                     )}

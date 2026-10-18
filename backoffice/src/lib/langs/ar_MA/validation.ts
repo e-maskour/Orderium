@@ -1,4 +1,7 @@
 export default {
+  // Moroccan phone validation
+  invalidMoroccanPhone: 'رقم غير صالح: 10 أرقام تبدأ بـ 05 أو 06 أو 07',
+  phoneWithoutCountryCode: 'أدخل الرقم بدون +212 / 212 (مثال: 0612345678)',
   // Auth validation
   validationPhoneRequired: 'رقم الهاتف مطلوب',
   validationPasswordRequired: 'كلمة المرور مطلوبة',

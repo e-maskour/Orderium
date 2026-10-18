@@ -1,4 +1,5 @@
 import type { IDriveNode, IDriveVersion, IDriveTag, DrivePermission } from './drive.interface';
+import { formatAmount, formatDate } from '@orderium/ui';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,9 +42,9 @@ const COLOR_MAP: Record<string, string> = {
 export function formatBytes(bytes: number | null | undefined): string {
   if (!bytes) return '—';
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  if (bytes < 1024 * 1024) return `${formatAmount(bytes / 1024, 1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${formatAmount(bytes / (1024 * 1024), 1)} MB`;
+  return `${formatAmount(bytes / (1024 * 1024 * 1024), 2)} GB`;
 }
 
 export function getMimeIcon(mimeType: string | null | undefined): string {
@@ -152,7 +153,7 @@ export class DriveNode implements IDriveNode {
   }
 
   get formattedDate(): string {
-    return new Date(this.updatedAt).toLocaleDateString();
+    return formatDate(this.updatedAt);
   }
 
   static fromApiResponse(data: any): DriveNode {

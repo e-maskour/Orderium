@@ -19,4 +19,5 @@ export const FIELD_IDS = {
   warehouseId: 'pf-warehouse',
   categoryIds: 'pf-categories',
   brandId: 'pf-brand',
+  isEnabled: 'pf-status',
 } as const;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Clock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { formatDate } from '@orderium/ui';
 
 interface Props {
   daysRemaining: number;
@@ -18,13 +19,7 @@ export function TrialBanner({ daysRemaining, trialEndsAt }: Props) {
 
   const bgClass = isUrgent ? 'bg-red-600' : isWarning ? 'bg-amber-500' : 'bg-blue-600';
 
-  const endsText = trialEndsAt
-    ? new Date(trialEndsAt).toLocaleDateString(undefined, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : null;
+  const endsText = trialEndsAt ? formatDate(trialEndsAt) : null;
 
   const message =
     daysRemaining === 0

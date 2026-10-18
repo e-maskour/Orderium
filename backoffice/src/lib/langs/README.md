@@ -36,7 +36,9 @@ langs/
 ## Module Organization
 
 ### common.ts
+
 Contains translations for:
+
 - App branding
 - Navigation
 - Common actions (create, update, delete, save, cancel, etc.)
@@ -52,7 +54,9 @@ Contains translations for:
 - Error messages
 
 ### auth.ts
+
 Contains translations for:
+
 - Login & authentication
 - Logout
 - Password fields
@@ -60,7 +64,9 @@ Contains translations for:
 - Access control messages
 
 ### partners.ts
+
 Contains translations for:
+
 - Customers management
 - Suppliers management
 - Partner form fields
@@ -68,14 +74,18 @@ Contains translations for:
 - Partner type (individual, company)
 
 ### products.ts
+
 Contains translations for:
+
 - Product management
 - Product form fields
 - Product attributes
 - Bulk operations
 
 ### orders.ts
+
 Contains translations for:
+
 - Order management
 - Order status values
 - Order details
@@ -84,7 +94,9 @@ Contains translations for:
 - KPIs
 
 ### invoices.ts
+
 Contains translations for:
+
 - Invoice management
 - Invoice status values
 - Payment status values
@@ -93,20 +105,26 @@ Contains translations for:
 - Invoice statistics
 
 ### delivery.ts
+
 Contains translations for:
+
 - Delivery persons management
 - Delivery person actions
 - Validation messages
 
 ### notifications.ts
+
 Contains translations for:
+
 - Notification types
 - Notification actions
 - Time indicators
 - Status translations for notifications
 
 ### pos.ts
+
 Contains translations for:
+
 - Point of Sale interface
 - Cart operations
 - Customer selection
@@ -115,12 +133,16 @@ Contains translations for:
 ## Adding New Translations
 
 ### 1. Identify the Module
+
 Determine which module the translation belongs to. If it doesn't fit any existing module, consider:
+
 - Adding it to `common.ts` if it's used across multiple modules
 - Creating a new module file if you have multiple related translations
 
 ### 2. Add to Both Locales
+
 Always add translations to both language files:
+
 - `langs/ar_MA/[module].ts` for Arabic
 - `langs/fr_FR/[module].ts` for French
 
@@ -129,6 +151,7 @@ Always add translations to both language files:
 Add a new translation to the products module:
 
 **ar_MA/products.ts:**
+
 ```typescript
 export default {
   // ... existing translations
@@ -137,6 +160,7 @@ export default {
 ```
 
 **fr_FR/products.ts:**
+
 ```typescript
 export default {
   // ... existing translations
@@ -155,7 +179,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 function MyComponent() {
   const { t } = useLanguage();
-  
+
   return (
     <div>
       <h1>{t('products')}</h1>
@@ -189,5 +213,6 @@ Some translations use nested keys (e.g., `invoice.title`, `invoice.status.draft`
 ## Currency Formatting
 
 The `formatCurrency` function in `i18n.ts` handles currency formatting for both locales:
+
 - Arabic: `1,234.56 د.م`
 - French: `1,234.56 DH`

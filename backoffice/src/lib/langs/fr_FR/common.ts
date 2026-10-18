@@ -5,6 +5,7 @@ export default {
 
   // Navigation
   dashboard: 'Tableau de bord',
+  home: 'Accueil',
   welcomeBack: 'Bon retour',
   welcome: 'Bienvenue',
   goodMorning: 'Bonjour',
@@ -20,6 +21,8 @@ export default {
   cancel: 'Annuler',
   close: 'Fermer',
   back: 'Retour',
+  backTo: 'Retour à {label}',
+  openRecord: 'Ouvrir la fiche',
   confirm: 'Confirmer',
   add: 'Ajouter',
 
@@ -62,7 +65,7 @@ export default {
   previous: 'Précédent',
   next: 'Suivant',
   last: 'Dernier',
-  pageReportTemplate: '{first} - {last} sur {totalRecords}',
+  pageReportTemplate: 'Affichage de {first}–{last} sur {totalRecords} entrées',
 
   // Loading & States
   loading: 'Chargement...',

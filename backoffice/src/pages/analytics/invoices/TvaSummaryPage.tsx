@@ -1,5 +1,6 @@
 import { Percent } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
@@ -11,8 +12,7 @@ import { API_ROUTES } from '../../../common/api/api-routes';
 import { useLanguage } from '../../../context/LanguageContext';
 import type { ReportFilter, ReportData } from '../../../modules/analytics/analytics.interface';
 
-const MAD = (row: Record<string, unknown>, field: string) =>
-  Number(row[field]).toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+const MAD = (row: Record<string, unknown>, field: string) => formatAmount(Number(row[field]));
 
 const TvaSummaryPage: React.FC = () => {
   const { t } = useLanguage();

@@ -1,3 +1,4 @@
+import { formatAmount } from '@orderium/ui';
 import { IInvoice, IInvoiceItem, IInvoiceWithDetails } from './invoices.interface';
 
 export class InvoiceItem implements IInvoiceItem {
@@ -42,11 +43,11 @@ export class InvoiceItem implements IInvoiceItem {
   }
 
   get displayUnitPrice(): string {
-    return this.unitPrice.toFixed(2);
+    return formatAmount(this.unitPrice, 2);
   }
 
   get displayTotal(): string {
-    return this.total.toFixed(2);
+    return formatAmount(this.total, 2);
   }
 
   // Static factory method
@@ -181,19 +182,19 @@ export class Invoice implements IInvoice {
   }
 
   get displaySubtotal(): string {
-    return this.subtotal.toFixed(2);
+    return formatAmount(this.subtotal, 2);
   }
 
   get displayTax(): string {
-    return this.tax.toFixed(2);
+    return formatAmount(this.tax, 2);
   }
 
   get displayDiscount(): string {
-    return this.discount.toFixed(2);
+    return formatAmount(this.discount, 2);
   }
 
   get displayTotal(): string {
-    return this.total.toFixed(2);
+    return formatAmount(this.total, 2);
   }
 
   get discountAmount(): number {
@@ -229,11 +230,11 @@ export class Invoice implements IInvoice {
   }
 
   get formattedPaidAmount(): string {
-    return this.paidAmount.toFixed(2);
+    return formatAmount(this.paidAmount, 2);
   }
 
   get formattedRemainingAmount(): string {
-    return this.remainingAmount.toFixed(2);
+    return formatAmount(this.remainingAmount, 2);
   }
 
   // Static factory method

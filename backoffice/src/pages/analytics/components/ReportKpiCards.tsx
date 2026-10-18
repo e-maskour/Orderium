@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 
 interface KpiCard {
   label: string;
@@ -15,12 +16,9 @@ interface ReportKpiCardsProps {
 function formatValue(value: string | number, suffix?: string): string {
   if (typeof value === 'number') {
     if (suffix === 'MAD') {
-      return (
-        value.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-        ' MAD'
-      );
+      return `${formatAmount(value)} MAD`;
     }
-    return value.toLocaleString('fr-MA');
+    return formatQuantity(value, 2);
   }
   return String(value) + (suffix ? ` ${suffix}` : '');
 }

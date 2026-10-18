@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 import ReactApexChart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
 import type { ReportChart as ReportChartData } from '../../../modules/analytics/analytics.interface';
@@ -15,14 +16,19 @@ const ReportChart: React.FC<ReportChartProps> = ({ chart, height = 320 }) => {
     chart: { toolbar: { show: false }, fontFamily: 'inherit' },
     xaxis: type !== 'pie' ? { categories: labels } : undefined,
     labels: type === 'pie' ? labels : undefined,
-    dataLabels: { enabled: type === 'pie' },
+    yaxis:
+      type !== 'pie'
+        ? { labels: { formatter: (val: number) => formatQuantity(val, 2) } }
+        : undefined,
+    dataLabels: {
+      enabled: type === 'pie',
+      formatter: (val: number) => `${formatAmount(val, 1)} %`,
+    },
     legend: { position: 'bottom' },
     colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
     tooltip: {
       y: {
-        formatter: (val: number) =>
-          val.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-          ' MAD',
+        formatter: (val: number) => `${formatAmount(val)} MAD`,
       },
     },
     plotOptions: {

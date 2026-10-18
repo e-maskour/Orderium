@@ -1,3 +1,4 @@
+import { formatAmount } from '@orderium/ui';
 import { IProduct, CreateProductDTO, UpdateProductDTO } from './products.interface';
 
 export class Product implements IProduct {
@@ -77,11 +78,11 @@ export class Product implements IProduct {
 
   // Getters
   get displayPrice(): string {
-    return this.price.toFixed(2);
+    return formatAmount(this.price, 2);
   }
 
   get displayCost(): string {
-    return this.cost.toFixed(2);
+    return formatAmount(this.cost, 2);
   }
 
   get margin(): number {
@@ -94,11 +95,11 @@ export class Product implements IProduct {
   }
 
   get displayMargin(): string {
-    return this.margin.toFixed(2);
+    return formatAmount(this.margin, 2);
   }
 
   get displayMarginPercentage(): string {
-    return `${this.marginPercentage.toFixed(1)}%`;
+    return `${formatAmount(this.marginPercentage, 1)}%`;
   }
 
   get hasStock(): boolean {

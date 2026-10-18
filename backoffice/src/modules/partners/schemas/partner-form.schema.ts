@@ -1,11 +1,18 @@
 import { z } from 'zod';
+import { getMoroccanPhoneError } from '@orderium/ui';
 
 export const partnerFormSchema = z.object({
   name: z
     .string()
     .min(1, { message: 'validationNameRequired' })
     .max(255, { message: 'validationNameMax' }),
-  phoneNumber: z.string().min(1, { message: 'validationPhoneRequired' }),
+  phoneNumber: z
+    .string()
+    .min(1, { message: 'validationPhoneRequired' })
+    .superRefine((value, ctx) => {
+      const error = getMoroccanPhoneError(value);
+      if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+    }),
   email: z
     .string()
     .email({ message: 'validationEmailInvalid' })

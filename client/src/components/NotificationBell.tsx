@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import type { TranslationKey } from '@/lib/i18n';
 import { http } from '@/services/httpClient';
 import { API_ROUTES } from '@/common/api-routes';
-import { notify } from '@orderium/ui';
+import { notify, formatDate } from '@orderium/ui';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -215,10 +215,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     if (mins < 60) return (t('minutesAgo') as string).replace('{minutes}', String(mins));
     if (hrs < 24) return (t('hoursAgo') as string).replace('{hours}', String(hrs));
     if (days < 7) return (t('daysAgo') as string).replace('{days}', String(days));
-    return new Date(ds).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', {
-      day: 'numeric',
-      month: 'short',
-    });
+    return formatDate(ds);
   };
 
   const translateNotif = (n: ApiNotification) => {

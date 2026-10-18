@@ -7,7 +7,7 @@ import { CellFormat } from './report-document.types';
  * numbers and dates identically.
  */
 export interface ReportFormatter {
-  /** Decimal number with the locale's grouping separators. */
+  /** Decimal number in French format ("1.234,56"). */
   number(value: unknown, fractionDigits?: number): string;
   /** Whole number, no fraction digits. */
   integer(value: unknown): string;
@@ -15,9 +15,9 @@ export interface ReportFormatter {
   currency(value: unknown, fractionDigits?: number): string;
   /** Percentage — input is already a percentage (`12.5` → `12,5 %`). */
   percent(value: unknown, fractionDigits?: number): string;
-  /** Short date in the configured locale and time zone. */
+  /** Short date (dd/MM/yyyy) in the configured time zone. */
   date(value: unknown): string;
-  /** Date + time in the configured locale and time zone. */
+  /** Date + time (dd/MM/yyyy HH:mm) in the configured time zone. */
   dateTime(value: unknown): string;
   /** Applies the formatter matching a {@link CellFormat} token. */
   apply(value: unknown, format?: CellFormat): string;

@@ -7,6 +7,10 @@
  *   4. window.print() (OS dialog — iOS AirPrint, Android Mopria, any browser)
  */
 
+// French number format (12.374,90) — pure helpers, no runtime dependencies
+import { formatAmount } from '../ui/src/formatAmount';
+import { formatQuantity } from '../ui/src/numberFormat';
+
 export interface PrinterConfig {
     id?: string;
     brand: 'epson' | 'star' | 'generic' | 'qztray' | 'browser';
@@ -66,12 +70,12 @@ export function buildEscPos(data: ReceiptData, charWidth = 48): string[] {
         '-'.repeat(W) + '\n',
         ...data.items.flatMap(item => [
             item.name + '\n',
-            row(`  ${item.qty} x ${item.unitPrice.toFixed(2)} DH`, `${item.total.toFixed(2)} DH`),
+            row(`  ${formatQuantity(item.qty)} x ${formatAmount(item.unitPrice)} DH`, `${formatAmount(item.total)} DH`),
         ]),
         '='.repeat(W) + '\n',
         '\x1B\x61\x02',       // right
         '\x1B\x45\x01',       // bold
-        row('TOTAL :', `${data.total.toFixed(2)} DH`),
+        row('TOTAL :', `${formatAmount(data.total)} DH`),
         '\x1B\x45\x00',       // bold off
         '\x1B\x61\x01',       // center
         '\n' + (data.footer ?? 'Merci pour votre confiance !') + '\n',
@@ -131,14 +135,14 @@ async function viaStarWebPRNT(config: PrinterConfig, data: ReceiptData): Promise
 
     for (const item of data.items) {
         req += b.createTextElement({ data: item.name + '\n' });
-        const right = `${item.total.toFixed(2)} DH`;
-        const left = `  ${item.qty} x ${item.unitPrice.toFixed(2)} DH`;
+        const right = `${formatAmount(item.total)} DH`;
+        const left = `  ${formatQuantity(item.qty)} x ${formatAmount(item.unitPrice)} DH`;
         req += b.createTextElement({ data: left.padEnd(W - right.length) + right + '\n' });
     }
 
     req += b.createTextElement({ data: '='.repeat(W) + '\n' });
     req += b.createAlignmentElement({ position: 'Right' });
-    req += b.createTextElement({ emphasis: true, data: `TOTAL : ${data.total.toFixed(2)} DH\n` });
+    req += b.createTextElement({ emphasis: true, data: `TOTAL : ${formatAmount(data.total)} DH\n` });
     req += b.createCutPaperElement({ feed: true });
 
     const trader = new StarWebPRNT.StarWebPRNTTrader(`http://${config.ip}/StarWebPRNT/SendMessage`);

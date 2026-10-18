@@ -5,10 +5,10 @@
   box-shadow: var(--form-input-shadow-focus) !important;
 }
 
-/* ─── Single-input AutoComplete focus ─── */
+/* ─── Single-input AutoComplete focus (see SELECT FIELDS in theme.css) ─── */
 .p-autocomplete .p-inputtext:enabled:focus {
-  border-color: var(--form-input-border-focus) !important;
-  box-shadow: var(--form-input-shadow-focus) !important;
+  border-color: var(--select-border-focus) !important;
+  box-shadow: none !important;
 }
 
 /* ─── Form field labels used in product forms ─── */
@@ -140,29 +140,6 @@
   .product-panel {
     padding: 0.875rem !important;
   }
-}
-
-/* ─── Product page TabView: restore nav border rail for clean indicator ─── */
-.product-tabview .p-tabview-nav {
-  border-width: 0 0 2px 0 !important;
-  border-style: solid !important;
-  border-color: #e2e8f0 !important;
-  background: transparent !important;
-  flex-wrap: nowrap !important;
-  overflow-x: auto !important;
-  scrollbar-width: none !important;
-}
-
-.product-tabview .p-tabview-nav::-webkit-scrollbar {
-  display: none;
-}
-
-.product-tabview .p-tabview-nav li .p-tabview-nav-link {
-  background: transparent !important;
-}
-
-.product-tabview .p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
-  background: #f8fafc !important;
 }
 
 @media (max-width: 420px) {

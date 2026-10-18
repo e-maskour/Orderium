@@ -22,6 +22,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function PaymentTerms() {
   const { t } = useLanguage();
@@ -194,9 +195,9 @@ export default function PaymentTerms() {
             value={terms.map((t2, i) => ({ ...t2, _idx: i }))}
             dataKey="_idx"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             emptyMessage={
               <EmptyState icon={Calendar} title={t('noPaymentTermsConfigured')} compact />

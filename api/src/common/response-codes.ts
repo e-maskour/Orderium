@@ -834,6 +834,12 @@ export const STT = {
     status: 200,
     message: 'Recent Activities Retrieved',
   },
+  /** GET /statistics/dashboard         → data: DashboardStats       | metadata: null */
+  DASHBOARD: {
+    code: 'STT200_07',
+    status: 200,
+    message: 'Dashboard Statistics Retrieved',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

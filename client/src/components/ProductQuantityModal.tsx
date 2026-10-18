@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/i18n';
 import { translateUomCode } from '@/lib/uom-translations';
 import { InputText } from 'primereact/inputtext';
 import { ShoppingCart, X } from 'lucide-react';
+import { formatDecimalInput, parseDecimal } from '@orderium/ui';
 
 const backdropAnimation = `
   @keyframes backdropFadeIn {
@@ -60,7 +61,7 @@ export const ProductQuantityModal = ({
     if (isOpen && product) {
       const currentQty = initialQuantity || getItemQuantity(product.id);
       if (currentQty > 0) {
-        setQuantity(currentQty.toString());
+        setQuantity(formatDecimalInput(currentQty));
       } else {
         setQuantity('');
       }
@@ -80,15 +81,15 @@ export const ProductQuantityModal = ({
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setQuantity('');
-    } else if (num === '.') {
-      if (!quantity.includes('.')) {
-        const newValue = quantity === '' ? '0.' : quantity + '.';
+    } else if (num === ',') {
+      if (!quantity.includes(',')) {
+        const newValue = quantity === '' ? '0,' : quantity + ',';
         setQuantity(newValue);
       }
     } else {
       const newValue = quantity === '' ? num : quantity + num;
-      if (newValue.includes('.')) {
-        const [, decimal] = newValue.split('.');
+      if (newValue.includes(',')) {
+        const [, decimal] = newValue.split(',');
         if (decimal && decimal.length > 2) return;
       }
       setQuantity(newValue);
@@ -97,14 +98,15 @@ export const ProductQuantityModal = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9.]/g, '');
-    const parts = value.split('.');
-    let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
+    // French format: "," is the decimal separator ("." typed on a numpad is converted)
+    const value = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+    const parts = value.split(',');
+    let sanitizedValue = parts.length > 2 ? parts[0] + ',' + parts.slice(1).join('') : value;
 
-    if (sanitizedValue.includes('.')) {
-      const [integer, decimal] = sanitizedValue.split('.');
+    if (sanitizedValue.includes(',')) {
+      const [integer, decimal] = sanitizedValue.split(',');
       if (decimal && decimal.length > 2) {
-        sanitizedValue = integer + '.' + decimal.substring(0, 2);
+        sanitizedValue = integer + ',' + decimal.substring(0, 2);
       }
     }
 
@@ -116,7 +118,7 @@ export const ProductQuantityModal = ({
   };
 
   const handleAddToCart = () => {
-    const qty = parseFloat(quantity);
+    const qty = parseDecimal(quantity) ?? 0;
     if (!qty || qty <= 0) return;
 
     if (currentCartQuantity > 0) {
@@ -139,9 +141,10 @@ export const ProductQuantityModal = ({
     onClose();
   };
 
-  const totalPrice = product.price * (parseFloat(quantity) || 0);
-  const hasQuantity = quantity !== '' && parseFloat(quantity) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
+  const parsedQuantity = parseDecimal(quantity) ?? 0;
+  const totalPrice = product.price * parsedQuantity;
+  const hasQuantity = quantity !== '' && parsedQuantity > 0;
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', ','];
   const unitCode = translateUomCode(product.saleUnitOfMeasure?.code, language);
 
   const modalContent = (
@@ -250,7 +253,7 @@ export const ProductQuantityModal = ({
                 key={num}
                 type="button"
                 onClick={() => handleNumberClick(num)}
-                className={`cl-key${num === 'C' ? ' clear' : num === '.' ? ' decimal' : ''}`}
+                className={`cl-key${num === 'C' ? ' clear' : num === ',' ? ' decimal' : ''}`}
               >
                 {num === 'C' ? <span style={{ fontSize: '0.75rem' }}>{t('clear')}</span> : num}
               </button>

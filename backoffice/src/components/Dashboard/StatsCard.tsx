@@ -1,5 +1,6 @@
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatQuantity } from '@orderium/ui';
 
 interface StatsCardProps {
   title: string;
@@ -209,7 +210,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               <TrendingDown style={{ width: '0.625rem', height: '0.625rem' }} strokeWidth={3} />
             )}
             {trend.isPositive ? '+' : ''}
-            {trend.value}%
+            {formatQuantity(trend.value, 1)}%
           </span>
           <span style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>
             {t('vsPeriod')}

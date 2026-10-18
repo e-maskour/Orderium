@@ -4,6 +4,7 @@ import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Share2, Copy, Check, Mail, ExternalLink, MessageCircle, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatAmount } from '@orderium/ui';
 
 export type ShareDocumentType = 'devis' | 'facture' | 'bon_livraison';
 
@@ -84,7 +85,7 @@ export function ShareDocumentDialog({
   const handleWhatsApp = () => {
     const phone = partnerPhone?.replace(/\D/g, '') || '';
     const currency = language === 'ar' ? 'د.م' : 'DH';
-    const total = totalAmount != null ? `${totalAmount.toFixed(2)} ${currency}` : '';
+    const total = totalAmount != null ? `${formatAmount(totalAmount, 2)} ${currency}` : '';
     const totalLine = total ? `Montant : *${total}*\n` : '';
     const greeting = partnerName ? `Bonjour *${partnerName}*,\n\n` : 'Bonjour,\n\n';
     const message = `${greeting}Veuillez trouver votre *${docInfo.fr} ${documentNumber}* via le lien ci-dessous :\n\n${shareUrl}\n\n${totalLine}\nCordialement`;

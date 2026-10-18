@@ -2,7 +2,7 @@
  * Tabs — controlled, accessible tab bar.
  *
  * A lightweight generic tab strip (not page navigation — see ModuleTabBar for
- * that). Renders an underline-style active state using brand tokens, with
+ * that). Renders the app-wide segmented bar (same look as every TabView), with
  * proper tablist/tab roles and keyboard-visible focus.
  */
 import type { ReactNode } from 'react';

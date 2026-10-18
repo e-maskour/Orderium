@@ -36,6 +36,7 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -489,7 +490,7 @@ export default function Categories() {
               first={(currentPage - 1) * pageSize}
               rows={pageSize}
               totalRecords={totalCount}
-              rowsPerPageOptions={[10, 25, 50, 100]}
+              rowsPerPageOptions={PAGE_SIZE_OPTIONS}
               onPageChange={(e: PaginatorPageChangeEvent) => {
                 setCurrentPage(Math.floor(e.first / e.rows) + 1);
                 setPageSize(e.rows);

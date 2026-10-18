@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Award } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
+import { formatQuantity } from '@orderium/ui';
 
 interface Product {
   name: string;
@@ -177,7 +178,7 @@ export const TopProductsWidget: React.FC<TopProductsWidgetProps> = ({ products }
                   }}
                 >
                   {product.trend >= 0 ? '+' : ''}
-                  {product.trend}%
+                  {formatQuantity(product.trend, 1)}%
                 </span>
               </div>
             </div>

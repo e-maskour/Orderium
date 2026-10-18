@@ -1,3 +1,4 @@
+import { formatAmount } from '@orderium/ui';
 import { IStatistics } from './statistics.interface';
 
 export class Statistics implements IStatistics {
@@ -18,11 +19,11 @@ export class Statistics implements IStatistics {
 
   // Getters
   get displayTotalRevenue(): string {
-    return this.TotalRevenue ? this.TotalRevenue.toFixed(2) : '0.00';
+    return formatAmount(this.TotalRevenue ?? 0);
   }
 
   get displayAverageOrderValue(): string {
-    return this.AverageOrderValue ? this.AverageOrderValue.toFixed(2) : '0.00';
+    return formatAmount(this.AverageOrderValue ?? 0);
   }
 
   get displayTotalOrders(): string {

@@ -1,5 +1,10 @@
 import { Statistics } from './statistics.model';
-import type { IComprehensiveStatistics, IRecentActivity } from './statistics.interface';
+import type {
+  DashboardPeriod,
+  IComprehensiveStatistics,
+  IDashboardStats,
+  IRecentActivity,
+} from './statistics.interface';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class StatisticsService {
@@ -27,6 +32,13 @@ export class StatisticsService {
       API_ROUTES.STATISTICS.RECENT_ACTIVITIES,
       { params: { limit } },
     );
+    return response.data;
+  }
+
+  async getDashboard(period: DashboardPeriod = 'mtd'): Promise<IDashboardStats> {
+    const response = await apiClient.get<IDashboardStats>(API_ROUTES.STATISTICS.DASHBOARD, {
+      params: { period },
+    });
     return response.data;
   }
 }

@@ -105,7 +105,7 @@ const FAB_STYLES = `
   }
   .fab-wrap {
     position: fixed;
-    inset: auto 0 1.75rem 0;
+    inset: auto 0 2rem 0;
     z-index: 9999;
     display: flex;
     justify-content: center;
@@ -119,17 +119,19 @@ const FAB_STYLES = `
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.5rem 0.5rem 0.875rem;
-    border-radius: 0.9rem;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    padding-inline-start: 1.25rem;
+    border-radius: 1.125rem;
     background: rgba(15, 23, 42, 0.94);
     border: 1px solid var(--fab-line);
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
-      0 20px 48px -12px rgba(15,23,42,0.5),
-      0 4px 12px -4px rgba(15,23,42,0.32),
-      inset 0 1px 0 rgba(255,255,255,0.06);
+      0 24px 56px -12px rgba(15,23,42,0.55),
+      0 6px 16px -4px rgba(15,23,42,0.35),
+      0 0 0 1px rgba(59,130,246,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.08);
     animation: fab-rise 0.26s cubic-bezier(0.22,1,0.36,1) both;
   }
 
@@ -145,14 +147,14 @@ const FAB_STYLES = `
     content: '';
     position: absolute;
     inset: auto 0 0 0;
-    height: 2px;
+    height: 3px;
     background: var(--fab-progress-bg, rgba(148,163,184,0.14));
   }
   .fab-bar__progress {
     position: absolute;
     bottom: 0;
     inset-inline-start: 0;
-    height: 2px;
+    height: 3px;
     background: var(--fab-accent);
     box-shadow: 0 0 10px rgba(59,130,246,0.55);
     transition: width 0.42s cubic-bezier(0.22,1,0.36,1);
@@ -162,26 +164,26 @@ const FAB_STYLES = `
   .fab-count {
     display: inline-flex;
     align-items: baseline;
-    gap: 0.3rem;
+    gap: 0.375rem;
     flex-shrink: 0;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
   .fab-count__num {
-    font-size: 1.0625rem; font-weight: 700; line-height: 1;
+    font-size: 1.5rem; font-weight: 700; line-height: 1;
     letter-spacing: -0.02em;
     color: var(--fab-ink);
     animation: fab-tick 0.2s ease-out;
   }
-  .fab-count__of  { font-size: 0.8rem; color: var(--fab-ink-dim); line-height: 1; }
-  .fab-count__lbl { font-size: 0.78rem; color: var(--fab-ink-mid); font-weight: 500; line-height: 1; }
+  .fab-count__of  { font-size: 0.9375rem; color: var(--fab-ink-dim); line-height: 1; }
+  .fab-count__lbl { font-size: 0.9375rem; color: var(--fab-ink-mid); font-weight: 500; line-height: 1; }
 
   /* select-all toggle */
   .fab-chk {
     flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 1.875rem; height: 1.875rem;
-    border-radius: 0.5rem;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 0.75rem;
     background: transparent;
     border: 1px solid var(--fab-line);
     color: var(--fab-ink-dim);
@@ -191,31 +193,33 @@ const FAB_STYLES = `
   .fab-chk:hover { background: rgba(148,163,184,0.12); color: var(--fab-ink); }
   .fab-chk--on   { background: var(--fab-accent-dim); border-color: rgba(59,130,246,0.45); color: #93c5fd; }
 
-  .fab-sep    { width: 1px; height: 1.5rem; background: var(--fab-line); flex-shrink: 0; }
+  .fab-sep    { width: 1px; height: 2rem; background: var(--fab-line); flex-shrink: 0; }
   .fab-spacer { flex: 1 1 1.25rem; min-width: 0.75rem; }
 
   .fab-actions {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
     flex-shrink: 0;
   }
 
   /* action buttons */
   .fab-btn {
-    display: inline-flex; align-items: center; gap: 0.375rem;
-    padding: 0.4375rem 0.7rem;
-    border-radius: 0.5rem;
-    font: 600 0.8125rem/1 inherit;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0 1.125rem;
+    border-radius: 0.75rem;
+    font: 600 0.9375rem/1 inherit;
     white-space: nowrap;
     border: 1px solid transparent;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.14s, border-color 0.14s, color 0.14s;
+    transition: background 0.14s, border-color 0.14s, color 0.14s, transform 0.14s, box-shadow 0.14s;
   }
+  .fab-btn > svg:first-child { width: 1.125rem !important; height: 1.125rem !important; flex-shrink: 0; }
   .fab-btn:active { transform: scale(0.97); }
-  .fab-btn--primary         { background: var(--fab-accent); color: #fff; box-shadow: 0 1px 8px rgba(59,130,246,0.3); }
-  .fab-btn--primary:hover   { background: #2563eb; }
+  .fab-btn--primary         { background: linear-gradient(180deg, #4f8ff7 0%, #2f6fec 100%); color: #fff; border-color: rgba(255,255,255,0.12); box-shadow: 0 4px 14px -2px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2); }
+  .fab-btn--primary:hover   { background: linear-gradient(180deg, #5b98f8 0%, #2563eb 100%); transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.22); }
   .fab-btn--secondary       { background: transparent; color: var(--fab-ink-mid); }
   .fab-btn--secondary:hover { background: rgba(148,163,184,0.13); color: var(--fab-ink); }
   .fab-btn--danger          { background: transparent; color: var(--fab-danger); }
@@ -226,8 +230,8 @@ const FAB_STYLES = `
   /* overflow trigger — icon only; the name lives in the tooltip and the menu header */
   .fab-more {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 1.875rem; height: 1.875rem;
-    border-radius: 0.5rem;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 0.75rem;
     background: transparent;
     border: 1px solid var(--fab-line);
     color: var(--fab-ink-mid);
@@ -243,8 +247,8 @@ const FAB_STYLES = `
   .fab-close {
     flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 1.875rem; height: 1.875rem;
-    border-radius: 0.5rem;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 0.75rem;
     background: transparent;
     border: 1px solid transparent;
     color: var(--fab-ink-dim);
@@ -438,7 +442,7 @@ const FAB_STYLES = `
   @media (prefers-reduced-motion: reduce) {
     .fab-bar, .fab-sheet, .fab-menu, .fab-count__num { animation: none; }
     .fab-bar__progress, .fab-sheet__progress { transition: none; }
-    .fab-btn:active { transform: none; }
+    .fab-btn:active, .fab-btn--primary:hover { transform: none; }
   }
 ` as const;
 
@@ -629,9 +633,9 @@ export function FloatingActionBar({
       aria-pressed={isAllSelected}
     >
       {isAllSelected ? (
-        <CheckSquare style={{ width: '0.9rem', height: '0.9rem' }} />
+        <CheckSquare style={{ width: '1.125rem', height: '1.125rem' }} />
       ) : (
-        <Square style={{ width: '0.9rem', height: '0.9rem' }} />
+        <Square style={{ width: '1.125rem', height: '1.125rem' }} />
       )}
     </button>
   );
@@ -707,7 +711,7 @@ export function FloatingActionBar({
                 aria-haspopup="menu"
                 aria-expanded={menuPath[0] === OVERFLOW_ID}
               >
-                <MoreHorizontal style={{ width: '1rem', height: '1rem' }} />
+                <MoreHorizontal style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             )}
           </div>
@@ -715,7 +719,7 @@ export function FloatingActionBar({
           <div className="fab-sep" />
 
           <button type="button" className="fab-close" onClick={onClearSelection} title={t('close')}>
-            <X style={{ width: '0.9rem', height: '0.9rem' }} />
+            <X style={{ width: '1.125rem', height: '1.125rem' }} />
           </button>
 
           {/* Menu — anchored to the bar so the action row can never clip it */}

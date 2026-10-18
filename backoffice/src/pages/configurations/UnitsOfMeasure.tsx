@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { DecimalInput, formatQuantity } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '../../components/EmptyState';
 import {
@@ -23,6 +24,7 @@ import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
 import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function UnitsOfMeasure() {
   const { t } = useLanguage();
@@ -261,9 +263,9 @@ export default function UnitsOfMeasure() {
             value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
             dataKey="id"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             rowGroupMode="subheader"
             groupRowsBy="category"
@@ -319,7 +321,7 @@ export default function UnitsOfMeasure() {
               sortable
               body={(row: IUnitOfMeasure) => (
                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  {row.ratio}
+                  {formatQuantity(row.ratio, 6)}
                 </span>
               )}
             />
@@ -515,15 +517,13 @@ export default function UnitsOfMeasure() {
                     {`${t('ratio')} (${t('ratioHelp') || '1 this unit = X base units'})`}{' '}
                     <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
                   </label>
-                  <InputText
-                    type="number"
-                    step="0.000001"
-                    min="0"
-                    value={String(formData.ratio)}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ratio: parseFloat(e.target.value) })
-                    }
+                  <DecimalInput
+                    min={0}
+                    maxFractionDigits={6}
+                    value={formData.ratio}
+                    onValueChange={(v) => setFormData({ ...formData, ratio: v ?? 0 })}
                     required
+                    className="p-inputtext p-component"
                     style={{ width: '100%' }}
                   />
                 </div>

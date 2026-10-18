@@ -6,6 +6,9 @@ import { SkeletonCard } from '../components/Skeleton';
 import { TrendChart, type TrendSeries } from '../components/Charts';
 import { formatCompact } from '../utils/format';
 import type { PlatformHealth, TenantHealthSummary } from '../types/metrics';
+import { formatAmount } from '../utils/formatAmount';
+import { formatTime } from '../utils/dateFormat';
+import { formatQuantity } from '../utils/numberFormat';
 
 const WINDOWS = [
   { label: '6h', hours: 6 },
@@ -79,27 +82,27 @@ function HealthKpis({ totals }: { totals: TenantHealthSummary }) {
         icon={<Activity className="h-4 w-4" />}
         label="Requests"
         value={formatCompact(totals.requests)}
-        sub={`${totals.errors4xx.toLocaleString()} client errors`}
+        sub={`${formatQuantity(totals.errors4xx)} client errors`}
       />
       <Tile
         icon={<AlertOctagon className="h-4 w-4" />}
         label="Failure rate"
-        value={`${totals.errorRate.toFixed(2)}%`}
+        value={`${formatAmount(totals.errorRate, 2)}%`}
         // Only 5xx counts: a 404 or a rejected login is the system behaving.
-        sub={`${totals.errors5xx.toLocaleString()} server errors`}
+        sub={`${formatQuantity(totals.errors5xx)} server errors`}
         valueClass={errorTone}
       />
       <Tile
         icon={<Timer className="h-4 w-4" />}
         label="p95 latency"
-        value={`${totals.p95LatencyMs.toLocaleString()} ms`}
-        sub={`${totals.avgLatencyMs.toLocaleString()} ms average`}
+        value={`${formatQuantity(totals.p95LatencyMs)} ms`}
+        sub={`${formatQuantity(totals.avgLatencyMs)} ms average`}
       />
       <Tile
         icon={<Gauge className="h-4 w-4" />}
         label="Slow requests"
         value={formatCompact(totals.slowRequests)}
-        sub={`peak ${totals.maxLatencyMs.toLocaleString()} ms`}
+        sub={`peak ${formatQuantity(totals.maxLatencyMs)} ms`}
       />
     </div>
   );
@@ -137,12 +140,7 @@ function Tile({
 }
 
 function RequestChart({ data }: { data: PlatformHealth }) {
-  const labels = data.series.map((p) =>
-    new Date(p.bucketStart).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-  );
+  const labels = data.series.map((p) => formatTime(p.bucketStart));
 
   const series: TrendSeries[] = [
     {
@@ -227,10 +225,10 @@ function WorstTenants({ tenants }: { tenants: PlatformHealth['worstTenants'] }) 
                     </Link>
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
-                    {t.requests.toLocaleString()}
+                    {formatQuantity(t.requests)}
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
-                    {t.errors5xx.toLocaleString()}
+                    {formatQuantity(t.errors5xx)}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <span
@@ -242,11 +240,11 @@ function WorstTenants({ tenants }: { tenants: PlatformHealth['worstTenants'] }) 
                             : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                       }`}
                     >
-                      {t.errorRate.toFixed(2)}%
+                      {formatAmount(t.errorRate, 2)}%
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
-                    {t.p95LatencyMs.toLocaleString()} ms
+                    {formatQuantity(t.p95LatencyMs)} ms
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <ChevronRight className="h-4 w-4 text-slate-300" />

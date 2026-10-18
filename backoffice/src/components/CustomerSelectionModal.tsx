@@ -3,10 +3,16 @@ import { Search, User, MapPin, Plus } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toastCreated, toastError } from '../services/toast.service';
 import { partnersService } from '../modules/partners';
 import { IPosCustomer as Customer } from '../modules/pos';
+import {
+  getMoroccanPhoneError,
+  isValidMoroccanPhone,
+  normalizeMoroccanPhone,
+  phoneInputProps,
+} from '@orderium/ui';
 
 interface CustomerSelectionModalProps {
   isOpen: boolean;
@@ -16,6 +22,12 @@ interface CustomerSelectionModalProps {
   t: (key: string) => string;
   dir?: string;
 }
+
+// Digits with optional leading "+" and common separators (spaces, dashes, dots, parentheses)
+const isPhoneLike = (value: string) => {
+  const trimmed = value.trim();
+  return /^\+?[\d\s\-.()]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 2;
+};
 
 export const CustomerSelectionModal = ({
   isOpen,
@@ -33,7 +45,11 @@ export const CustomerSelectionModal = ({
     phoneNumber: '',
     address: '',
   });
+  const queryClient = useQueryClient();
+  const [missingField, setMissingField] = useState<'name' | 'phoneNumber'>('name');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   // Focus search input when modal opens
   useEffect(() => {
@@ -74,23 +90,42 @@ export const CustomerSelectionModal = ({
           );
           setShowCustomerForm(false);
         } else {
+          // No match: prefill whichever field the user typed and ask for the other one
+          const term = customerSearch.trim();
+          const typedPhone = isPhoneLike(term);
           setCustomerSuggestions([]);
           setShowCustomerForm(true);
-          setNewCustomer({ phoneNumber: customerSearch, name: '', address: '' });
+          setMissingField(typedPhone ? 'name' : 'phoneNumber');
+          setNewCustomer({
+            name: typedPhone ? '' : term,
+            phoneNumber: typedPhone ? term.replace(/\D/g, '') : '',
+            address: '',
+          });
         }
-      } catch (error) {
-        console.error('Failed to search customers:', error);
+      } catch {
+        setCustomerSuggestions([]);
       }
     }, 300);
 
     return () => clearTimeout(timer);
   }, [customerSearch]);
 
-  // Create customer mutation
+  // Create customer mutation — saved as an individual customer so it appears in the Customers module
   const createCustomerMutation = useMutation({
-    mutationFn: (customerData: typeof newCustomer) => partnersService.create(customerData as any),
+    mutationFn: (customerData: typeof newCustomer) =>
+      partnersService.create({
+        name: customerData.name.trim(),
+        phoneNumber: normalizeMoroccanPhone(customerData.phoneNumber),
+        address: customerData.address.trim() || null,
+        isCustomer: true,
+        isSupplier: false,
+        isCompany: false,
+        isEnabled: true,
+      }),
     onSuccess: (customer) => {
       toastCreated(t('customerCreated'));
+      queryClient.invalidateQueries({ queryKey: ['partners-all'] });
+      queryClient.invalidateQueries({ queryKey: ['partners'] });
       onSelectCustomer({
         id: customer.id,
         name: customer.name,
@@ -101,10 +136,27 @@ export const CustomerSelectionModal = ({
       });
       onClose();
     },
-    onError: () => {
-      toastError(t('failedToCreate'));
+    onError: (error: any) => {
+      const status = error?.response?.status ?? error?.status;
+      toastError(status === 409 ? t('phoneAlreadyExists') : t('failedToCreate'));
     },
   });
+
+  // Focus the field the user still has to fill
+  useEffect(() => {
+    if (!showCustomerForm) return;
+    const timer = setTimeout(() => {
+      (missingField === 'name' ? nameInputRef : phoneInputRef).current?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [showCustomerForm, missingField]);
+
+  const phoneErrorKey = getMoroccanPhoneError(newCustomer.phoneNumber);
+  const phoneError = phoneErrorKey ? t(phoneErrorKey) : null;
+  const canCreate = !!newCustomer.name.trim() && isValidMoroccanPhone(newCustomer.phoneNumber);
+  const submitNewCustomer = () => {
+    if (canCreate && !createCustomerMutation.isPending) createCustomerMutation.mutate(newCustomer);
+  };
 
   const handleSelectCustomer = (customer: Customer) => {
     onSelectCustomer(customer);
@@ -393,34 +445,67 @@ export const CustomerSelectionModal = ({
                 {t('createNewCustomer')}
               </span>
             </div>
+            <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '-0.25rem' }}>
+              {t('noCustomerFound')}
+              {' · '}
+              <span style={{ fontWeight: 600, color: '#2563eb' }}>
+                {missingField === 'name'
+                  ? t('enterNameForNewCustomer')
+                  : t('enterPhoneForNewCustomer')}
+              </span>
+            </div>
             <InputText
+              ref={nameInputRef}
               placeholder={t('name')}
               value={newCustomer.name}
               onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && submitNewCustomer()}
               className="cust-input"
               style={{
                 width: '100%',
                 height: '2.625rem',
                 borderRadius: '0.625rem',
-                border: '1.5px solid #e5e7eb',
+                border: `1.5px solid ${
+                  missingField === 'name' && !newCustomer.name.trim() ? '#3b82f6' : '#e5e7eb'
+                }`,
                 fontSize: '0.9375rem',
                 transition: 'all 0.2s',
               }}
             />
             <InputText
-              placeholder={t('phoneNumber')}
+              ref={phoneInputRef}
+              {...phoneInputProps}
               value={newCustomer.phoneNumber}
-              onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
+              onChange={(e) =>
+                setNewCustomer({
+                  ...newCustomer,
+                  phoneNumber: normalizeMoroccanPhone(e.target.value),
+                })
+              }
+              onKeyDown={(e) => e.key === 'Enter' && submitNewCustomer()}
               className="cust-input"
+              aria-invalid={!!phoneError}
               style={{
                 width: '100%',
                 height: '2.625rem',
                 borderRadius: '0.625rem',
-                border: '1.5px solid #e5e7eb',
+                border: `1.5px solid ${
+                  phoneError
+                    ? '#ef4444'
+                    : missingField === 'phoneNumber' && !newCustomer.phoneNumber
+                      ? '#3b82f6'
+                      : '#e5e7eb'
+                }`,
                 fontSize: '0.9375rem',
+                textAlign: dir === 'rtl' ? 'right' : 'left',
                 transition: 'all 0.2s',
               }}
             />
+            {phoneError && (
+              <div style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '-0.375rem' }}>
+                {phoneError}
+              </div>
+            )}
             <div style={{ position: 'relative' }}>
               <MapPin
                 style={{
@@ -453,8 +538,8 @@ export const CustomerSelectionModal = ({
             </div>
             <Button
               label={t('createCustomer')}
-              onClick={() => createCustomerMutation.mutate(newCustomer)}
-              disabled={!newCustomer.name || !newCustomer.phoneNumber}
+              onClick={submitNewCustomer}
+              disabled={!canCreate}
               loading={createCustomerMutation.isPending}
               style={{
                 width: '100%',

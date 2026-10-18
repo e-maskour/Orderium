@@ -1,4 +1,5 @@
 import { Plus, Minus, Trash2 } from 'lucide-react';
+import { formatQuantity } from '@orderium/ui';
 
 interface QuantityStepperProps {
   quantity: number;
@@ -69,7 +70,7 @@ export const QuantityStepper = ({
           fontSize: size === 'lg' ? '1.125rem' : undefined,
         }}
       >
-        {quantity}
+        {formatQuantity(quantity)}
       </span>
 
       <button

@@ -117,7 +117,11 @@ export function AutoCompleteSelect({
       dropdown
       forceSelection
       onChange={(e) => setDraft(e.value)}
-      onSelect={(e) => onChange({ value: readValue(e.value, optionValue) })}
+      onSelect={(e) => {
+        // forceSelection re-selects the matching option on blur; don't re-emit it.
+        const next = readValue(e.value, optionValue);
+        if (next !== value) onChange({ value: next });
+      }}
       onClear={() => {
         setDraft(null);
         onChange({ value: null });

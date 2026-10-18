@@ -1,4 +1,10 @@
 import { useState } from 'react';
+import {
+  PHONE_ERROR_MESSAGES,
+  getMoroccanPhoneError,
+  normalizeMoroccanPhone,
+  phoneInputProps,
+} from '../utils/phone';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -233,6 +239,8 @@ export function CreateTenant() {
       if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
         newErrors.contactEmail = 'Invalid email address';
       }
+      const phoneError = getMoroccanPhoneError(form.contactPhone);
+      if (phoneError) newErrors.contactPhone = PHONE_ERROR_MESSAGES[phoneError];
     }
     if (s === 3) {
       if (form.maxUsers < 1) newErrors.maxUsers = 'Must be at least 1';
@@ -476,12 +484,14 @@ export function CreateTenant() {
               <div>
                 <label className="label">Contact Phone</label>
                 <input
-                  type="tel"
+                  {...phoneInputProps}
                   value={form.contactPhone}
-                  onChange={(e) => set('contactPhone', e.target.value)}
-                  placeholder="+1 555 000 0000"
-                  className="input"
+                  onChange={(e) => set('contactPhone', normalizeMoroccanPhone(e.target.value))}
+                  className={`input ${errors.contactPhone ? 'border-red-400' : ''}`}
                 />
+                {errors.contactPhone && (
+                  <p className="mt-1 text-xs text-red-500">{errors.contactPhone}</p>
+                )}
               </div>
 
               {/* Brand color */}

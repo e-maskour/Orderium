@@ -8,6 +8,11 @@
  * layout; the tokens and font stack are kept in sync on purpose.
  */
 
+import {
+  formatAmount,
+  formatQuantity,
+} from '../../../common/utils/french-format';
+
 export interface OrdersMergeItem {
   productId?: number | null;
   description: string;
@@ -53,14 +58,11 @@ function esc(value: string): string {
 }
 
 function money(value: number): string {
-  const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(2) : '0.00';
+  return formatAmount(value);
 }
 
 function qty(value: number): string {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return '0';
-  return Number.isInteger(num) ? String(num) : num.toFixed(2);
+  return formatQuantity(value);
 }
 
 export function renderOrdersMergeTemplate(

@@ -17,6 +17,7 @@ import { InputText } from 'primereact/inputtext';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dialog } from 'primereact/dialog';
+import { formatAmount, formatDate, formatDateTime } from '@orderium/ui';
 import { stockMovementService } from '../modules/inventory/stock-movements.service';
 import { StockMovement } from '../modules/inventory/inventory.model';
 import {
@@ -31,6 +32,9 @@ import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { RefLink } from '../components/ui/RefLink';
+import { entityRoutes } from '../lib/entityRoutes';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function StockMovements() {
   const { t, language } = useLanguage();
@@ -254,9 +258,13 @@ export default function StockMovements() {
                 const uom = m.unitOfMeasureCode
                   ? ` ${translateUomCode(m.unitOfMeasureCode, language)}`
                   : '';
-                return `${sign}${parseFloat(m.quantity.toString()).toFixed(2)}${uom}`;
+                return `${sign}${formatAmount(m.quantity, 2)}${uom}`;
               },
-              bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
+              bottomLeft: (m: StockMovement) => (
+                <RefLink to={m.productId ? entityRoutes.product(m.productId) : null}>
+                  {m.productName || `Produit #${m.productId}`}
+                </RefLink>
+              ),
               bottomRight: (m: StockMovement) => getStatusBadge(m.status),
             }}
           />
@@ -278,9 +286,9 @@ export default function StockMovements() {
             selectionMode="checkbox"
             dataKey="id"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             loading={isLoading}
             emptyMessage={
@@ -327,7 +335,9 @@ export default function StockMovements() {
               body={(mov: StockMovement) => (
                 <div>
                   <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>
-                    {mov.productName || `#${mov.productId}`}
+                    <RefLink to={mov.productId ? entityRoutes.product(mov.productId) : null}>
+                      {mov.productName || `#${mov.productId}`}
+                    </RefLink>
                   </p>
                   {mov.productCode && (
                     <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
@@ -418,7 +428,7 @@ export default function StockMovements() {
                 } else {
                   isOutbound = outboundTypes.includes(mov.movementType);
                 }
-                const qty = parseFloat(mov.quantity.toString()).toFixed(2);
+                const qty = formatAmount(mov.quantity, 2);
                 const sign = isOutbound ? '-' : '+';
                 return (
                   <span
@@ -454,9 +464,9 @@ export default function StockMovements() {
               body={(mov: StockMovement) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
                   {mov.dateDone
-                    ? new Date(mov.dateDone).toLocaleDateString('fr-FR')
+                    ? formatDate(mov.dateDone)
                     : mov.dateScheduled
-                      ? new Date(mov.dateScheduled).toLocaleDateString('fr-FR')
+                      ? formatDate(mov.dateScheduled)
                       : '-'}
                 </span>
               )}
@@ -501,7 +511,14 @@ export default function StockMovements() {
                     </span>
                   ),
                 },
-                { label: t('product'), value: mov.productName || `#${mov.productId}` },
+                {
+                  label: t('product'),
+                  value: (
+                    <RefLink to={mov.productId ? entityRoutes.product(mov.productId) : null}>
+                      {mov.productName || `#${mov.productId}`}
+                    </RefLink>
+                  ),
+                },
                 ...(mov.productCode
                   ? [
                       {
@@ -533,7 +550,7 @@ export default function StockMovements() {
                         }}
                       >
                         {isOut ? '-' : '+'}
-                        {parseFloat(mov.quantity.toString()).toFixed(2)}
+                        {formatAmount(mov.quantity, 2)}
                         {mov.unitOfMeasureCode && (
                           <span style={{ fontWeight: 500, opacity: 0.75 }}>
                             {translateUomCode(mov.unitOfMeasureCode, language)}
@@ -582,7 +599,7 @@ export default function StockMovements() {
                   ? [
                       {
                         label: t('dateDone'),
-                        value: new Date(mov.dateDone).toLocaleString('fr-FR'),
+                        value: formatDateTime(mov.dateDone),
                       },
                     ]
                   : []),
@@ -590,7 +607,7 @@ export default function StockMovements() {
                   ? [
                       {
                         label: t('dateScheduled'),
-                        value: new Date(mov.dateScheduled).toLocaleDateString('fr-FR'),
+                        value: formatDate(mov.dateScheduled),
                       },
                     ]
                   : []),

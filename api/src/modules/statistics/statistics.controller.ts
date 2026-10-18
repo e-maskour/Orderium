@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { StatisticsService } from './statistics.service';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { StatisticsService, DashboardPeriod } from './statistics.service';
 import { ApiRes } from '../../common/api-response';
 import { STT } from '../../common/response-codes';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -101,5 +101,21 @@ export class StatisticsController {
     const activities =
       await this.statisticsService.getRecentActivities(limitNum);
     return ApiRes(STT.RECENT_ACTIVITIES, activities);
+  }
+
+  @Get('dashboard')
+  @ApiOperation({
+    summary: 'Get the backoffice dashboard (KPIs, charts, stock, purchases)',
+  })
+  @ApiQuery({ name: 'period', required: false, enum: ['mtd', 'ytd'] })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard statistics retrieved successfully',
+  })
+  @RequirePermission('dashboard.view')
+  async getDashboard(@Query('period') period?: string) {
+    const p: DashboardPeriod = period === 'ytd' ? 'ytd' : 'mtd';
+    const stats = await this.statisticsService.getDashboard(p);
+    return ApiRes(STT.DASHBOARD, stats);
   }
 }

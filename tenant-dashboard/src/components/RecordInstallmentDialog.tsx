@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { AlertCircle } from 'lucide-react';
 import { Modal } from './Modal';
+import { DecimalInput } from './DecimalInput';
+import { DateInput } from './DateInput';
 import { PaymentProgress } from './PaymentStatusBadge';
 import { useAddInstallment } from '../hooks/usePayments';
 import { formatMoney, todayIso } from '../utils/format';
@@ -26,7 +28,7 @@ interface Props {
  * problem while typing instead of after submitting.
  */
 export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [paymentDate, setPaymentDate] = useState(todayIso());
   const [paymentType, setPaymentType] = useState<PaymentType>('bank_transfer');
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -37,7 +39,7 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setAmount(payment.amountRemaining > 0 ? String(payment.amountRemaining) : '');
+    setAmount(payment.amountRemaining > 0 ? payment.amountRemaining : null);
     setPaymentDate(todayIso());
     setPaymentType('bank_transfer');
     setReferenceNumber('');
@@ -45,8 +47,8 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
     setValidateImmediately(true);
   }, [open, payment.amountRemaining]);
 
-  const parsed = Number(amount);
-  const isNumeric = amount.trim() !== '' && Number.isFinite(parsed);
+  const parsed = amount ?? NaN;
+  const isNumeric = amount !== null && Number.isFinite(parsed);
   const remainingAfter = isNumeric
     ? Math.round((payment.amountRemaining - parsed) * 100) / 100
     : payment.amountRemaining;
@@ -161,14 +163,12 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
             <label htmlFor="inst-amount" className="label">
               Amount ({payment.currency})
             </label>
-            <input
+            <DecimalInput
               id="inst-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              max={payment.amountRemaining}
+              maxFractionDigits={2}
+              min={0}
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onValueChange={setAmount}
               className="input"
               required
               aria-invalid={!!error}
@@ -179,12 +179,10 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
             <label htmlFor="inst-date" className="label">
               Payment date
             </label>
-            <input
+            <DateInput
               id="inst-date"
-              type="date"
               value={paymentDate}
-              min={payment.periodStart}
-              onChange={(e) => setPaymentDate(e.target.value)}
+              onChange={setPaymentDate}
               className="input"
               required
             />

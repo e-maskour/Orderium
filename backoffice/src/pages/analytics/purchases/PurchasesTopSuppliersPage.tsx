@@ -1,5 +1,6 @@
 import { Truck } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
@@ -28,8 +29,7 @@ const PurchasesTopSuppliersPage: React.FC = () => {
     {
       field: 'totalPurchases',
       header: `${t('analyticsPurchasesAmount')} (MAD)`,
-      body: (row: Record<string, unknown>) =>
-        Number(row.totalPurchases).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+      body: (row: Record<string, unknown>) => formatAmount(Number(row.totalPurchases)),
     },
   ];
 

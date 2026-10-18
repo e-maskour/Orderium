@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Bell, Search, CheckCheck } from 'lucide-react';
+import { Search, CheckCheck } from 'lucide-react';
+import { Tabs } from '../components/ui';
+import { Button } from 'primereact/button';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
 import {
@@ -102,89 +105,20 @@ export default function Notifications() {
   return (
     <AdminLayout>
       <div dir={dir} style={{ maxWidth: 960, margin: '0 auto', padding: '1.5rem 1rem' }}>
-        {/* Page Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            marginBottom: '1.5rem',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            flexDirection: isRtl ? 'row-reverse' : 'row',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              flexDirection: isRtl ? 'row-reverse' : 'row',
-            }}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: '#2563eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Bell style={{ width: 24, height: 24, color: '#fff' }} />
-            </div>
-            <div style={{ textAlign: isRtl ? 'right' : 'left' }}>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>
-                {t('notifications')}
-              </h1>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0 0' }}>
-                {t('notificationsSubtitle')}
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              flexDirection: isRtl ? 'row-reverse' : 'row',
-            }}
-          >
-            {unreadCount > 0 && (
-              <button
+        <PageHeader
+          title={t('notifications')}
+          subtitle={t('notificationsSubtitle')}
+          actions={
+            unreadCount > 0 ? (
+              <Button
+                outlined
+                icon={<CheckCheck aria-hidden="true" />}
+                label={t('markAllRead')}
                 onClick={() => markAllRead()}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '8px 16px',
-                  borderRadius: 10,
-                  border: '1px solid #2563eb',
-                  background: '#fff',
-                  color: '#2563eb',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 150ms',
-                  minHeight: 44,
-                  flexDirection: isRtl ? 'row-reverse' : 'row',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#eff6ff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#fff';
-                }}
-              >
-                <CheckCheck style={{ width: 16, height: 16 }} />
-                {t('markAllRead')}
-              </button>
-            )}
-          </div>
-        </div>
+              />
+            ) : undefined
+          }
+        />
 
         {/* Search Bar */}
         <div style={{ position: 'relative', marginBottom: '1rem' }}>
@@ -227,64 +161,17 @@ export default function Notifications() {
         </div>
 
         {/* Filter Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 4,
-            padding: 4,
-            borderRadius: 12,
-            background: '#f3f4f6',
-            marginBottom: '1.5rem',
-            overflowX: 'auto',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        >
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  flexShrink: 0,
-                  padding: '8px 16px',
-                  borderRadius: 8,
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: isActive ? '#fff' : 'transparent',
-                  color: isActive ? '#111827' : '#6b7280',
-                  boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 150ms',
-                  minHeight: 36,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-              >
-                {t(TAB_I18N[tab] as any)}
-                {tab === 'unread' && unreadTabCount > 0 && (
-                  <span
-                    style={{
-                      background: isActive ? '#2563eb' : '#9ca3af',
-                      color: '#fff',
-                      fontSize: '0.625rem',
-                      fontWeight: 600,
-                      borderRadius: 9999,
-                      padding: '1px 6px',
-                      minWidth: 18,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {unreadTabCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <Tabs
+          className="ui-tabs-wrap"
+          ariaLabel={t('notifications')}
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as NotificationTab)}
+          tabs={TABS.map((tab) => ({
+            key: tab,
+            label: t(TAB_I18N[tab] as any),
+            count: tab === 'unread' && unreadTabCount > 0 ? unreadTabCount : undefined,
+          }))}
+        />
 
         {/* Date-Grouped List */}
         {filteredNotifications.length === 0 ? (

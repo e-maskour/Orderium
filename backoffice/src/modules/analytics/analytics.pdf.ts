@@ -1,3 +1,4 @@
+import { formatDate } from '@orderium/ui';
 import type { TranslationKey } from '../../lib/i18n';
 import type { AnyReportFilter, PdfBadgeTone, PdfReportSpec } from './analytics.interface';
 
@@ -43,6 +44,12 @@ const PRESET_LABEL_KEYS: Record<string, TranslationKey> = {
  * Describes the active filter as chips printed under the PDF title, so a
  * printed report always states the criteria it was produced under.
  */
+/** 'yyyy-MM-dd' → 'dd/MM/yyyy' (parsed as a local date so the day never shifts). */
+function displayDate(value: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return m ? formatDate(new Date(+m[1], +m[2] - 1, +m[3]), value) : formatDate(value, value);
+}
+
 export function buildPdfMeta(filter: AnyReportFilter, t: Translate): PdfReportSpec['meta'] {
   const meta: NonNullable<PdfReportSpec['meta']> = [];
 
@@ -50,14 +57,14 @@ export function buildPdfMeta(filter: AnyReportFilter, t: Translate): PdfReportSp
   const { asOfDate, preset, startDate, endDate } = filter as Record<string, string | undefined>;
 
   if (asOfDate) {
-    meta.push({ label: t('analyticsPdfPeriod'), value: asOfDate });
+    meta.push({ label: t('analyticsPdfPeriod'), value: displayDate(asOfDate) });
     return meta;
   }
 
   if (preset === 'custom' && (startDate || endDate)) {
     meta.push({
       label: t('analyticsPdfPeriod'),
-      value: `${startDate ?? '…'} → ${endDate ?? '…'}`,
+      value: `${startDate ? displayDate(startDate) : '…'} → ${endDate ? displayDate(endDate) : '…'}`,
     });
   } else if (preset) {
     const key = PRESET_LABEL_KEYS[preset];

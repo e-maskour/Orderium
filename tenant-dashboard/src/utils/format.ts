@@ -1,30 +1,42 @@
+import { formatAmount } from './formatAmount';
+import {
+  APP_LOCALE,
+  formatDate as formatNumericDate,
+  formatDateTime as formatNumericDateTime,
+} from './dateFormat';
+import { formatQuantity } from './numberFormat';
+
+/** Date-only strings (`2026-08-08`) are read as local midnight, not UTC. */
+function parseDateValue(value: string): Date | null {
+  const date = new Date(value.length <= 10 ? `${value}T00:00:00` : value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** Local `YYYY-MM-DD` — never via toISOString, which shifts the day across time zones. */
+function toLocalIso(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /**
  * Formats money for display. The currency comes from the record itself —
  * amounts from different currencies are never combined, so there is no
  * app-wide default to fall back on beyond the tenant default of MAD.
  */
 export function formatMoney(amount: number, currency = 'MAD'): string {
-  return new Intl.NumberFormat('fr-MA', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  // French format regardless of browser locale: `12.374,90 MAD`
+  return `${formatAmount(amount, 2)} ${currency}`;
 }
 
-/** `2026-08-08` → `8 Aug 2026`. Date-only strings are parsed as-is. */
+/** `2026-08-08` → `08/08/2026`. Date-only strings are parsed as local dates. */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return '—';
-  const date = new Date(value.length <= 10 ? `${value}T00:00:00` : value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date);
+  return formatNumericDate(parseDateValue(value), '—');
 }
 
-/** Compact period label: `Jan – Dec 2026` or `1 Jan 2026 – 31 Mar 2026`. */
+/** Period label: `01/01/2026 – 31/03/2026`. */
 export function formatPeriod(start: string, end: string): string {
   return `${formatDate(start)} – ${formatDate(end)}`;
 }
@@ -53,41 +65,34 @@ export function addMonths(iso: string, months: number): string {
   const targetDay = date.getDate();
   date.setMonth(date.getMonth() + months);
   if (date.getDate() < targetDay) date.setDate(0);
-  return date.toISOString().slice(0, 10);
+  return toLocalIso(date);
 }
 
-/** `1536` → `1.5 KB`. Mirrors the API's own byte formatting. */
+/** `1536` → `1,5 KB`. Mirrors the API's own byte formatting, with a French comma decimal. */
 export function formatBytes(bytes: number | null | undefined): string {
   if (!bytes || bytes <= 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  return `${formatAmount(bytes / Math.pow(1024, i), i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
 /**
- * Compact counts for KPI tiles: `1234` → `1.2k`, `1500000` → `1.5M`.
+ * Compact counts for KPI tiles (French): `1234` → `1,2 k`, `1500000` → `1,5 M`.
  * Numbers below 1000 are shown in full — rounding those loses real information.
  */
 export function formatCompact(value: number | null | undefined): string {
   const n = value ?? 0;
-  if (Math.abs(n) < 1000) return n.toLocaleString();
-  return new Intl.NumberFormat('en', {
+  if (Math.abs(n) < 1000) return formatQuantity(n);
+  return new Intl.NumberFormat(APP_LOCALE, {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(n);
 }
 
-/** `2026-09-06T14:03:00Z` → `6 Sep, 14:03`. Used for "as of" freshness labels. */
+/** `2026-09-06T14:03:00Z` → `06/09/2026 14:03`. Used for "as of" freshness labels. */
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+  return formatNumericDateTime(value, '—');
 }
 
 /** `2026-09-06` shifted by `days`, staying in `YYYY-MM-DD`. */
@@ -97,11 +102,11 @@ export function shiftIso(iso: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** `2026-09-06` → `6 Sep`. Compact axis label for daily charts. */
+/** `2026-09-06` → `6 sept.`. Compact (French) axis label for daily charts. */
 export function formatDayLabel(iso: string): string {
   const date = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(APP_LOCALE, {
     day: 'numeric',
     month: 'short',
   }).format(date);

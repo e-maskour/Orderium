@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { applyPrimeLocale } from '@orderium/ui';
 import { Language, TranslationKey, translations } from '@/lib/i18n';
 
 interface LanguageContextType {
@@ -22,6 +23,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('delivery-language', language);
     document.documentElement.dir = dir;
     document.documentElement.lang = language;
+    // Calendars: French/Arabic labels, always dd/mm/yyyy
+    applyPrimeLocale(language);
   }, [language, dir]);
 
   const t = (key: TranslationKey): string => {

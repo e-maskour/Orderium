@@ -29,7 +29,7 @@ import {
   AlertTriangle,
   User,
 } from 'lucide-react';
-import { notify } from '@orderium/ui';
+import { notify, normalizePhoneInputEvent, phoneInputProps } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
 
 const PRI = '#059669';
@@ -370,10 +370,10 @@ export default function Login() {
                   }}
                 />
                 <input
+                  {...phoneInputProps}
                   {...register('phone')}
+                  onChange={(e) => register('phone').onChange(normalizePhoneInputEvent(e))}
                   className="clt-field-input"
-                  type="tel"
-                  autoComplete="tel"
                   placeholder={t('phonePlaceholder')}
                   disabled={isLoading}
                   style={{

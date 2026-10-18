@@ -5,7 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
-import { Users, ArrowLeft, Save } from 'lucide-react';
+import { Users, ArrowLeft, Save, X } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
@@ -63,6 +63,8 @@ export default function FournisseurCreate() {
               <Button
                 type="button"
                 label={t('cancel')}
+                aria-label={t('cancel')}
+                icon={<X style={{ width: '0.875rem', height: '0.875rem' }} />}
                 outlined
                 onClick={() => navigate('/fournisseurs')}
               />

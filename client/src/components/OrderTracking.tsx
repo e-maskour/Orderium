@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { formatDate } from '@orderium/ui';
 import { ordersService } from '@/modules/orders';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Package, Truck, CheckCircle, Clock, XCircle } from 'lucide-react';
@@ -216,11 +217,7 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
             {stepLabels[STEPS[currentIndex].key]}
           </p>
           <p style={{ margin: '0.25rem 0 0', fontSize: '0.8125rem', color: '#6b7280' }}>
-            {t('orderReceived')} ·{' '}
-            {new Date(orderStatus.createdAt).toLocaleDateString(
-              language === 'ar' ? 'ar-MA' : 'fr-MA',
-              { day: '2-digit', month: 'long' },
-            )}
+            {t('orderReceived')} · {formatDate(orderStatus.createdAt)}
           </p>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Gauge } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency, formatNumber } from '../../lib/formatters';
+import { formatQuantity } from '@orderium/ui';
 
 interface PerformanceMetricsProps {
   metrics: {
@@ -190,7 +191,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics 
                     }}
                   >
                     {isPositive ? '+' : ''}
-                    {metric.change}%
+                    {formatQuantity(metric.change, 1)}%
                   </span>
                 </div>
               </div>

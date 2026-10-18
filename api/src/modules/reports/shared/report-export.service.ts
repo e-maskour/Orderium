@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as XLSX from 'xlsx';
+import { formatAmount } from '../../../common/utils/french-format';
 
 export interface XlsxColumn {
   header: string;
@@ -46,13 +47,9 @@ export class ReportExportService {
   }
 
   /**
-   * Formats a number as Moroccan currency string.
+   * Formats a number as Moroccan currency string, e.g. "1.500,50 MAD".
    */
   formatMAD(value: number): string {
-    return new Intl.NumberFormat('fr-MA', {
-      style: 'currency',
-      currency: 'MAD',
-      minimumFractionDigits: 2,
-    }).format(value);
+    return `${formatAmount(value)} MAD`;
   }
 }

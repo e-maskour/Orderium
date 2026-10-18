@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getMoroccanPhoneError, normalizeMoroccanPhone, phoneInputProps } from '@orderium/ui';
 import { UserCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { CreateAdminPayload } from '../../api/onboarding';
 import { useLanguage } from '../../context/LanguageContext';
@@ -72,10 +73,9 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
     if (!form.fullName.trim()) errs.fullName = t('onboardingErrFullNameRequired');
     if (form.email && form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs.email = t('onboardingErrInvalidEmail');
-    const normalizedPhone = form.phoneNumber.replace(/[\s\-().]/g, '');
-    if (!normalizedPhone) errs.phoneNumber = t('onboardingErrPhoneRequired');
-    else if (!/^\+?[0-9]{8,15}$/.test(normalizedPhone))
-      errs.phoneNumber = t('onboardingErrPhoneFormat');
+    const phoneError = getMoroccanPhoneError(form.phoneNumber);
+    if (!form.phoneNumber) errs.phoneNumber = t('onboardingErrPhoneRequired');
+    else if (phoneError) errs.phoneNumber = t(phoneError);
     if (!form.password) errs.password = t('onboardingErrPasswordRequired');
     else if (form.password.length < 8) errs.password = t('onboardingErrPasswordTooShort');
     if (!confirmPassword) errs.confirmPassword = t('onboardingErrConfirmPassword');
@@ -89,11 +89,7 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
     if (!validate()) return;
     setIsLoading(true);
     try {
-      // Normalize phone: strip spaces, dashes, parens so backend validation passes
-      await onNext({
-        ...form,
-        phoneNumber: form.phoneNumber.replace(/[\s\-().]/g, ''),
-      });
+      await onNext({ ...form, phoneNumber: normalizeMoroccanPhone(form.phoneNumber) });
     } finally {
       setIsLoading(false);
     }
@@ -174,11 +170,9 @@ export default function AdminStep({ onNext, onBack }: AdminStepProps) {
         </label>
         <input
           style={focusStyle('phoneNumber')}
+          {...phoneInputProps}
           value={form.phoneNumber}
-          onChange={(e) => set('phoneNumber', e.target.value)}
-          placeholder="+212600000000"
-          type="tel"
-          autoComplete="tel"
+          onChange={(e) => set('phoneNumber', normalizeMoroccanPhone(e.target.value))}
           onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
           onBlur={(e) =>
             (e.currentTarget.style.borderColor = errors.phoneNumber ? '#ef4444' : '#e2e8f0')

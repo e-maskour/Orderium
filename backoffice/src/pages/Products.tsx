@@ -36,8 +36,9 @@ import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function Products() {
   const { t, language } = useLanguage();
@@ -475,7 +476,7 @@ export default function Products() {
                 topLeft: (p: IProduct) => p.name,
                 topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)} ${t('currency')}`,
                 bottomLeft: (p: IProduct) =>
-                  [p.code, p.stock != null ? `Stock: ${p.stock}` : null]
+                  [p.code, p.stock != null ? `Stock: ${formatQuantity(p.stock)}` : null]
                     .filter(Boolean)
                     .join(' · '),
                 bottomRight: (p: IProduct) => {
@@ -601,9 +602,9 @@ export default function Products() {
                 rowClassName={() => 'ord-row-clickable'}
                 dataKey="id"
                 paginator
-                paginatorPosition="top"
+                paginatorPosition="bottom"
                 rows={pageSize}
-                rowsPerPageOptions={[10, 25, 50, 100]}
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
                 removableSort
                 loading={isLoading}
                 emptyMessage={t('noProductsFound')}
@@ -713,7 +714,7 @@ export default function Products() {
                             color: '#b91c1c',
                           }}
                         >
-                          {product.stock}{' '}
+                          {formatQuantity(product.stock)}{' '}
                           {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
                         </span>
                       );
@@ -747,7 +748,7 @@ export default function Products() {
                           color: '#166534',
                         }}
                       >
-                        {product.stock}{' '}
+                        {formatQuantity(product.stock)}{' '}
                         {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
                       </span>
                     );

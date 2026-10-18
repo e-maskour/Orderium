@@ -1,5 +1,6 @@
 import { BookOpen } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
@@ -16,7 +17,7 @@ import type {
 
 const MAD = (row: Record<string, unknown>, field: string) => {
   const v = Number(row[field]);
-  return isNaN(v) ? '—' : v.toLocaleString('fr-MA', { minimumFractionDigits: 2 });
+  return isNaN(v) ? '—' : formatAmount(v);
 };
 
 const ClientStatementPage: React.FC = () => {

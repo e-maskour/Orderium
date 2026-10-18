@@ -99,10 +99,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         style={
           {
             transition: 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            '--sidebar-width': isSidebarCollapsed ? '4.5rem' : '15rem',
+            '--sidebar-width': isSidebarCollapsed ? '4.5rem' : '16rem',
             ...(language === 'ar'
-              ? { marginRight: isSidebarCollapsed ? '4.5rem' : '15rem', marginLeft: '0.75rem' }
-              : { marginLeft: isSidebarCollapsed ? '4.5rem' : '15rem', marginRight: '0.75rem' }),
+              ? { marginRight: isSidebarCollapsed ? '4.5rem' : '16rem', marginLeft: '0.75rem' }
+              : { marginLeft: isSidebarCollapsed ? '4.5rem' : '16rem', marginRight: '0.75rem' }),
           } as React.CSSProperties & Record<string, string>
         }
         className="admin-main-content"

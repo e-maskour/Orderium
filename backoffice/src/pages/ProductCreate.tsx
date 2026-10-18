@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -15,11 +15,12 @@ import { brandsService } from '../modules/brands';
 import { uomService } from '../modules/uom';
 import { apiClient, API_ROUTES } from '../common';
 import { AdminLayout } from '../components/AdminLayout';
-import { DocPageHeader } from '../components/DocPageHeader';
+import { PageHeader } from '../components/PageHeader';
+import { ImageUpload } from '../components/ImageUpload';
 import { useApiErrors } from '../hooks/useApiErrors';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import type { TranslationKey } from '../lib/i18n';
-import { Package } from 'lucide-react';
+import { ChevronLeft, Plus, Save, X } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastCreated, toastError, toastSuccess } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
@@ -30,6 +31,25 @@ import { ProductForm, FormErrorSummary, FIELD_IDS, type SummaryEntry } from '../
 interface InventoryConfigShape {
   values?: { defaultWarehouseId?: number | null };
 }
+
+const EMPTY_PRODUCT: ProductFormValues = {
+  name: '',
+  code: '',
+  description: '',
+  price: null,
+  cost: null,
+  minPrice: null,
+  saleTaxId: null,
+  purchaseTaxId: null,
+  saleUnitId: null,
+  purchaseUnitId: null,
+  categoryIds: [],
+  brandId: null,
+  warehouseId: null,
+  isService: false,
+  isEnabled: true,
+  isPriceChangeAllowed: true,
+};
 
 export default function ProductCreate() {
   const navigate = useNavigate();
@@ -77,34 +97,22 @@ export default function ProductCreate() {
 
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [summary, setSummary] = useState<SummaryEntry[]>([]);
+  const [image, setImage] = useState<{ url: string; publicId: string | null } | null>(null);
+  /** Set by "Save & add new": stay on the page and start a fresh product. */
+  const addAnotherRef = useRef(false);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
-    defaultValues: {
-      name: '',
-      code: '',
-      description: '',
-      price: null,
-      cost: null,
-      minPrice: null,
-      saleTaxId: null,
-      purchaseTaxId: null,
-      saleUnitId: null,
-      purchaseUnitId: null,
-      categoryIds: [],
-      brandId: null,
-      warehouseId: null,
-      isService: false,
-      isEnabled: true,
-      isPriceChangeAllowed: true,
-    },
+    defaultValues: EMPTY_PRODUCT,
   });
 
   const {
     handleSubmit: rhfHandleSubmit,
     setValue,
+    reset,
+    getValues,
     formState: { errors, isDirty },
   } = form;
   const { handleApiErrors } = useApiErrors(form);
@@ -157,6 +165,19 @@ export default function ProductCreate() {
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toastCreated(t('productCreatedSuccess'));
+      if (addAnotherRef.current) {
+        // Keep the preselected unit and warehouse; clear everything else
+        const { saleUnitId, purchaseUnitId, warehouseId } = getValues();
+        reset({
+          ...EMPTY_PRODUCT,
+          saleUnitId,
+          purchaseUnitId,
+          warehouseId,
+        });
+        setImage(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       navigate(`/products/${result.product.id}`);
     },
     onError: (error: unknown) => {
@@ -185,6 +206,8 @@ export default function ProductCreate() {
       isPriceChangeAllowed: data.isPriceChangeAllowed,
       saleUnitId: data.saleUnitId,
       purchaseUnitId: data.purchaseUnitId,
+      imageUrl: image?.url ?? null,
+      imagePublicId: image?.publicId ?? null,
     });
   };
 
@@ -218,19 +241,37 @@ export default function ProductCreate() {
 
   const saving = createMutation.isPending;
 
+  const submit = (addAnother: boolean) => {
+    addAnotherRef.current = addAnother;
+    void rhfHandleSubmit(onSubmit, onInvalidSubmit)();
+  };
+
   return (
     <AdminLayout>
       <div className="pform-page">
-        <DocPageHeader
-          icon={<Package size={24} />}
-          parentLabel={t('products')}
-          currentLabel={t('createNewProduct')}
+        <PageHeader
           title={t('newProductLabel')}
-          onBack={() => navigate('/products')}
-          backAriaLabel={t('backToProducts')}
+          subtitle={t('addNewProductToInventory')}
+          crumbs={[{ label: t('products'), to: '/products' }]}
+          actions={
+            <Button
+              type="button"
+              outlined
+              severity="secondary"
+              label={t('backToProducts')}
+              icon={<ChevronLeft size={16} className="pform-back-icon" aria-hidden="true" />}
+              onClick={() => navigate('/products')}
+            />
+          }
         />
 
-        <form onSubmit={rhfHandleSubmit(onSubmit, onInvalidSubmit)} noValidate>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(false);
+          }}
+          noValidate
+        >
           <FormErrorSummary entries={summary} />
 
           <ProductForm
@@ -241,19 +282,45 @@ export default function ProductCreate() {
             isGeneratingCode={isGeneratingCode}
             onRegenerateCode={handleRegenerateCode}
             saving={saving}
+            imageSlot={
+              <ImageUpload
+                currentImage={image?.url}
+                currentPublicId={image?.publicId}
+                disabled={saving}
+                onImageUpload={(url, publicId) => setImage({ url, publicId: publicId ?? null })}
+                onImageRemove={() => setImage(null)}
+              />
+            }
+            actions={
+              <>
+                <Button
+                  type="submit"
+                  label={t('pfSaveProduct')}
+                  icon={<Save size={16} aria-hidden="true" />}
+                  loading={saving && !addAnotherRef.current}
+                  disabled={saving}
+                />
+                <Button
+                  type="button"
+                  outlined
+                  label={t('pfSaveAndAddNew')}
+                  icon={<Plus size={16} aria-hidden="true" />}
+                  loading={saving && addAnotherRef.current}
+                  disabled={saving}
+                  onClick={() => submit(true)}
+                />
+                <Button
+                  type="button"
+                  text
+                  severity="secondary"
+                  label={t('cancel')}
+                  icon={<X size={16} aria-hidden="true" />}
+                  disabled={saving}
+                  onClick={() => navigate('/products')}
+                />
+              </>
+            }
           />
-
-          {/* ── Sticky action bar ── */}
-          <div className="pform-actions">
-            <Button
-              type="button"
-              outlined
-              label={t('cancel')}
-              disabled={saving}
-              onClick={() => navigate('/products')}
-            />
-            <Button type="submit" label={t('createProduct')} loading={saving} disabled={saving} />
-          </div>
         </form>
       </div>
     </AdminLayout>

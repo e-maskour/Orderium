@@ -1,3 +1,4 @@
+import { formatAmount } from '@orderium/ui';
 import { IQuote, IQuoteItem, IQuoteWithDetails } from './quotes.interface';
 
 export class QuoteItem implements IQuoteItem {
@@ -41,11 +42,11 @@ export class QuoteItem implements IQuoteItem {
   }
 
   get displayUnitPrice(): string {
-    return this.unitPrice.toFixed(2);
+    return formatAmount(this.unitPrice, 2);
   }
 
   get displayTotal(): string {
-    return this.total.toFixed(2);
+    return formatAmount(this.total, 2);
   }
 
   static fromApiResponse(data: any): QuoteItem {
@@ -198,19 +199,19 @@ export class Quote implements IQuote {
   }
 
   get displaySubtotal(): string {
-    return this.subtotal.toFixed(2);
+    return formatAmount(this.subtotal, 2);
   }
 
   get displayTax(): string {
-    return this.tax.toFixed(2);
+    return formatAmount(this.tax, 2);
   }
 
   get displayDiscount(): string {
-    return this.discount.toFixed(2);
+    return formatAmount(this.discount, 2);
   }
 
   get displayTotal(): string {
-    return this.total.toFixed(2);
+    return formatAmount(this.total, 2);
   }
 
   get discountAmount(): number {

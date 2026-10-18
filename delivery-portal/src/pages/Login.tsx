@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizePhoneInputEvent, phoneInputProps } from '@orderium/ui';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -229,10 +230,10 @@ export default function Login() {
                   }}
                 />
                 <input
+                  {...phoneInputProps}
                   {...register('phoneNumber')}
+                  onChange={(e) => register('phoneNumber').onChange(normalizePhoneInputEvent(e))}
                   className="dlv-field-input"
-                  type="tel"
-                  autoComplete="tel"
                   placeholder={t('enterPhoneNumber')}
                   disabled={isLoading}
                   style={{

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { InputNumber } from 'primereact/inputnumber';
+import { DecimalInput, formatDate, formatQuantity } from '@orderium/ui';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
@@ -37,6 +37,9 @@ import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { RefLink } from '../components/ui/RefLink';
+import { entityRoutes } from '../lib/entityRoutes';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function InventoryAdjustments() {
   const { t } = useLanguage();
@@ -443,9 +446,9 @@ export default function InventoryAdjustments() {
             selectionMode="checkbox"
             dataKey="id"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             loading={isLoading}
             emptyMessage={
@@ -498,9 +501,7 @@ export default function InventoryAdjustments() {
               headerStyle={{ textAlign: 'center' }}
               body={(adj: InventoryAdjustment) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                  {adj.adjustmentDate
-                    ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR')
-                    : '-'}
+                  {adj.adjustmentDate ? formatDate(adj.adjustmentDate) : '-'}
                 </span>
               )}
             />
@@ -742,7 +743,7 @@ export default function InventoryAdjustments() {
                       {t('adjInfoDate')}
                     </div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
-                      {new Date(selectedAdjustment.adjustmentDate).toLocaleDateString('fr-FR')}
+                      {formatDate(selectedAdjustment.adjustmentDate)}
                     </div>
                   </div>
                 )}
@@ -880,7 +881,13 @@ export default function InventoryAdjustments() {
                             <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                               <td style={{ padding: '0.75rem 1rem', color: '#0f172a' }}>
                                 <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>
-                                  {line.productName || `#${line.productId}`}
+                                  <RefLink
+                                    to={
+                                      line.productId ? entityRoutes.product(line.productId) : null
+                                    }
+                                  >
+                                    {line.productName || `#${line.productId}`}
+                                  </RefLink>
                                 </div>
                                 {line.productCode && (
                                   <div
@@ -902,7 +909,7 @@ export default function InventoryAdjustments() {
                                   fontSize: '0.875rem',
                                 }}
                               >
-                                {line.theoreticalQuantity}
+                                {formatQuantity(line.theoreticalQuantity, 4)}
                                 {line.uomCode && (
                                   <span
                                     style={{
@@ -924,7 +931,7 @@ export default function InventoryAdjustments() {
                                   fontSize: '0.875rem',
                                 }}
                               >
-                                {line.countedQuantity}
+                                {formatQuantity(line.countedQuantity, 4)}
                                 {line.uomCode && (
                                   <span
                                     style={{
@@ -950,7 +957,9 @@ export default function InventoryAdjustments() {
                                     color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
                                   }}
                                 >
-                                  {diff > 0 ? `+${diff}` : diff}
+                                  {diff > 0
+                                    ? `+${formatQuantity(diff, 4)}`
+                                    : formatQuantity(diff, 4)}
                                 </span>
                               </td>
                             </tr>
@@ -1235,7 +1244,7 @@ export default function InventoryAdjustments() {
                               width: '9rem',
                             }}
                           >
-                            {line.theoreticalQuantity}
+                            {formatQuantity(line.theoreticalQuantity, 4)}
                             {line.uomCode && (
                               <span
                                 style={{
@@ -1266,14 +1275,16 @@ export default function InventoryAdjustments() {
                                 padding: '0 0.375rem',
                               }}
                             >
-                              <InputNumber
+                              <DecimalInput
                                 value={line.countedQuantity}
-                                onValueChange={(e) => updateLine(line.productId, e.value ?? 0)}
+                                onValueChange={(v) => updateLine(line.productId, v ?? 0)}
                                 min={0}
                                 minFractionDigits={0}
                                 maxFractionDigits={4}
-                                style={{ flex: 1 }}
-                                inputStyle={{
+                                className="p-inputtext p-component"
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
                                   textAlign: 'center',
                                   width: '100%',
                                   border: 'none',
@@ -1313,7 +1324,7 @@ export default function InventoryAdjustments() {
                                 color: diff > 0 ? '#15803d' : diff < 0 ? '#dc2626' : '#94a3b8',
                               }}
                             >
-                              {diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2)}
+                              {diff > 0 ? `+${formatQuantity(diff, 2)}` : formatQuantity(diff, 2)}
                             </span>
                           </td>
                         </tr>

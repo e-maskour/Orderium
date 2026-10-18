@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { toastInfo } from '../services/toast.service';
 import { API_ROUTES } from '../common/api-routes';
 import type { TranslationKey } from '../lib/i18n';
+import { formatDate } from '@orderium/ui';
 
 // ─── Brand ────────────────────────────────────────────────────────────────────
 
@@ -251,10 +252,7 @@ export function NotificationBell() {
     if (mins < 60) return `${mins} ${t('minutesAgo')}`;
     if (hrs < 24) return `${hrs} ${t('hoursAgo')}`;
     if (days < 7) return `${days} ${t('daysAgo')}`;
-    return new Date(ds).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', {
-      day: 'numeric',
-      month: 'short',
-    });
+    return formatDate(ds);
   };
 
   const translateNotif = (n: ApiNotification) => {

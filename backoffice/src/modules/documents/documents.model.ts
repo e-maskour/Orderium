@@ -1,5 +1,5 @@
 import { DocumentItem } from './services/documents.service';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDate } from '@orderium/ui';
 
 export class DocumentListItem implements DocumentItem {
   id: number;
@@ -47,12 +47,12 @@ export class DocumentListItem implements DocumentItem {
   }
 
   get formattedDate(): string {
-    return new Date(this.date).toLocaleDateString();
+    return formatDate(this.date);
   }
 
   get formattedDueDate(): string {
     if (!this.dueDate) return '—';
-    return new Date(this.dueDate).toLocaleDateString();
+    return formatDate(this.dueDate);
   }
 
   get isPaid(): boolean {

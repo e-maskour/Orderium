@@ -1,7 +1,12 @@
 import { CellFormat, ReportFormatter } from '../types';
 import { toText } from './html.util';
+import {
+  formatAmount,
+  formatDate,
+  formatDateTime,
+} from '../../../common/utils/french-format';
 
-/** Options needed to build a locale-aware formatter. */
+/** Options needed to build a report formatter. */
 export interface FormatterOptions {
   locale: string;
   currency: string;
@@ -23,96 +28,71 @@ function toDate(value: unknown): Date | null {
 }
 
 /**
- * `Intl` instances are expensive to construct, so each formatter caches its
- * own by option signature. One formatter is built per report.
+ * Currency label for a report: the symbol follows the report language
+ * (`MAD` in French, `د.م.` in Arabic) while the digits themselves are always
+ * formatted the French way via {@link formatAmount}.
+ */
+function resolveCurrencyLabel(locale: string, currency: string): string {
+  try {
+    const part = new Intl.NumberFormat(locale, { style: 'currency', currency })
+      .formatToParts(0)
+      .find((p) => p.type === 'currency');
+    // Strip bidi control marks some locales (e.g. ar-MA) wrap symbols with.
+    const label = part?.value.replace(/[\u200e\u200f\u061c]/g, '').trim();
+    return label || currency;
+  } catch {
+    return currency;
+  }
+}
+
+/**
+ * Numbers and numeric dates are always rendered in French format
+ * ("1.234,56", "31/01/2026 14:05") regardless of the report locale; the
+ * locale only drives text such as the currency label. One formatter is
+ * built per report.
  */
 export function createReportFormatter(
   options: FormatterOptions,
 ): ReportFormatter {
   const { locale, currency, timeZone } = options;
-  const numberCache = new Map<string, Intl.NumberFormat>();
-  const dateCache = new Map<string, Intl.DateTimeFormat>();
-
-  const numberFormat = (opts: Intl.NumberFormatOptions): Intl.NumberFormat => {
-    const key = JSON.stringify(opts);
-    let formatter = numberCache.get(key);
-    if (!formatter) {
-      formatter = new Intl.NumberFormat(locale, opts);
-      numberCache.set(key, formatter);
-    }
-    return formatter;
-  };
-
-  const dateFormat = (
-    opts: Intl.DateTimeFormatOptions,
-  ): Intl.DateTimeFormat => {
-    const key = JSON.stringify(opts);
-    let formatter = dateCache.get(key);
-    if (!formatter) {
-      formatter = new Intl.DateTimeFormat(locale, { timeZone, ...opts });
-      dateCache.set(key, formatter);
-    }
-    return formatter;
-  };
+  const currencyLabel = resolveCurrencyLabel(locale, currency);
 
   const formatter: ReportFormatter = {
     number(value, fractionDigits = 2) {
       const num = toNumber(value);
       if (num === null) return '';
-      return numberFormat({
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      }).format(num);
+      return formatAmount(num, fractionDigits);
     },
 
     integer(value) {
       const num = toNumber(value);
       if (num === null) return '';
-      return numberFormat({ maximumFractionDigits: 0 }).format(num);
+      return formatAmount(num, 0);
     },
 
     currency(value, fractionDigits = 2) {
       const num = toNumber(value);
       if (num === null) return '';
-      return numberFormat({
-        style: 'currency',
-        currency,
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      }).format(num);
+      return `${formatAmount(num, fractionDigits)} ${currencyLabel}`;
     },
 
     percent(value, fractionDigits = 1) {
       const num = toNumber(value);
       if (num === null) return '';
-      // Input is already expressed in percent, so divide before formatting.
-      return numberFormat({
-        style: 'percent',
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      }).format(num / 100);
+      // Input is already expressed in percent.
+      return `${formatAmount(num, fractionDigits)} %`;
     },
 
     date(value) {
       const date = toDate(value);
       if (!date) return '';
-      return dateFormat({
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(date);
+      return formatDate(date, { timeZone });
     },
 
     dateTime(value) {
       const date = toDate(value);
       if (!date) return '';
-      return dateFormat({
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
+      return formatDateTime(date, { timeZone });
     },
 
     apply(value, format: CellFormat = 'text') {

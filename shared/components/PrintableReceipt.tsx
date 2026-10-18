@@ -1,5 +1,7 @@
 import { createPortal } from 'react-dom';
 import type { ReceiptData } from './PrintManager';
+import { formatAmount } from '../ui/src/formatAmount';
+import { formatQuantity } from '../ui/src/numberFormat';
 
 interface Props {
     data: ReceiptData | null;
@@ -43,9 +45,9 @@ export function PrintableReceipt({ data }: Props) {
                     {data.items.map((item, i) => (
                         <tr key={i}>
                             <td>{item.name}</td>
-                            <td style={{ textAlign: 'right' }}>{item.qty}</td>
-                            <td style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
-                            <td style={{ textAlign: 'right' }}>{item.total.toFixed(2)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatQuantity(item.qty)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatAmount(item.unitPrice)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatAmount(item.total)}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -54,11 +56,11 @@ export function PrintableReceipt({ data }: Props) {
             <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
             <div style={{ textAlign: 'right' }}>
-                <div>Sous-total : {data.subtotal.toFixed(2)} DH</div>
+                <div>Sous-total : {formatAmount(data.subtotal)} DH</div>
                 {data.discount != null && data.discount > 0 && (
-                    <div>Remise : -{data.discount.toFixed(2)} DH</div>
+                    <div>Remise : -{formatAmount(data.discount)} DH</div>
                 )}
-                <strong style={{ fontSize: 14 }}>TOTAL : {data.total.toFixed(2)} DH</strong>
+                <strong style={{ fontSize: 14 }}>TOTAL : {formatAmount(data.total)} DH</strong>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 12 }}>

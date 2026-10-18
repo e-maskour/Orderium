@@ -14,6 +14,7 @@ import { imagesService } from '../modules/images';
 import { resolveMediaUrl } from '../lib/media';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { formatAmount } from '@orderium/ui';
 
 // ── Image processing utilities (module-level, no React deps) ─────────────────
 
@@ -571,7 +572,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 }}
               >
                 <span style={{ fontSize: '0.75rem', color: '#fff' }}>
-                  {(uploadStatus.imageData.size / 1024 / 1024).toFixed(2)}MB
+                  {formatAmount(uploadStatus.imageData.size / 1024 / 1024, 2)}MB
                 </span>
               </div>
             )}

@@ -1,4 +1,5 @@
 import { Invoice, InvoiceStatus } from './entities/invoice.entity';
+import { formatDate } from '../../common/utils/french-format';
 
 // ─── Min-price validation ─────────────────────────────────────────────────
 
@@ -46,12 +47,8 @@ export function buildInvoiceExportRows(
   const isFactureAchat = !!invoice.supplierId;
   const base: Record<string, unknown> = {
     Numéro: invoice.documentNumber,
-    Date: invoice.date
-      ? new Date(invoice.date).toLocaleDateString('fr-FR')
-      : '',
-    'Date échéance': invoice.dueDate
-      ? new Date(invoice.dueDate).toLocaleDateString('fr-FR')
-      : '',
+    Date: invoice.date ? formatDate(invoice.date) : '',
+    'Date échéance': invoice.dueDate ? formatDate(invoice.dueDate) : '',
     Type: isFactureAchat ? 'Facture achat' : 'Facture vente',
     'Client/Fournisseur': isFactureAchat
       ? invoice.supplierName || invoice.supplier?.name || ''

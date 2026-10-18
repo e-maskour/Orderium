@@ -188,6 +188,7 @@ export const API_ROUTES = {
     OVERVIEW: '/api/statistics',
     COMPREHENSIVE: '/api/statistics/comprehensive',
     RECENT_ACTIVITIES: '/api/statistics/recent-activities',
+    DASHBOARD: '/api/statistics/dashboard',
   },
 
   // ─── Reports / Analytics ───────────────────────────────────

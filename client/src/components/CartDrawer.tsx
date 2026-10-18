@@ -1,6 +1,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart, CartItem } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
+import { formatQuantity } from '@orderium/ui';
 import { createPortal } from 'react-dom';
 import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package, Minus, Plus, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -165,7 +166,7 @@ const CartItemRow = ({
                   textAlign: 'center',
                 }}
               >
-                {item.quantity}
+                {formatQuantity(item.quantity)}
               </span>
               <button
                 onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
@@ -279,7 +280,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               }}
             >
               {uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} ·{' '}
-              {totalQuantity} {t(totalQuantity === 1 ? 'piece' : 'pieces')}
+              {formatQuantity(totalQuantity)} {t(totalQuantity === 1 ? 'piece' : 'pieces')}
             </p>
           )}
         </div>

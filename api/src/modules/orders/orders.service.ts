@@ -57,6 +57,18 @@ import {
   applyOrderFilters,
 } from './orders.queries';
 
+/** Statuses an admin can set by hand on a POS order (see changePosOrderStatus). */
+const POS_SETTABLE_STATUSES: OrderStatus[] = [
+  OrderStatus.CONFIRMED,
+  OrderStatus.PICKED_UP,
+  OrderStatus.DELIVERED,
+  OrderStatus.CANCELLED,
+];
+
+const isPosOrigin = (order: Pick<Order, 'originType'>): boolean =>
+  order.originType === (OrderOriginType.CLIENT_POS as string) ||
+  order.originType === (OrderOriginType.ADMIN_POS as string);
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -1065,10 +1077,13 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Order not found');
 
-    if (
-      order.status === OrderStatus.DELIVERED ||
-      order.status === OrderStatus.CANCELLED
-    ) {
+    // POS orders (admin till / customer portal) stay editable once delivered or paid
+    const isLocked = isPosOrigin(order)
+      ? order.status === OrderStatus.CANCELLED ||
+        order.status === OrderStatus.INVOICED
+      : order.status === OrderStatus.DELIVERED ||
+        order.status === OrderStatus.CANCELLED;
+    if (isLocked) {
       throw new BadRequestException(
         'Cannot update a delivered or cancelled order.',
       );
@@ -1114,6 +1129,13 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
     if (order.status === OrderStatus.DELIVERED)
       throw new BadRequestException('Cannot cancel a delivered order');
+    return this.applyCancellation(id);
+  }
+
+  /** Mark the order cancelled and reverse any stock movements it produced. */
+  private async applyCancellation(
+    id: number,
+  ): Promise<Record<string, unknown>> {
     await this.orderRepository.update(id, {
       status: OrderStatus.CANCELLED,
       isValidated: false,
@@ -1171,6 +1193,10 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Order not found');
 
+    if (isPosOrigin(order)) {
+      return this.changePosOrderStatus(order, newStatus);
+    }
+
     const allowed = WORKFLOW[order.status];
     if (allowed === undefined) {
       throw new BadRequestException(
@@ -1187,6 +1213,41 @@ export class OrdersService {
     await this.orderRepository.save(order);
     await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
+  }
+
+  /**
+   * POS orders (ADMIN_POS / CLIENT_POS) are not bound to the backoffice
+   * workflow: any operational status can be set, whatever the payment or
+   * delivery state. Cancelled is final because cancelling reverses stock.
+   */
+  private async changePosOrderStatus(
+    order: Order,
+    newStatus: string,
+  ): Promise<Record<string, unknown>> {
+    const target = newStatus as OrderStatus;
+    if (!POS_SETTABLE_STATUSES.includes(target)) {
+      throw new BadRequestException(
+        `Status '${newStatus}' cannot be set on a POS order`,
+      );
+    }
+    if (
+      order.status === OrderStatus.CANCELLED ||
+      order.status === OrderStatus.INVOICED
+    ) {
+      throw new BadRequestException(
+        `Cannot change status of a ${order.status} order`,
+      );
+    }
+    if (order.status === target) return this.getOrderById(order.id);
+
+    if (target === OrderStatus.CANCELLED) {
+      return this.applyCancellation(order.id);
+    }
+
+    order.status = target;
+    await this.orderRepository.save(order);
+    await this.invalidateOrderCache(order.id);
+    return await this.getOrderById(order.id);
   }
 
   async remove(id: number): Promise<void> {

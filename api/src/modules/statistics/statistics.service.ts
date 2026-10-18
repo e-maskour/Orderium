@@ -1,10 +1,23 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { Order, DeliveryStatus } from '../orders/entities/order.entity';
+import {
+  Order,
+  OrderItem,
+  DeliveryStatus,
+  OrderStatus,
+} from '../orders/entities/order.entity';
+import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Partner } from '../partners/entities/partner.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 import { Product } from '../products/entities/product.entity';
+import { Category } from '../categories/entities/category.entity';
+import { StockQuant } from '../inventory/entities/stock-quant.entity';
+import {
+  StockMovement,
+  MovementType,
+  MovementStatus,
+} from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 export interface OrderStatistics {
@@ -52,8 +65,88 @@ export interface RecentActivity {
   productId?: number;
 }
 
+export type DashboardPeriod = 'mtd' | 'ytd';
+
+export interface DashboardKpi {
+  value: number;
+  previous: number;
+  /** % change vs the previous period, null when there is no baseline */
+  change: number | null;
+}
+
+export interface DashboardSeriesPoint {
+  /** Bucket start date, YYYY-MM-DD */
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+export interface DashboardStats {
+  period: DashboardPeriod;
+  range: { start: string; end: string };
+  kpis: {
+    sales: DashboardKpi;
+    revenue: DashboardKpi;
+    cost: DashboardKpi;
+    profit: DashboardKpi;
+  };
+  breakdown: {
+    revenue: number;
+    collected: number;
+    outstanding: number;
+    cost: number;
+    profit: number;
+    margin: number;
+    salesCount: number;
+  };
+  salesSeries: {
+    daily: DashboardSeriesPoint[];
+    weekly: DashboardSeriesPoint[];
+    monthly: DashboardSeriesPoint[];
+  };
+  inventory: { qtyInHand: number; incoming: number };
+  partners: { customers: number; suppliers: number };
+  stock: {
+    lowStock: number;
+    outOfStock: number;
+    categories: number;
+    products: number;
+  };
+  customerSeries: { month: string; new: number; returning: number }[];
+  purchases: {
+    count: number;
+    cost: number;
+    cancelledSales: number;
+    returns: number;
+  };
+  recentSales: {
+    id: number;
+    documentNumber: string;
+    customerName: string | null;
+    date: string;
+    total: number;
+    paidAmount: number;
+    status: string;
+  }[];
+  lowStockProducts: {
+    id: number;
+    name: string;
+    code: string | null;
+    imageUrl: string | null;
+    stock: number;
+    threshold: number;
+  }[];
+}
+
 /** 5-minute TTL for all statistics cache entries */
 const STATS_TTL = 300_000;
+
+/** Local-calendar YYYY-MM-DD (matches Postgres `date` columns, which carry no timezone) */
+const ymd = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const pctChange = (value: number, previous: number): number | null =>
+  previous === 0 ? null : ((value - previous) / Math.abs(previous)) * 100;
 
 @Injectable()
 export class StatisticsService {
@@ -94,6 +187,8 @@ export class StatisticsService {
       `tenant:${slug}:statistics:comprehensive:7`,
       `tenant:${slug}:statistics:comprehensive:30`,
       `tenant:${slug}:statistics:recent:10`,
+      `tenant:${slug}:statistics:dashboard:mtd:${ymd(new Date())}`,
+      `tenant:${slug}:statistics:dashboard:ytd:${ymd(new Date())}`,
     ];
     await Promise.all(keys.map((k) => this.cacheManager.del(k)));
   }
@@ -429,5 +524,397 @@ export class StatisticsService {
         return activities.slice(0, limit);
       },
     );
+  }
+
+  // ─── Dashboard ────────────────────────────────────────────────────────────
+
+  /**
+   * Everything the backoffice dashboard renders, in one round-trip.
+   * "Sales" are non-cancelled VENTE orders; cost is the product cost of the
+   * lines sold (COGS), so profit = revenue − cost.
+   */
+  async getDashboard(period: DashboardPeriod = 'mtd'): Promise<DashboardStats> {
+    const today = ymd(new Date());
+    return this.withCache<DashboardStats>(
+      this.statsKey(`dashboard:${period}:${today}`),
+      STATS_TTL,
+      async () => {
+        const now = new Date();
+        const start =
+          period === 'ytd'
+            ? new Date(now.getFullYear(), 0, 1)
+            : new Date(now.getFullYear(), now.getMonth(), 1);
+        const prevStart =
+          period === 'ytd'
+            ? new Date(now.getFullYear() - 1, 0, 1)
+            : new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const prevEnd =
+          period === 'ytd'
+            ? new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+            : new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+        const [
+          current,
+          previous,
+          salesSeries,
+          inventory,
+          partners,
+          stock,
+          customerSeries,
+          purchases,
+          recentSales,
+          lowStockProducts,
+        ] = await Promise.all([
+          this.getSalesTotals(start, now),
+          this.getSalesTotals(prevStart, prevEnd),
+          this.getSalesSeries(now),
+          this.getInventoryTotals(),
+          this.getPartnerCounts(),
+          this.getStockCounts(),
+          this.getCustomerSeries(now),
+          this.getPurchaseTotals(start, now),
+          this.getRecentSales(5),
+          this.getLowStockProducts(5),
+        ]);
+
+        const kpi = (value: number, prev: number): DashboardKpi => ({
+          value,
+          previous: prev,
+          change: pctChange(value, prev),
+        });
+        const profit = current.revenue - current.cost;
+        const prevProfit = previous.revenue - previous.cost;
+
+        return {
+          period,
+          range: { start: ymd(start), end: ymd(now) },
+          kpis: {
+            sales: kpi(current.count, previous.count),
+            revenue: kpi(current.revenue, previous.revenue),
+            cost: kpi(current.cost, previous.cost),
+            profit: kpi(profit, prevProfit),
+          },
+          breakdown: {
+            revenue: current.revenue,
+            collected: current.paid,
+            outstanding: Math.max(0, current.revenue - current.paid),
+            cost: current.cost,
+            profit,
+            margin: current.revenue > 0 ? (profit / current.revenue) * 100 : 0,
+            salesCount: current.count,
+          },
+          salesSeries,
+          inventory,
+          partners,
+          stock,
+          customerSeries,
+          purchases,
+          recentSales,
+          lowStockProducts,
+        };
+      },
+    );
+  }
+
+  /** Base query: non-cancelled sales orders */
+  private salesQuery(alias = 'order') {
+    return this.orderRepository
+      .createQueryBuilder(alias)
+      .where(`${alias}.direction = :vente`, { vente: DocumentDirection.VENTE })
+      .andWhere(`${alias}.status <> :cancelled`, {
+        cancelled: OrderStatus.CANCELLED,
+      });
+  }
+
+  private async getSalesTotals(
+    from: Date,
+    to: Date,
+  ): Promise<{ count: number; revenue: number; paid: number; cost: number }> {
+    const range = { from: ymd(from), to: ymd(to) };
+    const [totals, cost] = await Promise.all([
+      this.salesQuery()
+        .select('COUNT(*)', 'count')
+        .addSelect('COALESCE(SUM(order.total), 0)', 'revenue')
+        .addSelect('COALESCE(SUM(order.paidAmount), 0)', 'paid')
+        .andWhere('order.date BETWEEN :from AND :to', range)
+        .getRawOne<{ count: string; revenue: string; paid: string }>(),
+      this.tenantConnService
+        .getRepository(OrderItem)
+        .createQueryBuilder('item')
+        .innerJoin('item.order', 'order')
+        .leftJoin('item.product', 'product')
+        .select(
+          'COALESCE(SUM(item.quantity * COALESCE(product.cost, 0)), 0)',
+          'cost',
+        )
+        .where('order.direction = :vente', { vente: DocumentDirection.VENTE })
+        .andWhere('order.status <> :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .andWhere('order.date BETWEEN :from AND :to', range)
+        .getRawOne<{ cost: string }>(),
+    ]);
+    return {
+      count: parseInt(totals?.count ?? '0', 10),
+      revenue: parseFloat(totals?.revenue ?? '0'),
+      paid: parseFloat(totals?.paid ?? '0'),
+      cost: parseFloat(cost?.cost ?? '0'),
+    };
+  }
+
+  /** Revenue per day (30d), per ISO week (12w) and per month (12m), zero-filled */
+  private async getSalesSeries(
+    now: Date,
+  ): Promise<DashboardStats['salesSeries']> {
+    const dayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 29,
+    );
+    const mondayOffset = (now.getDay() + 6) % 7;
+    const weekStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - mondayOffset - 7 * 11,
+    );
+    const monthStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+    const bucketed = async (unit: 'day' | 'week' | 'month', from: Date) => {
+      const rows = await this.salesQuery()
+        .select(
+          `TO_CHAR(DATE_TRUNC('${unit}', order.date), 'YYYY-MM-DD')`,
+          'bucket',
+        )
+        .addSelect('COUNT(*)', 'orders')
+        .addSelect('COALESCE(SUM(order.total), 0)', 'revenue')
+        .andWhere('order.date >= :from', { from: ymd(from) })
+        .groupBy('bucket')
+        .getRawMany<{ bucket: string; orders: string; revenue: string }>();
+      return new Map(rows.map((r) => [r.bucket, r]));
+    };
+
+    const fill = (
+      rows: Map<string, { orders: string; revenue: string }>,
+      keys: string[],
+    ): DashboardSeriesPoint[] =>
+      keys.map((date) => ({
+        date,
+        orders: parseInt(rows.get(date)?.orders ?? '0', 10),
+        revenue: parseFloat(rows.get(date)?.revenue ?? '0'),
+      }));
+
+    const range = (n: number, at: (i: number) => Date) =>
+      Array.from({ length: n }, (_, i) => ymd(at(i)));
+
+    const [daily, weekly, monthly] = await Promise.all([
+      bucketed('day', dayStart),
+      bucketed('week', weekStart),
+      bucketed('month', monthStart),
+    ]);
+
+    return {
+      daily: fill(
+        daily,
+        range(
+          30,
+          (i) =>
+            new Date(
+              dayStart.getFullYear(),
+              dayStart.getMonth(),
+              dayStart.getDate() + i,
+            ),
+        ),
+      ),
+      weekly: fill(
+        weekly,
+        range(
+          12,
+          (i) =>
+            new Date(
+              weekStart.getFullYear(),
+              weekStart.getMonth(),
+              weekStart.getDate() + 7 * i,
+            ),
+        ),
+      ),
+      monthly: fill(
+        monthly,
+        range(
+          12,
+          (i) =>
+            new Date(monthStart.getFullYear(), monthStart.getMonth() + i, 1),
+        ),
+      ),
+    };
+  }
+
+  private async getInventoryTotals(): Promise<DashboardStats['inventory']> {
+    const [onHand, incoming] = await Promise.all([
+      this.productRepository
+        .createQueryBuilder('product')
+        .select('COALESCE(SUM(product.stock), 0)', 'qty')
+        .where('product.isService = false')
+        .andWhere('product.stock > 0')
+        .getRawOne<{ qty: string }>(),
+      this.tenantConnService
+        .getRepository(StockQuant)
+        .createQueryBuilder('quant')
+        .select('COALESCE(SUM(quant.incomingQuantity), 0)', 'qty')
+        .getRawOne<{ qty: string }>(),
+    ]);
+    return {
+      qtyInHand: parseFloat(onHand?.qty ?? '0'),
+      incoming: parseFloat(incoming?.qty ?? '0'),
+    };
+  }
+
+  private async getPartnerCounts(): Promise<DashboardStats['partners']> {
+    const [customers, suppliers] = await Promise.all([
+      this.partnerRepository.count({ where: { isCustomer: true } }),
+      this.partnerRepository.count({ where: { isSupplier: true } }),
+    ]);
+    return { customers, suppliers };
+  }
+
+  /** Products whose stock is at or under their alert threshold (default 5) */
+  private lowStockQuery() {
+    return this.productRepository
+      .createQueryBuilder('product')
+      .where('product.isService = false')
+      .andWhere('product.isEnabled = true')
+      .andWhere(
+        'COALESCE(product.stock, 0) <= COALESCE(product.stockAlertThreshold, 5)',
+      );
+  }
+
+  private async getStockCounts(): Promise<DashboardStats['stock']> {
+    const [lowStock, outOfStock, categories, products] = await Promise.all([
+      this.lowStockQuery().getCount(),
+      this.lowStockQuery()
+        .andWhere('COALESCE(product.stock, 0) <= 0')
+        .getCount(),
+      this.tenantConnService.getRepository(Category).count(),
+      this.productRepository.count({
+        where: { isService: false, isEnabled: true },
+      }),
+    ]);
+    return { lowStock, outOfStock, categories, products };
+  }
+
+  /** Per month (12m): customers buying for the first time vs returning buyers */
+  private async getCustomerSeries(
+    now: Date,
+  ): Promise<DashboardStats['customerSeries']> {
+    const monthStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const rows: { month: string; new: string; returning: string }[] =
+      await this.orderRepository.query(
+        `WITH sales AS (
+           SELECT "customerId", "date" FROM "orders"
+           WHERE "direction" = $1 AND "status" <> $2 AND "customerId" IS NOT NULL
+         ),
+         firsts AS (
+           SELECT "customerId", DATE_TRUNC('month', MIN("date")) AS first_month
+           FROM sales GROUP BY "customerId"
+         ),
+         active AS (
+           SELECT DISTINCT "customerId", DATE_TRUNC('month', "date") AS month
+           FROM sales WHERE "date" >= $3
+         )
+         SELECT TO_CHAR(a.month, 'YYYY-MM-DD') AS month,
+                SUM(CASE WHEN f.first_month = a.month THEN 1 ELSE 0 END) AS new,
+                SUM(CASE WHEN f.first_month < a.month THEN 1 ELSE 0 END) AS returning
+         FROM active a JOIN firsts f ON f."customerId" = a."customerId"
+         GROUP BY a.month`,
+        [DocumentDirection.VENTE, OrderStatus.CANCELLED, ymd(monthStart)],
+      );
+    const byMonth = new Map(rows.map((r) => [r.month, r]));
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = ymd(
+        new Date(monthStart.getFullYear(), monthStart.getMonth() + i, 1),
+      );
+      const row = byMonth.get(month);
+      return {
+        month,
+        new: parseInt(row?.new ?? '0', 10),
+        returning: parseInt(row?.returning ?? '0', 10),
+      };
+    });
+  }
+
+  private async getPurchaseTotals(
+    from: Date,
+    to: Date,
+  ): Promise<DashboardStats['purchases']> {
+    const range = { from: ymd(from), to: ymd(to) };
+    const [purchases, cancelledSales, returns] = await Promise.all([
+      this.orderRepository
+        .createQueryBuilder('order')
+        .select('COUNT(*)', 'count')
+        .addSelect('COALESCE(SUM(order.total), 0)', 'cost')
+        .where('order.direction = :achat', { achat: DocumentDirection.ACHAT })
+        .andWhere('order.status <> :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .andWhere('order.date BETWEEN :from AND :to', range)
+        .getRawOne<{ count: string; cost: string }>(),
+      this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.direction = :vente', { vente: DocumentDirection.VENTE })
+        .andWhere('order.status = :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .andWhere('order.date BETWEEN :from AND :to', range)
+        .getCount(),
+      this.tenantConnService
+        .getRepository(StockMovement)
+        .createQueryBuilder('move')
+        .where('move.movementType = :type', { type: MovementType.RETURN_IN })
+        .andWhere('move.status = :done', { done: MovementStatus.DONE })
+        .andWhere('move.dateDone >= :from', { from: range.from })
+        .getCount(),
+    ]);
+    return {
+      count: parseInt(purchases?.count ?? '0', 10),
+      cost: parseFloat(purchases?.cost ?? '0'),
+      cancelledSales,
+      returns,
+    };
+  }
+
+  private async getRecentSales(
+    limit: number,
+  ): Promise<DashboardStats['recentSales']> {
+    const orders = await this.orderRepository.find({
+      where: { direction: DocumentDirection.VENTE },
+      order: { date: 'DESC', id: 'DESC' },
+      take: limit,
+    });
+    return orders.map((o) => ({
+      id: o.id,
+      documentNumber: o.orderNumber || o.documentNumber,
+      customerName: o.customerName ?? null,
+      date: typeof o.date === 'string' ? o.date : ymd(new Date(o.date)),
+      total: o.total,
+      paidAmount: o.paidAmount,
+      status: o.status,
+    }));
+  }
+
+  private async getLowStockProducts(
+    limit: number,
+  ): Promise<DashboardStats['lowStockProducts']> {
+    const products = await this.lowStockQuery()
+      .orderBy('product.stock', 'ASC', 'NULLS FIRST')
+      .addOrderBy('product.name', 'ASC')
+      .limit(limit)
+      .getMany();
+    return products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      code: p.code,
+      imageUrl: p.imageUrl,
+      stock: p.stock ?? 0,
+      threshold: p.stockAlertThreshold ?? 5,
+    }));
   }
 }

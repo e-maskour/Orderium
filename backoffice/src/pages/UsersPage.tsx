@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { getMoroccanPhoneError, normalizeMoroccanPhone, phoneInputProps } from '@orderium/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +25,7 @@ import {
   XCircle,
   Search,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import {
@@ -40,6 +42,7 @@ import { rolesService, type Role } from '../modules/roles';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { useAccessLabels } from '../hooks/useAccessLabels';
 import { AutoCompleteSelect, AutoCompleteMultiSelect } from '../components/ui/AutoCompleteSelect';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function UsersPage() {
   const { t, dir } = useLanguage();
@@ -67,7 +70,7 @@ export default function UsersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-  const perPage = 20;
+  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
 
   const currentUserType: UserType = activeTab === 0 ? 'admin' : 'client';
 
@@ -80,7 +83,7 @@ export default function UsersPage() {
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ['users', currentUserType, page, searchQuery, roleFilter, statusFilter],
+    queryKey: ['users', currentUserType, page, perPage, searchQuery, roleFilter, statusFilter],
     queryFn: () =>
       usersService.getAll({
         page,
@@ -195,6 +198,11 @@ export default function UsersPage() {
     }
     if (!formPhone.trim()) {
       toastError(t('phoneRequired'));
+      return;
+    }
+    const phoneError = getMoroccanPhoneError(formPhone);
+    if (phoneError) {
+      toastError(t(phoneError));
       return;
     }
     const passwordChange = resolvePasswordChange(formPassword, !!editingUser);
@@ -456,13 +464,16 @@ export default function UsersPage() {
           value={users}
           loading={isLoading}
           paginator
-          paginatorPosition="top"
+          paginatorPosition="bottom"
           rows={perPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={PAGE_SIZE_OPTIONS}
           totalRecords={totalRecords}
           lazy
           first={(page - 1) * perPage}
-          onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
+          onPage={(e) => {
+            setPage(Math.floor(e.first / e.rows) + 1);
+            setPerPage(e.rows);
+          }}
           paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           currentPageReportTemplate={t('pageReportTemplate')}
           emptyMessage={<EmptyState icon={UsersIcon} title={t('noResults')} />}
@@ -719,16 +730,11 @@ export default function UsersPage() {
             setRoleFilter('all');
             setStatusFilter('all');
           }}
-          pt={{
-            root: { className: 'product-tabview' },
-            panelContainer: { style: { padding: '0.75rem 0 0', background: 'transparent' } },
-            nav: { style: { background: 'transparent' } },
-          }}
         >
           <TabPanel
             header={
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <i className="pi pi-shield" style={{ fontSize: '0.85rem' }} />
+              <span className="ui-tab-label">
+                <ShieldCheck aria-hidden="true" />
                 {t('adminUsers')}
               </span>
             }
@@ -737,8 +743,8 @@ export default function UsersPage() {
           </TabPanel>
           <TabPanel
             header={
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <i className="pi pi-users" style={{ fontSize: '0.85rem' }} />
+              <span className="ui-tab-label">
+                <UsersIcon aria-hidden="true" />
                 {t('clientUsers')}
               </span>
             }
@@ -806,10 +812,28 @@ export default function UsersPage() {
                   {t('phone')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <InputText
+                  {...phoneInputProps}
                   value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                  style={{ width: '100%', borderRadius: '0.5rem', border: '1.5px solid #e2e8f0' }}
+                  onChange={(e) => setFormPhone(normalizeMoroccanPhone(e.target.value))}
+                  className={getMoroccanPhoneError(formPhone) ? 'p-invalid' : ''}
+                  style={{
+                    width: '100%',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${getMoroccanPhoneError(formPhone) ? '#ef4444' : '#e2e8f0'}`,
+                  }}
                 />
+                {getMoroccanPhoneError(formPhone) && (
+                  <small
+                    style={{
+                      display: 'block',
+                      color: '#ef4444',
+                      fontSize: '0.75rem',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    {t(getMoroccanPhoneError(formPhone)!)}
+                  </small>
+                )}
               </div>
               <div>
                 <label

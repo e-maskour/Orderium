@@ -219,7 +219,7 @@ export function ProductCatalogueModal({
         updatedItems[existingItemIndex] = updated;
       } else {
         const newItem: InvoiceItemRow = {
-          id: String(updatedItems.length + 1),
+          id: `new_${Date.now()}_${product.id}`,
           productId: product.id,
           description: product.name,
           quantity: newQuantity,

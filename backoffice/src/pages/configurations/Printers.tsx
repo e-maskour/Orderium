@@ -18,6 +18,7 @@ import {
   ScanLine,
   Loader2,
   Plug,
+  History,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -41,6 +42,8 @@ import {
   type DiscoveredPrinter,
 } from '@shared-print/PrintManager';
 import type { TranslationKey } from '../../lib/i18n';
+import { formatDate, formatDateTime } from '@orderium/ui';
+import { Tabs } from '../../components/ui';
 
 /**
  * Option labels carry a `labelKey` when they are prose. Brand and protocol
@@ -94,7 +97,7 @@ const buildDummyReceipt = (t: (k: TranslationKey) => string): ReceiptData => ({
   storeName: 'Morocom — Test',
   storePhone: '0600000000',
   orderNumber: 'TEST-001',
-  date: new Date().toLocaleString(),
+  date: formatDateTime(new Date()),
   clientName: t('printerTestCustomer'),
   items: [
     { name: t('printerTestProductA'), qty: 2, unitPrice: 49.9, total: 99.8 },
@@ -534,35 +537,15 @@ export default function Printers() {
         </div>
 
         {/* Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.25rem',
-            borderBottom: '2px solid var(--erp-border)',
-            marginBottom: '1.5rem',
-          }}
-        >
-          {(['printers', 'history'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '0.5rem 1.25rem',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                borderBottom:
-                  activeTab === tab ? '2px solid var(--primary-color)' : '2px solid transparent',
-                color: activeTab === tab ? 'var(--primary-color)' : 'var(--text-label)',
-                marginBottom: -2,
-              }}
-            >
-              {tab === 'printers' ? t('printers') : t('printHistory')}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          className="ui-tabs-wrap"
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as 'printers' | 'history')}
+          tabs={[
+            { key: 'printers', label: t('printers'), icon: <Printer /> },
+            { key: 'history', label: t('printHistory'), icon: <History /> },
+          ]}
+        />
 
         {activeTab === 'printers' && (
           <>
@@ -671,8 +654,7 @@ export default function Printers() {
                           {printer.documentTypes.join(', ')}
                           {printer.lastSeenAt && (
                             <span style={{ marginLeft: 8 }}>
-                              · {t('printerLastSeen')}{' '}
-                              {new Date(printer.lastSeenAt).toLocaleDateString('fr-FR')}
+                              · {t('printerLastSeen')} {formatDate(printer.lastSeenAt)}
                             </span>
                           )}
                         </div>
@@ -753,9 +735,7 @@ export default function Printers() {
                 ) : (
                   jobs.map((job: any) => (
                     <tr key={job.id} style={{ borderBottom: '1px solid var(--erp-border-light)' }}>
-                      <td style={tdStyle}>
-                        {new Date(job.printedAt ?? job.printed_at).toLocaleString('fr-FR')}
-                      </td>
+                      <td style={tdStyle}>{formatDateTime(job.printedAt ?? job.printed_at)}</td>
                       <td style={tdStyle}>{job.printer?.name ?? '—'}</td>
                       <td style={tdStyle}>{job.documentType ?? job.document_type}</td>
                       <td style={tdStyle}>{job.method ?? '—'}</td>

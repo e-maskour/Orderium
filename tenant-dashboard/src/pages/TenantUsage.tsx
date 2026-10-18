@@ -10,6 +10,7 @@ import type {
   TenantMetricSortKey,
   TenantMetricsListParams,
 } from '../types/metrics';
+import { formatQuantity } from '../utils/numberFormat';
 
 interface Column {
   key: TenantMetricSortKey | 'quota' | 'risk' | 'origin';
@@ -208,15 +209,15 @@ function MetricRow({ row }: { row: TenantMetricRow }) {
         </Link>
       </td>
 
-      <Num value={row.ordersTotal} sub={`${row.orders30d.toLocaleString()} in 30d`} />
+      <Num value={row.ordersTotal} sub={`${formatQuantity(row.orders30d)} in 30d`} />
 
       <td className="px-3 py-3 text-right">
         <span className="whitespace-nowrap font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
-          {(origin.BACKOFFICE ?? 0).toLocaleString()}
+          {formatQuantity(origin.BACKOFFICE ?? 0)}
           <span className="mx-1 text-slate-300 dark:text-slate-600">/</span>
-          {(origin.ADMIN_POS ?? 0).toLocaleString()}
+          {formatQuantity(origin.ADMIN_POS ?? 0)}
           <span className="mx-1 text-slate-300 dark:text-slate-600">/</span>
-          {(origin.CLIENT_POS ?? 0).toLocaleString()}
+          {formatQuantity(origin.CLIENT_POS ?? 0)}
         </span>
       </td>
 
@@ -252,7 +253,7 @@ function Num({ value, sub, compact }: { value: number; sub?: string; compact?: b
   return (
     <td className="px-3 py-3 text-right">
       <span className="font-semibold tabular-nums text-slate-800 dark:text-slate-200">
-        {compact ? formatCompact(value) : value.toLocaleString()}
+        {compact ? formatCompact(value) : formatQuantity(value)}
       </span>
       {sub && <p className="text-[10px] text-slate-400">{sub}</p>}
     </td>

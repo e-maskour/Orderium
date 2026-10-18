@@ -51,8 +51,16 @@ export function FormField({
     <div className={`pform-field${className ? ` ${className}` : ''}`}>
       <label className="pform-field__label" htmlFor={id}>
         {label}
-        {/* Required is conveyed as text, not by colour or a bare asterisk */}
-        {required && <span className="pform-field__req">{t('required')}</span>}
+        {/* Asterisk is explained by the banner at the top of the form; the
+            hidden text keeps "required" announced to screen readers */}
+        {required && (
+          <>
+            <span className="pform-field__req" aria-hidden="true">
+              *
+            </span>
+            <span className="sr-only">({t('required')})</span>
+          </>
+        )}
       </label>
 
       {children({ id, describedBy, invalid: Boolean(error), required })}

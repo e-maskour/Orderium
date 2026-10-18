@@ -50,6 +50,7 @@ import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
 import { ProgressBar } from 'primereact/progressbar';
+import { formatDate } from '@orderium/ui';
 import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
 
@@ -526,7 +527,7 @@ function BrowseFileCard({
           {formatBytes(file.sizeBytes)}
         </span>
         <span style={{ width: '8rem', fontSize: '0.8125rem', color: '#94a3b8', flexShrink: 0 }}>
-          {new Date(file.lastModified).toLocaleDateString()}
+          {formatDate(file.lastModified)}
         </span>
         {(hovered || isSelected) && (
           <Button
@@ -743,7 +744,7 @@ function NodeCard({
           {node.isFolder ? '—' : formatBytes(node.sizeBytes ?? 0)}
         </span>
         <span style={{ width: '8rem', fontSize: '0.8125rem', color: '#94a3b8', flexShrink: 0 }}>
-          {new Date(node.updatedAt).toLocaleDateString()}
+          {formatDate(node.updatedAt)}
         </span>
         <Button
           text

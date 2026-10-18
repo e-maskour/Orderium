@@ -2,6 +2,7 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
+import { formatQuantity } from '@orderium/ui';
 import { Package, Plus, Check } from 'lucide-react';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
@@ -153,7 +154,7 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
               }}
             >
               <Check size={12} />
-              {quantity}
+              {formatQuantity(quantity)}
             </div>
           ) : (
             <div
@@ -279,7 +280,7 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
                 boxShadow: '0 2px 8px rgba(5,150,105,0.4)',
               }}
             >
-              {quantity}
+              {formatQuantity(quantity)}
             </div>
           )}
         </div>

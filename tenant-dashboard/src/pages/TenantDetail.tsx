@@ -66,6 +66,8 @@ import { BILLING_CYCLE_LABELS } from '../types/payment';
 import { formatMoney } from '../utils/format';
 import type { UpdateTenantInput, TenantModulesConfig } from '../types/tenant';
 import { DEFAULT_MODULES } from '../types/tenant';
+import { formatDate as formatAppDate, formatDateTime } from '../utils/dateFormat';
+import { formatQuantity } from '../utils/numberFormat';
 
 type Tab = 'overview' | 'metrics' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
 
@@ -78,12 +80,7 @@ function trialDaysRemaining(endsAt: string | null): number | null {
 }
 
 function formatDate(s: string | null) {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  return formatAppDate(s, '—');
 }
 
 // ───────────────────────── sub-components ────────────────────────────────────
@@ -123,7 +120,7 @@ function UsageMeter({
         <div className="flex items-center gap-2">
           <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>
           <span className="text-xs text-slate-400 dark:text-slate-500">
-            {used.toLocaleString()} / {max.toLocaleString()}
+            {formatQuantity(used)} / {formatQuantity(max)}
           </span>
         </div>
       </div>
@@ -463,13 +460,21 @@ export function TenantDetail() {
               {
                 icon: <Users className="h-4 w-4" />,
                 label: 'Users',
-                value: statsLoading ? '—' : (stats?.usersCount ?? '—').toLocaleString(),
+                value: statsLoading
+                  ? '—'
+                  : stats?.usersCount != null
+                    ? formatQuantity(stats.usersCount)
+                    : '—',
                 color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400',
               },
               {
                 icon: <ShoppingCart className="h-4 w-4" />,
                 label: 'Orders',
-                value: statsLoading ? '—' : (stats?.ordersCount ?? '—').toLocaleString(),
+                value: statsLoading
+                  ? '—'
+                  : stats?.ordersCount != null
+                    ? formatQuantity(stats.ordersCount)
+                    : '—',
                 color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400',
               },
               {
@@ -801,10 +806,10 @@ export function TenantDetail() {
               </div>
               <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-4">
                 {[
-                  { label: 'Max Users', value: tenant.maxUsers.toLocaleString() },
-                  { label: 'Max Products', value: tenant.maxProducts.toLocaleString() },
-                  { label: 'Orders/month', value: tenant.maxOrdersPerMonth.toLocaleString() },
-                  { label: 'Storage', value: `${tenant.maxStorageMb.toLocaleString()} MB` },
+                  { label: 'Max Users', value: formatQuantity(tenant.maxUsers) },
+                  { label: 'Max Products', value: formatQuantity(tenant.maxProducts) },
+                  { label: 'Orders/month', value: formatQuantity(tenant.maxOrdersPerMonth) },
+                  { label: 'Storage', value: `${formatQuantity(tenant.maxStorageMb)} MB` },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-xs font-medium text-white/60">{label}</p>
@@ -1090,7 +1095,7 @@ export function TenantDetail() {
                               )}
                             </div>
                             <span className="shrink-0 rounded-lg bg-slate-50 px-2 py-1 text-xs text-slate-400 dark:bg-slate-800">
-                              {new Date(entry.createdAt).toLocaleString()}
+                              {formatDateTime(entry.createdAt)}
                             </span>
                           </div>
                           {entry.details && Object.keys(entry.details).length > 0 && (

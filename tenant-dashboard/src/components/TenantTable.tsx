@@ -3,6 +3,8 @@ import type { Tenant } from '../types/tenant';
 import { StatusBadge } from './StatusBadge';
 import { SkeletonRow } from './Skeleton';
 import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { formatDate } from '../utils/dateFormat';
+import { formatQuantity } from '../utils/numberFormat';
 
 interface Props {
   tenants: Tenant[];
@@ -121,7 +123,7 @@ export function TenantTable({ tenants, loading = false }: Props) {
 
                   {/* Max users */}
                   <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                    {t.maxUsers.toLocaleString()}
+                    {formatQuantity(t.maxUsers)}
                   </td>
 
                   {/* Expiry */}
@@ -135,7 +137,7 @@ export function TenantTable({ tenants, loading = false }: Props) {
                       </span>
                     ) : t.subscriptionEndsAt ? (
                       <span className="text-xs text-slate-400">
-                        {new Date(t.subscriptionEndsAt).toLocaleDateString()}
+                        {formatDate(t.subscriptionEndsAt)}
                       </span>
                     ) : (
                       <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
@@ -143,9 +145,7 @@ export function TenantTable({ tenants, loading = false }: Props) {
                   </td>
 
                   {/* Created */}
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    {new Date(t.createdAt).toLocaleDateString()}
-                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-400">{formatDate(t.createdAt)}</td>
 
                   {/* View arrow */}
                   <td className="px-4 py-3">

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { User, Bot, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { formatTime } from '@orderium/ui';
 import { AssistantMessage } from '../../types/aiAssistant';
 
 interface MessageBubbleProps {
@@ -131,12 +132,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           }}
         >
           {getStatusIcon()}
-          <span>
-            {new Date(message.timestamp).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
+          <span>{formatTime(message.timestamp)}</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useBackNavigation } from '../hooks/useBackNavigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
@@ -17,6 +18,7 @@ import {
   DollarSign,
   AlertCircle,
   Save,
+  X,
 } from 'lucide-react';
 import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
@@ -24,7 +26,7 @@ import { Button } from 'primereact/button';
 
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { goBack } = useBackNavigation('/customers');
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
@@ -47,7 +49,7 @@ export default function CustomerEdit() {
       queryClient.invalidateQueries({ queryKey: ['partners'] });
       queryClient.invalidateQueries({ queryKey: ['partner', id] });
       toastUpdated(t('customerUpdated'));
-      navigate('/customers');
+      goBack();
     },
     onError: (error: Error) => {
       toastError(`${t('failedToUpdate')}: ${error.message}`);
@@ -124,7 +126,7 @@ export default function CustomerEdit() {
           backButton={
             <Button
               icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
-              onClick={() => navigate('/customers')}
+              onClick={goBack}
               style={{
                 width: '2.25rem',
                 height: '2.25rem',
@@ -142,8 +144,10 @@ export default function CustomerEdit() {
               <Button
                 type="button"
                 label={t('cancel')}
+                aria-label={t('cancel')}
+                icon={<X style={{ width: '0.875rem', height: '0.875rem' }} />}
                 outlined
-                onClick={() => navigate('/customers')}
+                onClick={goBack}
               />
               <Button
                 type="submit"

@@ -4,6 +4,7 @@ import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
+import { formatQuantity } from '@orderium/ui';
 import { toastSuccess, toastError } from '../services/toast.service';
 import {
   ArrowLeft,
@@ -572,7 +573,7 @@ export default function OrderDetail() {
                         color: '#9ca3af',
                       }}
                     >
-                      {item.quantity}×
+                      {formatQuantity(item.quantity)}×
                     </div>
                     <span
                       style={{

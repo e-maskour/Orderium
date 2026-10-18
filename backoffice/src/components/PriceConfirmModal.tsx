@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { DollarSign, X, TrendingDown } from 'lucide-react';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDecimalInput, parseDecimal } from '@orderium/ui';
 
 interface Product {
   id: number;
@@ -33,7 +33,7 @@ export const PriceConfirmModal = ({
 
   useEffect(() => {
     if (isOpen && product) {
-      setPrice(formatAmount(product.price, 2));
+      setPrice(formatDecimalInput(product.price, 2, 2));
       setDecimalMode(false);
     }
   }, [isOpen, product]);
@@ -71,15 +71,15 @@ export const PriceConfirmModal = ({
     if (num === 'C') {
       setPrice('');
       setDecimalMode(false);
-    } else if (num === '.') {
-      if (!price.includes('.')) {
-        setPrice((price || '0') + '.');
+    } else if (num === ',') {
+      if (!price.includes(',')) {
+        setPrice((price || '0') + ',');
         setDecimalMode(true);
       }
     } else {
       const newValue = price === '' || price === '0' ? num : price + num;
-      if (newValue.includes('.')) {
-        const parts = newValue.split('.');
+      if (newValue.includes(',')) {
+        const parts = newValue.split(',');
         if (parts[1] && parts[1].length > 2) return;
       }
       setPrice(newValue);
@@ -87,15 +87,16 @@ export const PriceConfirmModal = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
+    // French decimal format: "." (numpad / virtual keyboard) is shown as ","
+    const value = e.target.value.replace(/\./g, ',');
+    if (/^\d*,?\d{0,2}$/.test(value) || value === '') {
       setPrice(value);
-      setDecimalMode(value.includes('.'));
+      setDecimalMode(value.includes(','));
     }
   };
 
   const handleConfirm = () => {
-    const pv = parseFloat(price);
+    const pv = parseDecimal(price) ?? 0;
     if (pv > 0) {
       onConfirm(pv);
       setPrice('');
@@ -104,9 +105,9 @@ export const PriceConfirmModal = ({
     }
   };
 
-  const hasValidPrice = price !== '' && parseFloat(price) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
-  const priceValue = parseFloat(price) || 0;
+  const hasValidPrice = price !== '' && (parseDecimal(price) ?? 0) > 0;
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', ','];
+  const priceValue = parseDecimal(price) ?? 0;
   const isBelowCost = product.cost != null && priceValue > 0 && priceValue < product.cost;
 
   const modal = (
@@ -356,7 +357,7 @@ export const PriceConfirmModal = ({
               inputMode="decimal"
               value={price}
               onChange={handleInputChange}
-              placeholder="0.00"
+              placeholder="0,00"
               className="pos-price-field"
               style={{
                 fontSize: '2.5rem',
@@ -393,7 +394,7 @@ export const PriceConfirmModal = ({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
             {numbers.map((num) => {
               const isClear = num === 'C';
-              const isDot = num === '.';
+              const isDot = num === ',';
               return (
                 <button
                   key={num}

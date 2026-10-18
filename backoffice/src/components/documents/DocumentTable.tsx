@@ -18,7 +18,9 @@ import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { MobileList } from '../MobileList';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDate } from '@orderium/ui';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { PartnerAvatar } from '@/components/ui';
 
 interface Document {
   id: number;
@@ -484,10 +486,10 @@ export function DocumentTable({
           rowClassName={() => 'ord-row-clickable'}
           dataKey="id"
           paginator
-          paginatorPosition="top"
+          paginatorPosition="bottom"
           paginatorClassName="min-h-3rem"
           rows={pageSize}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={PAGE_SIZE_OPTIONS}
           removableSort
           loading={loading}
           emptyMessage={t('noDocumentFound')}
@@ -549,9 +551,12 @@ export function DocumentTable({
             header={partnerLabel}
             sortable
             body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
-                {doc.partnerName}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                <PartnerAvatar name={doc.partnerName} />
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                  {doc.partnerName}
+                </span>
+              </div>
             )}
           />
           <Column
@@ -565,13 +570,7 @@ export function DocumentTable({
             }
             sortable
             body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {new Date(doc.date).toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </span>
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>{formatDate(doc.date)}</span>
             )}
           />
           {documentType === 'facture' && (
@@ -581,13 +580,7 @@ export function DocumentTable({
               sortable
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                  {doc.dueDate
-                    ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : '-'}
+                  {doc.dueDate ? formatDate(doc.dueDate) : '-'}
                 </span>
               )}
             />
@@ -599,13 +592,7 @@ export function DocumentTable({
               sortable
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                  {doc.validationDate
-                    ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : '-'}
+                  {doc.validationDate ? formatDate(doc.validationDate) : '-'}
                 </span>
               )}
             />
@@ -750,8 +737,7 @@ export function DocumentTable({
                 {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             ),
-            bottomLeft: (doc) =>
-              `${doc.partnerName} · ${new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+            bottomLeft: (doc) => `${doc.partnerName} · ${formatDate(doc.date)}`,
             bottomRight: (doc) => (
               <span className={getStatusBadgeClass(doc.status)}>{getStatusLabel(doc.status)}</span>
             ),

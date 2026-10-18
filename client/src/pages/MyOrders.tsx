@@ -27,7 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { notify } from '@orderium/ui';
+import { notify, formatDate as formatAppDate, formatQuantity } from '@orderium/ui';
 
 const STATUS_CONFIG: Record<
   string,
@@ -162,14 +162,7 @@ export default function MyOrders() {
     return language === 'ar' ? cfg.label_ar : cfg.label_fr;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-MA', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+  const formatDate = (dateString: string) => formatAppDate(dateString);
 
   const handleViewItems = async (order: Order) => {
     try {
@@ -832,7 +825,7 @@ export default function MyOrders() {
                       {item.productName || `${t('cartProduct')} ${item.productId}`}
                     </p>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6b7280' }}>
-                      {item.quantity} × {formatCurrency(item.unitPrice, language)}
+                      {formatQuantity(item.quantity)} × {formatCurrency(item.unitPrice, language)}
                     </p>
                   </div>
                   <span style={{ fontWeight: 800, fontSize: '1rem', color: '#059669' }}>

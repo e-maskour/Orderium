@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { applyPrimeLocale } from '@orderium/ui';
 import { Language, translations, TranslationKey } from '../lib/i18n';
 import { LanguageContext } from './LanguageContextInstance';
 
@@ -47,6 +48,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
+    // Calendars: French/Arabic labels, always dd/mm/yyyy
+    applyPrimeLocale(language);
   }, [language]);
 
   /** A deliberate switch by the user. Pins their choice against the tenant default. */

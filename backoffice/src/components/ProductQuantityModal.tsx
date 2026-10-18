@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, X, Package } from 'lucide-react';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDecimalInput, parseDecimal } from '@orderium/ui';
 import { translateUomCode } from '../lib/uom-translations';
 
 interface Product {
@@ -42,7 +42,7 @@ export const ProductQuantityModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      setQuantity(initialQuantity > 0 ? initialQuantity.toString() : '');
+      setQuantity(initialQuantity > 0 ? formatDecimalInput(initialQuantity, 0, 2) : '');
     }
   }, [isOpen, initialQuantity]);
 
@@ -77,23 +77,23 @@ export const ProductQuantityModal = ({
   if (!isOpen || !product) return null;
 
   const maxQuantity = product.stock ?? 999;
-  const qty = parseFloat(quantity) || 0;
+  const qty = parseDecimal(quantity) ?? 0;
   const hasQuantity = quantity !== '' && qty > 0;
   const totalPrice = product.price * qty;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', ','];
   const unitCode = translateUomCode(product.saleUnitOfMeasure?.code, language ?? 'fr');
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setQuantity('');
-    } else if (num === '.') {
-      if (!quantity.includes('.')) {
-        setQuantity(quantity === '' ? '0.' : quantity + '.');
+    } else if (num === ',') {
+      if (!quantity.includes(',')) {
+        setQuantity(quantity === '' ? '0,' : quantity + ',');
       }
     } else {
       const newValue = quantity === '' ? num : quantity + num;
-      if (newValue.includes('.')) {
-        const [, decimal] = newValue.split('.');
+      if (newValue.includes(',')) {
+        const [, decimal] = newValue.split(',');
         if (decimal && decimal.length > 2) return;
       }
       setQuantity(newValue);
@@ -101,12 +101,13 @@ export const ProductQuantityModal = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9.]/g, '');
-    const parts = value.split('.');
-    let v = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
-    if (v.includes('.')) {
-      const [int, dec] = v.split('.');
-      if (dec && dec.length > 2) v = int + '.' + dec.substring(0, 2);
+    // French decimal format: "." (numpad / virtual keyboard) is shown as ","
+    const value = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+    const parts = value.split(',');
+    let v = parts.length > 2 ? parts[0] + ',' + parts.slice(1).join('') : value;
+    if (v.includes(',')) {
+      const [int, dec] = v.split(',');
+      if (dec && dec.length > 2) v = int + ',' + dec.substring(0, 2);
     }
     setQuantity(v === '0' ? '' : v);
   };
@@ -394,7 +395,7 @@ export const ProductQuantityModal = ({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
             {numbers.map((num) => {
               const isClear = num === 'C';
-              const isDot = num === '.';
+              const isDot = num === ',';
               return (
                 <button
                   key={num}

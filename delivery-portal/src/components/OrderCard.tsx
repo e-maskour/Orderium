@@ -4,6 +4,7 @@ import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
+import { formatDateTime } from '@orderium/ui';
 import { toastError } from '../services/toast.service';
 import { Card } from 'primereact/card';
 import { Tag } from 'primereact/tag';
@@ -71,16 +72,7 @@ export default function OrderCard({ order }: OrderCardProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const locale = language === 'ar' ? 'ar-MA' : 'fr-MA';
-    return date.toLocaleDateString(locale, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const formatDate = (dateString: string) => formatDateTime(dateString);
 
   return (
     <Card className="h-full">

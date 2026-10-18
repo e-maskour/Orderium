@@ -1,4 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
+import {
+  DecimalInput,
+  getMoroccanPhoneError,
+  normalizeMoroccanPhone,
+  phoneInputProps,
+} from '@orderium/ui';
 import { Building2, Phone, MapPin, FileText, Upload, X, Loader2 } from 'lucide-react';
 import type { ICompany } from '../../modules/company/company.interface';
 import { useLanguage } from '../../context/LanguageContext';
@@ -149,6 +155,10 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = t('onboardingErrInvalidEmailAddress');
     }
+    const phoneError = getMoroccanPhoneError(form.phone || '');
+    if (phoneError) errs.phone = t(phoneError);
+    const faxError = getMoroccanPhoneError(form.fax || '');
+    if (faxError) errs.fax = t(faxError);
     if (form.website && !/^https?:\/\//.test(form.website)) {
       errs.website = t('onboardingErrWebsiteScheme');
     }
@@ -347,14 +357,18 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
       <FormRow>
         <FormField label={t('phone')}>
           <input
-            style={inputStyle}
+            {...phoneInputProps}
+            style={focusStyle('phone')}
             value={form.phone}
-            onChange={(e) => set('phone', e.target.value)}
-            placeholder="+212 6XX-XXXXXX"
-            type="tel"
+            onChange={(e) => set('phone', normalizeMoroccanPhone(e.target.value))}
             onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
-            onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
+            onBlur={(e) =>
+              (e.currentTarget.style.borderColor = errors.phone ? '#ef4444' : '#e2e8f0')
+            }
           />
+          {errors.phone && (
+            <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{errors.phone}</span>
+          )}
         </FormField>
         <FormField label={t('email')}>
           <input
@@ -378,13 +392,19 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
         <FormRow>
           <FormField label={t('fax')}>
             <input
-              style={inputStyle}
+              {...phoneInputProps}
+              placeholder="05XXXXXXXX"
+              style={focusStyle('fax')}
               value={form.fax}
-              onChange={(e) => set('fax', e.target.value)}
-              placeholder="+212 5XX-XXXXXX"
+              onChange={(e) => set('fax', normalizeMoroccanPhone(e.target.value))}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
+              onBlur={(e) =>
+                (e.currentTarget.style.borderColor = errors.fax ? '#ef4444' : '#e2e8f0')
+              }
             />
+            {errors.fax && (
+              <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{errors.fax}</span>
+            )}
           </FormField>
           <FormField label={t('website')}>
             <input
@@ -564,13 +584,13 @@ export default function CompanyStep({ onNext }: CompanyStepProps) {
             </select>
           </FormField>
           <FormField label={t('capital')}>
-            <input
+            <DecimalInput
               style={inputStyle}
-              value={form.capital ?? ''}
-              onChange={(e) => set('capital', e.target.value ? Number(e.target.value) : undefined)}
+              value={form.capital ?? null}
+              onValueChange={(v) => set('capital', v ?? undefined)}
               placeholder="100000"
-              type="number"
               min={0}
+              maxFractionDigits={2}
               onFocus={(e) => (e.currentTarget.style.borderColor = '#235ae4')}
               onBlur={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
             />

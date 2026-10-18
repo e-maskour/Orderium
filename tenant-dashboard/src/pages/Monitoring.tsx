@@ -28,6 +28,7 @@ import {
   todayIso,
 } from '../utils/format';
 import type { PlatformAlert, PlatformOverview } from '../types/metrics';
+import { formatQuantity } from '../utils/numberFormat';
 
 const RANGES = [
   { label: '7d', days: 7 },
@@ -122,7 +123,7 @@ export function Monitoring() {
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
                 <MiniStat
                   label="Orders this month"
-                  value={data.totals.ordersThisMonth.toLocaleString()}
+                  value={formatQuantity(data.totals.ordersThisMonth)}
                 />
                 <MiniStat label="Database footprint" value={formatBytes(data.totals.dbSizeBytes)} />
                 <MiniStat label="Object storage" value={formatBytes(data.totals.storageBytes)} />
@@ -219,7 +220,7 @@ function KpiGrid({ data }: { data: PlatformOverview }) {
         label="Orders"
         value={formatCompact(t.orders)}
         delta={data.deltas.orders}
-        sub={`${t.ordersThisMonth.toLocaleString()} this month`}
+        sub={`${formatQuantity(t.ordersThisMonth)} this month`}
         tone="indigo"
       />
       <Kpi

@@ -1,4 +1,5 @@
 import { AdminLayout } from '../components/AdminLayout';
+import { getMoroccanPhoneError, normalizeMoroccanPhone, phoneInputProps } from '@orderium/ui';
 import { PageHeader } from '../components/PageHeader';
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Truck, Edit2, Trash2, Search, X } from 'lucide-react';
@@ -25,6 +26,7 @@ import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Modal } from '../components/Modal';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function DeliveryPersons() {
   const { t } = useLanguage();
@@ -130,6 +132,12 @@ export default function DeliveryPersons() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const phoneError = getMoroccanPhoneError(formData.phoneNumber);
+    if (phoneError) {
+      toastError(t(phoneError));
+      return;
+    }
 
     if (editingPerson) {
       // Update existing person
@@ -430,9 +438,9 @@ export default function DeliveryPersons() {
                 selectionMode="checkbox"
                 dataKey="id"
                 paginator
-                paginatorPosition="top"
+                paginatorPosition="bottom"
                 rows={25}
-                rowsPerPageOptions={[10, 25, 50, 100]}
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
                 removableSort
                 emptyMessage={
                   <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} compact />
@@ -586,13 +594,27 @@ export default function DeliveryPersons() {
                 {t('phoneNumber')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <InputText
-                type="tel"
+                {...phoneInputProps}
                 value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                placeholder="06XXXXXXXX"
+                onChange={(e) =>
+                  setFormData({ ...formData, phoneNumber: normalizeMoroccanPhone(e.target.value) })
+                }
+                className={getMoroccanPhoneError(formData.phoneNumber) ? 'p-invalid' : ''}
                 style={{ width: '100%' }}
                 required
               />
+              {getMoroccanPhoneError(formData.phoneNumber) && (
+                <small
+                  style={{
+                    display: 'block',
+                    color: '#ef4444',
+                    fontSize: '0.75rem',
+                    marginTop: '0.25rem',
+                  }}
+                >
+                  {t(getMoroccanPhoneError(formData.phoneNumber)!)}
+                </small>
+              )}
             </div>
             <div>
               <label

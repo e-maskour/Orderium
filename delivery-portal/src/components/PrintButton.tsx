@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Printer } from 'lucide-react';
 import { usePrinter } from '../hooks/usePrinter';
 import type { ReceiptData } from '@shared-print/PrintManager';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 
 interface PrintButtonProps {
   data: ReceiptData;
@@ -65,15 +66,15 @@ export function PrintButton({ data, printerId, label }: PrintButtonProps) {
             {data.items.map((item, i) => (
               <tr key={i}>
                 <td>{item.name}</td>
-                <td style={{ textAlign: 'right' }}>{item.qty}</td>
-                <td style={{ textAlign: 'right' }}>{item.total.toFixed(2)}</td>
+                <td style={{ textAlign: 'right' }}>{formatQuantity(item.qty)}</td>
+                <td style={{ textAlign: 'right' }}>{formatAmount(item.total, 2)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
         <div style={{ textAlign: 'right' }}>
-          <strong>Total : {data.total.toFixed(2)}</strong>
+          <strong>Total : {formatAmount(data.total, 2)}</strong>
         </div>
         {data.footer && (
           <div style={{ textAlign: 'center', marginTop: 8, fontSize: 10 }}>{data.footer}</div>

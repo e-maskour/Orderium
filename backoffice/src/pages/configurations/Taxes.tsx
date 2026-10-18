@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { DecimalInput, formatQuantity } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
 import {
   taxesService,
@@ -22,6 +23,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function Taxes() {
   const { t } = useLanguage();
@@ -164,7 +166,7 @@ export default function Taxes() {
             emptyMessage={t('noTaxRateConfigured')}
             config={{
               topLeft: (r: TaxRate) => r.name,
-              topRight: (r: TaxRate) => `${r.rate}%`,
+              topRight: (r: TaxRate) => `${formatQuantity(r.rate, 2)}%`,
               bottomRight: (r: TaxRate) =>
                 r.isDefault ? <StatusBadge tone="success" label={t('default')} /> : null,
             }}
@@ -184,9 +186,9 @@ export default function Taxes() {
             value={rates.map((r, i) => ({ ...r, _idx: i }))}
             dataKey="_idx"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             emptyMessage={<EmptyState icon={Percent} title={t('noTaxRatesConfigured')} compact />}
             paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
@@ -210,7 +212,7 @@ export default function Taxes() {
               sortable
               body={(row) => (
                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  {row.rate}%
+                  {formatQuantity(row.rate, 2)}%
                 </span>
               )}
             />
@@ -300,14 +302,14 @@ export default function Taxes() {
                 {t('ratePercentage')} <span style={{ color: 'var(--status-unpaid-text)' }}>*</span>
               </label>
               <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-                <InputText
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={String(formData.rate)}
-                  onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
+                <DecimalInput
+                  min={0}
+                  max={100}
+                  maxFractionDigits={2}
+                  value={formData.rate}
+                  onValueChange={(v) => setFormData({ ...formData, rate: v ?? 0 })}
                   required
+                  className="p-inputtext p-component"
                   style={{ width: '100%', paddingRight: '2.5rem' }}
                 />
                 <Percent

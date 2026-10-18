@@ -23,6 +23,7 @@ import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 import { StatusBadge } from '../../components/ui';
 import { AutoCompleteSelect } from '../../components/ui/AutoCompleteSelect';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -239,9 +240,9 @@ export default function Sequences() {
             value={sequences}
             dataKey="id"
             paginator
-            paginatorPosition="top"
+            paginatorPosition="bottom"
             rows={25}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             emptyMessage={<EmptyState icon={Hash} title={t('noSequencesConfigured')} compact />}
             paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"

@@ -1,221 +1,119 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import type { CSSProperties } from 'react';
+import type { ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../lib/i18n';
-import { formatAmount } from '@orderium/ui';
+import { DecimalInput, formatAmount, formatQuantity } from '@orderium/ui';
 import { ordersService } from '../modules/orders';
 import { orderPaymentsService, ORDER_PAYMENT_TYPE_LABELS } from '../modules';
+import type { IOrderPayment } from '../modules';
 import { productsService } from '../modules/products';
 import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal, prefetchPDF } from '../components/PDFPreviewModal';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
+import { Calendar as PrimeCalendar } from 'primereact/calendar';
+import { Menu } from 'primereact/menu';
+import type { MenuItem } from 'primereact/menuitem';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
+import { RefLink } from '../components/ui/RefLink';
+import { entityRoutes } from '../lib/entityRoutes';
+import { useBackNavigation } from '../hooks/useBackNavigation';
+import { OrderStatusBanner } from '../components/order-detail/OrderStatusBanner';
+import { OrderMoneySummary } from '../components/order-detail/OrderMoneySummary';
+import { getOrderStage, toWhatsAppNumber } from '../components/order-detail/orderStage';
+import '../components/order-detail/order-detail.css';
 import {
   ArrowLeft,
+  Banknote,
   Package,
+  PackageCheck,
   Phone,
   MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  MoreVertical,
   Printer,
   Pencil,
   Trash2,
   Plus,
   Check,
   X,
-  CreditCard,
-  ChevronRight,
+  XCircle,
   User,
   Receipt,
   Truck,
   Calendar,
-  ShoppingBag,
+  Home,
   RefreshCw,
-  Share2,
+  StickyNote,
+  Wallet,
 } from 'lucide-react';
 
-// ─── Status config ──────────────────────────────────────────────────────────
+/** Statuses a user can set by hand on POS orders (mirrors the API's POS_SETTABLE_STATUSES). */
+const POS_STATUS_OPTIONS: { value: string; labelKey: TranslationKey; Icon: typeof Check }[] = [
+  { value: 'confirmed', labelKey: 'confirmed', Icon: Check },
+  { value: 'picked_up', labelKey: 'pickedUp', Icon: PackageCheck },
+  { value: 'delivered', labelKey: 'delivered', Icon: Home },
+  { value: 'cancelled', labelKey: 'cancelled', Icon: XCircle },
+];
 
-const STATUS_CFG: Record<
-  string,
-  { label_fr: string; label_ar: string; bg: string; color: string; border: string; icon: string }
-> = {
-  pending: {
-    label_fr: 'En attente',
-    label_ar: 'في الانتظار',
-    bg: '#f8fafc',
-    color: '#475569',
-    border: '#e2e8f0',
-    icon: '⏳',
-  },
-  confirmed: {
-    label_fr: 'Confirmé',
-    label_ar: 'مؤكد',
-    bg: '#eff6ff',
-    color: '#1d4ed8',
-    border: '#bfdbfe',
-    icon: '✅',
-  },
-  in_progress: {
-    label_fr: 'En cours',
-    label_ar: 'قيد التنفيذ',
-    bg: '#fffbeb',
-    color: '#92400e',
-    border: '#fde68a',
-    icon: '⚙️',
-  },
-  picked_up: {
-    label_fr: 'Récupéré',
-    label_ar: 'تم الاستلام',
-    bg: '#f5f3ff',
-    color: '#6d28d9',
-    border: '#ddd6fe',
-    icon: '📦',
-  },
-  to_delivery: {
-    label_fr: 'À livrer',
-    label_ar: 'للتوصيل',
-    bg: '#fffbeb',
-    color: '#b45309',
-    border: '#fde68a',
-    icon: '🚚',
-  },
-  in_delivery: {
-    label_fr: 'En livraison',
-    label_ar: 'في التوصيل',
-    bg: '#ecfeff',
-    color: '#0e7490',
-    border: '#a5f3fc',
-    icon: '🚴',
-  },
-  delivered: {
-    label_fr: 'Livré',
-    label_ar: 'تم التوصيل',
-    bg: '#ecfdf5',
-    color: '#047857',
-    border: '#a7f3d0',
-    icon: '✔️',
-  },
-  cancelled: {
-    label_fr: 'Annulé',
-    label_ar: 'ملغى',
-    bg: '#fef2f2',
-    color: '#b91c1c',
-    border: '#fecaca',
-    icon: '❌',
-  },
-  canceled: {
-    label_fr: 'Annulé',
-    label_ar: 'ملغى',
-    bg: '#fef2f2',
-    color: '#b91c1c',
-    border: '#fecaca',
-    icon: '❌',
-  },
-};
+/** 'yyyy-MM-dd' → local Date (no timezone shift). */
+function isoToLocalDate(value: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value || '');
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
 
-const NEXT_ACTIONS: Record<
-  string,
-  { value: string; label_fr: string; label_ar: string; bg: string; color: string; border: string }[]
-> = {
-  pending: [
-    {
-      value: 'confirmed',
-      label_fr: 'Confirmer',
-      label_ar: 'تأكيد',
-      bg: '#eff6ff',
-      color: '#1d4ed8',
-      border: '#bfdbfe',
-    },
-    {
-      value: 'cancelled',
-      label_fr: 'Annuler',
-      label_ar: 'إلغاء',
-      bg: '#fef2f2',
-      color: '#b91c1c',
-      border: '#fecaca',
-    },
-  ],
-  confirmed: [
-    {
-      value: 'picked_up',
-      label_fr: 'Récupéré',
-      label_ar: 'تم الاستلام',
-      bg: '#f5f3ff',
-      color: '#6d28d9',
-      border: '#ddd6fe',
-    },
-    {
-      value: 'delivered',
-      label_fr: 'Livré',
-      label_ar: 'تم التسليم',
-      bg: '#ecfdf5',
-      color: '#047857',
-      border: '#a7f3d0',
-    },
-    {
-      value: 'cancelled',
-      label_fr: 'Annuler',
-      label_ar: 'إلغاء',
-      bg: '#fef2f2',
-      color: '#b91c1c',
-      border: '#fecaca',
-    },
-  ],
-  picked_up: [
-    {
-      value: 'delivered',
-      label_fr: 'Marquer livré',
-      label_ar: 'تم التسليم',
-      bg: '#ecfdf5',
-      color: '#047857',
-      border: '#a7f3d0',
-    },
-    {
-      value: 'cancelled',
-      label_fr: 'Annuler',
-      label_ar: 'إلغاء',
-      bg: '#fef2f2',
-      color: '#b91c1c',
-      border: '#fecaca',
-    },
-  ],
-  in_delivery: [
-    {
-      value: 'delivered',
-      label_fr: 'Marquer livré',
-      label_ar: 'تم التسليم',
-      bg: '#ecfdf5',
-      color: '#047857',
-      border: '#a7f3d0',
-    },
-  ],
-};
+/** Local Date → 'yyyy-MM-dd' (built from local parts, not toISOString). */
+function localDateToIso(d: Date | null | undefined): string {
+  if (!d) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
-/** Shared look for the rows in the "Documents" side panel. */
-const docActionBtnStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.625rem',
-  padding: '0.625rem 0.75rem',
-  borderRadius: '0.5rem',
-  background: '#f8fafc',
-  border: '1px solid #e2e8f0',
-  cursor: 'pointer',
-  width: '100%',
-  textAlign: 'left',
-  fontFamily: 'inherit',
-};
+function initials(name: string | null | undefined): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
+}
+
+/** "Appeler" + "WhatsApp" — the two ways shop owners actually reach people. */
+function ContactButtons({ phone, t }: { phone: string; t: (k: TranslationKey) => string }) {
+  const wa = toWhatsAppNumber(phone);
+  return (
+    <div className="od-duo">
+      <a className="od-btn" href={`tel:${phone}`}>
+        <Phone aria-hidden="true" />
+        {t('odCall')}
+      </a>
+      {wa && (
+        <a
+          className="od-btn od-btn--wa"
+          href={`https://wa.me/${wa}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <MessageCircle aria-hidden="true" />
+          {t('odWhatsapp')}
+        </a>
+      )}
+    </div>
+  );
+}
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { goBack } = useBackNavigation('/orders');
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
   const isAr = language?.startsWith('ar');
@@ -239,8 +137,31 @@ export default function OrderDetailPage() {
     enabled: !!id,
   });
 
-  // ── Status mutation ────────────────────────────────────────
-  const changeStatusMutation = useMutation({
+  // ── Lifecycle actions ──────────────────────────────────────
+  // draft → validate() → in_progress → (delivery) confirmed/picked_up → deliver() → delivered
+  const lifecycleMutation = useMutation({
+    mutationFn: (action: 'validate' | 'deliver' | 'pickUp' | 'cancel') => {
+      switch (action) {
+        case 'validate':
+          return ordersService.validate(Number(id));
+        case 'deliver':
+          return ordersService.deliver(Number(id));
+        case 'pickUp':
+          return ordersService.changeStatus(Number(id), 'picked_up');
+        default:
+          return ordersService.cancel(Number(id));
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orderDetails', Number(id)] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toastSuccess(t('statusUpdated'));
+    },
+    onError: (e: Error) => toastError(e.message),
+  });
+
+  // POS orders: any status can be set by hand, even once paid or delivered
+  const posStatusMutation = useMutation({
     mutationFn: (status: string) => ordersService.changeStatus(Number(id), status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orderDetails', Number(id)] });
@@ -357,9 +278,14 @@ export default function OrderDetailPage() {
 
   // ── Payments ───────────────────────────────────────────────
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
-  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState<string>(localDateToIso(new Date()));
   const [paymentType, setPaymentType] = useState<string>('cash');
   const [paymentNote, setPaymentNote] = useState<string>('');
+  const [showPayForm, setShowPayForm] = useState(false);
+  const paymentsRef = useRef<HTMLElement | null>(null);
+  const paymentMenuRef = useRef<Menu>(null);
+  const moreMenuRef = useRef<Menu>(null);
+  const [menuPayment, setMenuPayment] = useState<IOrderPayment | null>(null);
 
   const createPaymentMutation = useMutation({
     mutationFn: () =>
@@ -376,6 +302,7 @@ export default function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setPaymentAmount(0);
       setPaymentNote('');
+      setShowPayForm(false);
       toastSuccess(t('paymentAdded') || 'Paiement enregistré');
     },
     onError: (e: Error) => toastError(e.message),
@@ -413,7 +340,7 @@ export default function OrderDetailPage() {
     if (!id) return;
     const isReceipt = type === 'receipt';
     const orderRef = order?.displayOrderNumber || `#${id}`;
-    const total = order?.total != null ? `${Number(order.total).toFixed(2)} DH` : '';
+    const total = order?.total != null ? `${formatAmount(Number(order.total), 2)} DH` : '';
     const message = isAr
       ? `مرحباً، يرجى الاطلاع على ${isReceipt ? 'إيصال' : 'وصل التسليم'} الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
       : `Bonjour, veuillez trouver ci-joint ${isReceipt ? 'le reçu' : 'le bon de livraison'} de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
@@ -440,7 +367,7 @@ export default function OrderDetailPage() {
         return;
       }
 
-      const phone = (order?.customerPhone ?? '').replace(/[\s\-()]/g, '').replace(/^\+/, '');
+      const phone = toWhatsAppNumber(order?.customerPhone);
       if (phone) {
         window.open(
           `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
@@ -514,23 +441,20 @@ export default function OrderDetailPage() {
             style={{ width: '3rem', height: '3rem', margin: '0 auto 1rem', color: '#cbd5e1' }}
           />
           <p>{t('orderNotFound') || 'Commande introuvable'}</p>
-          <Button
-            label={t('back') || 'Retour'}
-            onClick={() => navigate('/orders')}
-            style={{ marginTop: '1rem' }}
-          />
+          <Button label={t('back') || 'Retour'} onClick={goBack} style={{ marginTop: '1rem' }} />
         </div>
       </AdminLayout>
     );
   }
 
-  const status = order.status || 'pending';
-  const statusCfg = STATUS_CFG[status] || STATUS_CFG.pending;
-  const statusLabel = isAr ? statusCfg.label_ar : statusCfg.label_fr;
-  const nextActions = NEXT_ACTIONS[status] || [];
-  const isEditable = !['delivered', 'cancelled', 'canceled'].includes(status);
+  const status: string = order.status || 'draft';
   /** POS-issued order (admin till or customer portal) — prints a receipt, not just a BL. */
   const isPosOrder = order.originType === 'CLIENT_POS' || order.originType === 'ADMIN_POS';
+  /** POS orders stay editable after payment/delivery; only cancelled/invoiced ones are locked. */
+  const isPosLocked = ['invoiced', 'cancelled', 'canceled'].includes(status);
+  const isEditable = isPosOrder
+    ? !isPosLocked
+    : !['delivered', 'invoiced', 'cancelled', 'canceled'].includes(status);
 
   const orderDate = new Date(order.date || order.dateCreated);
   const formattedDate = orderDate.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
@@ -542,24 +466,180 @@ export default function OrderDetailPage() {
   const paidAmount = payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0);
   const remainingAmount = Math.max(0, (order?.total ?? 0) - paidAmount);
 
-  const paymentTypeOptions = Object.entries(ORDER_PAYMENT_TYPE_LABELS).map(([value, label]) => ({
+  /** Payment method in words ("Espèces"), never the raw value ("cash"). */
+  const paymentTypeLabel = (value: string) => {
+    const key = `odPay_${value}` as TranslationKey;
+    const label = t(key);
+    return label === key
+      ? (ORDER_PAYMENT_TYPE_LABELS as Record<string, string>)[value] || value
+      : label;
+  };
+  const paymentTypeOptions = Object.keys(ORDER_PAYMENT_TYPE_LABELS).map((value) => ({
     value,
-    label,
+    label: paymentTypeLabel(value),
   }));
+
+  /** "8 sept. 2026" — plain-date strings are read as local dates so they don't shift a day. */
+  const formatDay = (value: string | null | undefined) => {
+    if (!value) return '—';
+    const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value);
+    return Number.isNaN(d.getTime())
+      ? value
+      : d.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
+  };
+
+  const stage = getOrderStage(status, order.deliveryStatus, remainingAmount);
+
+  const openPaymentForm = () => {
+    setPaymentAmount(Math.round(remainingAmount * 100) / 100);
+    setShowPayForm(true);
+    requestAnimationFrame(() =>
+      paymentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
+  };
+
+  const runLifecycle = (
+    action: 'validate' | 'deliver' | 'pickUp' | 'cancel',
+    question: string,
+    confirmLabel: string,
+  ) =>
+    toastConfirm(question, () => lifecycleMutation.mutate(action), {
+      confirmLabel,
+      ...(action === 'cancel' ? { variant: 'destructive' as const } : {}),
+    });
+
+  // The single "next thing to do" for this order.
+  let primaryAction: ReactNode = null;
+  if (!editMode) {
+    const busy = lifecycleMutation.isPending;
+    if (stage === 'draft') {
+      primaryAction = (
+        <button
+          type="button"
+          className="od-primary"
+          disabled={busy}
+          onClick={() => runLifecycle('validate', t('odValidateConfirm'), t('odActionValidate'))}
+        >
+          <Check aria-hidden="true" />
+          {t('odActionValidate')}
+        </button>
+      );
+    } else if (stage === 'ready' || stage === 'delivering') {
+      primaryAction = (
+        <button
+          type="button"
+          className="od-primary"
+          disabled={busy}
+          onClick={() => runLifecycle('deliver', t('odDeliverConfirm'), t('odActionDeliver'))}
+        >
+          <Home aria-hidden="true" />
+          {t('odActionDeliver')}
+        </button>
+      );
+    } else if (stage === 'deliveredUnpaid') {
+      primaryAction = (
+        <button type="button" className="od-primary" onClick={openPaymentForm}>
+          <Plus aria-hidden="true" />
+          {t('addPayment')}
+        </button>
+      );
+    } else if (stage === 'done' || stage === 'invoiced') {
+      primaryAction = (
+        <button
+          type="button"
+          className="od-primary od-primary--wa"
+          onClick={() => handleShare(isPosOrder ? 'receipt' : 'delivery-note')}
+        >
+          <MessageCircle aria-hidden="true" />
+          {isPosOrder ? t('odActionSendReceipt') : t('odActionSendNote')}
+        </button>
+      );
+    }
+  }
+
+  // Rare actions live in the "Plus" menu so they can't be tapped by mistake.
+  const posStatusItems: MenuItem[] =
+    isPosOrder && !isPosLocked
+      ? POS_STATUS_OPTIONS.filter((o) => o.value !== status).map((o) => ({
+          label: t('odStatusMenu').replace('{status}', t(o.labelKey)),
+          icon: <o.Icon size={16} style={{ marginInlineEnd: '0.5rem' }} />,
+          disabled: posStatusMutation.isPending,
+          ...(o.value === 'cancelled' ? { style: { color: 'var(--status-unpaid)' } } : {}),
+          command: () =>
+            o.value === 'cancelled'
+              ? toastConfirm(t('odCancelConfirm'), () => posStatusMutation.mutate(o.value), {
+                  confirmLabel: t('odCancelOrder'),
+                  variant: 'destructive' as const,
+                })
+              : posStatusMutation.mutate(o.value),
+        }))
+      : [];
+
+  const moreMenuItems: MenuItem[] = [
+    ...posStatusItems,
+    ...(status === 'confirmed' && !isPosOrder
+      ? [
+          {
+            label: t('odMarkPickedUp'),
+            icon: <PackageCheck size={16} style={{ marginInlineEnd: '0.5rem' }} />,
+            command: () => lifecycleMutation.mutate('pickUp'),
+          },
+        ]
+      : []),
+    ...(order.isValidated
+      ? [
+          {
+            label: t('odRegeneratePdf'),
+            icon: <RefreshCw size={16} style={{ marginInlineEnd: '0.5rem' }} />,
+            disabled: regeneratingPdf,
+            command: handleRegeneratePdf,
+          },
+        ]
+      : []),
+    ...(!isPosOrder && !['delivered', 'invoiced', 'cancelled', 'canceled'].includes(status)
+      ? [
+          {
+            label: t('odCancelOrder'),
+            icon: <XCircle size={16} style={{ marginInlineEnd: '0.5rem' }} />,
+            style: { color: 'var(--status-unpaid)' },
+            command: () => runLifecycle('cancel', t('odCancelConfirm'), t('odCancelOrder')),
+          },
+        ]
+      : []),
+  ];
+
+  const paymentMenuItems: MenuItem[] = [
+    {
+      label: t('odDeletePayment'),
+      icon: <Trash2 size={16} style={{ marginInlineEnd: '0.5rem' }} />,
+      style: { color: 'var(--status-unpaid)' },
+      command: () => {
+        const p = menuPayment;
+        if (!p) return;
+        toastConfirm(
+          t('odDeletePaymentConfirm').replace(
+            '{amount}',
+            `${formatAmount(p.amount, 2)} ${t('currency')}`,
+          ),
+          () => deletePaymentMutation.mutate(p.id),
+          { variant: 'destructive', confirmLabel: t('delete') },
+        );
+      },
+    },
+  ];
 
   return (
     <AdminLayout>
+      {/* Edit-mode item rows only — the read-only layout lives in order-detail.css */}
       <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .ord-detail-grid {
-          display: grid;
-          grid-template-columns: 1fr 22rem;
-          gap: 1.25rem;
-          align-items: start;
-        }
         .ord-items-thead {
           display: grid;
           grid-template-columns: 3fr 1fr 1fr 1fr;
+          gap: 0.75rem;
           padding: 0.5rem 1rem;
           border-bottom: 1px solid #f1f5f9;
           background: #f8fafc;
@@ -568,31 +648,70 @@ export default function OrderDetailPage() {
           display: grid;
           grid-template-columns: 3fr 1fr 1fr 1fr;
           align-items: center;
-          padding: 0.625rem 1rem;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
           transition: background 0.5s;
         }
         .ord-item-row > * { min-width: 0; }
-        .ord-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .ord-items-card-hdr { display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 1rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-        .ord-items-card-hdr-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+        /* Edit-mode inputs — large, readable, finger-sized (44px) */
+        .ord-item-name-input,
+        .ord-item-qty-input,
+        .ord-item-price-input {
+          height: 2.75rem;
+          padding: 0 0.75rem;
+          border-radius: 0.625rem;
+          font-size: 1.0625rem;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          color: #0f172a;
+          background: #fff;
+          border: 1.5px solid #cbd5e1;
+          outline: none;
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .ord-item-qty-input {
+          width: 5.5rem;
+          text-align: center;
+          font-weight: 700;
+          color: #92400e;
+          background: #fffbeb;
+          border-color: #fcd34d;
+        }
+        .ord-item-price-input { width: 7.5rem; text-align: end; }
+        .ord-item-name-input { width: 100%; font-weight: 500; }
+        .ord-item-qty-input:hover,
+        .ord-item-price-input:hover { border-color: #94a3b8; }
+        .ord-item-qty-input:hover { border-color: #f59e0b; }
+        .ord-item-name-input:focus,
+        .ord-item-qty-input:focus,
+        .ord-item-price-input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        }
+        .ord-item-delete-btn,
+        .ord-item-icon-btn {
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 0.625rem;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #dc2626;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          justify-self: end;
+        }
+        .ord-item-delete-btn:hover { background: #fee2e2; }
+        .ord-item-icon-btn--ok { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+        .ord-item-icon-btn--ok:hover { background: #bbf7d0; }
+        .ord-item-icon-btn--muted { background: #f1f5f9; border-color: #e2e8f0; color: #64748b; }
+        .ord-item-icon-btn--muted:hover { background: #e2e8f0; }
         .ord-new-item-inputs { display: contents; }
         .ord-new-item-btns   { display: contents; }
-        /* ── Document-style page header ── */
-        .doc-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: nowrap; position: relative; margin-bottom: 1.5rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1px solid rgba(226,232,240,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; }
-        .doc-detail-hdr__icon { width: 3rem; height: 3rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4 0%, #818cf8 100%); border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(35,90,228,0.35); }
-        .doc-detail-hdr__body { flex: 1; min-width: 0; overflow: hidden; }
-        .doc-detail-hdr__crumb { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.2rem; }
-        .doc-detail-hdr__title { margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .doc-detail-hdr__badges { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
         @media (max-width: 767px) {
-          .ord-detail-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .ord-items-card-hdr { flex-direction: column; align-items: stretch; gap: 0.5rem; }
-          .ord-items-card-hdr-actions { flex-wrap: wrap; }
-          .ord-items-thead {
-            display: none !important;
-          }
+          .ord-items-thead { display: none !important; }
           .ord-item-row {
             display: flex !important;
             flex-wrap: wrap !important;
@@ -600,1603 +719,807 @@ export default function OrderDetailPage() {
             align-items: center !important;
             padding: 0.875rem 1rem !important;
           }
-          .ord-item-row > *:first-child {
-            flex: 0 0 100%;
-            margin-bottom: 0.125rem;
-          }
-          .ord-item-total {
-            margin-inline-start: auto;
-          }
-          .ord-item-qty-input {
-            flex: 0 0 5.5rem !important;
-            width: 5.5rem !important;
-          }
-          .ord-item-price-input {
-            flex: 0 0 8rem !important;
-            width: 8rem !important;
-            min-width: 0 !important;
-          }
-          .ord-item-delete-btn {
-            margin-inline-start: auto !important;
-          }
-          .ord-new-item-row {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.625rem !important;
-          }
-          .ord-new-item-row > *:first-child {
-            width: 100%;
-          }
-          .ord-new-item-inputs {
-            display: flex !important;
-            gap: 0.5rem;
-          }
-          .ord-new-item-inputs > input:last-child {
-            flex: 1;
-            width: auto !important;
-          }
-          .ord-new-item-btns {
-            display: flex !important;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-          .ord-pay-progress-labels {
-            flex-direction: column !important;
-            gap: 0.25rem !important;
-            align-items: flex-start !important;
-          }
-          /* header mobile overrides */
-          .doc-detail-hdr { padding: 0.625rem 0.75rem; gap: 0.5rem; border-radius: 0.875rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-          .doc-detail-hdr__icon { display: none !important; }
-          .doc-detail-hdr__title { display: none !important; }
-          .doc-detail-hdr__crumb { margin-bottom: 0; }
-          .doc-detail-hdr__badges { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0.4375rem; width: 100%; }
-          .doc-detail-hdr__badges::-webkit-scrollbar { display: none; }
+          .ord-item-row > *:first-child { flex: 0 0 100%; margin-bottom: 0.125rem; }
+          .ord-item-qty-input { flex: 0 0 6rem !important; width: 6rem !important; }
+          .ord-item-price-input { flex: 1 1 8rem !important; width: auto !important; min-width: 0 !important; }
+          .ord-item-delete-btn { margin-inline-start: auto !important; }
+          .ord-new-item-row { flex-direction: column !important; align-items: stretch !important; gap: 0.625rem !important; }
+          .ord-new-item-row > *:first-child { width: 100%; }
+          .ord-new-item-inputs { display: flex !important; gap: 0.5rem; }
+          .ord-new-item-inputs > input:last-child { flex: 1; width: auto !important; }
+          .ord-new-item-btns { display: flex !important; gap: 0.5rem; justify-content: flex-end; }
         }
       `}</style>
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 0 3rem' }}>
-        {/* ── Page Header ─────────────────────────────────── */}
-        <div className="doc-detail-hdr">
-          {/* Back button */}
-          <Button
-            icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
-            onClick={() => navigate('/orders')}
-            style={{
-              width: '2.25rem',
-              height: '2.25rem',
-              flexShrink: 0,
-              background: '#f8fafc',
-              border: '1.5px solid #e2e8f0',
-              color: '#64748b',
-              borderRadius: '0.625rem',
-              padding: 0,
-            }}
-          />
-          {/* Icon box */}
-          <div className="doc-detail-hdr__icon">
-            <ShoppingBag style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />
-          </div>
-          {/* Title + breadcrumb */}
-          <div className="doc-detail-hdr__body">
-            <div className="doc-detail-hdr__crumb">
-              <span
-                onClick={() => navigate('/orders')}
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  color: '#94a3b8',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.07em',
-                  cursor: 'pointer',
-                }}
-              >
-                {t('orders')}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 700,
-                  color: '#235ae4',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.07em',
-                }}
-              >
-                {order.displayOrderNumber}
-              </span>
-            </div>
-            <h1 className="doc-detail-hdr__title">
-              <span style={{ color: '#235ae4' }}>{order.displayOrderNumber}</span>
-            </h1>
-          </div>
-          {/* Badges */}
-          <div className="doc-detail-hdr__badges">
-            {/* Status badge */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4375rem',
-                padding: '0.4375rem 0.875rem',
-                borderRadius: '9999px',
-                background: statusCfg.bg,
-                border: `1.5px solid ${statusCfg.border}`,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: '0.875rem', lineHeight: 1 }}>{statusCfg.icon}</span>
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 700,
-                  color: statusCfg.color,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                }}
-              >
-                {statusLabel}
-              </span>
-            </div>
-            {/* Date badge */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4375rem',
-                padding: '0.4375rem 0.875rem',
-                borderRadius: '9999px',
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              <Calendar
-                style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', flexShrink: 0 }}
-              />
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  color: '#64748b',
-                  letterSpacing: '0.02em',
-                }}
-              >
+        <PageHeader
+          title={order.displayOrderNumber}
+          crumbs={[{ label: t('orders'), to: '/orders' }]}
+          backButton={
+            <Button
+              className="page-header__back"
+              icon={<ArrowLeft size={18} className="od-flip" aria-hidden="true" />}
+              onClick={goBack}
+              aria-label={t('orders')}
+            />
+          }
+          actions={
+            <>
+              <span className="page-header__badge">
+                <Calendar aria-hidden="true" />
                 {formattedDate}
               </span>
-            </div>
-            {/* Print buttons */}
-            {isPosOrder && (
-              <>
-                <Button
-                  icon={<Receipt style={{ width: '0.875rem', height: '0.875rem' }} />}
-                  label={isAr ? 'إيصال' : 'Reçu'}
-                  onClick={() => handlePrint('receipt')}
-                  outlined
-                  size="small"
-                  style={{ flexShrink: 0 }}
-                />
-                <Button
-                  icon={<Share2 style={{ width: '0.875rem', height: '0.875rem' }} />}
-                  label={isAr ? 'مشاركة' : 'Partager'}
-                  onClick={() => handleShare('receipt')}
-                  outlined
-                  size="small"
-                  style={{ flexShrink: 0 }}
-                />
-              </>
-            )}
-            <Button
-              icon={<Truck style={{ width: '0.875rem', height: '0.875rem' }} />}
-              label={isAr ? 'بون التسليم' : 'Bon de livraison'}
-              onClick={() => handlePrint('delivery-note')}
-              outlined
-              size="small"
-              style={{ flexShrink: 0 }}
-            />
-          </div>
-        </div>
-
-        {/* Status workflow chips */}
-        {nextActions.length > 0 && (
-          <div
-            style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}
-          >
-            {nextActions.map((action) => (
-              <button
-                key={action.value}
-                type="button"
-                onClick={() => {
-                  const isDestructive = action.value === 'cancelled';
-                  if (isDestructive) {
-                    toastConfirm(
-                      isAr ? action.label_ar : action.label_fr,
-                      () => changeStatusMutation.mutate(action.value),
-                      {
-                        variant: 'destructive',
-                        confirmLabel: isAr ? action.label_ar : action.label_fr,
-                      },
-                    );
-                  } else {
-                    changeStatusMutation.mutate(action.value);
-                  }
-                }}
-                disabled={changeStatusMutation.isPending}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  padding: '0.4rem 1rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border: `1.5px solid ${action.border}`,
-                  backgroundColor: action.bg,
-                  color: action.color,
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                <ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} />
-                {isAr ? action.label_ar : action.label_fr}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* ── Body grid ───────────────────────────────────── */}
-        <div className="ord-detail-grid">
-          {/* ═══ LEFT COLUMN ═══════════════════════════════ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Client Note */}
-            {order.notes && (
-              <div
-                style={{
-                  background: '#fffbeb',
-                  border: '1px solid #fde68a',
-                  borderRadius: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  fontSize: '0.875rem',
-                  color: '#92400e',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.375rem',
-                    marginBottom: '0.375rem',
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  <span style={{ fontSize: '0.875rem' }}>📝</span>
-                  {isAr ? 'ملاحظة العميل' : 'Note du client'}
-                </div>
-                <span style={{ lineHeight: 1.5 }}>{order.notes}</span>
-              </div>
-            )}
-
-            {/* Items card */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '0.875rem',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              {/* Items header */}
-              <div className="ord-items-card-hdr">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                  <Package style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
-                    {t('orderItems')}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#64748b',
-                      background: '#e2e8f0',
-                      borderRadius: '9999px',
-                      padding: '0.1rem 0.5rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {computedItems.length}
-                  </span>
-                </div>
-                <div className="ord-items-card-hdr-actions">
-                  {editMode ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setNewItem({ description: '', quantity: '1', unitPrice: '0' })
-                        }
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.75rem',
-                          borderRadius: '9999px',
-                          background: '#eff6ff',
-                          border: '1.5px solid #bfdbfe',
-                          color: '#1d4ed8',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Plus style={{ width: '0.75rem', height: '0.75rem' }} />
-                        {isAr ? 'إضافة' : 'Ajouter'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={updateItemsMutation.isPending}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.75rem',
-                          borderRadius: '9999px',
-                          background: '#dcfce7',
-                          border: '1.5px solid #86efac',
-                          color: '#16a34a',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Check style={{ width: '0.75rem', height: '0.75rem' }} />
-                        {isAr ? 'حفظ' : 'Enregistrer'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelEditMode}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.75rem',
-                          borderRadius: '9999px',
-                          background: '#f1f5f9',
-                          border: '1.5px solid #e2e8f0',
-                          color: '#64748b',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <X style={{ width: '0.75rem', height: '0.75rem' }} />
-                        {isAr ? 'إلغاء' : 'Annuler'}
-                      </button>
-                    </>
-                  ) : (
-                    isEditable && (
-                      <button
-                        type="button"
-                        onClick={enterEditMode}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.75rem',
-                          borderRadius: '9999px',
-                          background: '#f8fafc',
-                          border: '1.5px solid #e2e8f0',
-                          color: '#64748b',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Pencil style={{ width: '0.75rem', height: '0.75rem' }} />
-                        {isAr ? 'تعديل' : 'Modifier'}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* Items table header */}
-              <div className="ord-items-thead">
-                {[
-                  isAr ? 'المقال' : 'Article',
-                  isAr ? 'الكمية' : 'Qté',
-                  isAr ? 'السعر' : 'Prix unit.',
-                  isAr ? 'الإجمالي' : 'Total',
-                ].map((h) => (
-                  <span
-                    key={h}
-                    style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      color: '#94a3b8',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {h}
-                  </span>
-                ))}
-              </div>
-
-              {computedItems.length === 0 && !newItem ? (
-                <div
-                  style={{
-                    padding: '2rem',
-                    textAlign: 'center',
-                    color: '#94a3b8',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  {isAr ? 'لا توجد مقالات' : 'Aucun article'}
-                </div>
-              ) : (
-                <div>
-                  {computedItems.map((item: any, idx: number) => {
-                    const qty = parseFloat(item.quantity || 0);
-                    const unitPrice = parseFloat(item.unitPrice || 0);
-                    const disc = parseFloat(item.discount || 0);
-                    const lineTotal = editMode ? qty * unitPrice : parseFloat(item.total || 0);
-                    const name = item.description || item.product?.name || `#${item.productId}`;
-
-                    return (
-                      <div
-                        key={idx}
-                        ref={(el) => {
-                          itemRowRefs.current[idx] = el;
-                        }}
-                        className="ord-item-row"
-                        style={{
-                          borderBottom:
-                            idx < computedItems.length - 1 ? '1px solid #e2e8f0' : 'none',
-                          background: highlightedIdx === idx ? '#fef9c3' : 'transparent',
-                        }}
-                      >
-                        {editMode ? (
-                          <>
-                            {/* Name */}
-                            <div style={{ paddingInlineEnd: '0.5rem' }}>
-                              <p
-                                style={{
-                                  margin: 0,
-                                  fontSize: '0.875rem',
-                                  fontWeight: 600,
-                                  color: '#0f172a',
-                                }}
-                              >
-                                {name}
-                              </p>
-                            </div>
-                            {/* Qty */}
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.quantity}
-                              onChange={(e) =>
-                                setEditItems((prev) =>
-                                  prev.map((it, i) =>
-                                    i === idx ? { ...it, quantity: e.target.value } : it,
-                                  ),
-                                )
-                              }
-                              className="ord-item-qty-input"
-                              style={{
-                                width: '4rem',
-                                height: '2rem',
-                                padding: '0 0.4rem',
-                                borderRadius: '0.375rem',
-                                border: '1.5px solid #fde68a',
-                                fontWeight: 700,
-                                color: '#b45309',
-                                background: '#fef3c7',
-                                textAlign: 'center',
-                                fontSize: '0.8125rem',
-                              }}
-                            />
-                            {/* Unit price */}
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.unitPrice}
-                              onChange={(e) =>
-                                setEditItems((prev) =>
-                                  prev.map((it, i) =>
-                                    i === idx ? { ...it, unitPrice: e.target.value } : it,
-                                  ),
-                                )
-                              }
-                              className="ord-item-price-input"
-                              style={{
-                                width: '5rem',
-                                height: '2rem',
-                                padding: '0 0.4rem',
-                                borderRadius: '0.375rem',
-                                border: '1.5px solid #e2e8f0',
-                                textAlign: 'right',
-                                fontSize: '0.8125rem',
-                              }}
-                            />
-                            {/* Delete */}
-                            <button
-                              type="button"
-                              className="ord-item-delete-btn"
-                              onClick={() =>
-                                setEditItems((prev) => prev.filter((_, i) => i !== idx))
-                              }
-                              style={{
-                                width: '2rem',
-                                height: '2rem',
-                                borderRadius: '0.375rem',
-                                background: '#fef2f2',
-                                border: '1px solid #fecaca',
-                                color: '#dc2626',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                              }}
-                            >
-                              <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            {/* Name */}
-                            <div style={{ minWidth: 0 }}>
-                              <p
-                                className="ord-item-name"
-                                style={{
-                                  margin: 0,
-                                  fontSize: '0.875rem',
-                                  fontWeight: 600,
-                                  color: '#0f172a',
-                                }}
-                              >
-                                {name}
-                              </p>
-                              {disc > 0 && (
-                                <span style={{ fontSize: '0.7rem', color: '#dc2626' }}>
-                                  - {formatAmount(disc, 2)}
-                                </span>
-                              )}
-                            </div>
-                            {/* Qty badge */}
-                            <div
-                              style={{
-                                width: '2rem',
-                                height: '2rem',
-                                background: '#fef3c7',
-                                borderRadius: '0.375rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <span
-                                style={{ fontSize: '0.75rem', fontWeight: 800, color: '#b45309' }}
-                              >
-                                {Number.isInteger(qty) ? qty : qty.toFixed(1)}
-                              </span>
-                            </div>
-                            {/* Unit price */}
-                            <span style={{ fontSize: '0.8125rem', color: '#475569' }}>
-                              {formatAmount(unitPrice, 2)}
-                            </span>
-                            {/* Total */}
-                            <span
-                              className="ord-item-total"
-                              style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}
-                            >
-                              {formatAmount(lineTotal, 2)}{' '}
-                              <span
-                                style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 400 }}
-                              >
-                                {t('currency')}
-                              </span>
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* New item row */}
-                  {editMode && newItem !== null && (
-                    <div
-                      className="ord-new-item-row"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.625rem 1rem',
-                        background: '#f0fdf4',
-                        borderTop: '1px solid #bbf7d0',
-                      }}
-                    >
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <input
-                          type="text"
-                          placeholder={isAr ? 'ابحث عن مقال...' : 'Rechercher un produit...'}
-                          value={newItem.description}
-                          autoFocus
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setNewItem((prev) =>
-                              prev ? { ...prev, description: val, productId: undefined } : null,
-                            );
-                            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-                            if (val.trim().length < 1) {
-                              setProductSuggestions([]);
-                              setShowSuggestions(false);
-                              return;
-                            }
-                            searchTimerRef.current = setTimeout(async () => {
-                              try {
-                                const res = await productsService.getProducts({
-                                  search: val,
-                                  limit: 10,
-                                });
-                                setProductSuggestions(
-                                  res.products.map((p) => ({
-                                    id: p.id,
-                                    name: p.name,
-                                    price: p.price,
-                                  })),
-                                );
-                                setShowSuggestions(true);
-                              } catch {
-                                setProductSuggestions([]);
-                                setShowSuggestions(false);
-                              }
-                            }, 280);
-                          }}
-                          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                          onFocus={() => {
-                            if (productSuggestions.length > 0) setShowSuggestions(true);
-                          }}
-                          style={{
-                            width: '100%',
-                            height: '2rem',
-                            padding: '0 0.5rem',
-                            borderRadius: '0.375rem',
-                            border: '1.5px solid #86efac',
-                            fontSize: '0.8125rem',
-                          }}
-                        />
-                        {showSuggestions && productSuggestions.length > 0 && (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              bottom: '2.25rem',
-                              left: 0,
-                              right: 0,
-                              background: '#fff',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '0.5rem',
-                              boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
-                              zIndex: 50,
-                              maxHeight: '12rem',
-                              overflowY: 'auto',
-                            }}
-                          >
-                            {productSuggestions.map((p) => (
-                              <div
-                                key={p.id}
-                                onMouseDown={() => {
-                                  const existingIndex = editItems.findIndex(
-                                    (ei) => ei.productId === p.id,
-                                  );
-                                  if (existingIndex !== -1) {
-                                    setShowSuggestions(false);
-                                    setProductSuggestions([]);
-                                    setNewItem(null);
-                                    setHighlightedIdx(existingIndex);
-                                    setTimeout(() => {
-                                      itemRowRefs.current[existingIndex]?.scrollIntoView({
-                                        behavior: 'smooth',
-                                        block: 'nearest',
-                                      });
-                                    }, 50);
-                                    setTimeout(() => setHighlightedIdx(null), 2000);
-                                  } else {
-                                    setNewItem((prev) =>
-                                      prev
-                                        ? {
-                                            ...prev,
-                                            description: p.name,
-                                            unitPrice: String(p.price),
-                                            productId: p.id,
-                                          }
-                                        : null,
-                                    );
-                                    setShowSuggestions(false);
-                                    setProductSuggestions([]);
-                                  }
-                                }}
-                                style={{
-                                  padding: '0.5rem 0.75rem',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  fontSize: '0.8125rem',
-                                  borderBottom: '1px solid #f1f5f9',
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = '#f0fdf4')}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-                              >
-                                <span style={{ fontWeight: 600 }}>{p.name}</span>
-                                <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
-                                  {formatAmount(p.price, 2)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="ord-new-item-inputs">
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Qté"
-                          value={newItem.quantity}
-                          onChange={(e) =>
-                            setNewItem((prev) =>
-                              prev ? { ...prev, quantity: e.target.value } : null,
-                            )
-                          }
-                          style={{
-                            width: '3.5rem',
-                            height: '2rem',
-                            padding: '0 0.4rem',
-                            borderRadius: '0.375rem',
-                            border: '1.5px solid #86efac',
-                            fontSize: '0.8125rem',
-                            textAlign: 'center',
-                          }}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="PU"
-                          value={newItem.unitPrice}
-                          onChange={(e) =>
-                            setNewItem((prev) =>
-                              prev ? { ...prev, unitPrice: e.target.value } : null,
-                            )
-                          }
-                          style={{
-                            width: '5rem',
-                            height: '2rem',
-                            padding: '0 0.4rem',
-                            borderRadius: '0.375rem',
-                            border: '1.5px solid #86efac',
-                            fontSize: '0.8125rem',
-                            textAlign: 'right',
-                          }}
-                        />
-                      </div>
-                      <div className="ord-new-item-btns">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (newItem.description && parseFloat(newItem.quantity) > 0) {
-                              setEditItems((prev) => [
-                                ...prev,
-                                {
-                                  description: newItem.description,
-                                  quantity: newItem.quantity,
-                                  unitPrice: newItem.unitPrice,
-                                  productId: newItem.productId,
-                                  discount: 0,
-                                  discountType: 0,
-                                  tax: 0,
-                                },
-                              ]);
-                              setNewItem(null);
-                              setProductSuggestions([]);
-                            }
-                          }}
-                          style={{
-                            width: '2rem',
-                            height: '2rem',
-                            borderRadius: '0.375rem',
-                            background: '#dcfce7',
-                            border: '1px solid #86efac',
-                            color: '#16a34a',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Check style={{ width: '0.875rem', height: '0.875rem' }} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNewItem(null);
-                            setProductSuggestions([]);
-                            setShowSuggestions(false);
-                          }}
-                          style={{
-                            width: '2rem',
-                            height: '2rem',
-                            borderRadius: '0.375rem',
-                            background: '#f1f5f9',
-                            border: '1px solid #e2e8f0',
-                            color: '#64748b',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <X style={{ width: '0.875rem', height: '0.875rem' }} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Totals footer */}
-              <div
-                style={{
-                  padding: '0.875rem 1rem',
-                  borderTop: '2px solid #f1f5f9',
-                  background: '#f8fafc',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                }}
-              >
-                {globalDiscount > 0 && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '0.875rem',
-                      color: '#dc2626',
-                    }}
-                  >
-                    <span>{t('discount')}</span>
-                    <span>
-                      − {formatAmount(globalDiscount, 2)} {t('currency')}
-                    </span>
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: 'linear-gradient(135deg,#1d4ed8,#235ae4)',
-                    borderRadius: '0.625rem',
-                    padding: '0.625rem 0.875rem',
-                  }}
-                >
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#fff' }}>
-                    {t('grandTotal')}
-                  </span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
-                    {formatAmount(computedTotal, 2)}{' '}
-                    <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{t('currency')}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment progress bar */}
-            {(paidAmount > 0 || remainingAmount > 0) && !editMode && (
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: '0.875rem',
-                  border: '1px solid #e2e8f0',
-                  padding: '1rem',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-              >
-                <div
-                  className="ord-pay-progress-labels"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#047857' }}>
-                    {t('paidAmount')}: {formatAmount(paidAmount, 2)} {t('currency')}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.8125rem',
-                      fontWeight: 600,
-                      color: remainingAmount > 0 ? '#dc2626' : '#047857',
-                    }}
-                  >
-                    {t('remainingAmount')}: {formatAmount(remainingAmount, 2)} {t('currency')}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: '0.5rem',
-                    borderRadius: '9999px',
-                    background: '#fee2e2',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      borderRadius: '9999px',
-                      background: 'linear-gradient(to right, #10b981, #047857)',
-                      width: `${Math.min(100, computedTotal > 0 ? (paidAmount / computedTotal) * 100 : 0)}%`,
-                      transition: 'width 0.4s',
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ═══ RIGHT COLUMN ══════════════════════════════ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Customer card */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '0.875rem',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <div
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: 'linear-gradient(135deg, #1d4ed8, #235ae4)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <User
-                    style={{
-                      width: '0.875rem',
-                      height: '0.875rem',
-                      color: 'rgba(255,255,255,0.8)',
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: 'rgba(255,255,255,0.9)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {t('customer')}
-                  </span>
-                </div>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                {order.customerName && (
-                  <p
-                    style={{
-                      margin: '0 0 0.5rem',
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                    }}
-                  >
-                    {order.customerName}
-                  </p>
-                )}
-                {order.customerPhone && (
-                  <a
-                    href={`tel:${order.customerPhone}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                      fontSize: '0.875rem',
-                      color: '#235ae4',
-                      textDecoration: 'none',
-                      marginBottom: '0.375rem',
-                    }}
-                  >
-                    <Phone style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />
-                    {order.customerPhone}
-                  </a>
-                )}
-                {order.customerAddress && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.375rem',
-                      fontSize: '0.8125rem',
-                      color: '#475569',
-                    }}
-                  >
-                    <MapPin
-                      style={{
-                        width: '0.875rem',
-                        height: '0.875rem',
-                        flexShrink: 0,
-                        marginTop: '0.1rem',
-                      }}
-                    />
-                    {order.customerAddress}
-                  </div>
-                )}
-                {!order.customerName && !order.customerPhone && !order.customerAddress && (
-                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#94a3b8' }}>—</p>
-                )}
-              </div>
-            </div>
-
-            {/* Delivery info */}
-            {order.deliveryPersonName && (
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: '0.875rem',
-                  border: '1px solid #e2e8f0',
-                  overflow: 'hidden',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '0.75rem 1rem',
-                    background: 'linear-gradient(135deg, #7e22ce, #a855f7)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Truck
-                      style={{
-                        width: '0.875rem',
-                        height: '0.875rem',
-                        color: 'rgba(255,255,255,0.8)',
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        color: 'rgba(255,255,255,0.9)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                      }}
-                    >
-                      {t('deliveryPerson')}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                  <p
-                    style={{
-                      margin: '0 0 0.5rem',
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                    }}
-                  >
-                    {order.deliveryPersonName}
-                  </p>
-                  {order.deliveryPersonPhone && (
-                    <a
-                      href={`tel:${order.deliveryPersonPhone}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.375rem',
-                        fontSize: '0.875rem',
-                        color: '#7e22ce',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <Phone style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />
-                      {order.deliveryPersonPhone}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Payments card */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '0.875rem',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <div
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: '#f8fafc',
-                  borderBottom: '1px solid #e2e8f0',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CreditCard style={{ width: '0.875rem', height: '0.875rem', color: '#047857' }} />
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {t('payments') || 'Paiements'}
-                  </span>
-                </div>
-              </div>
-              <div
-                style={{
-                  padding: '0.875rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.875rem',
-                }}
-              >
-                {/* Summary row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
-                  <div
-                    style={{
-                      background: '#f0fdf4',
-                      border: '1px solid #bbf7d0',
-                      borderRadius: '0.625rem',
-                      padding: '0.625rem',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 0.125rem',
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: '#047857',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {t('paidAmount')}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#047857' }}>
-                      {formatAmount(paidAmount, 2)}{' '}
-                      <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
-                    </p>
-                  </div>
-                  <div
-                    style={{
-                      background: remainingAmount > 0 ? '#fef2f2' : '#f0fdf4',
-                      border: `1px solid ${remainingAmount > 0 ? '#fecaca' : '#bbf7d0'}`,
-                      borderRadius: '0.625rem',
-                      padding: '0.625rem',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 0.125rem',
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: remainingAmount > 0 ? '#dc2626' : '#047857',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {t('remainingAmount')}
-                    </p>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '1rem',
-                        fontWeight: 800,
-                        color: remainingAmount > 0 ? '#dc2626' : '#047857',
-                      }}
-                    >
-                      {formatAmount(remainingAmount, 2)}{' '}
-                      <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Payment history */}
-                {payments.length > 0 && (
-                  <div>
-                    <p
-                      style={{
-                        margin: '0 0 0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                      }}
-                    >
-                      {t('paymentHistory')}
-                    </p>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.375rem',
-                        maxHeight: '10rem',
-                        overflowY: 'auto',
-                      }}
-                    >
-                      {payments.map((p: any) => (
-                        <div
-                          key={p.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '0.5rem 0.625rem',
-                            background: '#f0fdf4',
-                            border: '1px solid #bbf7d0',
-                            borderRadius: '0.5rem',
-                          }}
-                        >
-                          <div>
-                            <span
-                              style={{ fontSize: '0.875rem', fontWeight: 700, color: '#047857' }}
-                            >
-                              {formatAmount(p.amount, 2)} {t('currency')}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '0.7rem',
-                                color: '#64748b',
-                                marginInlineStart: '0.5rem',
-                              }}
-                            >
-                              {p.paymentDate} · {p.paymentType}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toastConfirm(
-                                t('deletePayment') || 'Supprimer ?',
-                                () => deletePaymentMutation.mutate(p.id),
-                                { confirmLabel: t('delete') },
-                              )
-                            }
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#dc2626',
-                              padding: '0.125rem',
-                              display: 'flex',
-                            }}
-                          >
-                            <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Add payment form — hidden when order is fully paid */}
-                {remainingAmount > 0 && (
-                  <div
-                    style={{
-                      borderTop: '1px solid #f1f5f9',
-                      paddingTop: '0.875rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.625rem',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.8125rem',
-                        fontWeight: 700,
-                        color: '#334155',
-                      }}
-                    >
-                      {t('addPayment')}
-                    </p>
-                    <div>
-                      <label
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#64748b',
-                          display: 'block',
-                          marginBottom: '0.25rem',
-                        }}
-                      >
-                        {t('amount')}
-                      </label>
-                      <InputNumber
-                        value={paymentAmount}
-                        onValueChange={(e) => setPaymentAmount(e.value ?? 0)}
-                        mode="decimal"
-                        minFractionDigits={2}
-                        maxFractionDigits={2}
-                        min={0}
-                        inputStyle={{ width: '100%' }}
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#64748b',
-                          display: 'block',
-                          marginBottom: '0.25rem',
-                        }}
-                      >
-                        {t('paymentDate')}
-                      </label>
-                      <InputText
-                        type="date"
-                        value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#64748b',
-                          display: 'block',
-                          marginBottom: '0.25rem',
-                        }}
-                      >
-                        {t('paymentType')}
-                      </label>
-                      <AutoCompleteSelect
-                        value={paymentType}
-                        onChange={(e) => setPaymentType(e.value)}
-                        options={paymentTypeOptions}
-                        optionLabel="label"
-                        optionValue="value"
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#64748b',
-                          display: 'block',
-                          marginBottom: '0.25rem',
-                        }}
-                      >
-                        {t('notes')}
-                      </label>
-                      <InputText
-                        value={paymentNote}
-                        onChange={(e) => setPaymentNote(e.target.value)}
-                        placeholder={t('optional')}
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                    <Button
-                      label={t('addPayment')}
-                      icon={
-                        <CreditCard
-                          style={{
-                            width: '0.875rem',
-                            height: '0.875rem',
-                            marginInlineEnd: '0.375rem',
-                          }}
-                        />
-                      }
-                      onClick={() => createPaymentMutation.mutate()}
-                      loading={createPaymentMutation.isPending}
-                      disabled={!paymentAmount || paymentAmount <= 0}
-                      severity="success"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Print actions */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '0.875rem',
-                border: '1px solid #e2e8f0',
-                padding: '0.875rem 1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 0.25rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                <Printer
-                  style={{
-                    width: '0.8rem',
-                    height: '0.8rem',
-                    display: 'inline',
-                    marginInlineEnd: '0.375rem',
-                  }}
-                />
-                {isAr ? 'طباعة المستندات' : 'Documents'}
-              </p>
-
               {isPosOrder && (
+                <span className="page-header__badge">
+                  <Receipt aria-hidden="true" />
+                  {t('odPosSale')}
+                </span>
+              )}
+              {order.convertedToInvoiceId && (
+                <RefLink
+                  className="page-header__badge"
+                  to={entityRoutes.invoice(
+                    order.convertedToInvoiceId,
+                    order.direction === 'ACHAT' ? 'achat' : 'vente',
+                  )}
+                  fromLabel={order.displayOrderNumber}
+                >
+                  {t('invoice')}
+                </RefLink>
+              )}
+              {moreMenuItems.length > 0 && (
                 <>
+                  <Menu model={moreMenuItems} popup ref={moreMenuRef} popupAlignment="right" />
                   <button
                     type="button"
-                    onClick={() => handlePrint('receipt')}
-                    style={docActionBtnStyle}
+                    className="od-btn od-btn--sm"
+                    onClick={(e) => moreMenuRef.current?.toggle(e)}
+                    aria-haspopup="menu"
                   >
-                    <Receipt
-                      style={{
-                        width: '1.125rem',
-                        height: '1.125rem',
-                        color: '#235ae4',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                      {isAr ? 'إيصال' : 'Reçu'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleShare('receipt')}
-                    style={docActionBtnStyle}
-                  >
-                    <Share2
-                      style={{
-                        width: '1.125rem',
-                        height: '1.125rem',
-                        color: '#25d366',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                      {isAr ? 'مشاركة الإيصال' : 'Partager le reçu'}
-                    </span>
+                    <MoreVertical aria-hidden="true" />
+                    {t('odMore')}
                   </button>
                 </>
               )}
+            </>
+          }
+        />
 
-              <button
-                type="button"
-                onClick={() => handlePrint('delivery-note')}
-                style={docActionBtnStyle}
-              >
-                <Truck
-                  style={{ width: '1.125rem', height: '1.125rem', color: '#235ae4', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                  {isAr ? 'بون التسليم' : 'Bon de livraison'}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleShare('delivery-note')}
-                style={docActionBtnStyle}
-              >
-                <Share2
-                  style={{ width: '1.125rem', height: '1.125rem', color: '#25d366', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                  {isAr ? 'مشاركة الوصل' : 'Partager le bon'}
-                </span>
-              </button>
-              {order.isValidated && (
-                <button
-                  type="button"
-                  onClick={handleRegeneratePdf}
-                  disabled={regeneratingPdf}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.625rem',
-                    padding: '0.625rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    cursor: regeneratingPdf ? 'not-allowed' : 'pointer',
-                    opacity: regeneratingPdf ? 0.6 : 1,
-                    width: '100%',
-                    textAlign: 'left',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  <RefreshCw
-                    style={{
-                      width: '1.125rem',
-                      height: '1.125rem',
-                      color: '#64748b',
-                      flexShrink: 0,
-                      animation: regeneratingPdf ? 'spin 1s linear infinite' : 'none',
-                    }}
-                  />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                    {isAr ? 'إعادة توليد PDF' : 'Régénérer le PDF'}
-                  </span>
-                </button>
+        <div className="od-page">
+          <OrderStatusBanner
+            stage={stage}
+            remainingAmount={remainingAmount}
+            remainingLabel={`${formatAmount(remainingAmount, 2)} ${t('currency')}`}
+            action={primaryAction}
+          />
+
+          <OrderMoneySummary
+            total={computedTotal}
+            paid={paidAmount}
+            remaining={remainingAmount}
+            neutral={stage === 'draft' || stage === 'cancelled'}
+          />
+
+          <div className="od-grid">
+            {/* ═══ LEFT COLUMN ═══════════════════════════════ */}
+            <div className="od-col">
+              {order.notes && (
+                <div className="od-note">
+                  <b>
+                    <StickyNote aria-hidden="true" />
+                    {t('odClientNote')}
+                  </b>
+                  <span>{order.notes}</span>
+                </div>
               )}
+
+              {/* Products, read like a paper receipt */}
+              <section className="od-card">
+                <div className="od-card__head">
+                  <span className="od-ico" aria-hidden="true">
+                    <Package />
+                  </span>
+                  <h3>{t('orderItems')}</h3>
+                  <span className="od-card__count">
+                    {t('odProductsCount').replace('{n}', String(computedItems.length))}
+                  </span>
+                  <div className="od-card__head-actions">
+                    {editMode ? (
+                      <>
+                        <button
+                          type="button"
+                          className="od-btn od-btn--sm"
+                          onClick={() =>
+                            setNewItem({ description: '', quantity: '1', unitPrice: '0' })
+                          }
+                        >
+                          <Plus aria-hidden="true" />
+                          {isAr ? 'إضافة' : 'Ajouter'}
+                        </button>
+                        <button
+                          type="button"
+                          className="od-btn od-btn--sm"
+                          onClick={cancelEditMode}
+                        >
+                          <X aria-hidden="true" />
+                          {isAr ? 'إلغاء' : 'Annuler'}
+                        </button>
+                        <button
+                          type="button"
+                          className="od-primary"
+                          style={{
+                            minHeight: '2.75rem',
+                            fontSize: '0.875rem',
+                            padding: '0.5rem 1rem',
+                          }}
+                          onClick={handleSave}
+                          disabled={updateItemsMutation.isPending}
+                        >
+                          <Check aria-hidden="true" />
+                          {isAr ? 'حفظ' : 'Enregistrer'}
+                        </button>
+                      </>
+                    ) : (
+                      isEditable && (
+                        <button type="button" className="od-btn od-btn--sm" onClick={enterEditMode}>
+                          <Pencil aria-hidden="true" />
+                          {isAr ? 'تعديل' : 'Modifier'}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {editMode && (
+                  <div className="ord-items-thead">
+                    {[
+                      isAr ? 'المنتج' : 'Produit',
+                      isAr ? 'الكمية' : 'Qté',
+                      isAr ? 'السعر' : 'Prix unit.',
+                      '',
+                    ].map((h, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 700,
+                          color: 'var(--text-muted)',
+                        }}
+                      >
+                        {h}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {computedItems.length === 0 && !newItem ? (
+                  <div className="od-empty">
+                    <Package aria-hidden="true" />
+                    {t('odNoProducts')}
+                  </div>
+                ) : (
+                  <div>
+                    {computedItems.map((item: any, idx: number) => {
+                      const qty = parseFloat(item.quantity || 0);
+                      const unitPrice = parseFloat(item.unitPrice || 0);
+                      const disc = parseFloat(item.discount || 0);
+                      const lineTotal = editMode ? qty * unitPrice : parseFloat(item.total || 0);
+                      const name = item.description || item.product?.name || `#${item.productId}`;
+
+                      return (
+                        <div
+                          key={idx}
+                          ref={(el) => {
+                            itemRowRefs.current[idx] = el;
+                          }}
+                          className={editMode ? 'ord-item-row' : 'od-line'}
+                          style={
+                            editMode
+                              ? {
+                                  borderBottom:
+                                    idx < computedItems.length - 1 ? '1px solid #e2e8f0' : 'none',
+                                  background: highlightedIdx === idx ? '#fef9c3' : 'transparent',
+                                }
+                              : undefined
+                          }
+                        >
+                          {editMode ? (
+                            <>
+                              {/* Name */}
+                              <div style={{ paddingInlineEnd: '0.5rem' }}>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '1rem',
+                                    fontWeight: 600,
+                                    color: '#0f172a',
+                                  }}
+                                >
+                                  {name}
+                                </p>
+                              </div>
+                              {/* Qty */}
+                              <DecimalInput
+                                min={0}
+                                value={item.quantity === '' ? null : parseFloat(item.quantity)}
+                                onValueChange={(v) =>
+                                  setEditItems((prev) =>
+                                    prev.map((it, i) =>
+                                      i === idx
+                                        ? { ...it, quantity: v == null ? '' : String(v) }
+                                        : it,
+                                    ),
+                                  )
+                                }
+                                className="ord-item-qty-input"
+                                aria-label={isAr ? 'الكمية' : 'Quantité'}
+                              />
+                              {/* Unit price */}
+                              <DecimalInput
+                                min={0}
+                                value={item.unitPrice === '' ? null : parseFloat(item.unitPrice)}
+                                onValueChange={(v) =>
+                                  setEditItems((prev) =>
+                                    prev.map((it, i) =>
+                                      i === idx
+                                        ? { ...it, unitPrice: v == null ? '' : String(v) }
+                                        : it,
+                                    ),
+                                  )
+                                }
+                                className="ord-item-price-input"
+                                aria-label={isAr ? 'السعر' : 'Prix unitaire'}
+                              />
+                              {/* Delete */}
+                              <button
+                                type="button"
+                                className="ord-item-delete-btn"
+                                aria-label={isAr ? 'حذف' : 'Supprimer'}
+                                onClick={() =>
+                                  setEditItems((prev) => prev.filter((_, i) => i !== idx))
+                                }
+                              >
+                                <Trash2 style={{ width: '1.125rem', height: '1.125rem' }} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="od-line__thumb" aria-hidden="true">
+                                <Package />
+                              </span>
+                              <div className="od-line__what">
+                                <span className="od-line__name">
+                                  <RefLink
+                                    to={
+                                      item.productId ? entityRoutes.product(item.productId) : null
+                                    }
+                                    fromLabel={order.displayOrderNumber}
+                                  >
+                                    {name}
+                                  </RefLink>
+                                </span>
+                                <span className="od-line__calc">
+                                  <span className="od-qty">{formatQuantity(qty, 2)}</span>×{' '}
+                                  {formatAmount(unitPrice, 2)} {t('currency')}
+                                </span>
+                                {disc > 0 && (
+                                  <span className="od-line__discount">
+                                    {t('discount')} − {formatAmount(disc, 2)}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="od-line__sum">
+                                {formatAmount(lineTotal, 2)} {t('currency')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* New item row */}
+                    {editMode && newItem !== null && (
+                      <div
+                        className="ord-new-item-row"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.625rem 1rem',
+                          background: '#f0fdf4',
+                          borderTop: '1px solid #bbf7d0',
+                        }}
+                      >
+                        <div style={{ flex: 1, position: 'relative' }}>
+                          <input
+                            type="text"
+                            placeholder={isAr ? 'ابحث عن مقال...' : 'Rechercher un produit...'}
+                            value={newItem.description}
+                            autoFocus
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewItem((prev) =>
+                                prev ? { ...prev, description: val, productId: undefined } : null,
+                              );
+                              if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+                              if (val.trim().length < 1) {
+                                setProductSuggestions([]);
+                                setShowSuggestions(false);
+                                return;
+                              }
+                              searchTimerRef.current = setTimeout(async () => {
+                                try {
+                                  const res = await productsService.getProducts({
+                                    search: val,
+                                    limit: 10,
+                                  });
+                                  setProductSuggestions(
+                                    res.products.map((p) => ({
+                                      id: p.id,
+                                      name: p.name,
+                                      price: p.price,
+                                    })),
+                                  );
+                                  setShowSuggestions(true);
+                                } catch {
+                                  setProductSuggestions([]);
+                                  setShowSuggestions(false);
+                                }
+                              }, 280);
+                            }}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                            onFocus={() => {
+                              if (productSuggestions.length > 0) setShowSuggestions(true);
+                            }}
+                            className="ord-item-name-input"
+                          />
+                          {showSuggestions && productSuggestions.length > 0 && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: '3.25rem',
+                                left: 0,
+                                right: 0,
+                                background: '#fff',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '0.5rem',
+                                boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
+                                zIndex: 50,
+                                maxHeight: '12rem',
+                                overflowY: 'auto',
+                              }}
+                            >
+                              {productSuggestions.map((p) => (
+                                <div
+                                  key={p.id}
+                                  onMouseDown={() => {
+                                    const existingIndex = editItems.findIndex(
+                                      (ei) => ei.productId === p.id,
+                                    );
+                                    if (existingIndex !== -1) {
+                                      setShowSuggestions(false);
+                                      setProductSuggestions([]);
+                                      setNewItem(null);
+                                      setHighlightedIdx(existingIndex);
+                                      setTimeout(() => {
+                                        itemRowRefs.current[existingIndex]?.scrollIntoView({
+                                          behavior: 'smooth',
+                                          block: 'nearest',
+                                        });
+                                      }, 50);
+                                      setTimeout(() => setHighlightedIdx(null), 2000);
+                                    } else {
+                                      setNewItem((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              description: p.name,
+                                              unitPrice: String(p.price),
+                                              productId: p.id,
+                                            }
+                                          : null,
+                                      );
+                                      setShowSuggestions(false);
+                                      setProductSuggestions([]);
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '0.75rem 0.875rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    fontSize: '0.9375rem',
+                                    borderBottom: '1px solid #f1f5f9',
+                                  }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.background = '#f0fdf4')
+                                  }
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                                >
+                                  <span style={{ fontWeight: 600 }}>{p.name}</span>
+                                  <span
+                                    style={{
+                                      color: '#64748b',
+                                      fontSize: '0.875rem',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {formatAmount(p.price, 2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="ord-new-item-inputs">
+                          <DecimalInput
+                            min={0}
+                            placeholder="Qté"
+                            value={newItem.quantity === '' ? null : parseFloat(newItem.quantity)}
+                            onValueChange={(v) =>
+                              setNewItem((prev) =>
+                                prev ? { ...prev, quantity: v == null ? '' : String(v) } : null,
+                              )
+                            }
+                            className="ord-item-qty-input"
+                            aria-label={isAr ? 'الكمية' : 'Quantité'}
+                          />
+                          <DecimalInput
+                            min={0}
+                            placeholder="PU"
+                            value={newItem.unitPrice === '' ? null : parseFloat(newItem.unitPrice)}
+                            onValueChange={(v) =>
+                              setNewItem((prev) =>
+                                prev ? { ...prev, unitPrice: v == null ? '' : String(v) } : null,
+                              )
+                            }
+                            className="ord-item-price-input"
+                            aria-label={isAr ? 'السعر' : 'Prix unitaire'}
+                          />
+                        </div>
+                        <div className="ord-new-item-btns">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newItem.description && parseFloat(newItem.quantity) > 0) {
+                                setEditItems((prev) => [
+                                  ...prev,
+                                  {
+                                    description: newItem.description,
+                                    quantity: newItem.quantity,
+                                    unitPrice: newItem.unitPrice,
+                                    productId: newItem.productId,
+                                    discount: 0,
+                                    discountType: 0,
+                                    tax: 0,
+                                  },
+                                ]);
+                                setNewItem(null);
+                                setProductSuggestions([]);
+                              }
+                            }}
+                            className="ord-item-icon-btn ord-item-icon-btn--ok"
+                            aria-label={isAr ? 'إضافة' : 'Ajouter'}
+                          >
+                            <Check style={{ width: '1.125rem', height: '1.125rem' }} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewItem(null);
+                              setProductSuggestions([]);
+                              setShowSuggestions(false);
+                            }}
+                            className="ord-item-icon-btn ord-item-icon-btn--muted"
+                            aria-label={isAr ? 'إلغاء' : 'Annuler'}
+                          >
+                            <X style={{ width: '1.125rem', height: '1.125rem' }} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="od-totals">
+                  {globalDiscount > 0 && (
+                    <div className="od-totals__row od-totals__row--discount">
+                      <span>{t('discount')}</span>
+                      <span>
+                        − {formatAmount(globalDiscount, 2)} {t('currency')}
+                      </span>
+                    </div>
+                  )}
+                  <div className="od-totals__row od-totals__row--grand">
+                    <span>{t('odTotalToPay')}</span>
+                    <span>
+                      {formatAmount(computedTotal, 2)} {t('currency')}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Payments: a dated list, delete hidden behind the ⋯ menu */}
+              <section className="od-card" ref={paymentsRef}>
+                <div className="od-card__head">
+                  <span className="od-ico" aria-hidden="true">
+                    <Banknote />
+                  </span>
+                  <h3>{t('odPaymentsReceived')}</h3>
+                </div>
+
+                {payments.length === 0 ? (
+                  <div className="od-empty">
+                    <Wallet aria-hidden="true" />
+                    {t('odNoPayments')}
+                  </div>
+                ) : (
+                  payments.map((p: any) => (
+                    <div className="od-pay" key={p.id}>
+                      <span className="od-pay__icon" aria-hidden="true">
+                        <Banknote />
+                      </span>
+                      <div className="od-pay__what">
+                        <span className="od-pay__amount">
+                          {formatAmount(p.amount, 2)} {t('currency')}
+                        </span>
+                        <span className="od-pay__meta">
+                          {paymentTypeLabel(p.paymentType)} · {formatDay(p.paymentDate)}
+                          {p.notes ? ` · ${p.notes}` : ''}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="od-icon-btn"
+                        aria-label={t('odMore')}
+                        aria-haspopup="menu"
+                        onClick={(e) => {
+                          setMenuPayment(p);
+                          paymentMenuRef.current?.toggle(e);
+                        }}
+                      >
+                        <MoreHorizontal aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))
+                )}
+                <Menu model={paymentMenuItems} popup ref={paymentMenuRef} popupAlignment="right" />
+
+                {remainingAmount > 0 &&
+                  stage !== 'cancelled' &&
+                  (showPayForm ? (
+                    <div className="od-pay-form">
+                      <div className="od-pay-form__grid">
+                        <div>
+                          <label htmlFor="od-pay-amount">{t('amount')}</label>
+                          <DecimalInput
+                            id="od-pay-amount"
+                            value={paymentAmount}
+                            onValueChange={(v) => setPaymentAmount(v ?? 0)}
+                            minFractionDigits={2}
+                            maxFractionDigits={2}
+                            min={0}
+                            suffix={t('currency')}
+                            className="p-inputtext p-component"
+                            style={{ width: '100%', fontSize: '1.0625rem', fontWeight: 700 }}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="od-pay-type">{t('paymentType')}</label>
+                          <AutoCompleteSelect
+                            inputId="od-pay-type"
+                            value={paymentType}
+                            onChange={(e) => setPaymentType(e.value)}
+                            options={paymentTypeOptions}
+                            optionLabel="label"
+                            optionValue="value"
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="od-pay-date">{t('paymentDate')}</label>
+                          <PrimeCalendar
+                            inputId="od-pay-date"
+                            dateFormat="dd/mm/yy"
+                            value={isoToLocalDate(paymentDate)}
+                            onChange={(e) => setPaymentDate(localDateToIso(e.value as Date | null))}
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="od-pay-note">{t('notes')}</label>
+                          <InputText
+                            id="od-pay-note"
+                            value={paymentNote}
+                            onChange={(e) => setPaymentNote(e.target.value)}
+                            placeholder={t('optional')}
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+                      </div>
+                      <div className="od-pay-form__actions">
+                        <button
+                          type="button"
+                          className="od-btn od-btn--ghost"
+                          onClick={() => setShowPayForm(false)}
+                        >
+                          <X aria-hidden="true" />
+                          {isAr ? 'إلغاء' : 'Annuler'}
+                        </button>
+                        <button
+                          type="button"
+                          className="od-primary"
+                          onClick={() => createPaymentMutation.mutate()}
+                          disabled={
+                            createPaymentMutation.isPending || !paymentAmount || paymentAmount <= 0
+                          }
+                        >
+                          <Check aria-hidden="true" />
+                          {t('odSavePayment')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" className="od-add-pay" onClick={openPaymentForm}>
+                      <Plus aria-hidden="true" />
+                      {t('addPayment')}
+                    </button>
+                  ))}
+              </section>
             </div>
 
-            {/* Meta info */}
-            <div
-              style={{
-                background: '#f8fafc',
-                borderRadius: '0.875rem',
-                border: '1px solid #e2e8f0',
-                padding: '0.875rem 1rem',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.8125rem',
-                  }}
-                >
-                  <span style={{ color: '#64748b' }}>{isAr ? 'تاريخ الإنشاء' : 'Créée le'}</span>
-                  <span style={{ fontWeight: 600, color: '#334155' }}>
-                    {new Date(order.dateCreated).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR')}
+            {/* ═══ RIGHT COLUMN ══════════════════════════════ */}
+            <div className="od-col">
+              {/* Client: call or WhatsApp in one tap */}
+              <section className="od-card">
+                <div className="od-card__head">
+                  <span className="od-ico" aria-hidden="true">
+                    <User />
+                  </span>
+                  <h3>{t('customer')}</h3>
+                </div>
+                <div className="od-person">
+                  {order.customerName || order.customerPhone || order.customerAddress ? (
+                    <>
+                      <div className="od-who">
+                        <span className="od-avatar" aria-hidden="true">
+                          {initials(order.customerName)}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <span className="od-who__name">
+                            <RefLink
+                              to={
+                                order.customerId
+                                  ? entityRoutes.customer(order.customerId)
+                                  : order.supplierId
+                                    ? entityRoutes.supplier(order.supplierId)
+                                    : null
+                              }
+                              fromLabel={order.displayOrderNumber}
+                            >
+                              {order.customerName || '—'}
+                            </RefLink>
+                          </span>
+                          {order.customerPhone && (
+                            <span className="od-who__phone">{order.customerPhone}</span>
+                          )}
+                        </div>
+                      </div>
+                      {order.customerPhone && <ContactButtons phone={order.customerPhone} t={t} />}
+                      {order.customerAddress && (
+                        <div className="od-address">
+                          <MapPin aria-hidden="true" />
+                          {order.customerAddress}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>{t('odNoCustomer')}</span>
+                  )}
+                </div>
+              </section>
+
+              {order.deliveryPersonName && (
+                <section className="od-card">
+                  <div className="od-card__head">
+                    <span className="od-ico" aria-hidden="true">
+                      <Truck />
+                    </span>
+                    <h3>{t('deliveryPerson')}</h3>
+                  </div>
+                  <div className="od-person">
+                    <div className="od-who">
+                      <span className="od-avatar" aria-hidden="true">
+                        {initials(order.deliveryPersonName)}
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <span className="od-who__name">{order.deliveryPersonName}</span>
+                        {order.deliveryPersonPhone && (
+                          <span className="od-who__phone">{order.deliveryPersonPhone}</span>
+                        )}
+                      </div>
+                    </div>
+                    {order.deliveryPersonPhone && (
+                      <ContactButtons phone={order.deliveryPersonPhone} t={t} />
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Documents: one row per document, two verbs */}
+              <section className="od-card">
+                <div className="od-card__head">
+                  <span className="od-ico" aria-hidden="true">
+                    <Printer />
+                  </span>
+                  <h3>{t('odDocuments')}</h3>
+                </div>
+                {isPosOrder && (
+                  <div className="od-doc">
+                    <span className="od-doc__name">
+                      <Receipt aria-hidden="true" />
+                      {t('odReceipt')}
+                    </span>
+                    <span className="od-doc__actions">
+                      <button
+                        type="button"
+                        className="od-btn od-btn--sm"
+                        onClick={() => handlePrint('receipt')}
+                      >
+                        <Printer aria-hidden="true" />
+                        {t('odPrint')}
+                      </button>
+                      <button
+                        type="button"
+                        className="od-btn od-btn--sm od-btn--wa-text"
+                        onClick={() => handleShare('receipt')}
+                      >
+                        <MessageCircle aria-hidden="true" />
+                        {t('odSend')}
+                      </button>
+                    </span>
+                  </div>
+                )}
+                <div className="od-doc">
+                  <span className="od-doc__name">
+                    <Truck aria-hidden="true" />
+                    {t('odDeliveryNote')}
+                  </span>
+                  <span className="od-doc__actions">
+                    <button
+                      type="button"
+                      className="od-btn od-btn--sm"
+                      onClick={() => handlePrint('delivery-note')}
+                    >
+                      <Printer aria-hidden="true" />
+                      {t('odPrint')}
+                    </button>
+                    <button
+                      type="button"
+                      className="od-btn od-btn--sm od-btn--wa-text"
+                      onClick={() => handleShare('delivery-note')}
+                    >
+                      <MessageCircle aria-hidden="true" />
+                      {t('odSend')}
+                    </button>
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.8125rem',
-                  }}
-                >
-                  <span style={{ color: '#64748b' }}>{isAr ? 'آخر تحديث' : 'Modifiée le'}</span>
-                  <span style={{ fontWeight: 600, color: '#334155' }}>
-                    {new Date(order.dateUpdated).toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR')}
-                  </span>
+              </section>
+
+              <div className="od-meta">
+                <div>
+                  <span>{t('odCreatedOn')}</span>
+                  <span>{formatDay(order.dateCreated)}</span>
+                </div>
+                <div>
+                  <span>{t('odUpdatedOn')}</span>
+                  <span>{formatDay(order.dateUpdated)}</span>
                 </div>
                 {order.deliveryStatus && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '0.8125rem',
-                    }}
-                  >
-                    <span style={{ color: '#64748b' }}>{t('deliveryStatus')}</span>
-                    <span style={{ fontWeight: 600, color: '#334155' }}>
+                  <div>
+                    <span>{t('deliveryStatus')}</span>
+                    <span>
                       {t(
                         ((
                           {
@@ -2216,8 +1539,8 @@ export default function OrderDetailPage() {
                 )}
               </div>
             </div>
+            {/* ═══ END GRID ══════════════════════════════════ */}
           </div>
-          {/* ═══ END GRID ══════════════════════════════════ */}
         </div>
       </div>
 

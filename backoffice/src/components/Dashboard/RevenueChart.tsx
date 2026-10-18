@@ -3,7 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { TrendingUp } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { formatCurrency } from '../../lib/formatters';
+import { formatCurrency, formatNumber } from '../../lib/formatters';
 
 interface RevenueChartProps {
   data: {
@@ -80,7 +80,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             },
             formatter: (value) => {
               if (value === undefined || value === null) return '0';
-              return Math.round(value).toLocaleString('en-US');
+              return formatNumber(Math.round(value), 0);
             },
           },
         },

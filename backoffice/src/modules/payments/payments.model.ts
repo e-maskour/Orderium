@@ -1,3 +1,4 @@
+import { formatAmount, formatDate } from '@orderium/ui';
 import { CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS } from './payments.interface';
 
 export class Payment {
@@ -28,7 +29,7 @@ export class Payment {
   }
 
   get displayAmount(): string {
-    return this.amount.toFixed(2);
+    return formatAmount(this.amount, 2);
   }
 
   get displayPaymentType(): string {
@@ -36,7 +37,7 @@ export class Payment {
   }
 
   get displayDate(): string {
-    return new Date(this.paymentDate).toLocaleDateString();
+    return formatDate(this.paymentDate);
   }
 
   get isForCustomer(): boolean {

@@ -17,13 +17,12 @@ import {
 } from '../modules/payments';
 import { useLanguage } from '../context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { Calendar } from 'primereact/calendar';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Message } from 'primereact/message';
-import { formatAmount } from '@orderium/ui';
+import { DecimalInput, formatAmount } from '@orderium/ui';
 import { AutoCompleteSelect } from './ui/AutoCompleteSelect';
 
 interface PaymentModalProps {
@@ -446,21 +445,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 pointerEvents: 'none',
               }}
             />
-            <InputNumber
+            <DecimalInput
               value={formData.amount}
-              onValueChange={(e) => setFormData({ ...formData, amount: e.value ?? null })}
-              mode="decimal"
+              onValueChange={(v) => setFormData({ ...formData, amount: v })}
               minFractionDigits={2}
               maxFractionDigits={2}
               min={0}
-              placeholder="0.00"
-              inputStyle={{
+              placeholder="0,00"
+              className="p-inputtext p-component"
+              style={{
                 width: '100%',
                 paddingLeft: '2.5rem',
                 fontWeight: 600,
                 fontSize: '1rem',
               }}
-              style={{ width: '100%' }}
             />
           </div>
         </div>

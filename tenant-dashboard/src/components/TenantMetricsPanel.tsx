@@ -13,6 +13,8 @@ import {
   todayIso,
 } from '../utils/format';
 import type { TenantMetricRow } from '../types/metrics';
+import { formatAmount } from '../utils/formatAmount';
+import { formatQuantity } from '../utils/numberFormat';
 
 const RANGES = [
   { label: '7d', days: 7 },
@@ -108,25 +110,25 @@ export function TenantMetricsPanel({ tenantId }: { tenantId: number }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Orders"
-          value={metric.ordersTotal.toLocaleString()}
-          sub={`${metric.orders30d.toLocaleString()} in last 30d`}
+          value={formatQuantity(metric.ordersTotal)}
+          sub={`${formatQuantity(metric.orders30d)} in last 30d`}
         />
         <Stat
           label="Users"
-          value={metric.usersTotal.toLocaleString()}
+          value={formatQuantity(metric.usersTotal)}
           sub={`${metric.usersAdmin} staff · ${metric.usersTotal - metric.usersAdmin} portal`}
         />
-        <Stat label="Products" value={metric.productsTotal.toLocaleString()} />
+        <Stat label="Products" value={formatQuantity(metric.productsTotal)} />
         <Stat label="Revenue" value={formatMoney(metric.revenueTotal)} />
-        <Stat label="Devis" value={metric.quotesTotal.toLocaleString()} />
+        <Stat label="Devis" value={formatQuantity(metric.quotesTotal)} />
         <Stat
           label="Invoices"
-          value={metric.invoicesTotal.toLocaleString()}
+          value={formatQuantity(metric.invoicesTotal)}
           sub={metric.invoicesUnpaid > 0 ? `${metric.invoicesUnpaid} unpaid` : undefined}
         />
         <Stat
           label="Partners"
-          value={(metric.partnersCustomers + metric.partnersSuppliers).toLocaleString()}
+          value={formatQuantity(metric.partnersCustomers + metric.partnersSuppliers)}
           sub={`${metric.partnersCustomers} customers · ${metric.partnersSuppliers} suppliers`}
         />
         <Stat
@@ -258,7 +260,7 @@ function UsageCard({ metric }: { metric: TenantMetricRow }) {
         Live activity, flushed from Redis every two minutes
       </p>
       <div className="space-y-3">
-        <Row label="Active users today" value={metric.activeUsers.toLocaleString()} />
+        <Row label="Active users today" value={formatQuantity(metric.activeUsers)} />
         <Row label="API calls today" value={formatCompact(metric.apiCalls)} />
         <Row
           label="Last activity"
@@ -309,7 +311,7 @@ function HealthCard({ metric }: { metric: TenantMetricRow }) {
           <Row label="Requests" value={formatCompact(h.requests)} />
           <Row
             label="Failure rate"
-            value={`${h.errorRate.toFixed(2)}%`}
+            value={`${formatAmount(h.errorRate, 2)}%`}
             tone={
               h.errorRate >= 5
                 ? 'text-red-600 dark:text-red-400'
@@ -318,10 +320,10 @@ function HealthCard({ metric }: { metric: TenantMetricRow }) {
                   : 'text-emerald-600 dark:text-emerald-400'
             }
           />
-          <Row label="Server errors" value={h.errors5xx.toLocaleString()} />
-          <Row label="Client errors" value={h.errors4xx.toLocaleString()} />
-          <Row label="p95 latency" value={`${h.p95LatencyMs.toLocaleString()} ms`} />
-          <Row label="Average latency" value={`${h.avgLatencyMs.toLocaleString()} ms`} />
+          <Row label="Server errors" value={formatQuantity(h.errors5xx)} />
+          <Row label="Client errors" value={formatQuantity(h.errors4xx)} />
+          <Row label="p95 latency" value={`${formatQuantity(h.p95LatencyMs)} ms`} />
+          <Row label="Average latency" value={`${formatQuantity(h.avgLatencyMs)} ms`} />
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { AdminLayout } from '../components/AdminLayout';
+import { DecimalInput } from '@orderium/ui';
 import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -19,7 +20,6 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Sidebar } from 'primereact/sidebar';
 import {
@@ -31,7 +31,7 @@ import {
   OrderPaymentType,
 } from '../modules/order-payments';
 import { toastConfirm, toastError, toastSuccess } from '../services/toast.service';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDateTime } from '@orderium/ui';
 
 /* ─── Constants ──────────────────────────────────────────────── */
 
@@ -58,8 +58,7 @@ type StatusFilter = 'all' | CaissePaymentStatus;
 /* ─── Helpers ────────────────────────────────────────────────── */
 
 function fmtDatetime(d: string) {
-  const dt = new Date(d);
-  return `${dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  return formatDateTime(d);
 }
 
 function initials(name: string | null) {
@@ -626,17 +625,16 @@ export default function Caisse() {
               <div className="caisse-form-group">
                 <label className="caisse-form-label">{t('paymentAmount')} *</label>
                 <div className="caisse-amount-input">
-                  <InputNumber
+                  <DecimalInput
                     value={payAmount}
-                    onValueChange={(e) => setPayAmount(e.value ?? 0)}
-                    mode="decimal"
+                    onValueChange={(v) => setPayAmount(v ?? 0)}
                     minFractionDigits={2}
                     maxFractionDigits={2}
                     min={0.01}
                     max={payOrder.remainingAmount > 0 ? payOrder.remainingAmount : undefined}
-                    suffix={` ${currency}`}
+                    suffix={currency}
+                    className="p-inputtext p-component"
                     style={{ width: '100%' }}
-                    inputStyle={{ width: '100%' }}
                   />
                 </div>
                 {/* Quick amounts */}
@@ -778,16 +776,15 @@ export default function Caisse() {
               <div className="caisse-form-group">
                 <label className="caisse-form-label">{t('paymentAmount')} *</label>
                 <div className="caisse-amount-input">
-                  <InputNumber
+                  <DecimalInput
                     value={editAmount}
-                    onValueChange={(e) => setEditAmount(e.value ?? 0)}
-                    mode="decimal"
+                    onValueChange={(v) => setEditAmount(v ?? 0)}
                     minFractionDigits={2}
                     maxFractionDigits={2}
                     min={0.01}
-                    suffix={` ${currency}`}
+                    suffix={currency}
+                    className="p-inputtext p-component"
                     style={{ width: '100%' }}
-                    inputStyle={{ width: '100%' }}
                   />
                 </div>
               </div>

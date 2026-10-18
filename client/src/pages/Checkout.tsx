@@ -20,7 +20,7 @@ import {
   MapPin,
   FileText,
 } from 'lucide-react';
-import { notify } from '@orderium/ui';
+import { notify, phoneInputProps, formatQuantity } from '@orderium/ui';
 import { partnersService, ordersService } from '@/modules';
 import { authService } from '@/modules/auth';
 import { AddressInput } from '@/components/AddressInput';
@@ -363,7 +363,7 @@ const Checkout = () => {
                     </div>
                     <InputText
                       id="phone"
-                      type="tel"
+                      {...phoneInputProps}
                       {...register('phone')}
                       placeholder={t('phonePlaceholder')}
                       className={`w-full${errors.phone ? ' p-invalid' : ''}`}
@@ -608,7 +608,8 @@ const Checkout = () => {
                         {item.product.name}
                       </p>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>
-                        {item.quantity} × {formatCurrency(item.product.price, language)}
+                        {formatQuantity(item.quantity)} ×{' '}
+                        {formatCurrency(item.product.price, language)}
                       </p>
                     </div>
                     <span

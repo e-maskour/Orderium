@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Tag, Percent, X } from 'lucide-react';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 
 interface DiscountModalProps {
   productName: string;
@@ -87,7 +87,8 @@ export const DiscountModal = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9.]/g, '');
+    // Accept the French "," decimal separator; state keeps "." internally
+    const value = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
     const parts = value.split('.');
     let v = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
     if (v.includes('.')) {
@@ -368,9 +369,9 @@ export const DiscountModal = ({
             <input
               type="text"
               inputMode="decimal"
-              value={discount}
+              value={discount.replace('.', ',')}
               onChange={handleInputChange}
-              placeholder={discountType === 1 ? '0' : '0.00'}
+              placeholder={discountType === 1 ? '0' : '0,00'}
               className="disc-field"
               style={{
                 fontSize: '2.5rem',
@@ -419,7 +420,7 @@ export const DiscountModal = ({
                     lineHeight: 1,
                   }}
                 >
-                  {isClear ? t('clear') : num}
+                  {isClear ? t('clear') : isDot ? ',' : num}
                 </button>
               );
             })}
@@ -462,7 +463,9 @@ export const DiscountModal = ({
               >
                 <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>
                   {t('discount')}{' '}
-                  {discountType === 1 ? `(${discountValue}%)` : `(${discountPct.toFixed(1)}%)`}
+                  {discountType === 1
+                    ? `(${formatQuantity(discountValue, 2)}%)`
+                    : `(${formatQuantity(discountPct, 1)}%)`}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#235ae4' }}>
                   −{formatAmount(discountAmount, 2)} {t('currency')}

@@ -1,4 +1,5 @@
 import { Order as IOrder, OrderItem as IOrderItem } from './orders.interface';
+import { formatCurrency } from '@orderium/ui';
 
 export class OrderItem implements IOrderItem {
   constructor(
@@ -18,11 +19,11 @@ export class OrderItem implements IOrderItem {
   ) {}
 
   get displayPrice(): string {
-    return `$${this.unitPrice.toFixed(2)}`;
+    return formatCurrency(this.unitPrice, 'fr');
   }
 
   get displayTotal(): string {
-    return `$${this.total.toFixed(2)}`;
+    return formatCurrency(this.total, 'fr');
   }
 
   get hasDiscount(): boolean {
@@ -77,19 +78,19 @@ export class Order implements IOrder {
   ) {}
 
   get displayTotal(): string {
-    return `$${this.total.toFixed(2)}`;
+    return formatCurrency(this.total, 'fr');
   }
 
   get displaySubtotal(): string {
-    return `$${this.subtotal.toFixed(2)}`;
+    return formatCurrency(this.subtotal, 'fr');
   }
 
   get displayTaxAmount(): string {
-    return `$${this.taxAmount.toFixed(2)}`;
+    return formatCurrency(this.taxAmount, 'fr');
   }
 
   get displayDiscountAmount(): string {
-    return `$${this.discountAmount.toFixed(2)}`;
+    return formatCurrency(this.discountAmount, 'fr');
   }
 
   get itemCount(): number {

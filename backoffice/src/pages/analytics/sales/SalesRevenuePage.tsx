@@ -1,5 +1,6 @@
 import { TrendingUp } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportKpiCards from '../components/ReportKpiCards';
@@ -32,8 +33,7 @@ const SalesRevenuePage: React.FC = () => {
     {
       field: 'total',
       header: `${t('total')} (MAD)`,
-      body: (row: Record<string, unknown>) =>
-        Number(row.total).toLocaleString('fr-MA', { minimumFractionDigits: 2 }),
+      body: (row: Record<string, unknown>) => formatAmount(Number(row.total)),
     },
     { field: 'status', header: t('status') },
     { field: 'channel', header: t('channel') },

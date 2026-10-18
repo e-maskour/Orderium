@@ -201,6 +201,8 @@ export const translations = {
 
     // Validation
     validationPhoneRequired: 'رقم الهاتف مطلوب',
+    invalidMoroccanPhone: 'رقم غير صالح: 10 أرقام تبدأ بـ 05 أو 06 أو 07',
+    phoneWithoutCountryCode: 'أدخل الرقم بدون +212 / 212 (مثال: 0612345678)',
     validationPasswordRequired: 'كلمة المرور مطلوبة',
     validationCheckFields: 'يرجى مراجعة حقول النموذج',
     validationUnexpectedError: 'حدث خطأ غير متوقع',
@@ -406,6 +408,8 @@ export const translations = {
 
     // Validation
     validationPhoneRequired: 'Le numéro de téléphone est requis',
+    invalidMoroccanPhone: 'Numéro invalide : 10 chiffres commençant par 05, 06 ou 07',
+    phoneWithoutCountryCode: 'Saisissez le numéro sans +212 / 212 (ex : 0612345678)',
     validationPasswordRequired: 'Le mot de passe est requis',
     validationCheckFields: 'Veuillez vérifier les champs du formulaire',
     validationUnexpectedError: "Une erreur inattendue s'est produite",

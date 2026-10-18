@@ -15,7 +15,10 @@ import {
   renderHeaderTemplate,
   renderFooterTemplate,
 } from './templates/document.template';
-import { renderReceiptTemplate } from './templates/receipt.template';
+import {
+  renderReceiptTemplate,
+  RECEIPT_WIDTH_MM,
+} from './templates/receipt.template';
 import { renderOrdersMergeTemplate } from './templates/orders-merge.template';
 import type { OrdersMergeView } from './templates/orders-merge.template';
 import { getDocumentStyles } from './templates/document.styles';
@@ -25,6 +28,11 @@ import { MinioProvider } from '../images/providers/minio.provider';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { extractPartnerInfo, mapDocumentItems } from './pdf.helpers';
 import { buildOrdersMergeSummary } from '../orders/orders.helpers';
+import {
+  formatAmount,
+  formatDate,
+  formatQuantity,
+} from '../../common/utils/french-format';
 import type { MergeSummaryResult } from '../orders/orders.helpers';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
@@ -95,6 +103,8 @@ export class PDFService implements OnModuleDestroy {
 
   /** PDF buffer TTL in Redis: 5 minutes */
   private static readonly PDF_CACHE_TTL_MS = 5 * 60 * 1000;
+  /** Bump whenever a PDF template/layout changes so stale cached PDFs are bypassed. */
+  private static readonly PDF_CACHE_VERSION = 'v2';
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
@@ -200,7 +210,7 @@ export class PDFService implements OnModuleDestroy {
     lang: 'fr' | 'ar' = 'fr',
   ): Promise<PDFGenerationResult> {
     const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
-    const cacheKey = `pdf:${tenantSlug}:${documentType}:${documentId}:${lang}`;
+    const cacheKey = `pdf:${PDFService.PDF_CACHE_VERSION}:${tenantSlug}:${documentType}:${documentId}:${lang}`;
 
     // Serve from Redis cache if available (skips Playwright entirely)
     const cached = await this.cacheManager.get<{
@@ -254,7 +264,9 @@ export class PDFService implements OnModuleDestroy {
   ): Promise<PDFGenerationResult> {
     const uniqueIds = [...new Set(orderIds)];
     const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
-    const cacheKey = `pdf:${tenantSlug}:orders-merge:${[...uniqueIds]
+    const cacheKey = `pdf:${PDFService.PDF_CACHE_VERSION}:${tenantSlug}:orders-merge:${[
+      ...uniqueIds,
+    ]
       .sort((a, b) => a - b)
       .join('-')}:${lang}:${view}`;
 
@@ -318,7 +330,6 @@ export class PDFService implements OnModuleDestroy {
       await page.evaluate(() => (document as any).fonts.ready);
 
       const companyConfig = await this.getCompanyConfig();
-      const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
 
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
@@ -326,7 +337,7 @@ export class PDFService implements OnModuleDestroy {
         documentLabel:
           lang === 'ar' ? 'ملخص الطلبات' : 'RÉCAPITULATIF DE COMMANDES',
         documentNumber: String(summary.orderCount),
-        date: new Date().toLocaleDateString(dateLocale),
+        date: formatDate(new Date()),
         lang,
       });
 
@@ -365,7 +376,7 @@ export class PDFService implements OnModuleDestroy {
       const tenantSlug = this.tenantConnService.getCurrentTenantSlug();
       for (const lang of ['fr', 'ar'] as const) {
         await this.cacheManager.del(
-          `pdf:${tenantSlug}:${documentType}:${documentId}:${lang}`,
+          `pdf:${PDFService.PDF_CACHE_VERSION}:${tenantSlug}:${documentType}:${documentId}:${lang}`,
         );
       }
     } catch (err) {
@@ -660,8 +671,6 @@ export class PDFService implements OnModuleDestroy {
       const companyLines = this.buildCompanyLines(companyConfig, lang);
       const footerLines = this.buildCompanyFooterLines(companyConfig);
 
-      const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
-
       // Generate header and footer templates
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
@@ -672,12 +681,10 @@ export class PDFService implements OnModuleDestroy {
           lang,
         ),
         documentNumber: data.documentNumber,
-        date: new Date(data.date).toLocaleDateString(dateLocale),
-        dueDate: data.dueDate
-          ? new Date(data.dueDate).toLocaleDateString(dateLocale)
-          : undefined,
+        date: formatDate(data.date),
+        dueDate: data.dueDate ? formatDate(data.dueDate) : undefined,
         expirationDate: data.expirationDate
-          ? new Date(data.expirationDate).toLocaleDateString(dateLocale)
+          ? formatDate(data.expirationDate)
           : undefined,
         lang,
       });
@@ -715,7 +722,8 @@ export class PDFService implements OnModuleDestroy {
   ): Promise<Buffer> {
     const page = await this.getNewPage({
       viewport: {
-        width: 302,
+        // mm → CSS px (96dpi)
+        width: Math.round((RECEIPT_WIDTH_MM * 96) / 25.4),
         height: 3000,
       },
       deviceScaleFactor: 2,
@@ -738,7 +746,7 @@ export class PDFService implements OnModuleDestroy {
       });
 
       const pdfBuffer = await page.pdf({
-        width: '80mm',
+        width: `${RECEIPT_WIDTH_MM}mm`,
         height: `${contentHeight}px`,
         printBackground: true,
         margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
@@ -785,7 +793,7 @@ export class PDFService implements OnModuleDestroy {
           return `
               <tr class="table-row">
                 <td class="cell-desc">${item.description}</td>
-                <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
+                <td style="text-align: center; font-weight: 600;">${formatQuantity(item.quantity)}</td>
               </tr>
             `;
         } else {
@@ -793,10 +801,10 @@ export class PDFService implements OnModuleDestroy {
           return `
               <tr class="table-row">
                 <td class="cell-desc">${item.description}</td>
-                <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
+                <td style="text-align: center; font-weight: 600;">${formatQuantity(item.quantity)}</td>
                 <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.unitPrice)}</td>
                 <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.discount)}</td>
-                ${!hideVAT ? `<td class="num" style="text-align: ${midAlign};">${item.tax}%</td>` : ''}
+                ${!hideVAT ? `<td class="num" style="text-align: ${midAlign};">${formatQuantity(item.tax)}%</td>` : ''}
                 <td class="num" style="text-align: ${totalAlign}; font-weight: 600;">${this.formatCurrency(item.total)}</td>
               </tr>
             `;
@@ -809,18 +817,14 @@ export class PDFService implements OnModuleDestroy {
       ? data.items.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
 
-    const dateLocale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
-
     return renderDocumentTemplate({
       documentTitle,
       documentLabel,
       documentNumber: data.documentNumber,
-      date: new Date(data.date).toLocaleDateString(dateLocale),
-      dueDate: data.dueDate
-        ? new Date(data.dueDate).toLocaleDateString(dateLocale)
-        : undefined,
+      date: formatDate(data.date),
+      dueDate: data.dueDate ? formatDate(data.dueDate) : undefined,
       expirationDate: data.expirationDate
-        ? new Date(data.expirationDate).toLocaleDateString(dateLocale)
+        ? formatDate(data.expirationDate)
         : undefined,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
@@ -839,7 +843,7 @@ export class PDFService implements OnModuleDestroy {
       hideVAT,
       isPurchaseDocument: data.isDemandePrix,
       isDemandePrix: hidePrices,
-      totalQuantity: totalQuantity.toString(),
+      totalQuantity: formatQuantity(totalQuantity),
       lang,
     });
   }
@@ -860,9 +864,10 @@ export class PDFService implements OnModuleDestroy {
           item.discount > 0
             ? `${lang === 'ar' ? 'خصم' : 'Remise'}: -${this.formatCurrency(item.discount)} DH`
             : '';
-        const taxSub = !hideVAT && item.tax > 0 ? `TVA: ${item.tax}%` : '';
+        const taxSub =
+          !hideVAT && item.tax > 0 ? `TVA: ${formatQuantity(item.tax)}%` : '';
         const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
-        const qtyLine = `${item.quantity} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
+        const qtyLine = `${formatQuantity(item.quantity)} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
         return `<tr class="t-item">
             <td class="t-desc">
               ${item.description}
@@ -878,9 +883,7 @@ export class PDFService implements OnModuleDestroy {
 
     return renderReceiptTemplate({
       documentNumber: data.documentNumber,
-      date: new Date(data.date).toLocaleDateString(
-        lang === 'ar' ? 'ar-MA' : 'fr-FR',
-      ),
+      date: formatDate(data.date),
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       itemsHtml,
@@ -982,9 +985,9 @@ export class PDFService implements OnModuleDestroy {
   private formatCurrency(value: any): string {
     try {
       const numValue = Number(value);
-      return isNaN(numValue) ? '0.00' : numValue.toFixed(2);
+      return formatAmount(isNaN(numValue) ? 0 : numValue);
     } catch {
-      return '0.00';
+      return formatAmount(0);
     }
   }
 

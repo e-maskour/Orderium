@@ -8,6 +8,7 @@ import {
   buildFormatPattern,
   generateSequenceNumber,
 } from '../../common/helpers/sequence.helpers';
+import { formatDate } from '../../common/utils/french-format';
 
 // ─── Sequence response enrichment ─────────────────────────────────────────
 
@@ -67,9 +68,9 @@ export function buildQuoteExportRows(quote: Quote): Record<string, unknown>[] {
   const isDemandePrix = !!quote.supplierId;
   const base: Record<string, unknown> = {
     Numéro: quote.documentNumber,
-    Date: quote.date ? new Date(quote.date).toLocaleDateString('fr-FR') : '',
+    Date: quote.date ? formatDate(quote.date) : '',
     'Date expiration': quote.expirationDate
-      ? new Date(quote.expirationDate).toLocaleDateString('fr-FR')
+      ? formatDate(quote.expirationDate)
       : '',
     Type: isDemandePrix ? 'Demande de prix' : 'Devis',
     'Client/Fournisseur': isDemandePrix

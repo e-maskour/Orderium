@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { metricsApi } from '../api/metrics';
 import type { MetricsRangeParams, TenantMetricsListParams } from '../types/metrics';
+import { formatAmount } from '../utils/formatAmount';
 
 export const metricsKeys = {
   all: ['metrics'] as const,
@@ -74,7 +75,7 @@ export function useCollectMetrics() {
         toast.error(`Collected ${result.tenantsProcessed} tenants, ${result.tenantsFailed} failed`);
       } else {
         toast.success(
-          `Collected ${result.tenantsProcessed} tenants in ${(result.durationMs / 1000).toFixed(1)}s`,
+          `Collected ${result.tenantsProcessed} tenants in ${formatAmount(result.durationMs / 1000, 1)}s`,
         );
       }
     },

@@ -1,5 +1,5 @@
 import { ICompany } from './company.interface';
-import { formatAmount } from '@orderium/ui';
+import { APP_LOCALE, formatAmount } from '@orderium/ui';
 
 export class Company implements ICompany {
   companyName: string;
@@ -69,7 +69,7 @@ export class Company implements ICompany {
   get fiscalYearStartMonthName(): string {
     if (this.fiscalYearStartMonth == null) return 'N/A';
     const date = new Date(2000, this.fiscalYearStartMonth - 1, 1);
-    return date.toLocaleString('default', { month: 'long' });
+    return date.toLocaleString(APP_LOCALE, { month: 'long' });
   }
 
   static fromApiResponse(data: any): Company {

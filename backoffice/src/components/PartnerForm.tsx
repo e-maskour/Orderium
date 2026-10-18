@@ -14,7 +14,7 @@ import {
   type PartnerFormValues,
   type PartnerFormInput,
 } from '../modules/partners/schemas/partner-form.schema';
-import { notify } from '@orderium/ui';
+import { formatDate, notify, normalizePhoneInputEvent, phoneInputProps } from '@orderium/ui';
 
 interface PartnerFormProps {
   partner?: IPartner | null;
@@ -242,9 +242,10 @@ export function PartnerForm({ partner, type, onSubmit }: PartnerFormProps) {
                 </label>
                 <InputText
                   id="phoneNumber"
+                  {...phoneInputProps}
                   {...register('phoneNumber')}
+                  onChange={(e) => register('phoneNumber').onChange(normalizePhoneInputEvent(e))}
                   className={errors.phoneNumber ? 'p-invalid' : ''}
-                  placeholder="+212 6XX XXX XXX"
                   style={{ width: '100%' }}
                 />
                 <FieldError name="phoneNumber" />
@@ -474,11 +475,11 @@ export function PartnerForm({ partner, type, onSubmit }: PartnerFormProps) {
                 {[
                   {
                     label: t('createdAt'),
-                    value: new Date(partner.dateCreated).toLocaleDateString(),
+                    value: formatDate(partner.dateCreated),
                   },
                   {
                     label: t('updatedAt'),
-                    value: new Date(partner.dateUpdated).toLocaleDateString(),
+                    value: formatDate(partner.dateUpdated),
                   },
                 ].map(({ label, value }) => (
                   <div

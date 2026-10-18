@@ -147,7 +147,9 @@
   background: var(--pk-action-bg);
   color: var(--pk-ctrl-color);
   cursor: pointer;
-  transition: background 120ms, color 120ms;
+  transition:
+    background 120ms,
+    color 120ms;
   outline: none;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -189,7 +191,6 @@
 }
 
 @keyframes pk-fab-glow-pulse {
-
   0%,
   100% {
     box-shadow:
@@ -315,7 +316,6 @@
   transform: scale(1.1);
 }
 
-
 /* ─── Language switcher tabs ─────────────────────────────────────────────────── */
 
 .pk-lang-bar {
@@ -335,7 +335,10 @@
   border: 1.5px solid transparent;
   background: transparent;
   color: var(--pk-tab-text);
-  transition: background 140ms, color 140ms, border-color 140ms;
+  transition:
+    background 140ms,
+    color 140ms,
+    border-color 140ms;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   outline: none;
@@ -391,7 +394,10 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: transform 80ms, background 80ms, box-shadow 80ms;
+  transition:
+    transform 80ms,
+    background 80ms,
+    box-shadow 80ms;
   -webkit-tap-highlight-color: transparent;
   outline: none;
   touch-action: manipulation;
@@ -509,7 +515,6 @@
 
 /* Hide the entire virtual keyboard system on phones and tablets (< 1024px) */
 @media (max-width: 1023px) {
-
   .pk-fab-wrapper,
   .pos-keyboard-overlay {
     display: none !important;

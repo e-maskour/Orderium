@@ -9,6 +9,7 @@ import { Product } from '../products/entities/product.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote, QuoteStatus } from '../quotes/entities/quote.entity';
+import { formatDate } from '../../common/utils/french-format';
 
 /**
  * Scheduled notification jobs.
@@ -200,7 +201,7 @@ export class ScheduledNotificationsService {
     this.logger.log('Running daily sales summary...');
     await this.forEachTenant('daily-sales-summary', async (tenantSlug) => {
       const today = new Date();
-      const dateStr = today.toLocaleDateString('fr-MA');
+      const dateStr = formatDate(today);
 
       const startOfDay = new Date(today);
       startOfDay.setHours(0, 0, 0, 0);
@@ -241,7 +242,7 @@ export class ScheduledNotificationsService {
       weekStart.setDate(today.getDate() - 7);
       weekStart.setHours(0, 0, 0, 0);
 
-      const weekStartStr = weekStart.toLocaleDateString('fr-MA');
+      const weekStartStr = formatDate(weekStart);
 
       const result = await this.orderRepo
         .createQueryBuilder('order')

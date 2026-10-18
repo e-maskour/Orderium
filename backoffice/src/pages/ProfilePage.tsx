@@ -5,7 +5,7 @@ import { Avatar } from 'primereact/avatar';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
 import { Button } from 'primereact/button';
-import { User, Phone, Lock, Shield, KeyRound } from 'lucide-react';
+import { User, Phone, Lock, Shield, KeyRound, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAccessLabels } from '../hooks/useAccessLabels';
@@ -125,6 +125,8 @@ export default function ProfilePage() {
           actions={
             <Button
               label={saving ? t('saving') : t('save')}
+              aria-label={t('save')}
+              icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
               loading={saving}
               onClick={handleSave}
               style={{
@@ -310,6 +312,7 @@ export default function ProfilePage() {
                       }}
                     />
                     <InputText
+                      type="tel"
                       value={admin?.phoneNumber || ''}
                       disabled
                       dir="ltr"

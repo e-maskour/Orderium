@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react';
+import {
+  DecimalInput,
+  getMoroccanPhoneError,
+  normalizeMoroccanPhone,
+  phoneInputProps,
+} from '@orderium/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
@@ -99,11 +105,22 @@ export default function CompanySettings() {
     },
   });
 
+  const phoneError = getMoroccanPhoneError(formData?.phone || '');
+  const faxError = getMoroccanPhoneError(formData?.fax || '');
+
+  const saveCompany = () => {
+    if (!formData) return;
+    const error = phoneError || faxError;
+    if (error) {
+      toastError(t(error));
+      return;
+    }
+    updateMutation.mutate(formData);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData) {
-      updateMutation.mutate(formData);
-    }
+    saveCompany();
   };
 
   const handleChange = (field: keyof ICompany, value: any) => {
@@ -159,9 +176,7 @@ export default function CompanySettings() {
           actions={
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Button
-                onClick={() => {
-                  if (formData) updateMutation.mutate(formData);
-                }}
+                onClick={saveCompany}
                 icon={
                   updateMutation.isPending ? (
                     <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />
@@ -382,11 +397,24 @@ export default function CompanySettings() {
                   </label>
                   <InputText
                     id="cs-phone"
-                    type="tel"
+                    {...phoneInputProps}
                     value={formData.phone || ''}
-                    onChange={(e) => handleChange('phone', e.target.value)}
+                    onChange={(e) => handleChange('phone', normalizeMoroccanPhone(e.target.value))}
+                    className={phoneError ? 'p-invalid' : ''}
                     style={{ width: '100%' }}
                   />
+                  {phoneError && (
+                    <small
+                      style={{
+                        display: 'block',
+                        color: '#ef4444',
+                        fontSize: '0.75rem',
+                        marginTop: '0.25rem',
+                      }}
+                    >
+                      {t(phoneError)}
+                    </small>
+                  )}
                 </div>
                 <div>
                   <label className="cs-label" htmlFor="cs-fax">
@@ -394,11 +422,25 @@ export default function CompanySettings() {
                   </label>
                   <InputText
                     id="cs-fax"
-                    type="tel"
+                    {...phoneInputProps}
+                    placeholder="05XXXXXXXX"
                     value={formData.fax || ''}
-                    onChange={(e) => handleChange('fax', e.target.value)}
+                    onChange={(e) => handleChange('fax', normalizeMoroccanPhone(e.target.value))}
+                    className={faxError ? 'p-invalid' : ''}
                     style={{ width: '100%' }}
                   />
+                  {faxError && (
+                    <small
+                      style={{
+                        display: 'block',
+                        color: '#ef4444',
+                        fontSize: '0.75rem',
+                        marginTop: '0.25rem',
+                      }}
+                    >
+                      {t(faxError)}
+                    </small>
+                  )}
                 </div>
                 <div>
                   <label className="cs-label" htmlFor="cs-email">
@@ -549,11 +591,13 @@ export default function CompanySettings() {
                   <label className="cs-label" htmlFor="cs-capital">
                     {t('capital' as any)}
                   </label>
-                  <InputText
+                  <DecimalInput
                     id="cs-capital"
-                    type="number"
-                    value={String(formData.capital || '')}
-                    onChange={(e) => handleChange('capital', parseFloat(e.target.value))}
+                    min={0}
+                    maxFractionDigits={2}
+                    value={formData.capital || null}
+                    onValueChange={(v) => handleChange('capital', v ?? undefined)}
+                    className="p-inputtext p-component"
                     style={{ width: '100%' }}
                   />
                 </div>

@@ -57,6 +57,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    // vendor-prime (~745 kB) and vendor-charts (~525 kB) are deliberately isolated
+    // by manualChunks below so they cache independently; they can't be split further.
+    chunkSizeWarningLimit: 800,
     minify: 'terser',
     terserOptions: {
       compress: {

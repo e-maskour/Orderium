@@ -1,4 +1,5 @@
 import { Product as IProduct } from './products.interface';
+import { formatAmount, formatCurrency } from '@orderium/ui';
 
 export class Product implements IProduct {
   constructor(
@@ -25,11 +26,11 @@ export class Product implements IProduct {
   ) {}
 
   get displayPrice(): string {
-    return `$${this.price.toFixed(2)}`;
+    return formatCurrency(this.price, 'fr');
   }
 
   get displayCost(): string {
-    return `$${this.cost.toFixed(2)}`;
+    return formatCurrency(this.cost, 'fr');
   }
 
   get margin(): number {
@@ -42,11 +43,11 @@ export class Product implements IProduct {
   }
 
   get displayMargin(): string {
-    return `$${this.margin.toFixed(2)}`;
+    return formatCurrency(this.margin, 'fr');
   }
 
   get displayMarginPercentage(): string {
-    return `${this.marginPercentage.toFixed(1)}%`;
+    return `${formatAmount(this.marginPercentage, 1)}%`;
   }
 
   get hasStock(): boolean {

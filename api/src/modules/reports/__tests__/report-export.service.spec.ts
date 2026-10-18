@@ -54,20 +54,15 @@ describe('ReportExportService', () => {
 
   describe('formatMAD', () => {
     it('formats a number as MAD currency', () => {
-      const result = service.formatMAD(1500.5);
-      expect(result).toContain('1');
-      expect(result).toContain('500');
-      expect(result.toLowerCase()).toMatch(/mad|\u062f\.\u0645\./);
+      expect(service.formatMAD(1500.5)).toBe('1.500,50 MAD');
     });
 
     it('formats zero', () => {
-      const result = service.formatMAD(0);
-      expect(result).toContain('0');
+      expect(service.formatMAD(0)).toBe('0,00 MAD');
     });
 
     it('formats negative values', () => {
-      const result = service.formatMAD(-250);
-      expect(result).toContain('250');
+      expect(service.formatMAD(-250)).toBe('-250,00 MAD');
     });
   });
 });

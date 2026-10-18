@@ -1,3 +1,4 @@
+import { formatAmount, formatDate } from '@orderium/ui';
 import {
   IOrderPayment,
   OrderPaymentType,
@@ -34,7 +35,7 @@ export class OrderPayment implements IOrderPayment {
   }
 
   get displayAmount(): string {
-    return this.amount.toFixed(2);
+    return formatAmount(this.amount, 2);
   }
 
   get displayPaymentType(): string {
@@ -42,7 +43,7 @@ export class OrderPayment implements IOrderPayment {
   }
 
   get displayDate(): string {
-    return new Date(this.paymentDate).toLocaleDateString();
+    return formatDate(this.paymentDate);
   }
 
   static fromApiResponse(data: any): OrderPayment {

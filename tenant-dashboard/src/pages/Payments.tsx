@@ -16,6 +16,7 @@ import { PaymentForm } from '../components/PaymentForm';
 import { PaymentStatusBadge, PaymentProgress } from '../components/PaymentStatusBadge';
 import { Pagination } from '../components/Pagination';
 import { SearchBar } from '../components/SearchBar';
+import { DateInput } from '../components/DateInput';
 import { SkeletonListItem } from '../components/Skeleton';
 import { formatMoney, formatDate, daysUntil } from '../utils/format';
 import {
@@ -230,11 +231,10 @@ export function Payments() {
               <label htmlFor="f-due-from" className="label">
                 Due from
               </label>
-              <input
+              <DateInput
                 id="f-due-from"
-                type="date"
                 value={params.dueFrom ?? ''}
-                onChange={(e) => set('dueFrom', e.target.value || undefined)}
+                onChange={(value) => set('dueFrom', value || undefined)}
                 className="input"
               />
             </div>
@@ -242,11 +242,10 @@ export function Payments() {
               <label htmlFor="f-due-to" className="label">
                 Due to
               </label>
-              <input
+              <DateInput
                 id="f-due-to"
-                type="date"
                 value={params.dueTo ?? ''}
-                onChange={(e) => set('dueTo', e.target.value || undefined)}
+                onChange={(value) => set('dueTo', value || undefined)}
                 className="input"
               />
             </div>

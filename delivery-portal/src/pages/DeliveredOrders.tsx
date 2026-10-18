@@ -4,6 +4,7 @@ import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
+import { formatDate, formatTime } from '@orderium/ui';
 import { AppLayout } from '../components/AppLayout';
 import orderiumLogo from '../assets/logo-delivery.svg';
 import { RefreshCw, ChevronRight, Package } from 'lucide-react';
@@ -49,11 +50,7 @@ export default function DeliveredOrders() {
   // Group by date
   const grouped: Record<string, Order[]> = {};
   orders.forEach((order: Order) => {
-    const date = new Date(order.deliveredAt ?? order.createdAt).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
+    const date = formatDate(order.deliveredAt ?? order.createdAt);
     if (!grouped[date]) grouped[date] = [];
     grouped[date].push(order);
   });
@@ -346,8 +343,7 @@ function DeliveredRow({
         </div>
         <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>
           #{order.orderNumber}
-          {order.deliveredAt &&
-            ` · ${new Date(order.deliveredAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
+          {order.deliveredAt && ` · ${formatTime(order.deliveredAt)}`}
         </p>
       </div>
 

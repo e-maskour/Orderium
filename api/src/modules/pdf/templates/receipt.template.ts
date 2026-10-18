@@ -1,3 +1,11 @@
+import { formatQuantity } from '../../../common/utils/french-format';
+
+/**
+ * Printable width of an 80mm thermal roll (576 dots @ 203dpi).
+ * Rendering at the full 80mm makes printers clip the right edge.
+ */
+export const RECEIPT_WIDTH_MM = 72;
+
 interface ReceiptTemplateData {
   documentNumber: string;
   date: string;
@@ -36,7 +44,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   };
 
   const discountRowHtml =
-    data.discount && data.discount !== '0.00'
+    data.discount && data.discount !== '0,00'
       ? `<tr class="t-sub">
            <td class="t-label">${data.discountType === 1 ? L.discountPct : L.discount}</td>
            <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ` ${isRTL ? 'د.م' : 'DH'}`}</td>
@@ -53,13 +61,13 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=block" rel="stylesheet">
   <title>${L.receipt} ${data.documentNumber}</title>
   <style>
-    @page { size: 80mm auto; margin: 0; }
+    @page { size: ${RECEIPT_WIDTH_MM}mm auto; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; break-inside: avoid; page-break-inside: avoid; }
 
     body {
       font-family: "Noto Sans", "Noto Sans Arabic", sans-serif;
       background: #fff;
-      width: 80mm;
+      width: ${RECEIPT_WIDTH_MM}mm;
       margin: 0 auto;
       padding: 0;
       font-size: 7.5pt;
@@ -69,7 +77,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     }
 
     /* ── Wrapper ─────────────────────────── */
-    .rcp { padding: 4mm 4mm 5mm; }
+    .rcp { padding: 4mm 3mm 5mm; }
 
     /* ── Company header ──────────────────── */
     .rcp-brand {
@@ -372,7 +380,7 @@ ${
   <!-- ── Summary ── -->
   <div class="rcp-summary">
     <span><b>${data.totalProducts}</b> ${data.totalProducts > 1 ? L.articlesPl : L.articles}</span>
-    <span>${L.totalQty} : <b>${data.totalQty}</b></span>
+    <span>${L.totalQty} : <b>${formatQuantity(data.totalQty)}</b></span>
   </div>
 
   <!-- ── Totals ── -->

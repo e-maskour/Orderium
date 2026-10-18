@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { normalizePhoneInputEvent, phoneInputProps } from '@orderium/ui';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../context/AuthContext';
@@ -449,9 +450,9 @@ export default function Login() {
                   <Phone className="login-input-icon" style={{ width: '1rem', height: '1rem' }} />
                   <InputText
                     id="login-phone"
-                    type="tel"
+                    {...phoneInputProps}
                     {...register('phoneNumber')}
-                    placeholder="0600000000"
+                    onChange={(e) => register('phoneNumber').onChange(normalizePhoneInputEvent(e))}
                     disabled={isLoading}
                     className={errors.phoneNumber ? 'p-invalid' : ''}
                     aria-invalid={!!errors.phoneNumber}

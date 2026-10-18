@@ -92,7 +92,7 @@ export default function POS() {
   const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
-  const sidebarWidth = 320;
+  const sidebarWidth = 'clamp(360px, 32vw, 460px)';
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [uploadImageProduct, setUploadImageProduct] = useState<Product | null>(null);
@@ -556,222 +556,189 @@ export default function POS() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '0.75rem',
+              border: '1px solid #e2e8f0',
+              overflow: 'hidden',
+            }}
+          >
             {cart.map((item, index) => {
               const itemSubtotal = item.product.price * item.quantity;
               const itemDiscountAmount =
                 item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
               const itemTotal = itemSubtotal - itemDiscountAmount;
               const hasDiscount = item.discount > 0;
+              const lang = language as 'fr' | 'ar';
 
               return (
                 <div
                   key={item.product.id}
-                  className="pos-cart-item"
+                  className="pos-cart-row"
+                  onClick={() => openQuantityModal(item.product)}
                   style={{
-                    background: '#fff',
-                    borderRadius: '0.75rem',
-                    border: '1.5px solid #e2e8f0',
-                    overflow: 'hidden',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.375rem',
+                    paddingBlock: '0.625rem',
+                    paddingInlineStart: '0.75rem',
+                    paddingInlineEnd: '0.5rem',
+                    borderTop: index === 0 ? 'none' : '1px solid #f1f5f9',
+                    cursor: 'pointer',
                   }}
                 >
-                  {/* Row: index + thumb + name + delete */}
-                  <div
-                    onClick={() => openQuantityModal(item.product)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.625rem',
-                      padding: '0.625rem 0.625rem 0.5rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {/* Index badge */}
+                  {/* Line 1: name + delete */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
                     <span
-                      style={{
-                        width: '1.375rem',
-                        height: '1.375rem',
-                        borderRadius: '0.375rem',
-                        flexShrink: 0,
-                        background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                        color: 'rgba(255,255,255,0.6)',
-                        fontSize: '0.5625rem',
-                        fontWeight: 800,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {index + 1}
-                    </span>
-
-                    {/* Thumbnail */}
-                    <div
-                      style={{
-                        width: '2.75rem',
-                        height: '2.75rem',
-                        borderRadius: '0.5rem',
-                        flexShrink: 0,
-                        background: '#f8fafc',
-                        border: '1px solid #f1f5f9',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {item.product.imageUrl ? (
-                        <img
-                          src={resolveMediaUrl(item.product.imageUrl)}
-                          alt={item.product.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      ) : (
-                        <Package
-                          style={{ width: '1.125rem', height: '1.125rem', color: '#cbd5e1' }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <p
+                      title={item.product.name}
                       style={{
                         flex: 1,
                         minWidth: 0,
                         fontWeight: 600,
                         color: '#0f172a',
                         fontSize: '0.8125rem',
-                        lineHeight: 1.3,
+                        lineHeight: 1.35,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        margin: 0,
+                        wordBreak: 'break-word',
                       }}
                     >
                       {item.product.name}
-                    </p>
-
-                    {/* Remise */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDiscountModal(item);
-                      }}
-                      className="pos-disc-btn"
-                      style={{
-                        flexShrink: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '0.375rem',
-                        background: hasDiscount ? 'rgba(35,90,228,0.08)' : '#f1f5f9',
-                        border: hasDiscount ? '1px solid rgba(35,90,228,0.2)' : '1px solid #e2e8f0',
-                        color: hasDiscount ? '#235ae4' : '#94a3b8',
-                        fontSize: '0.625rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
-                      {hasDiscount
-                        ? item.discountType === 1
-                          ? `−${item.discount}%`
-                          : `−${formatCurrency(item.discount, language as 'fr' | 'ar')}`
-                        : t('discount')}
-                    </button>
-
-                    {/* Delete */}
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         removeFromCart(item.product.id);
                       }}
                       className="pos-cart-del-btn"
+                      aria-label="delete"
                       style={{
                         flexShrink: 0,
-                        width: '1.5rem',
-                        height: '1.5rem',
-                        borderRadius: '0.375rem',
+                        width: '2rem',
+                        height: '2rem',
+                        marginTop: '-0.25rem',
+                        borderRadius: '0.5rem',
                         background: '#fef2f2',
-                        border: '1px solid #fee2e2',
+                        border: '1px solid #fecaca',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        color: '#dc2626',
                         cursor: 'pointer',
                       }}
                     >
-                      <X style={{ width: '0.625rem', height: '0.625rem', color: '#f87171' }} />
+                      <Trash2 style={{ width: '1rem', height: '1rem' }} strokeWidth={2.25} />
                     </button>
                   </div>
 
-                  {/* Row: qty × price → total */}
+                  {/* Line 2: qty × price · remise ........ total */}
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.375rem 0.625rem',
-                      background: '#f8fafc',
-                      borderTop: '1px solid #f1f5f9',
+                      gap: '0.5rem',
+                      paddingInlineEnd: '0.25rem',
                     }}
                   >
                     <div
                       style={{
+                        flex: 1,
+                        minWidth: 0,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.375rem',
-                        cursor: 'pointer',
+                        flexWrap: 'wrap',
+                        gap: '0.25rem 0.375rem',
                       }}
-                      onClick={() => openQuantityModal(item.product)}
                     >
                       <span
                         style={{
-                          minWidth: '1.75rem',
                           height: '1.5rem',
-                          padding: '0 0.375rem',
+                          padding: '0 0.5rem',
                           borderRadius: '0.375rem',
-                          background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                          color: '#fff',
-                          fontSize: '0.6875rem',
+                          background: 'rgba(35,90,228,0.08)',
+                          color: '#235ae4',
+                          fontSize: '0.75rem',
                           fontWeight: 800,
+                          fontVariantNumeric: 'tabular-nums',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: '0 2px 6px rgba(35,90,228,0.3)',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {item.quantity}
                       </span>
-                      <span style={{ fontSize: '0.6875rem', color: '#64748b' }}>
-                        × {formatCurrency(item.product.price, language as 'fr' | 'ar')}
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#64748b',
+                          fontVariantNumeric: 'tabular-nums',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        × {formatCurrency(item.product.price, lang)}
                       </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDiscountModal(item);
+                        }}
+                        className="pos-disc-btn"
+                        style={{
+                          height: '1.5rem',
+                          padding: '0 0.4375rem',
+                          borderRadius: '0.375rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.1875rem',
+                          background: hasDiscount ? 'rgba(22,163,74,0.1)' : 'transparent',
+                          border: hasDiscount ? 'none' : '1px dashed #cbd5e1',
+                          color: hasDiscount ? '#15803d' : '#94a3b8',
+                          fontSize: '0.6875rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Tag style={{ width: '0.6875rem', height: '0.6875rem' }} />
+                        {hasDiscount
+                          ? item.discountType === 1
+                            ? `−${item.discount}%`
+                            : `−${formatCurrency(item.discount, lang)}`
+                          : t('discount')}
+                      </button>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+
+                    <div style={{ flexShrink: 0, textAlign: 'end' }}>
+                      {hasDiscount && (
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: '0.6875rem',
+                            color: '#94a3b8',
+                            textDecoration: 'line-through',
+                            fontVariantNumeric: 'tabular-nums',
+                            lineHeight: 1.1,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {formatCurrency(itemSubtotal, lang)}
+                        </span>
+                      )}
                       <span
                         style={{
                           fontSize: '0.9375rem',
                           fontWeight: 800,
                           color: '#0f172a',
-                          letterSpacing: '-0.02em',
+                          fontVariantNumeric: 'tabular-nums',
+                          letterSpacing: '-0.01em',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {formatCurrency(itemTotal, language as 'fr' | 'ar')}
+                        {formatCurrency(itemTotal, lang)}
                       </span>
-                      {hasDiscount && (
-                        <span
-                          style={{
-                            display: 'block',
-                            fontSize: '0.625rem',
-                            color: '#94a3b8',
-                            textDecoration: 'line-through',
-                            lineHeight: 1,
-                          }}
-                        >
-                          {formatCurrency(itemSubtotal, language as 'fr' | 'ar')}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -936,14 +903,14 @@ export default function POS() {
       <style>{`
         .pos-product-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
         .pos-product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(35,90,228,0.14) !important; }
-        .pos-cart-item { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
-        .pos-cart-item:hover { border-color: #bfdbfe !important; box-shadow: 0 2px 10px rgba(35,90,228,0.10) !important; }
+        .pos-cart-row { transition: background 0.12s ease; }
+        .pos-cart-row:hover { background: #f8fafc; }
         .pos-cart-clear-btn { transition: background 0.12s, border-color 0.12s; }
         .pos-cart-clear-btn:hover { background: rgba(239,68,68,0.22) !important; }
         .pos-cart-del-btn { transition: background 0.12s; }
-        .pos-cart-del-btn:hover { background: #fee2e2 !important; }
+        .pos-cart-del-btn:hover, .pos-cart-del-btn:active { background: #dc2626 !important; border-color: #dc2626 !important; color: #fff !important; }
         .pos-disc-btn { transition: background 0.12s; }
-        .pos-disc-btn:hover { background: rgba(35,90,228,0.14) !important; }
+        .pos-disc-btn:hover { background: rgba(35,90,228,0.08) !important; color: #235ae4 !important; }
         .pos-keypad-btn { transition: transform 0.1s ease, background 0.1s ease; }
         .pos-keypad-btn:active { transform: scale(0.95); }
         .pos-search-input:focus { border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.14) !important; }
@@ -1196,7 +1163,7 @@ export default function POS() {
             height: '100%',
             overflow: 'hidden',
             position: 'relative',
-            width: `${sidebarWidth}px`,
+            width: sidebarWidth,
             flexShrink: 0,
             borderRight: dir === 'rtl' ? undefined : '1px solid #e5e7eb',
             borderLeft: dir === 'rtl' ? '1px solid #e5e7eb' : undefined,

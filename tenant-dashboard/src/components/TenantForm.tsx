@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { slugify } from '../utils/slugify';
+import {
+  PHONE_ERROR_MESSAGES,
+  getMoroccanPhoneError,
+  normalizeMoroccanPhone,
+  phoneInputProps,
+} from '../utils/phone';
 import type { CreateTenantInput, Tenant } from '../types/tenant';
 
 interface Props {
@@ -63,6 +69,8 @@ export function TenantForm({ onSubmit, loading = false, initial, editMode = fals
     ) {
       newErrors.contactEmail = 'Invalid email address';
     }
+    const phoneError = getMoroccanPhoneError(form.contactPhone?.toString() ?? '');
+    if (phoneError) newErrors.contactPhone = PHONE_ERROR_MESSAGES[phoneError];
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -157,11 +165,14 @@ export function TenantForm({ onSubmit, loading = false, initial, editMode = fals
         <div>
           <label className="label">Contact Phone</label>
           <input
-            type="tel"
+            {...phoneInputProps}
             value={(form.contactPhone as string) ?? ''}
-            onChange={(e) => set('contactPhone', e.target.value)}
-            className="input"
+            onChange={(e) => set('contactPhone', normalizeMoroccanPhone(e.target.value))}
+            className={`input ${errors.contactPhone ? 'border-red-400' : ''}`}
           />
+          {errors.contactPhone && (
+            <p className="mt-1 text-xs text-red-500">{errors.contactPhone}</p>
+          )}
         </div>
       </div>
 

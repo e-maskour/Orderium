@@ -16,7 +16,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatDate } from '@orderium/ui';
 
 interface PaymentHistoryModalProps {
   isOpen: boolean;
@@ -258,7 +258,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                       <div className="flex align-items-center gap-2">
                         <Calendar style={{ width: 16, height: 16, color: '#94a3b8' }} />
                         <span style={{ fontSize: '0.875rem', color: '#334155' }}>
-                          {new Date(p.paymentDate).toLocaleDateString('fr-FR')}
+                          {formatDate(p.paymentDate)}
                         </span>
                       </div>
                     </div>

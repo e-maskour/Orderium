@@ -265,6 +265,8 @@ export default function SettingsPage() {
           actions={
             <Button
               label={t('save')}
+              aria-label={t('save')}
+              icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
               onClick={handleSave}
               style={{
                 background: 'linear-gradient(135deg,#235ae4,#1a47b8)',

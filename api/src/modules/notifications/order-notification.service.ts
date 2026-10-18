@@ -8,6 +8,7 @@ import { NotificationsQueueService } from './notifications.queue.service';
 import { Product } from '../products/entities/product.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
+import { formatAmount, formatDate } from '../../common/utils/french-format';
 
 /**
  * Central notification trigger service.
@@ -358,15 +359,13 @@ export class OrderNotificationService {
   /** Single overdue order alert */
   async notifyOrderPaymentOverdue(order: Order): Promise<void> {
     const clientName = order.customer?.name || order.customerName || 'Client';
-    const dueDate = order.amountDueDate
-      ? new Date(order.amountDueDate).toLocaleDateString('fr-MA')
-      : '—';
+    const dueDate = order.amountDueDate ? formatDate(order.amountDueDate) : '—';
     await this.fire(
       'ORDER_PAYMENT_OVERDUE',
       {
         orderNumber: order.documentNumber,
         clientName,
-        amount: String(order.remainingAmount ?? 0),
+        amount: formatAmount(order.remainingAmount ?? 0),
         dueDate,
       },
       [{ type: 'admins' }],
@@ -379,14 +378,14 @@ export class OrderNotificationService {
     const clientName =
       invoice.customer?.name || invoice.customerName || 'Client';
     const dueDate = invoice.amountDueDate
-      ? new Date(invoice.amountDueDate).toLocaleDateString('fr-MA')
+      ? formatDate(invoice.amountDueDate)
       : '—';
     await this.fire(
       'INVOICE_PAYMENT_OVERDUE',
       {
         invoiceNumber: invoice.documentNumber,
         clientName,
-        amount: String(invoice.remainingAmount ?? 0),
+        amount: formatAmount(invoice.remainingAmount ?? 0),
         dueDate,
       },
       [{ type: 'admins' }],
@@ -403,7 +402,7 @@ export class OrderNotificationService {
   ): Promise<void> {
     await this.fire(
       'DAILY_SALES_SUMMARY',
-      { date, ordersCount: String(ordersCount), amount: String(amount) },
+      { date, ordersCount: String(ordersCount), amount: formatAmount(amount) },
       [{ type: 'admins' }],
       { date, ordersCount, amount },
     );
@@ -416,7 +415,11 @@ export class OrderNotificationService {
   ): Promise<void> {
     await this.fire(
       'WEEKLY_REVENUE_REPORT',
-      { weekStart, ordersCount: String(ordersCount), amount: String(amount) },
+      {
+        weekStart,
+        ordersCount: String(ordersCount),
+        amount: formatAmount(amount),
+      },
       [{ type: 'admins' }],
       { weekStart, ordersCount, amount },
     );

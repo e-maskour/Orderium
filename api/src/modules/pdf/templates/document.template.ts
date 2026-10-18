@@ -234,7 +234,7 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
 
   // Build discount row if it exists
   const discountRowHtml =
-    data.discount && data.discount !== '0.00'
+    data.discount && data.discount !== '0,00'
       ? `<div class="totals-row">
            <span class="totals-label">${data.discountType === 1 ? L.discountPct : L.discount}</span>
            <span class="totals-value">${data.discountType === 1 ? `-${data.discount}%` : `-${data.discount} DH`}</span>

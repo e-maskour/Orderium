@@ -960,7 +960,6 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
           top: 0,
           zIndex: 100,
           direction: language === 'ar' ? 'rtl' : 'ltr',
-          backdropFilter: 'blur(12px)',
           backgroundColor: 'var(--topbar-bg)',
           borderBottom: '1px solid var(--topbar-border)',
           paddingTop: 'env(safe-area-inset-top)',
@@ -969,7 +968,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
         {/* ── Top Bar ── */}
         <header
           className="flex align-items-center justify-content-between"
-          style={{ height: '3.5rem', padding: '0 1.5rem' }}
+          style={{ height: 'var(--topbar-height)', padding: '0 1.5rem' }}
         >
           {/* Left */}
           <div className="flex align-items-center" style={{ gap: '0.125rem' }}>

@@ -1,3 +1,4 @@
+import { formatAmount as formatMoney } from '@orderium/ui';
 import { ICurrency, ICurrenciesConfig } from './currencies.interface';
 
 export class Currency implements ICurrency {
@@ -26,7 +27,7 @@ export class Currency implements ICurrency {
   }
 
   formatAmount(amount: number): string {
-    return `${this.symbol}${amount.toFixed(2)}`;
+    return `${this.symbol}${formatMoney(amount, 2)}`;
   }
 
   static fromApiResponse(data: any): Currency {

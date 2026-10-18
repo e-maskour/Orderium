@@ -6,6 +6,16 @@
 export { orderiumPrimeConfig, arabicLocale, frenchLocale } from './theme';
 export { formatAmount, formatCurrency } from './formatAmount';
 
+// Moroccan phone validation
+export * from './phone';
+
+// French number/date formatting (comma decimals, dd/MM/yyyy)
+export * from './numberFormat';
+export * from './dateFormat';
+export { DecimalInput } from './DecimalInput';
+export type { DecimalInputProps } from './DecimalInput';
+export { applyPrimeLocale } from './primeLocale';
+
 // Toast system
 export { toast, Toaster } from './toast';
 export type { Toast, ToastType, ToasterPosition } from './toast';

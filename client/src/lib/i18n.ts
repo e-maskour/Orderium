@@ -24,10 +24,3 @@ export const formatPhone = (phone: string): string => {
   }
   return phone;
 };
-
-export const validateMoroccanPhone = (phone: string): boolean => {
-  // Moroccan mobile: 06, 07 or +212 6/7
-  const cleaned = phone.replace(/\D/g, '');
-  const mobilePattern = /^(0[67]\d{8}|212[67]\d{8})$/;
-  return mobilePattern.test(cleaned);
-};

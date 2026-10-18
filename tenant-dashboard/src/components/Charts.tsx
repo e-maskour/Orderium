@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { formatQuantity } from '../utils/numberFormat';
 
 /**
  * Small SVG chart primitives.
@@ -94,7 +95,7 @@ export function TrendChart({
   labels,
   series,
   height = 200,
-  format = (v) => v.toLocaleString(),
+  format = (v) => formatQuantity(v),
 }: TrendChartProps) {
   const [hover, setHover] = useState<number | null>(null);
 
@@ -234,10 +235,10 @@ export function QuotaBar({ label, used, limit, pct, exceeded, unit }: QuotaBarPr
         <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</span>
         <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
           <span className={exceeded ? 'font-bold text-red-600 dark:text-red-400' : 'font-semibold'}>
-            {used.toLocaleString()}
+            {formatQuantity(used)}
           </span>
           {' / '}
-          {limit > 0 ? limit.toLocaleString() : '∞'}
+          {limit > 0 ? formatQuantity(limit) : '∞'}
           {unit ? ` ${unit}` : ''}
         </span>
       </div>
@@ -280,7 +281,7 @@ export function ShareBar({ segments }: { segments: ShareSegment[] }) {
                 width: `${(s.value / total) * 100}%`,
                 backgroundColor: s.color,
               }}
-              title={`${s.label}: ${s.value.toLocaleString()}`}
+              title={`${s.label}: ${formatQuantity(s.value)}`}
             />
           ))}
       </div>
@@ -290,7 +291,7 @@ export function ShareBar({ segments }: { segments: ShareSegment[] }) {
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
             <span className="text-[11px] text-slate-500 dark:text-slate-400">{s.label}</span>
             <span className="text-[11px] font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-              {s.value.toLocaleString()}
+              {formatQuantity(s.value)}
             </span>
             <span className="text-[10px] text-slate-400">
               {Math.round((s.value / total) * 100)}%

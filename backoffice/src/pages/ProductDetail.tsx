@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useBackNavigation } from '../hooks/useBackNavigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,9 +16,19 @@ import { brandsService } from '../modules/brands';
 import { taxesService } from '../modules/taxes';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
-import { DocPageHeader } from '../components/DocPageHeader';
+import { PageHeader } from '../components/PageHeader';
 import { ImageUpload } from '../components/ImageUpload';
-import { Save, Plus, ArrowRightLeft, Building2, AlertCircle, Package } from 'lucide-react';
+import {
+  Save,
+  Plus,
+  ArrowRightLeft,
+  Building2,
+  AlertCircle,
+  ChevronLeft,
+  X,
+  FileText,
+  Boxes,
+} from 'lucide-react';
 import {
   toastSuccess,
   toastUpdated,
@@ -31,10 +42,10 @@ import { useApiErrors } from '../hooks/useApiErrors';
 import type { TranslationKey } from '../lib/i18n';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { RadioButton } from 'primereact/radiobutton';
+import { DecimalInput, formatAmount } from '@orderium/ui';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 import {
   ProductForm,
@@ -47,7 +58,7 @@ import {
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { goBack } = useBackNavigation('/products');
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
   const currency = language === 'ar' ? 'د.م' : 'DH';
@@ -330,12 +341,12 @@ export default function ProductDetail() {
 
   const handleCancel = () => {
     if (isDirty) {
-      toastConfirm(t('unsavedChangesConfirm' as TranslationKey), () => navigate('/products'), {
+      toastConfirm(t('unsavedChangesConfirm' as TranslationKey), goBack, {
         confirmLabel: t('cancel'),
         variant: 'warning',
       } as any);
     } else {
-      navigate('/products');
+      goBack();
     }
   };
 
@@ -374,12 +385,7 @@ export default function ProductDetail() {
           <div className="pform-empty">
             <AlertCircle size={40} strokeWidth={1.5} aria-hidden="true" />
             <p className="pform-empty__title">{t('notFound')}</p>
-            <Button
-              type="button"
-              text
-              label={t('backToProducts')}
-              onClick={() => navigate('/products')}
-            />
+            <Button type="button" text label={t('backToProducts')} onClick={goBack} />
           </div>
         </div>
       </AdminLayout>
@@ -389,35 +395,44 @@ export default function ProductDetail() {
   return (
     <AdminLayout>
       <div className="pdetail-page">
-        <DocPageHeader
-          icon={<Package size={24} />}
-          parentLabel={t('products')}
-          currentLabel={product.code || product.name}
+        <PageHeader
           title={product.name}
-          onBack={handleCancel}
-          backAriaLabel={t('backToProducts')}
-          badges={
+          subtitle={product.code || undefined}
+          crumbs={[{ label: t('products'), to: '/products' }]}
+          actions={
             <>
               <span
-                className={`doc-hdr__badge doc-hdr__badge--${product.isEnabled ? 'on' : 'off'}`}
+                className={`page-header__badge page-header__badge--status page-header__badge--${product.isEnabled ? 'on' : 'off'}`}
               >
                 {product.isEnabled ? t('active') : t('inactive')}
               </span>
-              {product.isService && <span className="doc-hdr__badge">{t('isService')}</span>}
+              {product.isService && <span className="page-header__badge">{t('isService')}</span>}
+              <Button
+                type="button"
+                outlined
+                severity="secondary"
+                label={t('backToProducts')}
+                icon={<ChevronLeft size={16} className="pform-back-icon" aria-hidden="true" />}
+                onClick={handleCancel}
+              />
             </>
           }
         />
 
         <TabView
+          className="pdetail-tabs"
           activeIndex={activeTabIndex}
           onTabChange={(e) => setActiveTabIndex(e.index)}
-          pt={{
-            panelContainer: { style: { padding: 'var(--space-6) 0 0', background: 'transparent' } },
-            nav: { style: { background: 'transparent' } },
-          }}
         >
           {/* ── Details: the shared form, identical to create ── */}
-          <TabPanel header={t('tabInformation')}>
+          <TabPanel
+            header={
+              <span className="ui-tab-label">
+                <FileText size={16} aria-hidden="true" />
+                {t('tabInformation')}
+              </span>
+            }
+          >
             <div className="pform-tabbody">
               <form onSubmit={handleSave} noValidate>
                 <FormErrorSummary entries={summary} />
@@ -431,47 +446,54 @@ export default function ProductDetail() {
                   onRegenerateCode={handleRegenerateCode}
                   saving={saving}
                   imageSlot={
-                    <div className="pform-field">
-                      <span className="pform-field__label">{t('productImage')}</span>
-                      <ImageUpload
-                        productId={Number(id)}
-                        currentImage={(product as any)?.imageUrl}
-                        onImageUpload={() => {
-                          queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toastUpdated(t('imageUpdatedSuccessfully'));
-                        }}
-                        onImageRemove={() => {
-                          queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toastDeleted(t('imageRemovedSuccessfully'));
-                        }}
+                    <ImageUpload
+                      productId={Number(id)}
+                      currentImage={(product as any)?.imageUrl}
+                      onImageUpload={() => {
+                        queryClient.invalidateQueries({ queryKey: ['product', id] });
+                        toastUpdated(t('imageUpdatedSuccessfully'));
+                      }}
+                      onImageRemove={() => {
+                        queryClient.invalidateQueries({ queryKey: ['product', id] });
+                        toastDeleted(t('imageRemovedSuccessfully'));
+                      }}
+                    />
+                  }
+                  actions={
+                    <>
+                      <Button
+                        type="submit"
+                        label={t('saveChanges')}
+                        loading={saving}
+                        disabled={saving || !isDirty}
+                        icon={<Save size={16} aria-hidden="true" />}
                       />
-                    </div>
+                      <Button
+                        type="button"
+                        text
+                        severity="secondary"
+                        label={t('cancel')}
+                        icon={<X size={16} aria-hidden="true" />}
+                        disabled={saving}
+                        onClick={handleCancel}
+                      />
+                    </>
                   }
                 />
-
-                {/* ── Sticky action bar ── */}
-                <div className="pform-actions">
-                  <Button
-                    type="button"
-                    outlined
-                    label={t('cancel')}
-                    disabled={saving}
-                    onClick={handleCancel}
-                  />
-                  <Button
-                    type="submit"
-                    label={t('saveChanges')}
-                    loading={saving}
-                    disabled={saving || !isDirty}
-                    icon={<Save size={14} aria-hidden="true" />}
-                  />
-                </div>
               </form>
             </div>
           </TabPanel>
 
           {/* ── Stock: a separate concern, not part of the product form ── */}
-          <TabPanel header={t('stock')}>
+          <TabPanel
+            header={
+              <span className="ui-tab-label">
+                <Boxes size={16} aria-hidden="true" />
+                {t('stock')}
+                <span className="ui-tab-label__count">{stockQuants.length}</span>
+              </span>
+            }
+          >
             <div className="pstock-kpis">
               {[
                 { label: t('onHand'), value: totalOnHand, tone: '' },
@@ -490,7 +512,7 @@ export default function ProductDetail() {
               ].map(({ label, value, tone }) => (
                 <div className="pstock-kpi" key={label}>
                   <p className="pstock-kpi__label">{label}</p>
-                  <p className={`pstock-kpi__value${tone}`}>{value.toFixed(2)}</p>
+                  <p className={`pstock-kpi__value${tone}`}>{formatAmount(value, 2)}</p>
                 </div>
               ))}
             </div>
@@ -538,10 +560,10 @@ export default function ProductDetail() {
                     const incoming = parseFloat(row.incomingQuantity?.toString() || '0');
                     const outgoing = parseFloat(row.outgoingQuantity?.toString() || '0');
                     const metrics = [
-                      { label: t('onHand'), value: onHand.toFixed(2), tone: '' },
+                      { label: t('onHand'), value: formatAmount(onHand, 2), tone: '' },
                       {
                         label: t('available'),
-                        value: available.toFixed(2),
+                        value: formatAmount(available, 2),
                         tone:
                           available > 0
                             ? ' pstock-metric__value--ok'
@@ -549,7 +571,7 @@ export default function ProductDetail() {
                       },
                       {
                         label: t('reserved'),
-                        value: reserved > 0 ? reserved.toFixed(2) : '—',
+                        value: reserved > 0 ? formatAmount(reserved, 2) : '—',
                         tone:
                           reserved > 0
                             ? ' pstock-metric__value--warn'
@@ -557,12 +579,12 @@ export default function ProductDetail() {
                       },
                       {
                         label: t('incoming'),
-                        value: incoming > 0 ? incoming.toFixed(2) : '—',
+                        value: incoming > 0 ? formatAmount(incoming, 2) : '—',
                         tone: incoming > 0 ? '' : ' pstock-metric__value--muted',
                       },
                       {
                         label: t('outgoing'),
-                        value: outgoing > 0 ? outgoing.toFixed(2) : '—',
+                        value: outgoing > 0 ? formatAmount(outgoing, 2) : '—',
                         tone: outgoing > 0 ? '' : ' pstock-metric__value--muted',
                       },
                     ];
@@ -634,16 +656,16 @@ export default function ProductDetail() {
 
             <FormField id="sc-quantity" label={t('quantity')} required>
               {(a) => (
-                <InputNumber
-                  inputId={a.id}
+                <DecimalInput
+                  id={a.id}
+                  className="p-inputtext p-component"
                   value={stockCorrectionData.quantity ? Number(stockCorrectionData.quantity) : null}
-                  onValueChange={(e) =>
+                  onValueChange={(v) =>
                     setStockCorrectionData({
                       ...stockCorrectionData,
-                      quantity: e.value?.toString() ?? '',
+                      quantity: v?.toString() ?? '',
                     })
                   }
-                  mode="decimal"
                   minFractionDigits={2}
                   maxFractionDigits={2}
                   min={0}
@@ -728,16 +750,16 @@ export default function ProductDetail() {
 
             <FormField id="st-quantity" label={t('quantity')} required>
               {(a) => (
-                <InputNumber
-                  inputId={a.id}
+                <DecimalInput
+                  id={a.id}
+                  className="p-inputtext p-component"
                   value={stockTransferData.quantity ? Number(stockTransferData.quantity) : null}
-                  onValueChange={(e) =>
+                  onValueChange={(v) =>
                     setStockTransferData({
                       ...stockTransferData,
-                      quantity: e.value?.toString() ?? '',
+                      quantity: v?.toString() ?? '',
                     })
                   }
-                  mode="decimal"
                   minFractionDigits={2}
                   maxFractionDigits={2}
                   min={0}

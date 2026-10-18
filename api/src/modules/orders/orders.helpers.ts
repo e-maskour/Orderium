@@ -9,6 +9,7 @@ import {
   DeliveryStatus,
 } from './entities/order.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
+import { formatDate } from '../../common/utils/french-format';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -317,10 +318,8 @@ export function buildOrderExportBaseRow(order: Order) {
   return {
     Numéro: docRef,
     'N° reçu': order.receiptNumber ?? '',
-    Date: order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '',
-    'Date échéance': order.dueDate
-      ? new Date(order.dueDate).toLocaleDateString('fr-FR')
-      : '',
+    Date: order.date ? formatDate(order.date) : '',
+    'Date échéance': order.dueDate ? formatDate(order.dueDate) : '',
     Type: isBonAchat ? "Bon d'achat" : 'Bon de livraison',
     'Client/Fournisseur': isBonAchat
       ? order.supplierName || order.supplier?.name || ''

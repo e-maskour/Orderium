@@ -5,6 +5,8 @@ import { partnersService } from '../../modules/partners/partners.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { Phone, MapPin, Truck, CreditCard } from 'lucide-react';
 import { AutoCompleteSelect } from '../ui/AutoCompleteSelect';
+import { RefLink } from '../ui/RefLink';
+import { entityRoutes } from '../../lib/entityRoutes';
 
 interface DocumentPartnerBoxProps {
   direction: 'vente' | 'achat';
@@ -31,6 +33,7 @@ export function DocumentPartnerBox({
 }: DocumentPartnerBoxProps) {
   const { t } = useLanguage();
   const partnerLabel = direction === 'vente' ? t('invoice.customer') : t('invoice.supplier');
+  const partnerRoute = partnerId ? entityRoutes.partner(partnerId, direction) : null;
 
   const [partners, setPartners] = useState<IPartner[]>([]);
 
@@ -154,24 +157,33 @@ export function DocumentPartnerBox({
                 alignItems: 'center',
               }}
             >
-              {partnerName || <span style={{ color: '#94a3b8' }}>—</span>}
+              {partnerName ? (
+                <RefLink to={partnerRoute}>{partnerName}</RefLink>
+              ) : (
+                <span style={{ color: '#94a3b8' }}>—</span>
+              )}
             </div>
           ) : (
-            <AutoCompleteSelect
-              value={partnerId ? String(partnerId) : null}
-              options={partners.map((partner) => ({
-                value: String(partner.id),
-                label: partner.name,
-              }))}
-              onChange={(e) => handlePartnerSelect(e.value)}
-              optionLabel="label"
-              optionValue="value"
-              placeholder={t('invoice.partnerNamePlaceholder').replace(
-                '{partner}',
-                partnerLabel.toLowerCase(),
-              )}
-              style={{ width: '100%', height: '2.5rem' }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AutoCompleteSelect
+                value={partnerId ? String(partnerId) : null}
+                options={partners.map((partner) => ({
+                  value: String(partner.id),
+                  label: partner.name,
+                }))}
+                onChange={(e) => handlePartnerSelect(e.value)}
+                optionLabel="label"
+                optionValue="value"
+                placeholder={t('invoice.partnerNamePlaceholder').replace(
+                  '{partner}',
+                  partnerLabel.toLowerCase(),
+                )}
+                style={{ width: '100%', height: '2.5rem' }}
+              />
+              <RefLink to={partnerRoute} iconOnly className="ref-link--field">
+                {partnerName}
+              </RefLink>
+            </div>
           )}
         </div>
 

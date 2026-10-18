@@ -3,7 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { BarChart2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { formatCurrency } from '../../lib/formatters';
+import { formatCurrency, formatNumber } from '../../lib/formatters';
 
 interface SalesPerformanceChartProps {
   data: {
@@ -76,7 +76,7 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({ da
           },
           formatter: (value) => {
             if (value === undefined || value === null) return '0';
-            return Math.round(value).toLocaleString('en-US');
+            return formatNumber(Math.round(value), 0);
           },
         },
       },

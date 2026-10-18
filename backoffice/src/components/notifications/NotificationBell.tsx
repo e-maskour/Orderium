@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck } from 'lucide-react';
+import { Tabs } from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import {
@@ -214,71 +215,17 @@ export function NotificationBell() {
         </div>
 
         {/* Filter Tabs */}
-        <div style={{ borderBottom: '1px solid #f3f4f6' }}>
-          <div
-            style={
-              {
-                display: 'flex',
-                gap: 4,
-                padding: '8px 12px',
-                overflowX: 'auto',
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-              } as React.CSSProperties
-            }
-          >
-            {TABS.map((tab) => {
-              const isActive = activeTab === tab;
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    flexShrink: 0,
-                    padding: '6px 12px',
-                    borderRadius: 9999,
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: isActive ? '#2563eb' : 'transparent',
-                    color: isActive ? '#fff' : '#6b7280',
-                    transition: 'all 150ms',
-                    minHeight: 32,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = '#f3f4f6';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  {t(TAB_I18N[tab] as any)}
-                  {tab === 'unread' && unreadTabCount > 0 && !isActive && (
-                    <span
-                      style={{
-                        background: '#ef4444',
-                        color: '#fff',
-                        fontSize: '0.5625rem',
-                        fontWeight: 700,
-                        borderRadius: 9999,
-                        width: 16,
-                        height: 16,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {unreadTabCount > 9 ? '9+' : unreadTabCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--erp-border)' }}>
+          <Tabs
+            ariaLabel={t('notifications')}
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as NotificationTab)}
+            tabs={TABS.map((tab) => ({
+              key: tab,
+              label: t(TAB_I18N[tab] as any),
+              count: tab === 'unread' && unreadTabCount > 0 ? unreadTabCount : undefined,
+            }))}
+          />
         </div>
 
         {/* Notification List */}

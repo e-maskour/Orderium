@@ -23,3 +23,9 @@ export type { SearchInputProps } from './SearchInput';
 export { FormField, FormError } from './FormField';
 
 export { cx } from './cx';
+
+export { PartnerAvatar } from './PartnerAvatar';
+export type { PartnerAvatarProps } from './PartnerAvatar';
+
+export { RefLink } from './RefLink';
+export type { RefLinkProps } from './RefLink';

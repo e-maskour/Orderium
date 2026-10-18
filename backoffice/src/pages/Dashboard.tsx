@@ -1,966 +1,1225 @@
-import React, { useMemo, useState, useEffect } from 'react';
-
-// ─── Responsive hook ──────────────────────────────────────────────────────────
-function useIsMobile(breakpoint = 640) {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < breakpoint);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < breakpoint);
-    window.addEventListener('resize', handler, { passive: true });
-    return () => window.removeEventListener('resize', handler);
-  }, [breakpoint]);
-  return isMobile;
-}
+import React, { useMemo, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  BarChart3,
+  Box,
+  CalendarDays,
+  Clock,
+  DollarSign,
+  Download,
+  FileText,
+  Layers,
+  Package,
+  RefreshCw,
+  RotateCcw,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  TrendingDown,
+  TrendingUp,
+  Truck,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
-import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../modules/statistics';
-import { ordersService, Order } from '../modules/orders';
-import { formatCurrency } from '../lib/formatters';
-import { useNavigate } from 'react-router-dom';
-import {
-  DollarSign,
-  ShoppingCart,
-  Clock,
-  CheckCircle,
-  Truck,
-  XCircle,
-  Package,
-  RefreshCw,
-  Star,
-} from 'lucide-react';
+import type { DashboardPeriod, IDashboardKpi, IDashboardStats } from '../modules/statistics';
+import { APP_LOCALE, formatDate } from '@orderium/ui';
+import { formatCurrency, formatNumber } from '../lib/formatters';
+import './Dashboard.css';
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ─── Copy ────────────────────────────────────────────────────────────────────
 const L = {
   fr: {
-    greeting: (h: number, name: string) =>
-      `${h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'}, ${name} 👋`,
-    today: "Aujourd'hui",
-    moneyEarned: "Chiffre d'affaires cette semaine",
-    ordersToday: 'Commandes cette semaine',
-    waiting: 'En attente',
-    weekRevenue: 'Recettes cette semaine',
-    topItems: 'Les 5 articles les plus commandés',
-    ordersStatus: 'État des commandes',
-    recentOrders: 'Dernières commandes',
-    new: 'Nouvelles',
-    inPrep: 'En préparation',
-    delivered: 'Livrées',
-    cancelled: 'Annulées',
-    orderNum: 'N°',
-    client: 'Client',
-    amount: 'Montant',
-    status: 'Statut',
+    welcome: (name: string) => `Bon retour, ${name} !`,
+    heroLead: "Voici ce qui se passe dans votre commerce aujourd'hui.",
+    heroLow: (n: React.ReactNode) => <>Vous avez {n} en stock faible.</>,
+    heroOk: 'Tout votre stock est au-dessus du seuil.',
+    items: (n: number) => `${n} article${n > 1 ? 's' : ''}`,
+    mtd: 'Mois en cours',
+    ytd: 'Année en cours',
+    export: 'Exporter',
+    refresh: 'Actualiser',
+    totalSales: 'Ventes',
+    revenue: "Chiffre d'affaires",
+    cost: 'Coût des ventes',
+    profit: 'Bénéfice',
+    vsPrev: 'vs période précédente',
+    salesStats: 'Statistiques des ventes',
+    salesStatsSub: {
+      daily: '30 derniers jours',
+      weekly: '12 dernières semaines',
+      monthly: '12 derniers mois',
+    },
+    daily: 'Jour',
+    weekly: 'Semaine',
+    monthly: 'Mois',
+    vsLast: 'vs période précédente',
+    breakdown: 'Répartition du CA',
+    transactions: (n: number) => `${formatNumber(n, 0)} transaction${n > 1 ? 's' : ''}`,
+    collected: 'Encaissé',
+    collectedSub: 'Paiements reçus',
+    outstanding: 'Reste à encaisser',
+    outstandingSub: 'Montant non payé',
+    profitSub: (m: string) => `Marge ${m}`,
+    inventory: 'Aperçu du stock',
+    qtyInHand: 'Quantité en stock',
+    incoming: 'À recevoir',
+    partners: 'Clients & fournisseurs',
+    customers: 'Clients',
+    suppliers: 'Fournisseurs',
+    stockOverview: 'État du stock',
+    lowStock: 'Articles en stock faible',
+    categories: 'Catégories',
+    products: 'Articles',
+    customerStats: 'Statistiques clients',
+    customerStatsSub: 'Nouveaux vs fidèles',
+    newCustomers: 'Nouveaux',
+    returningCustomers: 'Fidèles',
+    peakMonth: 'clients au meilleur mois',
+    purchases: 'Aperçu des achats',
+    purchaseCount: "Bons d'achat",
+    purchaseCost: 'Coût des achats',
+    cancelled: 'Commandes annulées',
+    returns: 'Retours clients',
+    recentSales: 'Ventes récentes',
+    recentSalesSub: 'Dernières transactions',
     viewAll: 'Voir tout',
-    qty: 'qté',
-    days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-    statusLabels: {
-      draft: 'Brouillon',
-      validated: 'Validée',
-      in_progress: 'En cours',
-      confirmed: 'Confirmée',
-      picked_up: 'Récupérée',
-      delivered: 'Livrée',
-      cancelled: 'Annulée',
-    } as Record<string, string>,
+    view: 'Voir',
+    document: 'N° document',
+    customer: 'Client',
+    date: 'Date',
+    amount: 'Montant',
+    payment: 'Paiement',
+    action: 'Action',
+    lowStockProducts: 'Articles en stock faible',
+    lowStockSub: 'Articles à réapprovisionner',
+    product: 'Article',
+    sku: 'Référence',
+    currentStock: 'Stock actuel',
+    minStock: 'Seuil',
+    status: 'Statut',
+    reorder: 'Commander',
+    empty: 'Aucune donnée pour le moment',
+    noLowStock: 'Aucun article sous le seuil',
+    walkIn: 'Client comptoir',
+    payStatus: { paid: 'Payée', partial: 'Partielle', unpaid: 'Non payée', cancelled: 'Annulée' },
+    stockStatus: { out: 'Rupture', critical: 'Critique', low: 'Stock faible' },
+    loadError: 'Impossible de charger le tableau de bord.',
+    retry: 'Réessayer',
   },
   ar: {
-    greeting: (h: number, name: string) =>
-      `${h < 12 ? 'صباح الخير' : h < 18 ? 'مساء الخير' : 'مساء النور'}، ${name} 👋`,
-    today: 'اليوم',
-    moneyEarned: 'رقم الأعمال هذا الأسبوع',
-    ordersToday: 'طلبات هذا الأسبوع',
-    waiting: 'في الانتظار',
-    weekRevenue: 'إيرادات هذا الأسبوع',
-    topItems: 'أكثر 5 مواد طلباً',
-    ordersStatus: 'حالة الطلبات',
-    recentOrders: 'آخر الطلبات',
-    new: 'جديد',
-    inPrep: 'قيد التحضير',
-    delivered: 'تم التسليم',
-    cancelled: 'ملغاة',
-    orderNum: 'رقم',
-    client: 'العميل',
-    amount: 'المبلغ',
-    status: 'الحالة',
+    welcome: (name: string) => `مرحباً بعودتك، ${name}!`,
+    heroLead: 'هذا ما يحدث في تجارتك اليوم.',
+    heroLow: (n: React.ReactNode) => <>لديك {n} بمخزون منخفض.</>,
+    heroOk: 'كل المخزون فوق حد التنبيه.',
+    items: (n: number) => `${n} ${n > 1 ? 'مواد' : 'مادة'}`,
+    mtd: 'الشهر الحالي',
+    ytd: 'السنة الحالية',
+    export: 'تصدير',
+    refresh: 'تحديث',
+    totalSales: 'المبيعات',
+    revenue: 'رقم الأعمال',
+    cost: 'تكلفة المبيعات',
+    profit: 'الربح',
+    vsPrev: 'مقارنة بالفترة السابقة',
+    salesStats: 'إحصائيات المبيعات',
+    salesStatsSub: { daily: 'آخر 30 يوماً', weekly: 'آخر 12 أسبوعاً', monthly: 'آخر 12 شهراً' },
+    daily: 'يومي',
+    weekly: 'أسبوعي',
+    monthly: 'شهري',
+    vsLast: 'مقارنة بالفترة السابقة',
+    breakdown: 'توزيع رقم الأعمال',
+    transactions: (n: number) => `${formatNumber(n, 0)} عملية`,
+    collected: 'المحصّل',
+    collectedSub: 'الدفعات المستلمة',
+    outstanding: 'الباقي للتحصيل',
+    outstandingSub: 'مبالغ غير مدفوعة',
+    profitSub: (m: string) => `الهامش ${m}`,
+    inventory: 'نظرة على المخزون',
+    qtyInHand: 'الكمية المتوفرة',
+    incoming: 'قيد الاستلام',
+    partners: 'العملاء والموردون',
+    customers: 'العملاء',
+    suppliers: 'الموردون',
+    stockOverview: 'حالة المخزون',
+    lowStock: 'مواد بمخزون منخفض',
+    categories: 'الفئات',
+    products: 'المواد',
+    customerStats: 'إحصائيات العملاء',
+    customerStatsSub: 'الجدد مقابل الدائمين',
+    newCustomers: 'جدد',
+    returningCustomers: 'دائمون',
+    peakMonth: 'عميلاً في أفضل شهر',
+    purchases: 'نظرة على المشتريات',
+    purchaseCount: 'سندات الشراء',
+    purchaseCost: 'تكلفة المشتريات',
+    cancelled: 'طلبات ملغاة',
+    returns: 'مرتجعات العملاء',
+    recentSales: 'آخر المبيعات',
+    recentSalesSub: 'آخر العمليات',
     viewAll: 'عرض الكل',
-    qty: 'كمية',
-    days: ['الإث', 'الثل', 'الأر', 'الخم', 'الجم', 'السب', 'الأح'],
-    statusLabels: {
-      draft: 'مسودة',
-      validated: 'معتمدة',
-      in_progress: 'جارٍ',
-      confirmed: 'مؤكدة',
-      picked_up: 'تم الأخذ',
-      delivered: 'تم التسليم',
-      cancelled: 'ملغاة',
-    } as Record<string, string>,
+    view: 'عرض',
+    document: 'رقم الوثيقة',
+    customer: 'العميل',
+    date: 'التاريخ',
+    amount: 'المبلغ',
+    payment: 'الدفع',
+    action: 'إجراء',
+    lowStockProducts: 'مواد بمخزون منخفض',
+    lowStockSub: 'مواد تحتاج إلى تموين',
+    product: 'المادة',
+    sku: 'المرجع',
+    currentStock: 'المخزون الحالي',
+    minStock: 'الحد الأدنى',
+    status: 'الحالة',
+    reorder: 'طلب',
+    empty: 'لا توجد بيانات بعد',
+    noLowStock: 'لا توجد مواد تحت الحد',
+    walkIn: 'زبون عابر',
+    payStatus: { paid: 'مدفوعة', partial: 'جزئية', unpaid: 'غير مدفوعة', cancelled: 'ملغاة' },
+    stockStatus: { out: 'نفاد', critical: 'حرج', low: 'منخفض' },
+    loadError: 'تعذّر تحميل لوحة القيادة.',
+    retry: 'إعادة المحاولة',
   },
 };
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  draft: { bg: '#f1f5f9', color: '#64748b' },
-  validated: { bg: '#eff6ff', color: '#2563eb' },
-  in_progress: { bg: '#fff7ed', color: '#c2410c' },
-  confirmed: { bg: '#fef3c7', color: '#b45309' },
-  picked_up: { bg: '#f0fdf4', color: '#15803d' },
-  delivered: { bg: '#dcfce7', color: '#16a34a' },
-  cancelled: { bg: '#fef2f2', color: '#dc2626' },
+type Copy = (typeof L)['fr'];
+type Tone = 'primary' | 'paid' | 'unpaid' | 'partial' | 'pending' | 'draft';
+type Granularity = 'daily' | 'weekly' | 'monthly';
+
+// Chart colours must be literal values for ApexCharts; these mirror theme.css.
+const C = {
+  primary: '#235ae4',
+  primary200: '#abc0f4',
+  primary100: '#d4def9',
+  grid: '#f1f5f9',
+  axis: '#64748b',
 };
 
-// ─── Big KPI Card ──────────────────────────────────────────────────────────
-function BigCard({
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+/** Parses a server YYYY-MM-DD bucket as a local calendar date */
+const parseDay = (s: string) => {
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+
+const pct = (n: number) => `${formatNumber(n, 1)}%`;
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('') || '?';
+
+function payStatus(sale: IDashboardStats['recentSales'][number]) {
+  if (sale.status === 'cancelled') return { key: 'cancelled' as const, tone: 'draft' as Tone };
+  if (sale.total > 0 && sale.paidAmount >= sale.total)
+    return { key: 'paid' as const, tone: 'paid' as Tone };
+  if (sale.paidAmount > 0) return { key: 'partial' as const, tone: 'partial' as Tone };
+  return { key: 'unpaid' as const, tone: 'unpaid' as Tone };
+}
+
+function stockStatus(p: IDashboardStats['lowStockProducts'][number]) {
+  if (p.stock <= 0) return { key: 'out' as const, tone: 'unpaid' as Tone };
+  if (p.stock <= p.threshold / 2) return { key: 'critical' as const, tone: 'pending' as Tone };
+  return { key: 'low' as const, tone: 'partial' as Tone };
+}
+
+const barWidth = (value: number, max: number) =>
+  `${max > 0 ? Math.max(4, Math.min(100, (value / max) * 100)) : 0}%`;
+
+// ─── Small building blocks ───────────────────────────────────────────────────
+function Delta({ change, invert }: { change: number | null; invert?: boolean }) {
+  if (change === null || !isFinite(change)) return null;
+  const up = change >= 0;
+  const good = Math.abs(change) < 0.05 ? null : invert ? !up : up;
+  const Icon = up ? ArrowUp : ArrowDown;
+  return (
+    <span className={`dash-delta dash-delta--${good === null ? 'flat' : good ? 'good' : 'bad'}`}>
+      <Icon size={11} strokeWidth={2.5} aria-hidden />
+      {pct(Math.abs(change))}
+    </span>
+  );
+}
+
+function CardTitle({
   icon: Icon,
+  tone = 'primary',
+  title,
+  sub,
+  extra,
+}: {
+  icon: React.ElementType;
+  tone?: Tone;
+  title: string;
+  sub?: string;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="dash-card__title">
+      <span className={`dash-tile dash-tone--${tone}`}>
+        <Icon size={16} strokeWidth={2.25} aria-hidden />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <h2>
+          {title} {extra}
+        </h2>
+        {sub && <p>{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({
+  icon: Icon,
+  tone,
   label,
   value,
-  bg,
-  iconBg,
-  iconColor,
+  kpi,
+  invert,
+  accent,
   onClick,
-  compact,
+  vsPrev,
 }: {
   icon: React.ElementType;
+  tone: Tone;
   label: string;
-  value: string | number;
-  bg: string;
-  iconBg: string;
-  iconColor: string;
-  onClick?: () => void;
-  compact?: boolean;
+  value: string;
+  kpi: IDashboardKpi;
+  invert?: boolean;
+  accent?: boolean;
+  onClick: () => void;
+  vsPrev: string;
 }) {
   return (
-    <div
+    <button
+      type="button"
+      className="dash-card dash-kpi"
       onClick={onClick}
-      style={{
-        background: bg,
-        borderRadius: compact ? '0.75rem' : '1rem',
-        padding: compact ? '0.625rem 0.75rem' : '0.875rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: compact ? '0.3rem' : '0.5rem',
-        cursor: onClick ? 'pointer' : 'default',
-        userSelect: 'none',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-      }}
+      title={kpi.change === null ? undefined : vsPrev}
     >
-      <div
-        style={{
-          width: compact ? '1.75rem' : '2.25rem',
-          height: compact ? '1.75rem' : '2.25rem',
-          borderRadius: compact ? '0.4rem' : '0.625rem',
-          background: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={compact ? 14 : 18} color={iconColor} strokeWidth={2.5} />
+      <div className="dash-kpi__top">
+        <span className={`dash-tile dash-tile--lg dash-tone--${tone}`}>
+          <Icon size={20} strokeWidth={2.25} aria-hidden />
+        </span>
+        <Delta change={kpi.change} invert={invert} />
       </div>
-      <div
-        style={{
-          fontSize: compact ? '0.65rem' : '0.75rem',
-          fontWeight: 600,
-          color: '#64748b',
-          lineHeight: 1.2,
-        }}
-      >
-        {label}
+      <span className={`dash-kpi__value${accent ? ' dash-kpi__value--accent' : ''}`}>{value}</span>
+      <span className="dash-kpi__label">{label}</span>
+      <div className="dash-bar" aria-hidden>
+        <span
+          className={`dash-fill--${tone}`}
+          style={{ width: barWidth(kpi.value, Math.max(kpi.value, kpi.previous)) }}
+        />
       </div>
-      <div
-        style={{
-          fontSize: compact ? '1rem' : '1.375rem',
-          fontWeight: 800,
-          color: '#0f172a',
-          lineHeight: 1.1,
-          letterSpacing: '-0.02em',
-        }}
-      >
-        {value}
-      </div>
-    </div>
+    </button>
   );
 }
 
-// ─── Status Pill ───────────────────────────────────────────────────────────
-function StatusPill({
+function BarRow({
   icon: Icon,
+  tone,
   label,
-  count,
-  bg,
-  color,
-  iconBg,
+  value,
+  ratio,
+  alert,
   onClick,
 }: {
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  tone: Tone;
   label: string;
-  count: number;
-  bg: string;
-  color: string;
-  iconBg: string;
+  value: string;
+  ratio: number;
+  alert?: boolean;
   onClick?: () => void;
 }) {
   return (
     <div
+      className="dash-li"
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
-      style={{
-        background: bg,
-        borderRadius: '1rem',
-        padding: '1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.5rem',
-        cursor: onClick ? 'pointer' : 'default',
-        border: `2px solid ${color}22`,
-        transition: 'transform 0.15s ease',
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-      }}
+      onKeyDown={(e) => onClick && (e.key === 'Enter' || e.key === ' ') && onClick()}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
-      <div
-        style={{
-          width: '2.75rem',
-          height: '2.75rem',
-          borderRadius: '50%',
-          background: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Icon size={20} color={color} strokeWidth={2.5} />
+      {Icon ? (
+        <span className={`dash-tile dash-tone--${tone}`}>
+          <Icon size={15} strokeWidth={2.25} aria-hidden />
+        </span>
+      ) : (
+        <span className={`dash-dot dash-fill--${tone}`} aria-hidden />
+      )}
+      <div className="dash-li__body">
+        <div className="dash-li__row">
+          <span className="dash-li__label">{label}</span>
+          <span className={`dash-li__value${alert ? ' dash-li__value--alert' : ''}`}>{value}</span>
+        </div>
+        <div className="dash-bar" aria-hidden>
+          <span
+            className={`dash-fill--${tone}`}
+            style={{ width: `${Math.max(0, Math.min(100, ratio * 100))}%` }}
+          />
+        </div>
       </div>
-      <span style={{ fontSize: '1.75rem', fontWeight: 800, color, lineHeight: 1 }}>{count}</span>
-      <span
-        style={{
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          color,
-          textAlign: 'center',
-          lineHeight: 1.3,
-        }}
-      >
-        {label}
-      </span>
     </div>
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
+const Sk = ({ h, w = '100%' }: { h: number | string; w?: number | string }) => (
+  <div className="dash-sk" style={{ height: h, width: w }} />
+);
+
+// ─── Export ──────────────────────────────────────────────────────────────────
+function exportCsv(stats: IDashboardStats, tx: Copy, language: 'fr' | 'ar') {
+  const money = (v: number) => formatCurrency(v, language);
+  const rows: (string | number)[][] = [
+    [
+      tx[stats.period],
+      `${formatDate(parseDay(stats.range.start))} → ${formatDate(parseDay(stats.range.end))}`,
+    ],
+    [],
+    [tx.totalSales, stats.kpis.sales.value],
+    [tx.revenue, money(stats.kpis.revenue.value)],
+    [tx.cost, money(stats.kpis.cost.value)],
+    [tx.profit, money(stats.kpis.profit.value)],
+    [tx.collected, money(stats.breakdown.collected)],
+    [tx.outstanding, money(stats.breakdown.outstanding)],
+    [],
+    [tx.qtyInHand, stats.inventory.qtyInHand],
+    [tx.incoming, stats.inventory.incoming],
+    [tx.customers, stats.partners.customers],
+    [tx.suppliers, stats.partners.suppliers],
+    [tx.lowStock, stats.stock.lowStock],
+    [tx.purchaseCount, stats.purchases.count],
+    [tx.purchaseCost, money(stats.purchases.cost)],
+    [tx.cancelled, stats.purchases.cancelledSales],
+    [tx.returns, stats.purchases.returns],
+    [],
+    [tx.date, tx.revenue],
+    ...stats.salesSeries.monthly.map((p) => [
+      `${p.date.slice(5, 7)}/${p.date.slice(0, 4)}`,
+      money(p.revenue),
+    ]),
+  ];
+  const csv = rows
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';'))
+    .join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dashboard-${stats.period}-${stats.range.end}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { admin } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const tx = L[language as 'fr' | 'ar'] ?? L.fr;
-  const isRtl = language === 'ar';
+  const lang = (language === 'ar' ? 'ar' : 'fr') as 'fr' | 'ar';
+  const tx = L[lang];
+  const locale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
 
-  const {
-    data: comprehensiveStats,
-    isLoading,
-    refetch,
-    isFetching,
-  } = useQuery({
-    queryKey: ['statistics', 'comprehensive'],
-    queryFn: () => statisticsService.getComprehensiveStats(7),
+  const [period, setPeriod] = useState<DashboardPeriod>('mtd');
+  const [granularity, setGranularity] = useState<Granularity>('monthly');
+
+  const { data, isError, refetch, isFetching } = useQuery({
+    queryKey: ['statistics', 'dashboard', period],
+    queryFn: () => statisticsService.getDashboard(period),
     staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
-
-  const { data: recentOrdersData } = useQuery({
-    queryKey: ['orders', 'recent-dashboard'],
-    queryFn: () =>
-      ordersService.getAll(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        1,
-        8,
-        'VENTE',
-      ),
-    staleTime: 60_000,
     refetchInterval: 120_000,
+    placeholderData: (prev) => prev,
   });
 
-  const statistics = comprehensiveStats?.overview;
-  const dailyStats = useMemo(() => comprehensiveStats?.dailyStats ?? [], [comprehensiveStats]);
-  const topProducts = comprehensiveStats?.topProducts ?? [];
-  // `ordersService.getAll` is typed `Promise<any>`; it hands back `Order`
-  // models, so name the element type here rather than mapping over `any`.
-  const recentOrders: Order[] = recentOrdersData?.orders ?? [];
-
-  // Weekly totals from dailyStats (7 days)
-  const weekRevenue = useMemo(
-    () => dailyStats.reduce((sum, d) => sum + (d.revenue ?? 0), 0),
-    [dailyStats],
-  );
-  const weekOrders = useMemo(
-    () => dailyStats.reduce((sum, d) => sum + (d.orders ?? 0), 0),
-    [dailyStats],
+  const money = (v: number) => formatCurrency(v, lang);
+  const count = (v: number) => formatNumber(v, 0);
+  const compact = useMemo(
+    () => new Intl.NumberFormat(APP_LOCALE, { notation: 'compact', maximumFractionDigits: 1 }),
+    [],
   );
 
-  const pendingOrders = statistics?.PendingOrders ?? 0;
-  const inDeliveryOrders = statistics?.InDeliveryOrders ?? 0;
-  const deliveredOrders = statistics?.DeliveredOrders ?? 0;
-  const cancelledOrders = statistics?.CancelledOrders ?? 0;
+  const firstName = (admin?.fullName ?? admin?.name ?? '').split(' ')[0] || 'Admin';
 
-  const isMobile = useIsMobile(640);
+  // ── Sales statistics series ──
+  const series = useMemo(() => data?.salesSeries[granularity] ?? [], [data, granularity]);
+  const seriesTotal = series.reduce((s, p) => s + p.revenue, 0);
+  const lastTwo = series.slice(-2);
+  const seriesChange =
+    lastTwo.length === 2 && lastTwo[0].revenue > 0
+      ? ((lastTwo[1].revenue - lastTwo[0].revenue) / lastTwo[0].revenue) * 100
+      : null;
 
-  // Week bar chart options
-  const barOptions = useMemo<ApexOptions>(
+  const seriesLabel = (date: string) => {
+    const d = parseDay(date);
+    return granularity === 'monthly'
+      ? d.toLocaleDateString(locale, { month: 'short' })
+      : d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  };
+
+  const areaOptions = useMemo<ApexOptions>(
     () => ({
       chart: {
-        type: 'bar',
+        type: 'area',
         toolbar: { show: false },
-        animations: { enabled: true, speed: 600 },
+        zoom: { enabled: false },
         fontFamily: 'inherit',
-        width: '100%',
       },
-      plotOptions: {
-        bar: { borderRadius: 6, columnWidth: '60%', distributed: true },
+      colors: [C.primary],
+      stroke: { curve: 'smooth', width: 2.5 },
+      fill: {
+        type: 'gradient',
+        gradient: { shadeIntensity: 1, opacityFrom: 0.28, opacityTo: 0.02, stops: [0, 95] },
       },
-      colors: dailyStats.map((_, i) => (i === dailyStats.length - 1 ? '#16a34a' : '#86efac')),
       dataLabels: { enabled: false },
+      markers: { size: 0, hover: { size: 5 } },
+      grid: { borderColor: C.grid, strokeDashArray: 4, padding: { left: 8, right: 8 } },
       xaxis: {
-        categories: dailyStats.map((s) =>
-          new Date(s.date).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', {
-            weekday: 'short',
-          }),
-        ),
-        tickAmount: dailyStats.length,
+        categories: series.map((p) => seriesLabel(p.date)),
         labels: {
-          style: { fontSize: '12px', fontWeight: 600 },
+          style: { colors: C.axis, fontSize: '11px' },
           rotate: 0,
-          hideOverlappingLabels: false,
-          trim: false,
+          hideOverlappingLabels: true,
+        },
+        tickAmount: granularity === 'daily' ? 10 : undefined,
+        axisBorder: { show: false },
+        axisTicks: { show: false },
+        tooltip: { enabled: false },
+      },
+      yaxis: {
+        opposite: lang === 'ar',
+        labels: {
+          style: { colors: C.axis, fontSize: '11px' },
+          formatter: (v: number) => compact.format(v),
+        },
+      },
+      tooltip: {
+        theme: 'light',
+        y: { formatter: (v: number) => money(v) },
+      },
+      legend: { show: false },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [series, granularity, lang, compact],
+  );
+
+  // ── Customer statistics ──
+  const customers = useMemo(() => data?.customerSeries ?? [], [data]);
+  const peak = customers.reduce((m, c) => Math.max(m, c.new + c.returning), 0);
+
+  const customerOptions = useMemo<ApexOptions>(
+    () => ({
+      chart: { type: 'bar', stacked: true, toolbar: { show: false }, fontFamily: 'inherit' },
+      colors: [C.primary, C.primary200],
+      plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', columnWidth: '55%' } },
+      dataLabels: { enabled: false },
+      grid: { borderColor: C.grid, strokeDashArray: 4 },
+      xaxis: {
+        categories: customers.map((c) =>
+          parseDay(c.month).toLocaleDateString(locale, { month: 'short' }),
+        ),
+        labels: {
+          style: { colors: C.axis, fontSize: '11px' },
+          rotate: 0,
+          hideOverlappingLabels: true,
         },
         axisBorder: { show: false },
         axisTicks: { show: false },
       },
       yaxis: {
+        opposite: lang === 'ar',
         labels: {
-          formatter: (v: number) => formatCurrency(v, language),
-          style: { fontSize: '11px' },
-          maxWidth: 70,
+          style: { colors: C.axis, fontSize: '11px' },
+          formatter: (v: number) => String(Math.round(v)),
         },
       },
-      grid: {
-        borderColor: '#f1f5f9',
-        strokeDashArray: 4,
-        yaxis: { lines: { show: true } },
-        xaxis: { lines: { show: false } },
+      legend: {
+        position: 'top',
+        horizontalAlign: lang === 'ar' ? 'left' : 'right',
+        fontSize: '12px',
+        markers: { size: 5 },
+        labels: { colors: C.axis },
       },
-      tooltip: {
-        y: { formatter: (v: number) => formatCurrency(v, language) },
-        theme: 'light',
-        style: { fontSize: '12px' },
-        fixed: isMobile
-          ? { enabled: true, position: 'topLeft', offsetX: 0, offsetY: -10 }
-          : { enabled: false },
-      },
-      legend: { show: false },
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            plotOptions: { bar: { columnWidth: '75%' } },
-            xaxis: { labels: { style: { fontSize: '10px' } } },
-            yaxis: { labels: { show: false } },
-            chart: { height: 180 },
-          },
-        },
-      ],
+      tooltip: { theme: 'light', shared: true, intersect: false },
+      states: { hover: { filter: { type: 'darken' } } },
     }),
-    [dailyStats, language, isMobile],
+    [customers, locale, lang],
   );
 
-  const barSeries = useMemo(
+  const customerSeries = useMemo(
     () => [
-      {
-        name: tx.moneyEarned,
-        data: dailyStats.map((s) => s.revenue),
-      },
+      { name: tx.newCustomers, data: customers.map((c) => c.new) },
+      { name: tx.returningCustomers, data: customers.map((c) => c.returning) },
     ],
-    [dailyStats, tx],
+    [customers, tx],
   );
 
-  const now = new Date();
-  const greet = tx.greeting(
-    now.getHours(),
-    (admin?.fullName ?? admin?.name ?? '').split(' ')[0] || 'Admin',
-  );
+  // ── Derived numbers ──
+  const k = data?.kpis;
+  const b = data?.breakdown;
+  const stock = data?.stock;
+  const purchases = data?.purchases;
+  const stockMax = stock ? Math.max(stock.products, 1) : 1;
+  const purchaseMax = purchases
+    ? Math.max(purchases.count, purchases.cancelledSales, purchases.returns, 1)
+    : 1;
 
-  // Skeleton card
-  const SkCard = () => (
-    <div
-      style={{
-        borderRadius: '1rem',
-        background: '#f1f5f9',
-        height: '6rem',
-        animation: 'pulse 1.5s ease-in-out infinite',
-      }}
-    />
-  );
-
-  // ── Layout constants
-  const cardGrid: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '0.75rem',
-  };
-  const pillGrid: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))',
-    gap: '0.875rem',
-  };
-  const sectionCard: React.CSSProperties = {
-    background: '#fff',
-    borderRadius: '1.25rem',
-    padding: '1.25rem',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-    border: '1px solid #f1f5f9',
-  };
-  const sectionTitle: React.CSSProperties = {
-    fontSize: '1rem',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  };
+  const goProducts = () => navigate('/products');
+  const goSales = () => navigate('/orders');
 
   return (
     <AdminLayout>
-      <div style={{ padding: '0 0 2rem', direction: isRtl ? 'rtl' : 'ltr' }}>
-        {/* ── Header ──────────────────────────────── */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.5rem',
-            gap: '1rem',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>{greet}</div>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem' }}>
-              {now.toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
+      <div className="dash">
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section className="dash-hero">
+          <div className="dash-hero__main">
+            <span className="dash-hero__icon">
+              <Store size={24} strokeWidth={2} aria-hidden />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h1>{tx.welcome(firstName)}</h1>
+              <p>
+                {tx.heroLead}{' '}
+                {stock && stock.lowStock > 0
+                  ? tx.heroLow(
+                      <button type="button" className="dash-hero__chip" onClick={goProducts}>
+                        {tx.items(stock.lowStock)}
+                      </button>,
+                    )
+                  : stock
+                    ? tx.heroOk
+                    : null}
+              </p>
             </div>
           </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.5rem 0.875rem',
-              borderRadius: '0.625rem',
-              border: '1px solid #e2e8f0',
-              background: '#fff',
-              cursor: isFetching ? 'not-allowed' : 'pointer',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              color: '#64748b',
-              opacity: isFetching ? 0.6 : 1,
-            }}
-          >
-            <RefreshCw
-              size={14}
-              style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }}
-            />
-            {!isLoading && !isFetching && (
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: '#16a34a',
-                  display: 'inline-block',
-                }}
-              />
-            )}
-          </button>
-        </div>
-
-        {/* ── 1 · Today's Snapshot ────────────────── */}
-        {isLoading ? (
-          <div style={{ ...cardGrid, marginBottom: '1.25rem' }}>
-            {[0, 1, 2].map((i) => (
-              <SkCard key={i} />
+          <div className="dash-hero__actions">
+            {(['mtd', 'ytd'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                className="dash-hero__btn dash-hero__btn--grow"
+                aria-pressed={period === p}
+                onClick={() => setPeriod(p)}
+              >
+                {p === 'mtd' ? (
+                  <CalendarDays size={15} aria-hidden />
+                ) : (
+                  <Activity size={15} aria-hidden />
+                )}
+                {tx[p]}
+              </button>
             ))}
+            <button
+              type="button"
+              className="dash-hero__btn dash-hero__btn--icon"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              aria-label={tx.refresh}
+              title={tx.refresh}
+            >
+              <RefreshCw size={15} className={isFetching ? 'dash-spin' : undefined} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="dash-hero__btn dash-hero__btn--solid"
+              onClick={() => data && exportCsv(data, tx, lang)}
+              disabled={!data}
+            >
+              <Download size={15} aria-hidden />
+              {tx.export}
+            </button>
           </div>
-        ) : (
-          <div style={{ ...cardGrid, marginBottom: '1.25rem' }}>
-            <BigCard
-              icon={DollarSign}
-              label={tx.moneyEarned}
-              value={formatCurrency(weekRevenue, language)}
-              bg="linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
-              iconBg="#bbf7d0"
-              iconColor="#16a34a"
-              onClick={() => navigate('/orders')}
-              compact={isMobile}
-            />
-            <BigCard
-              icon={ShoppingCart}
-              label={tx.ordersToday}
-              value={weekOrders}
-              bg="linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)"
-              iconBg="#bfdbfe"
-              iconColor="#2563eb"
-              onClick={() => navigate('/orders')}
-              compact={isMobile}
-            />
-            <BigCard
-              icon={Clock}
-              label={tx.waiting}
-              value={pendingOrders}
-              bg={
-                pendingOrders > 0
-                  ? 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)'
-                  : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-              }
-              iconBg={pendingOrders > 0 ? '#fdba74' : '#e2e8f0'}
-              iconColor={pendingOrders > 0 ? '#c2410c' : '#94a3b8'}
-              onClick={() => navigate('/orders')}
-              compact={isMobile}
-            />
+        </section>
+
+        {isError && !data && (
+          <div className="dash-card dash-empty" role="alert">
+            <p style={{ margin: '0 0 0.75rem' }}>{tx.loadError}</p>
+            <button type="button" className="dash-btn" onClick={() => refetch()}>
+              <RefreshCw size={14} aria-hidden /> {tx.retry}
+            </button>
           </div>
         )}
 
-        {/* ── 2 · Week Revenue Bar Chart ───────────── */}
-        <div style={{ ...sectionCard, marginBottom: '1.25rem', overflow: 'hidden' }}>
-          <div style={sectionTitle}>
-            <span style={{ fontSize: '1.25rem' }}>📊</span>
-            {tx.weekRevenue}
-          </div>
-          {isLoading ? (
-            <div
-              style={{
-                height: '12rem',
-                background: '#f1f5f9',
-                borderRadius: '0.75rem',
-                animation: 'pulse 1.5s ease-in-out infinite',
-              }}
-            />
+        {/* ── KPIs ─────────────────────────────────────────────── */}
+        <section className="dash-kpis">
+          {!k ? (
+            [0, 1, 2, 3].map((i) => (
+              <div key={i} className="dash-card" style={{ display: 'grid', gap: '0.75rem' }}>
+                <Sk h={40} w={40} />
+                <Sk h={28} w="60%" />
+                <Sk h={10} w="40%" />
+              </div>
+            ))
           ) : (
-            <div style={{ width: '100%', minWidth: 0 }}>
-              <ReactApexChart
-                key={language}
-                type="bar"
-                height={isMobile ? 180 : 220}
-                width="100%"
-                options={barOptions}
-                series={barSeries}
+            <>
+              <KpiCard
+                icon={ShoppingCart}
+                tone="primary"
+                label={tx.totalSales}
+                value={count(k.sales.value)}
+                kpi={k.sales}
+                onClick={goSales}
+                vsPrev={tx.vsPrev}
               />
-            </div>
+              <KpiCard
+                icon={TrendingUp}
+                tone="paid"
+                label={tx.revenue}
+                value={money(k.revenue.value)}
+                kpi={k.revenue}
+                onClick={goSales}
+                vsPrev={tx.vsPrev}
+              />
+              <KpiCard
+                icon={TrendingDown}
+                tone="unpaid"
+                label={tx.cost}
+                value={money(k.cost.value)}
+                kpi={k.cost}
+                invert
+                onClick={goSales}
+                vsPrev={tx.vsPrev}
+              />
+              <KpiCard
+                icon={BarChart3}
+                tone="partial"
+                label={tx.profit}
+                value={money(k.profit.value)}
+                kpi={k.profit}
+                accent
+                onClick={() => navigate('/analytics/sales/revenue')}
+                vsPrev={tx.vsPrev}
+              />
+            </>
           )}
-        </div>
+        </section>
 
-        {/* ── 3+4 · Two-column: Top Items + Order Status ── */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(18rem, 1fr))',
-            gap: '1.25rem',
-            marginBottom: '1.25rem',
-          }}
-        >
-          {/* Top 5 Items */}
-          <div style={sectionCard}>
-            <div style={sectionTitle}>
-              <span style={{ fontSize: '1.25rem' }}>🏆</span>
-              {tx.topItems}
+        {/* ── Sales statistics + breakdown ─────────────────────── */}
+        <section className="dash-row">
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle
+                icon={Activity}
+                title={tx.salesStats}
+                sub={tx.salesStatsSub[granularity]}
+              />
+              <div className="dash-seg" role="group" aria-label={tx.salesStats}>
+                {(['daily', 'weekly', 'monthly'] as const).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    aria-pressed={granularity === g}
+                    onClick={() => setGranularity(g)}
+                  >
+                    {tx[g]}
+                  </button>
+                ))}
+              </div>
             </div>
-            {isLoading ? (
-              [0, 1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    height: '2.5rem',
-                    background: '#f1f5f9',
-                    borderRadius: '0.5rem',
-                    marginBottom: '0.5rem',
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                  }}
-                />
-              ))
-            ) : topProducts.slice(0, 5).length === 0 ? (
-              <div
-                style={{
-                  color: '#94a3b8',
-                  textAlign: 'center',
-                  padding: '2rem 0',
-                  fontSize: '0.875rem',
-                }}
-              >
-                —
+            {!data ? (
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                <Sk h={34} w="40%" />
+                <Sk h={240} />
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {topProducts.slice(0, 5).map((p, idx) => (
-                  <div
-                    key={p.productId}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.625rem 0.75rem',
-                      borderRadius: '0.75rem',
-                      background: idx === 0 ? '#fefce8' : '#f8fafc',
-                      border: idx === 0 ? '1.5px solid #fde68a' : '1px solid #f1f5f9',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '1rem',
-                        fontWeight: 800,
-                        color: idx === 0 ? '#b45309' : '#94a3b8',
-                        minWidth: '1.5rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}
+              <>
+                <div className="dash-total">
+                  <strong>{money(seriesTotal)}</strong>
+                  {seriesChange !== null && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Delta change={seriesChange} />
+                      <span className="dash-total__hint">{tx.vsLast}</span>
                     </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          color: '#0f172a',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {p.productName}
-                      </div>
+                  )}
+                </div>
+                <div className="dash-chart">
+                  <ReactApexChart
+                    key={`${lang}-${granularity}`}
+                    type="area"
+                    height={260}
+                    width="100%"
+                    options={areaOptions}
+                    series={[{ name: tx.revenue, data: series.map((p) => p.revenue) }]}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={DollarSign} tone="paid" title={tx.breakdown} />
+            </div>
+            {!b ? (
+              <div className="dash-list">
+                {[0, 1, 2, 3].map((i) => (
+                  <Sk key={i} h={58} />
+                ))}
+              </div>
+            ) : (
+              <div className="dash-list">
+                {[
+                  {
+                    tone: 'primary',
+                    label: tx.revenue,
+                    sub: tx.transactions(b.salesCount),
+                    value: b.revenue,
+                  },
+                  { tone: 'paid', label: tx.collected, sub: tx.collectedSub, value: b.collected },
+                  {
+                    tone: 'unpaid',
+                    label: tx.outstanding,
+                    sub: tx.outstandingSub,
+                    value: b.outstanding,
+                  },
+                  {
+                    tone: 'partial',
+                    label: tx.profit,
+                    sub: tx.profitSub(pct(b.margin)),
+                    value: b.profit,
+                  },
+                ].map((r) => (
+                  <div key={r.label} className="dash-li">
+                    <span className={`dash-dot dash-fill--${r.tone}`} aria-hidden />
+                    <div className="dash-li__body">
+                      <div className="dash-li__label">{r.label}</div>
+                      <div className="dash-li__sub">{r.sub}</div>
                     </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Package size={12} color="#16a34a" />
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#16a34a' }}>
-                        {p.sales} {tx.qty}
-                      </span>
-                    </div>
+                    <span className="dash-li__value">{money(r.value)}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </section>
 
-          {/* Order Status Summary */}
-          <div style={sectionCard}>
-            <div style={sectionTitle}>
-              <span style={{ fontSize: '1.25rem' }}>📋</span>
-              {tx.ordersStatus}
+        {/* ── Inventory / partners / stock ─────────────────────── */}
+        <section className="dash-row dash-row--3">
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={Box} title={tx.inventory} />
             </div>
-            <div style={pillGrid}>
-              <StatusPill
-                icon={Star}
-                label={tx.new}
-                count={pendingOrders}
-                bg="#fff7ed"
-                color="#c2410c"
-                iconBg="#fed7aa"
-                onClick={() => navigate('/orders')}
-              />
-              <StatusPill
-                icon={Truck}
-                label={tx.inPrep}
-                count={inDeliveryOrders}
-                bg="#eff6ff"
-                color="#2563eb"
-                iconBg="#bfdbfe"
-                onClick={() => navigate('/orders')}
-              />
-              <StatusPill
-                icon={CheckCircle}
-                label={tx.delivered}
-                count={deliveredOrders}
-                bg="#f0fdf4"
-                color="#16a34a"
-                iconBg="#bbf7d0"
-                onClick={() => navigate('/orders')}
-              />
-              <StatusPill
-                icon={XCircle}
-                label={tx.cancelled}
-                count={cancelledOrders}
-                bg="#fef2f2"
-                color="#dc2626"
-                iconBg="#fecaca"
-                onClick={() => navigate('/orders')}
-              />
+            <div className="dash-minis">
+              <button type="button" className="dash-mini" onClick={goProducts}>
+                <span className="dash-tile dash-tile--lg dash-tone--paid">
+                  <Package size={18} aria-hidden />
+                </span>
+                <strong>{data ? count(data.inventory.qtyInHand) : '—'}</strong>
+                <span>{tx.qtyInHand}</span>
+              </button>
+              <button type="button" className="dash-mini" onClick={() => navigate('/bon-achat')}>
+                <span className="dash-tile dash-tile--lg dash-tone--partial">
+                  <Clock size={18} aria-hidden />
+                </span>
+                <strong>{data ? count(data.inventory.incoming) : '—'}</strong>
+                <span>{tx.incoming}</span>
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* ── 5 · Recent Orders ────────────────────── */}
-        <div style={sectionCard}>
-          <div style={{ ...sectionTitle, justifyContent: 'space-between' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.25rem' }}>🕐</span>
-              {tx.recentOrders}
-            </span>
-            <button
-              onClick={() => navigate('/orders')}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#2563eb',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                padding: '0.25rem 0.5rem',
-                borderRadius: '0.5rem',
-              }}
-            >
-              {tx.viewAll} →
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={Users} title={tx.partners} />
+            </div>
+            <div className="dash-minis">
+              <button type="button" className="dash-mini" onClick={() => navigate('/customers')}>
+                <span className="dash-tile dash-tile--lg dash-tone--primary">
+                  <Users size={18} aria-hidden />
+                </span>
+                <strong>{data ? compact.format(data.partners.customers) : '—'}</strong>
+                <span>{tx.customers}</span>
+              </button>
+              <button type="button" className="dash-mini" onClick={() => navigate('/fournisseurs')}>
+                <span className="dash-tile dash-tile--lg dash-tone--pending">
+                  <Truck size={18} aria-hidden />
+                </span>
+                <strong>{data ? compact.format(data.partners.suppliers) : '—'}</strong>
+                <span>{tx.suppliers}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={AlertTriangle} tone="unpaid" title={tx.stockOverview} />
+            </div>
+            {!stock ? (
+              <div className="dash-list">
+                {[0, 1, 2].map((i) => (
+                  <Sk key={i} h={52} />
+                ))}
+              </div>
+            ) : (
+              <div className="dash-list">
+                <BarRow
+                  tone="unpaid"
+                  label={tx.lowStock}
+                  value={String(stock.lowStock).padStart(2, '0')}
+                  ratio={stock.lowStock / stockMax}
+                  alert={stock.lowStock > 0}
+                  onClick={goProducts}
+                />
+                <BarRow
+                  tone="primary"
+                  label={tx.categories}
+                  value={count(stock.categories)}
+                  ratio={stock.categories / Math.max(stock.categories, 20)}
+                  onClick={() => navigate('/categories')}
+                />
+                <BarRow
+                  tone="paid"
+                  label={tx.products}
+                  value={count(stock.products)}
+                  ratio={1}
+                  onClick={goProducts}
+                />
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Customers chart + purchases ──────────────────────── */}
+        <section className="dash-row">
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={Users} title={tx.customerStats} sub={tx.customerStatsSub} />
+            </div>
+            {!data ? (
+              <Sk h={260} />
+            ) : (
+              <>
+                <div className="dash-total">
+                  <strong>{count(peak)}</strong>
+                  <span className="dash-total__hint">{tx.peakMonth}</span>
+                </div>
+                <div className="dash-chart">
+                  <ReactApexChart
+                    key={lang}
+                    type="bar"
+                    height={250}
+                    width="100%"
+                    options={customerOptions}
+                    series={customerSeries}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="dash-card">
+            <div className="dash-card__head">
+              <CardTitle icon={ShoppingBag} tone="partial" title={tx.purchases} />
+            </div>
+            {!purchases ? (
+              <div className="dash-list">
+                {[0, 1, 2, 3].map((i) => (
+                  <Sk key={i} h={58} />
+                ))}
+              </div>
+            ) : (
+              <div className="dash-list">
+                <BarRow
+                  icon={ShoppingBag}
+                  tone="primary"
+                  label={tx.purchaseCount}
+                  value={count(purchases.count)}
+                  ratio={purchases.count / purchaseMax}
+                  onClick={() => navigate('/bon-achat')}
+                />
+                <BarRow
+                  icon={DollarSign}
+                  tone="partial"
+                  label={tx.purchaseCost}
+                  value={money(purchases.cost)}
+                  ratio={
+                    b && b.revenue > 0
+                      ? purchases.cost / Math.max(purchases.cost, b.revenue)
+                      : purchases.cost > 0
+                        ? 1
+                        : 0
+                  }
+                  onClick={() => navigate('/factures/achat')}
+                />
+                <BarRow
+                  icon={XCircle}
+                  tone="unpaid"
+                  label={tx.cancelled}
+                  value={String(purchases.cancelledSales).padStart(2, '0')}
+                  ratio={purchases.cancelledSales / purchaseMax}
+                  alert={purchases.cancelledSales > 0}
+                  onClick={goSales}
+                />
+                <BarRow
+                  icon={RotateCcw}
+                  tone="paid"
+                  label={tx.returns}
+                  value={String(purchases.returns).padStart(2, '0')}
+                  ratio={purchases.returns / purchaseMax}
+                  onClick={() => navigate('/stock-movements')}
+                />
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Recent sales ─────────────────────────────────────── */}
+        <section className="dash-card">
+          <div className="dash-card__head">
+            <CardTitle icon={FileText} title={tx.recentSales} sub={tx.recentSalesSub} />
+            <button type="button" className="dash-btn" onClick={goSales}>
+              {tx.viewAll}
             </button>
           </div>
-
-          {isMobile ? (
-            /* ── Mobile: card list ── */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-              {isLoading ? (
-                [0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      height: '4.5rem',
-                      background: '#f1f5f9',
-                      borderRadius: '0.75rem',
-                      animation: 'pulse 1.5s ease-in-out infinite',
-                    }}
-                  />
-                ))
-              ) : recentOrders.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>—</div>
-              ) : (
-                recentOrders.map((order) => {
-                  const sc = STATUS_COLORS[order.status] ?? STATUS_COLORS.draft;
-                  return (
-                    <div
-                      key={order.id}
-                      onClick={() => navigate(`/orders/${order.id}`)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.75rem',
-                        borderRadius: '0.75rem',
-                        background: '#f8fafc',
-                        border: '1px solid #f1f5f9',
-                        cursor: 'pointer',
-                        gap: '0.75rem',
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0f172a' }}>
-                          #{order.displayOrderNumber}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#64748b',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            maxWidth: '10rem',
-                          }}
-                        >
-                          {order.customerName ?? '—'}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: isRtl ? 'flex-start' : 'flex-end',
-                          gap: '0.25rem',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <span style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#0f172a' }}>
-                          {formatCurrency(order.total, language)}
-                        </span>
-                        <span
-                          style={{
-                            padding: '0.15rem 0.5rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            background: sc.bg,
-                            color: sc.color,
-                          }}
-                        >
-                          {tx.statusLabels[order.status] ?? order.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+          {!data ? (
+            <div className="dash-list">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Sk key={i} h={40} />
+              ))}
             </div>
+          ) : data.recentSales.length === 0 ? (
+            <div className="dash-empty">{tx.empty}</div>
           ) : (
-            /* ── Desktop: table ── */
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                    {[tx.orderNum, tx.client, tx.amount, tx.status].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          padding: '0.5rem 0.75rem',
-                          textAlign: isRtl ? 'right' : 'left',
-                          fontWeight: 700,
-                          color: '#64748b',
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    [0, 1, 2, 3, 4].map((i) => (
-                      <tr key={i}>
-                        {[0, 1, 2, 3].map((j) => (
-                          <td key={j} style={{ padding: '0.75rem' }}>
-                            <div
-                              style={{
-                                height: '1rem',
-                                background: '#f1f5f9',
-                                borderRadius: '0.25rem',
-                                animation: 'pulse 1.5s ease-in-out infinite',
-                              }}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : recentOrders.length === 0 ? (
+            <>
+              <div className="dash-table-wrap">
+                <table className="dash-table">
+                  <thead>
                     <tr>
-                      <td
-                        colSpan={4}
-                        style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}
-                      >
-                        —
-                      </td>
+                      <th>{tx.document}</th>
+                      <th>{tx.customer}</th>
+                      <th>{tx.date}</th>
+                      <th>{tx.amount}</th>
+                      <th>{tx.payment}</th>
+                      <th>{tx.action}</th>
                     </tr>
-                  ) : (
-                    recentOrders.map((order, idx) => {
-                      const sc = STATUS_COLORS[order.status] ?? STATUS_COLORS.draft;
+                  </thead>
+                  <tbody>
+                    {data.recentSales.map((s) => {
+                      const ps = payStatus(s);
+                      const name = s.customerName || tx.walkIn;
                       return (
-                        <tr
-                          key={order.id}
-                          onClick={() => navigate(`/orders/${order.id}`)}
-                          style={{
-                            borderBottom:
-                              idx < recentOrders.length - 1 ? '1px solid #f1f5f9' : 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.1s ease',
-                          }}
-                          onMouseEnter={(e) =>
-                            ((e.currentTarget as HTMLElement).style.background = '#f8fafc')
-                          }
-                          onMouseLeave={(e) =>
-                            ((e.currentTarget as HTMLElement).style.background = 'transparent')
-                          }
-                        >
-                          <td
-                            style={{
-                              padding: '0.75rem',
-                              fontWeight: 700,
-                              color: '#0f172a',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            #{order.displayOrderNumber}
-                          </td>
-                          <td
-                            style={{
-                              padding: '0.75rem',
-                              color: '#334155',
-                              maxWidth: '10rem',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {order.customerName ?? '—'}
-                          </td>
-                          <td
-                            style={{
-                              padding: '0.75rem',
-                              fontWeight: 700,
-                              color: '#0f172a',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {formatCurrency(order.total, language)}
-                          </td>
-                          <td style={{ padding: '0.75rem' }}>
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                padding: '0.2rem 0.625rem',
-                                borderRadius: '9999px',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                background: sc.bg,
-                                color: sc.color,
-                                whiteSpace: 'nowrap',
-                              }}
+                        <tr key={s.id}>
+                          <td>
+                            <button
+                              type="button"
+                              className="dash-link"
+                              onClick={() => navigate(`/orders/${s.id}`)}
                             >
-                              {tx.statusLabels[order.status] ?? order.status}
+                              {s.documentNumber}
+                            </button>
+                          </td>
+                          <td>
+                            <span className="dash-person">
+                              <span className="dash-avatar" aria-hidden>
+                                {initials(name)}
+                              </span>
+                              {name}
                             </span>
+                          </td>
+                          <td>{formatDate(parseDay(s.date))}</td>
+                          <td className="dash-num">{money(s.total)}</td>
+                          <td>
+                            <span className={`dash-badge dash-badge--${ps.tone}`}>
+                              {tx.payStatus[ps.key]}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="dash-btn"
+                              onClick={() => navigate(`/orders/${s.id}`)}
+                            >
+                              {tx.view}
+                            </button>
                           </td>
                         </tr>
                       );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="dash-mlist">
+                {data.recentSales.map((s) => {
+                  const ps = payStatus(s);
+                  const name = s.customerName || tx.walkIn;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className="dash-mrow"
+                      onClick={() => navigate(`/orders/${s.id}`)}
+                    >
+                      <span className="dash-avatar" aria-hidden>
+                        {initials(name)}
+                      </span>
+                      <span className="dash-mrow__body">
+                        <span className="dash-mrow__title" style={{ display: 'block' }}>
+                          {name}
+                        </span>
+                        <span className="dash-mrow__sub" style={{ display: 'block' }}>
+                          {s.documentNumber} · {formatDate(parseDay(s.date))}
+                        </span>
+                      </span>
+                      <span className="dash-mrow__end">
+                        <strong>{money(s.total)}</strong>
+                        <span className={`dash-badge dash-badge--${ps.tone}`}>
+                          {tx.payStatus[ps.key]}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
-        </div>
+        </section>
+
+        {/* ── Low stock products ───────────────────────────────── */}
+        <section className="dash-card">
+          <div className="dash-card__head">
+            <CardTitle
+              icon={AlertTriangle}
+              tone="unpaid"
+              title={tx.lowStockProducts}
+              sub={tx.lowStockSub}
+              extra={
+                stock && stock.lowStock > 0 ? (
+                  <span className="dash-count">{tx.items(stock.lowStock)}</span>
+                ) : null
+              }
+            />
+            <button type="button" className="dash-btn" onClick={goProducts}>
+              {tx.viewAll}
+            </button>
+          </div>
+          {!data ? (
+            <div className="dash-list">
+              {[0, 1, 2, 3].map((i) => (
+                <Sk key={i} h={44} />
+              ))}
+            </div>
+          ) : data.lowStockProducts.length === 0 ? (
+            <div className="dash-empty">{tx.noLowStock}</div>
+          ) : (
+            <>
+              <div className="dash-table-wrap">
+                <table className="dash-table">
+                  <thead>
+                    <tr>
+                      <th>{tx.product}</th>
+                      <th>{tx.sku}</th>
+                      <th>{tx.currentStock}</th>
+                      <th>{tx.minStock}</th>
+                      <th>{tx.status}</th>
+                      <th>{tx.action}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.lowStockProducts.map((p) => {
+                      const st = stockStatus(p);
+                      return (
+                        <tr key={p.id}>
+                          <td>
+                            <span className="dash-person">
+                              {p.imageUrl ? (
+                                <img
+                                  className="dash-thumb"
+                                  src={p.imageUrl}
+                                  alt=""
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span className="dash-thumb">
+                                  <Layers size={16} aria-hidden />
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                className="dash-link"
+                                style={{ color: 'var(--text-primary)' }}
+                                onClick={() => navigate(`/products/${p.id}`)}
+                              >
+                                {p.name}
+                              </button>
+                            </span>
+                          </td>
+                          <td className="dash-mono">{p.code || '—'}</td>
+                          <td
+                            className="dash-num"
+                            style={{ color: `var(--status-${st.tone}-text)` }}
+                          >
+                            {count(p.stock)}
+                          </td>
+                          <td>{count(p.threshold)}</td>
+                          <td>
+                            <span className={`dash-badge dash-badge--${st.tone}`}>
+                              {tx.stockStatus[st.key]}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="dash-btn dash-btn--outline-primary"
+                              onClick={() => navigate('/bon-achat/create')}
+                            >
+                              {tx.reorder}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="dash-mlist">
+                {data.lowStockProducts.map((p) => {
+                  const st = stockStatus(p);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className="dash-mrow"
+                      onClick={() => navigate(`/products/${p.id}`)}
+                    >
+                      {p.imageUrl ? (
+                        <img className="dash-thumb" src={p.imageUrl} alt="" loading="lazy" />
+                      ) : (
+                        <span className="dash-thumb">
+                          <Layers size={16} aria-hidden />
+                        </span>
+                      )}
+                      <span className="dash-mrow__body">
+                        <span className="dash-mrow__title" style={{ display: 'block' }}>
+                          {p.name}
+                        </span>
+                        <span className="dash-mrow__sub" style={{ display: 'block' }}>
+                          {tx.currentStock}: {count(p.stock)} / {count(p.threshold)}
+                        </span>
+                      </span>
+                      <span className="dash-mrow__end">
+                        <span className={`dash-badge dash-badge--${st.tone}`}>
+                          {tx.stockStatus[st.key]}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </section>
       </div>
     </AdminLayout>
   );

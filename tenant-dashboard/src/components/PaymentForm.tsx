@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { AlertCircle } from 'lucide-react';
 import { Modal } from './Modal';
+import { DecimalInput } from './DecimalInput';
+import { DateInput } from './DateInput';
 import { useTenants, usePlans } from '../hooks/useTenants';
 import { useCreatePayment, useUpdatePayment } from '../hooks/usePayments';
 import { formatMoney, todayIso, addMonths } from '../utils/format';
@@ -29,7 +31,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   const [periodStart, setPeriodStart] = useState(todayIso());
   const [periodEnd, setPeriodEnd] = useState(addMonths(todayIso(), 12));
   const [dueDate, setDueDate] = useState(todayIso());
-  const [amountDue, setAmountDue] = useState('');
+  const [amountDue, setAmountDue] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   /** Once the user edits the amount, plan changes stop overwriting it. */
   const [amountTouched, setAmountTouched] = useState(false);
@@ -51,7 +53,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
       setPeriodStart(payment.periodStart.slice(0, 10));
       setPeriodEnd(payment.periodEnd.slice(0, 10));
       setDueDate(payment.dueDate.slice(0, 10));
-      setAmountDue(String(payment.amountDue));
+      setAmountDue(payment.amountDue);
       setNotes(payment.notes ?? '');
       setAmountTouched(true);
     } else {
@@ -62,7 +64,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
       setPeriodStart(today);
       setPeriodEnd(addMonths(today, 12));
       setDueDate(today);
-      setAmountDue('');
+      setAmountDue(null);
       setNotes('');
       setAmountTouched(false);
     }
@@ -78,11 +80,11 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   useEffect(() => {
     if (amountTouched || !plan) return;
     const price = billingCycle === 'yearly' ? plan.priceYearly : plan.priceMonthly;
-    if (price > 0) setAmountDue(String(price));
+    if (price > 0) setAmountDue(price);
   }, [plan, billingCycle, amountTouched]);
 
-  const parsedAmount = Number(amountDue);
-  const amountValid = amountDue.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const parsedAmount = amountDue ?? NaN;
+  const amountValid = amountDue !== null && Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   const paid = payment?.amountPaid ?? 0;
   const belowPaid = isEdit && amountValid && parsedAmount < paid;
@@ -232,13 +234,12 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <label htmlFor="pf-start" className="label">
               Period start
             </label>
-            <input
+            <DateInput
               id="pf-start"
-              type="date"
               value={periodStart}
-              onChange={(e) => {
-                setPeriodStart(e.target.value);
-                setPeriodEnd(addMonths(e.target.value, billingCycle === 'yearly' ? 12 : 1));
+              onChange={(value) => {
+                setPeriodStart(value);
+                if (value) setPeriodEnd(addMonths(value, billingCycle === 'yearly' ? 12 : 1));
               }}
               className="input"
               required
@@ -248,12 +249,10 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <label htmlFor="pf-end" className="label">
               Period end
             </label>
-            <input
+            <DateInput
               id="pf-end"
-              type="date"
               value={periodEnd}
-              min={periodStart}
-              onChange={(e) => setPeriodEnd(e.target.value)}
+              onChange={setPeriodEnd}
               className="input"
               required
               aria-invalid={periodInvalid}
@@ -263,11 +262,10 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <label htmlFor="pf-due" className="label">
               Due date
             </label>
-            <input
+            <DateInput
               id="pf-due"
-              type="date"
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              onChange={setDueDate}
               className="input"
               required
             />
@@ -278,14 +276,13 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
           <label htmlFor="pf-amount" className="label">
             Total amount ({currency})
           </label>
-          <input
+          <DecimalInput
             id="pf-amount"
-            type="number"
-            step="0.01"
-            min="0.01"
+            maxFractionDigits={2}
+            min={0}
             value={amountDue}
-            onChange={(e) => {
-              setAmountDue(e.target.value);
+            onValueChange={(value) => {
+              setAmountDue(value);
               setAmountTouched(true);
             }}
             className="input"

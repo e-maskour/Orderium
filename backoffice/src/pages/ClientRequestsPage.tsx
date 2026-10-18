@@ -5,6 +5,7 @@ import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { TabView, TabPanel } from 'primereact/tabview';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 import { CheckCircle, XCircle, Clock, Search, X, UserRoundCheck, Inbox } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -19,8 +20,7 @@ import {
   type ClientRequest,
   type ClientRequestStatus,
 } from '../modules/client-requests';
-
-const PER_PAGE = 20;
+import { PartnerAvatar } from '@/components/ui';
 
 /** Tab index ↔ status filter. `undefined` = all statuses. */
 const TABS: {
@@ -50,6 +50,7 @@ export default function ClientRequestsPage() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<ClientRequest[]>([]);
@@ -70,9 +71,8 @@ export default function ClientRequestsPage() {
   }, [searchInput]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['client-requests', status ?? 'all', page, searchQuery],
-    queryFn: () =>
-      clientRequestsService.getAll({ page, pageSize: PER_PAGE, status, search: searchQuery }),
+    queryKey: ['client-requests', status ?? 'all', page, pageSize, searchQuery],
+    queryFn: () => clientRequestsService.getAll({ page, pageSize, status, search: searchQuery }),
   });
 
   const { data: pendingCount = 0 } = useQuery({
@@ -132,7 +132,7 @@ export default function ClientRequestsPage() {
   };
 
   const formatDate = (value: string) =>
-    new Date(value).toLocaleDateString(dir === 'rtl' ? 'ar-MA' : 'fr-MA', {
+    new Date(value).toLocaleDateString(dir === 'rtl' ? 'ar-MA' : 'fr-FR', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -229,24 +229,11 @@ export default function ClientRequestsPage() {
           <TabPanel
             key={tab.labelKey}
             header={
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                {tab.status === 'pending' && (
-                  <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
-                )}
+              <span className="ui-tab-label">
+                {tab.status === 'pending' && <Clock aria-hidden="true" />}
                 {t(tab.labelKey)}
                 {tab.status === 'pending' && pendingCount > 0 && (
-                  <span
-                    style={{
-                      background: '#f59e0b',
-                      color: '#fff',
-                      borderRadius: '9999px',
-                      fontSize: '0.6875rem',
-                      fontWeight: 700,
-                      padding: '0.05rem 0.4rem',
-                    }}
-                  >
-                    {pendingCount}
-                  </span>
+                  <span className="ui-tab-label__count">{pendingCount}</span>
                 )}
               </span>
             }
@@ -261,7 +248,7 @@ export default function ClientRequestsPage() {
                 countLabel={t('clientRequestsCountLabel')}
                 emptyMessage={t('noClientRequests')}
                 emptyIcon={Inbox}
-                hasMore={page * PER_PAGE < totalRecords}
+                hasMore={page * pageSize < totalRecords}
                 onLoadMore={() => setPage((p) => p + 1)}
                 selectedKeys={new Set(selectedIds)}
                 onToggleSelect={(key) =>
@@ -294,13 +281,17 @@ export default function ClientRequestsPage() {
                 value={requests}
                 loading={isLoading}
                 paginator
-                paginatorPosition="top"
-                rows={PER_PAGE}
+                paginatorPosition="bottom"
+                rows={pageSize}
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
                 totalRecords={totalRecords}
                 lazy
-                first={(page - 1) * PER_PAGE}
-                onPage={(e) => setPage(Math.floor((e.first ?? 0) / PER_PAGE) + 1)}
-                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                first={(page - 1) * pageSize}
+                onPage={(e) => {
+                  setPage(Math.floor(e.first / e.rows) + 1);
+                  setPageSize(e.rows);
+                }}
+                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 currentPageReportTemplate={t('pageReportTemplate')}
                 emptyMessage={<EmptyState icon={Inbox} title={t('noClientRequests')} />}
                 dataKey="id"
@@ -312,7 +303,12 @@ export default function ClientRequestsPage() {
                 <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                 <Column
                   header={t('name')}
-                  body={(r: ClientRequest) => r.name || r.customerName || '—'}
+                  body={(r: ClientRequest) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <PartnerAvatar name={r.name || r.customerName} />
+                      <span>{r.name || r.customerName || '—'}</span>
+                    </div>
+                  )}
                 />
                 <Column field="phoneNumber" header={t('phoneNumber')} />
                 <Column header={t('email')} body={(r: ClientRequest) => r.email || '—'} />

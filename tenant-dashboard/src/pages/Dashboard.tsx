@@ -16,6 +16,7 @@ import {
   Archive,
   Layers,
 } from 'lucide-react';
+import { formatDate } from '../utils/dateFormat';
 
 // ─── KPI hero card (Total Tenants) ───────────────────────────────────────────
 interface KpiHeroProps {
@@ -778,10 +779,7 @@ export function Dashboard() {
                       <div className="flex shrink-0 items-center gap-2.5">
                         <StatusBadge status={t.status} trialDaysRemaining={t.trialDaysRemaining} />
                         <span className="hidden text-[11px] text-slate-400 lg:block tabular-nums">
-                          {new Date(t.createdAt).toLocaleDateString('en', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
+                          {formatDate(t.createdAt)}
                         </span>
                         <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-indigo-400 transition-colors dark:text-slate-700" />
                       </div>

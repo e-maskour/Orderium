@@ -5,6 +5,7 @@ export default {
 
   // Navigation
   dashboard: 'لوحة التحكم',
+  home: 'الرئيسية',
   welcomeBack: 'مرحباً بعودتك',
   welcome: 'مرحباً',
   goodMorning: 'صباح الخير',
@@ -20,6 +21,8 @@ export default {
   cancel: 'إلغاء',
   close: 'إغلاق',
   back: 'رجوع',
+  backTo: 'الرجوع إلى {label}',
+  openRecord: 'فتح البطاقة',
   confirm: 'تأكيد',
   add: 'إضافة',
 
@@ -62,7 +65,7 @@ export default {
   previous: 'السابق',
   next: 'التالي',
   last: 'الأخيرة',
-  pageReportTemplate: '{first} - {last} من {totalRecords}',
+  pageReportTemplate: 'عرض {first}–{last} من أصل {totalRecords} عنصر',
 
   // Loading & States
   loading: 'جاري التحميل...',

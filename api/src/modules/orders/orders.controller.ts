@@ -452,7 +452,7 @@ export class OrdersController {
   @Serialize(OrderDetailResponseDto)
   @ApiOperation({
     summary:
-      'Change order status via workflow (confirmed → picked_up | delivered | cancelled)',
+      'Change order status via workflow (confirmed → picked_up | delivered | cancelled). POS orders (ADMIN_POS / CLIENT_POS) can be set to any of these at any time.',
   })
   @ApiResponse({
     status: 200,

@@ -15,12 +15,11 @@ import {
   Phone,
   MapPin,
 } from 'lucide-react';
-import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { posService, ICheckoutState } from '../modules/pos';
 import { orderPaymentsService } from '../modules';
-import { formatCurrency } from '@orderium/ui';
+import { DecimalInput, formatCurrency } from '@orderium/ui';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ export default function CheckoutPage() {
 
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState(0);
-  const [paidAmount, setPaidAmount] = useState('');
+  const [paidAmount, setPaidAmount] = useState<number | null>(null);
 
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: any) => {
@@ -91,7 +90,7 @@ export default function CheckoutPage() {
 
   const total = itemsSubtotal - globalDiscountAmount;
   const totalItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  const paid = parseFloat(paidAmount) || 0;
+  const paid = paidAmount ?? 0;
   const change = paid - total;
 
   const handleConfirmOrder = () => {
@@ -416,13 +415,14 @@ export default function CheckoutPage() {
                   </div>
 
                   <div>
-                    <InputText
-                      type="number"
-                      value={String(globalDiscount || '')}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0;
+                    <DecimalInput
+                      className="p-inputtext p-component"
+                      data-keyboard-layout="numeric"
+                      value={globalDiscount || null}
+                      min={0}
+                      onValueChange={(v) => {
                         const max = globalDiscountType === 1 ? 100 : itemsSubtotal;
-                        setGlobalDiscount(Math.min(value, max));
+                        setGlobalDiscount(Math.min(v ?? 0, max));
                       }}
                       placeholder={`${t('discount')} ${globalDiscountType === 1 ? '(%)' : `(${t('currency')})`}`}
                       style={{ width: '100%' }}
@@ -524,10 +524,12 @@ export default function CheckoutPage() {
                         zIndex: 1,
                       }}
                     />
-                    <InputText
-                      type="number"
-                      value={String(paidAmount)}
-                      onChange={(e) => setPaidAmount(e.target.value)}
+                    <DecimalInput
+                      className="p-inputtext p-component"
+                      data-keyboard-layout="numeric"
+                      value={paidAmount}
+                      min={0}
+                      onValueChange={(v) => setPaidAmount(v)}
                       placeholder={t('paidAmount')}
                       style={{ width: '100%', paddingLeft: '2.5rem', fontSize: '1.125rem' }}
                     />

@@ -33,24 +33,20 @@ import type {
   SeederStatusInfo,
   TenantSeederStatus,
 } from '../types/seeder';
+import { formatAmount } from '../utils/formatAmount';
+import { formatDateTime } from '../utils/dateFormat';
 
 // ─────────────────────────────── helpers ─────────────────────────────────────
 
 function fmt(ms: number | null): string {
   if (ms === null) return '—';
   if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
+  return `${formatAmount(ms / 1000, 2)}s`;
 }
 
 function fmtDate(s: string | null): string {
   if (!s) return 'never';
-  return new Date(s).toLocaleString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(s, 'never');
 }
 
 /**
