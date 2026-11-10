@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Preset Roles
+ *  MARNOVA — Preset Roles
  * ═══════════════════════════════════════════════════════════════
  *
  *  The equivalent of Odoo's data-defined `res.groups`: a ladder of roles

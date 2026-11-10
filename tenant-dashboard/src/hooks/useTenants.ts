@@ -158,8 +158,15 @@ export function useExtendTrial() {
 export function useDeleteTenant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, confirmation }: { id: number; confirmation: string }) =>
-      tenantsApi.deletePermanently(id, confirmation),
+    mutationFn: ({
+      id,
+      confirmation,
+      password,
+    }: {
+      id: number;
+      confirmation: string;
+      password: string;
+    }) => tenantsApi.deletePermanently(id, confirmation, password),
     onSuccess: () => qc.invalidateQueries({ queryKey: tenantKeys.lists() }),
   });
 }
@@ -167,8 +174,15 @@ export function useDeleteTenant() {
 export function useResetTenant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, confirmation }: { id: number; confirmation: string }) =>
-      tenantsApi.resetData(id, confirmation),
+    mutationFn: ({
+      id,
+      confirmation,
+      password,
+    }: {
+      id: number;
+      confirmation: string;
+      password: string;
+    }) => tenantsApi.resetData(id, confirmation, password),
     onSuccess: (_data, { id }) => qc.invalidateQueries({ queryKey: tenantKeys.stats(id) }),
   });
 }

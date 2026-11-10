@@ -11,13 +11,13 @@ interface Props {
  * Hidden receipt rendered in DOM for window.print() / AirPrint / Mopria fallback.
  * Only visible during @media print.
  * Rendered via portal directly on <body> so the CSS selector
- * `body > *:not(#morocom-receipt)` correctly hides the app shell.
+ * `body > *:not(#marnova-receipt)` correctly hides the app shell.
  */
 export function PrintableReceipt({ data }: Props) {
     if (!data) return null;
 
     return createPortal(
-        <div id="morocom-receipt">
+        <div id="marnova-receipt">
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
                 <strong style={{ fontSize: 16 }}>{data.storeName}</strong>
                 {data.storePhone && <div>{data.storePhone}</div>}

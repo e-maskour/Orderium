@@ -8,9 +8,11 @@ import { useTenants, usePlans } from '../hooks/useTenants';
 import { useCreatePayment, useUpdatePayment } from '../hooks/usePayments';
 import { formatMoney, todayIso, addMonths } from '../utils/format';
 import { BILLING_CYCLE_LABELS, type BillingCycle, type Payment } from '../types/payment';
+import { planLabel, sortPlans } from '../utils/plans';
 import type { SubscriptionPlan } from '../types/tenant';
 
-const PLANS: SubscriptionPlan[] = ['trial', 'basic', 'pro', 'enterprise'];
+/** Pre-selected for a new payment: the recommended paid plan. */
+const DEFAULT_PAYMENT_PLAN: SubscriptionPlan = 'business';
 const CYCLES: BillingCycle[] = ['monthly', 'yearly'];
 
 interface Props {
@@ -26,7 +28,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   const isEdit = !!payment;
 
   const [tenantId, setTenantId] = useState<number | ''>(fixedTenantId ?? '');
-  const [planName, setPlanName] = useState<SubscriptionPlan>('basic');
+  const [planName, setPlanName] = useState<SubscriptionPlan>(DEFAULT_PAYMENT_PLAN);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
   const [periodStart, setPeriodStart] = useState(todayIso());
   const [periodEnd, setPeriodEnd] = useState(addMonths(todayIso(), 12));
@@ -42,6 +44,10 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   const updatePayment = useUpdatePayment();
 
   const plan = plans?.find((p) => p.name === planName);
+  // The free trial is never billed; keep it listed only when editing a record that uses it.
+  const planOptions = sortPlans(plans).filter(
+    (p) => p.priceMonthly > 0 || p.priceYearly > 0 || p.name === planName,
+  );
   const currency = payment?.currency ?? plan?.currency ?? 'MAD';
 
   useEffect(() => {
@@ -59,7 +65,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
     } else {
       const today = todayIso();
       setTenantId(fixedTenantId ?? '');
-      setPlanName('basic');
+      setPlanName(DEFAULT_PAYMENT_PLAN);
       setBillingCycle('yearly');
       setPeriodStart(today);
       setPeriodEnd(addMonths(today, 12));
@@ -200,12 +206,19 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <select
               id="pf-plan"
               value={planName}
-              onChange={(e) => setPlanName(e.target.value as SubscriptionPlan)}
+              onChange={(e) => {
+                setPlanName(e.target.value as SubscriptionPlan);
+                // On a new payment, a deliberate plan change re-applies its list price.
+                if (!isEdit) setAmountTouched(false);
+              }}
               className="input"
             >
-              {PLANS.map((p) => (
-                <option key={p} value={p}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
+              {!planOptions.some((p) => p.name === planName) && (
+                <option value={planName}>{planLabel(planName, plans)}</option>
+              )}
+              {planOptions.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.displayName}
                 </option>
               ))}
             </select>
@@ -217,7 +230,10 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <select
               id="pf-cycle"
               value={billingCycle}
-              onChange={(e) => applyCycle(e.target.value as BillingCycle, periodStart)}
+              onChange={(e) => {
+                applyCycle(e.target.value as BillingCycle, periodStart);
+                if (!isEdit) setAmountTouched(false);
+              }}
               className="input"
             >
               {CYCLES.map((c) => (
@@ -292,7 +308,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
           />
           {!error && plan && !amountTouched && (
             <p id="pf-amount-hint" className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-              Prefilled from the {plan.displayName} {billingCycle} list price — edit it for a
+              Prefilled from the {plan.displayName} {billingCycle} list price (HT) — edit it for a
               negotiated amount.
             </p>
           )}

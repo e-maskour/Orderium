@@ -1,5 +1,28 @@
-import { IsOptional, IsString, IsDateString, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsNumber,
+  IsIn,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SORT_ORDERS, toSortOrder } from '../../../common/utils/list-sort';
+import type { SortOrder } from '../../../common/utils/list-sort';
+
+/** Columns the quote list may be sorted by (whitelist → SQL column in the service). */
+export const QUOTE_SORT_FIELDS = [
+  'number',
+  'partnerName',
+  'date',
+  'dueDate',
+  'validationDate',
+  'subtotal',
+  'tax',
+  'total',
+  'status',
+] as const;
+export type QuoteSortField = (typeof QUOTE_SORT_FIELDS)[number];
 
 export class FilterQuotesDto {
   @ApiProperty({
@@ -40,4 +63,21 @@ export class FilterQuotesDto {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
+
+  @ApiPropertyOptional({
+    enum: QUOTE_SORT_FIELDS,
+    description: 'Column to sort by (default: creation date, newest first)',
+  })
+  @IsOptional()
+  @IsIn(QUOTE_SORT_FIELDS)
+  sortField?: QuoteSortField;
+
+  @ApiPropertyOptional({
+    enum: SORT_ORDERS,
+    description: 'Sort direction (default: ASC when sortField is set)',
+  })
+  @IsOptional()
+  @Transform(toSortOrder)
+  @IsIn(SORT_ORDERS)
+  sortOrder?: SortOrder;
 }

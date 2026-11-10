@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, SlidersHorizontal, X } from 'lucide-react';
-import { useTenants } from '../hooks/useTenants';
+import { usePlans, useTenants } from '../hooks/useTenants';
+import { PLAN_KEYS, planLabel, sortPlans } from '../utils/plans';
 import { TenantTable } from '../components/TenantTable';
 import { SearchBar } from '../components/SearchBar';
 import { Pagination } from '../components/Pagination';
@@ -16,14 +17,6 @@ const STATUS_OPTIONS = [
   { value: 'disabled', label: 'Disabled' },
   { value: 'archived', label: 'Archived' },
   { value: 'deleted', label: 'Deleted' },
-] as const;
-
-const PLAN_OPTIONS = [
-  { value: 'all', label: 'All plans' },
-  { value: 'trial', label: 'Trial' },
-  { value: 'basic', label: 'Basic' },
-  { value: 'pro', label: 'Pro' },
-  { value: 'enterprise', label: 'Enterprise' },
 ] as const;
 
 const SORT_OPTIONS = [
@@ -59,6 +52,16 @@ export function TenantsList() {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data, isLoading } = useTenants(params);
+  const { data: plans } = usePlans();
+
+  // Filter options follow the plan catalogue; the known keys cover the loading state.
+  const sortedPlans = sortPlans(plans);
+  const planOptions = [
+    { value: 'all', label: 'All plans' },
+    ...(sortedPlans.length > 0
+      ? sortedPlans.map((p) => ({ value: p.name, label: p.displayName }))
+      : PLAN_KEYS.map((k) => ({ value: k, label: planLabel(k) }))),
+  ];
 
   const set = <K extends keyof ListTenantsParams>(key: K, value: ListTenantsParams[K]) =>
     setParams((p) => ({ ...p, [key]: value, page: 1 }));
@@ -154,7 +157,7 @@ export function TenantsList() {
                 onChange={(e) => set('plan', e.target.value as ListTenantsParams['plan'])}
                 className={selectClass}
               >
-                {PLAN_OPTIONS.map((o) => (
+                {planOptions.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>

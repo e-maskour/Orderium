@@ -5,6 +5,12 @@
  */
 import { SelectQueryBuilder } from 'typeorm';
 import { Order } from './entities/order.entity';
+import type { OrderSortField } from './dto/filter-orders.dto';
+import {
+  ListSort,
+  applyListSort,
+  partnerSortColumns,
+} from '../../common/utils/list-sort';
 
 // ─── Shared SELECT field lists ─────────────────────────────────────────────
 
@@ -116,11 +122,11 @@ export function applyOrderFilters(
 
   if (filters.search) {
     qb.andWhere(
-      '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search) OR LOWER(order.orderNumber) LIKE LOWER(:search))',
+      '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search) OR LOWER(order.orderNumber) LIKE LOWER(:search) OR LOWER(supplier.name) LIKE LOWER(:search))',
       { search: `%${filters.search}%` },
     );
-    // In search mode the remaining filter-panel conditions are skipped
-    return qb;
+    // Search is combined (AND) with every other filter, so status / source /
+    // period / direction still narrow the results while searching.
   }
   if (filters.orderNumber) {
     qb.andWhere(
@@ -162,10 +168,12 @@ export function applyOrderFilters(
       deliveryPersonId: filters.deliveryPersonId,
     });
   }
-  if (filters.startDate && filters.endDate) {
+  if (filters.startDate) {
     qb.andWhere('order.dateCreated >= :startDate', {
       startDate: filters.startDate,
     });
+  }
+  if (filters.endDate) {
     qb.andWhere('order.dateCreated <= :endDate', { endDate: filters.endDate });
   }
   if (filters.direction) {
@@ -175,4 +183,36 @@ export function applyOrderFilters(
   }
 
   return qb;
+}
+
+// ─── Sorting ────────────────────────────────────────────────────────────────
+
+/**
+ * Applies a whitelisted sort (see ORDER_SORT_FIELDS) to an order list query.
+ * Default ordering — and tie-breaker — is newest first (`dateCreated DESC`).
+ */
+export function applyOrderSort(
+  qb: SelectQueryBuilder<Order>,
+  sort: ListSort<OrderSortField> | undefined,
+  direction?: 'ACHAT' | 'VENTE',
+): SelectQueryBuilder<Order> {
+  const columns: Record<OrderSortField, string | string[]> = {
+    number: 'order.documentNumber',
+    partnerName: partnerSortColumns(direction),
+    date: 'order.date',
+    dateCreated: 'order.dateCreated',
+    dueDate: 'order.dueDate',
+    validationDate: 'order.validationDate',
+    subtotal: 'order.subtotal',
+    tax: 'order.tax',
+    total: 'order.total',
+    paidAmount: 'order.paidAmount',
+    remainingAmount: 'order.remainingAmount',
+    status: 'order.status',
+    originType: 'order.originType',
+  };
+  return applyListSort(qb, sort, columns, {
+    column: 'order.dateCreated',
+    order: 'DESC',
+  });
 }

@@ -157,7 +157,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
   ];
 
   const whatsappMessage = encodeURIComponent(
-    `🎉 ${companyName} is now live on Morocom!\n\nAccess your portals:\n• Admin: ${ADMIN_URL}\n${CLIENT_URL ? `• Client: ${CLIENT_URL}\n` : ''}${DELIVERY_URL ? `• Delivery: ${DELIVERY_URL}` : ''}`,
+    `🎉 ${companyName} is now live on Marnova!\n\nAccess your portals:\n• Admin: ${ADMIN_URL}\n${CLIENT_URL ? `• Client: ${CLIENT_URL}\n` : ''}${DELIVERY_URL ? `• Delivery: ${DELIVERY_URL}` : ''}`,
   );
 
   return (

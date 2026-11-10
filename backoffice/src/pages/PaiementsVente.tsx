@@ -19,21 +19,27 @@ import {
 import { InputText } from 'primereact/inputtext';
 import { presetRange, type DatePreset } from '../utils/datePresets';
 import { PeriodFilter } from '../components/PeriodFilter';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
-import { invoicesService } from '../modules/invoices';
+import { Payment, PaymentFilters, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import PaymentModal from '../components/PaymentModal';
 import { toastConfirm } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatAmount, formatDate } from '@orderium/ui';
 import { EmptyState } from '../components/EmptyState';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
-import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { PartnerAvatar, RefLink } from '@/components/ui';
 import { entityRoutes } from '@/lib/entityRoutes';
+
+/** Local calendar day as YYYY-MM-DD (toISOString() would shift to UTC). */
+function toLocalYMD(d?: Date): string | undefined {
+  if (!d) return undefined;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 export default function PaiementsVente() {
   const { t, language, dir } = useLanguage();
@@ -56,6 +62,10 @@ export default function PaiementsVente() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [selectedRows, setSelectedRows] = useState<Payment[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [sortField, setSortField] = useState<PaymentFilters['sortField']>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
 
   const getDateRange = useMemo(() => {
     if (dateFilterType !== 'custom') return presetRange(dateFilterType);
@@ -68,38 +78,59 @@ export default function PaiementsVente() {
     return {};
   }, [dateFilterType, dateRange]);
 
-  const { data: filteredPayments = [], isLoading: loading } = useQuery({
+  const dateFrom = toLocalYMD(getDateRange.start);
+  const dateTo = toLocalYMD(getDateRange.end);
+  const paymentType = paymentTypeFilter !== 'all' ? paymentTypeFilter : undefined;
+  const search = debouncedSearch.trim() || undefined;
+
+  // Back to page 1 (and drop the selection) whenever a filter changes
+  useEffect(() => {
+    setPage(1);
+    setSelectedRows([]);
+  }, [search, paymentType, dateFrom, dateTo]);
+
+  // All filters, pagination and sorting are applied by the API
+  const { data: listData, isLoading: loading } = useQuery({
     queryKey: [
       'payments-vente',
-      debouncedSearch,
-      paymentTypeFilter,
-      dateFilterType,
-      getDateRange.start,
-      getDateRange.end,
+      { search, paymentType, dateFrom, dateTo, page, pageSize, sortField, sortOrder },
     ],
-    queryFn: async () => {
-      const all = await paymentsService.getAll({
-        search: debouncedSearch || undefined,
-        paymentType: paymentTypeFilter !== 'all' ? paymentTypeFilter : undefined,
-        dateFrom: getDateRange.start ? getDateRange.start.toISOString().split('T')[0] : undefined,
-        dateTo: getDateRange.end ? getDateRange.end.toISOString().split('T')[0] : undefined,
-      });
-      return all.filter((p: Payment) => p.customerId != null);
-    },
+    queryFn: () =>
+      paymentsService.getPage({
+        direction: 'vente',
+        search,
+        paymentType,
+        dateFrom,
+        dateTo,
+        page,
+        limit: pageSize,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
+      }),
+    placeholderData: keepPreviousData,
   });
+  const filteredPayments = listData?.payments ?? [];
+  const totalRecords = listData?.total ?? 0;
+  const totalAmount = listData?.totalAmount ?? 0;
 
-  const { data: allSalesPayments = [] } = useQuery({
-    queryKey: ['payments-vente-kpi'],
-    queryFn: async () =>
-      (await paymentsService.getAll({})).filter((p: Payment) => p.customerId != null),
+  // "This month" KPI: fixed current-month range, aggregated server-side
+  const monthRange = presetRange('month');
+  const monthFrom = toLocalYMD(monthRange.start);
+  const monthTo = toLocalYMD(monthRange.end);
+  const { data: monthData } = useQuery({
+    queryKey: ['payments-vente-kpi', monthFrom, monthTo],
+    queryFn: () =>
+      paymentsService.getPage({
+        direction: 'vente',
+        dateFrom: monthFrom,
+        dateTo: monthTo,
+        page: 1,
+        limit: 1,
+      }),
     staleTime: 60_000,
   });
-
-  const { data: invoicesData } = useQuery({
-    queryKey: ['invoices-all'],
-    queryFn: () => invoicesService.getAll(),
-  });
-  const invoices: any[] = invoicesData?.invoices || [];
+  const thisMonthCount = monthData?.total ?? 0;
+  const thisMonthAmount = monthData?.totalAmount ?? 0;
 
   const clearSelection = () => setSelectedRows([]);
   const toggleSelectAll = () =>
@@ -107,35 +138,16 @@ export default function PaiementsVente() {
       ? setSelectedRows([])
       : setSelectedRows(filteredPayments);
 
-  const getPartnerId = (p: Payment): number | undefined => {
-    const inv = invoices.find((i: any) => i.invoice.id === p.invoiceId);
-    return p.customerId ?? inv?.invoice.customerId ?? undefined;
-  };
-  const getInvoiceNumber = (invoiceId: number) => {
-    const inv = invoices.find((i: any) => i.invoice.id === invoiceId);
-    return inv?.invoice.invoiceNumber || '#' + invoiceId;
-  };
-  const getCustomerName = (invoiceId: number) => {
-    const inv = invoices.find((i: any) => i.invoice.id === invoiceId);
-    return inv?.invoice.customerName || '-';
-  };
-  const getInvoiceTotal = (invoiceId: number) => {
-    const inv = invoices.find((i: any) => i.invoice.id === invoiceId);
-    return inv?.invoice.total || 0;
-  };
+  const getPartnerId = (p: Payment): number | undefined =>
+    p.customerId ?? p.invoice?.customerId ?? undefined;
+  const getInvoiceNumber = (p: Payment) => p.invoice?.documentNumber || '#' + p.invoiceId;
+  const getCustomerName = (p: Payment) => p.invoice?.customerName || '-';
+  const getInvoiceTotal = (p: Payment) => p.invoice?.total || 0;
 
   const handleEdit = (payment: Payment) => {
     setSelectedPayment(payment);
     setShowPaymentModal(true);
   };
-
-  const totalAmount = allSalesPayments.reduce((sum, p) => sum + p.amount, 0);
-  const thisMonthPayments = allSalesPayments.filter((p) => {
-    const d = new Date(p.paymentDate);
-    const n = new Date();
-    return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
-  });
-  const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const PAYMENT_METHOD_CONFIG: Record<string, { cls: string; icon: React.ElementType }> = {
     cash: { cls: 'pm-badge pm-badge--cash', icon: Banknote },
@@ -164,7 +176,7 @@ export default function PaiementsVente() {
           <KpiGrid count={3}>
             <KpiCard
               label={t('totalPayments')}
-              value={allSalesPayments.length}
+              value={totalRecords}
               icon={CreditCard}
               color="blue"
             />
@@ -179,7 +191,7 @@ export default function PaiementsVente() {
               value={formatAmount(thisMonthAmount, 2) + ' ' + (language === 'ar' ? 'د.م' : 'DH')}
               icon={CalendarIcon}
               color="purple"
-              subtitle={thisMonthPayments.length + ' paiements'}
+              subtitle={thisMonthCount + ' paiements'}
             />
           </KpiGrid>
         </div>
@@ -318,19 +330,24 @@ export default function PaiementsVente() {
               items={filteredPayments}
               keyExtractor={(p: Payment) => p.id}
               loading={loading}
-              totalCount={filteredPayments.length}
+              totalCount={totalRecords}
+              hasMore={page * pageSize < totalRecords}
+              onLoadMore={() => {
+                // Mobile shows a growing list: widen page 1 instead of replacing rows
+                setPageSize(Math.min(page * pageSize + DEFAULT_PAGE_SIZE, 500));
+                setPage(1);
+              }}
               countLabel="paiements"
               emptyMessage="Aucun paiement trouvé"
               config={{
                 topLeft: (p: Payment) => (
                   <RefLink to={entityRoutes.invoice(p.invoiceId, 'vente')}>
-                    {getInvoiceNumber(p.invoiceId)}
+                    {getInvoiceNumber(p)}
                   </RefLink>
                 ),
                 topRight: (p: Payment) =>
                   '+' + formatAmount(p.amount, 2) + ' ' + (language === 'ar' ? 'د.م' : 'DH'),
-                bottomLeft: (p: Payment) =>
-                  getCustomerName(p.invoiceId) + ' · ' + formatDate(p.paymentDate),
+                bottomLeft: (p: Payment) => getCustomerName(p) + ' · ' + formatDate(p.paymentDate),
                 bottomRight: (p: Payment) => (
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
                     {PAYMENT_TYPE_LABELS[p.paymentType]}
@@ -347,9 +364,23 @@ export default function PaiementsVente() {
             onSelectionChange={(e) => setSelectedRows(e.value as Payment[])}
             selectionMode="checkbox"
             dataKey="id"
+            lazy
             paginator
             paginatorPosition="bottom"
-            rows={25}
+            first={(page - 1) * pageSize}
+            rows={pageSize}
+            totalRecords={totalRecords}
+            onPage={(e: DataTablePageEvent) => {
+              setPage(Math.floor(e.first / e.rows) + 1);
+              setPageSize(e.rows);
+            }}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={(e: DataTableSortEvent) => {
+              setSortField((e.sortField || undefined) as PaymentFilters['sortField']);
+              setSortOrder(e.sortOrder);
+              setPage(1);
+            }}
             rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             loading={loading}
@@ -412,7 +443,7 @@ export default function PaiementsVente() {
                   }}
                 >
                   <RefLink to={entityRoutes.invoice(p.invoiceId, 'vente')}>
-                    {getInvoiceNumber(p.invoiceId)}
+                    {getInvoiceNumber(p)}
                   </RefLink>
                 </span>
               )}
@@ -420,7 +451,7 @@ export default function PaiementsVente() {
             <Column
               header={t('client')}
               body={(p: Payment) => {
-                const name = getCustomerName(p.invoiceId);
+                const name = getCustomerName(p);
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <PartnerAvatar name={name !== '-' ? name : null} size="sm" shape="circle" />
@@ -512,7 +543,7 @@ export default function PaiementsVente() {
         isAllSelected={
           selectedRows.length === filteredPayments.length && filteredPayments.length > 0
         }
-        totalCount={filteredPayments.length}
+        totalCount={totalRecords}
         itemLabel="paiement"
         actions={[
           ...(selectedRows.length === 1
@@ -560,7 +591,7 @@ export default function PaiementsVente() {
             setSelectedPayment(null);
           }}
           invoiceId={selectedPayment.invoiceId}
-          invoiceTotal={getInvoiceTotal(selectedPayment.invoiceId)}
+          invoiceTotal={getInvoiceTotal(selectedPayment)}
           payment={selectedPayment}
         />
       )}

@@ -87,6 +87,7 @@ export interface OrderStatusCounts {
   confirmed: number;
   picked_up: number;
   delivered: number;
+  invoiced: number;
   cancelled: number;
 }
 
@@ -276,6 +277,7 @@ export function buildOrderStatusCounts(
     confirmed: map.get(OrderStatus.CONFIRMED) ?? 0,
     picked_up: map.get(OrderStatus.PICKED_UP) ?? 0,
     delivered: map.get(OrderStatus.DELIVERED) ?? 0,
+    invoiced: map.get(OrderStatus.INVOICED) ?? 0,
     cancelled: map.get(OrderStatus.CANCELLED) ?? 0,
   };
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * seed-demo.mjs — Morocom Demo Data Seeder
+ * seed-demo.mjs — Marnova Demo Data Seeder
  *
  * Populates the demo tenant via REST API with:
  *   - 5  product categories
@@ -285,11 +285,11 @@ const SUPPLIERS_COMPANIES = [
 // ─── Livreurs ─────────────────────────────────────────────────────────────────
 
 const LIVREURS = [
-    { name: 'Ahmed Livreur', phoneNumber: '+212691234567', email: 'ahmed.livreur@morocom.ma', password: 'Livraison1!' },
-    { name: 'Rachid Express', phoneNumber: '+212692345678', email: 'rachid.express@morocom.ma', password: 'Livraison2!' },
-    { name: 'Omar Dispatch', phoneNumber: '+212693456789', email: 'omar.dispatch@morocom.ma', password: 'Livraison3!' },
-    { name: 'Yassine Delivery', phoneNumber: '+212694567890', email: 'yassine.delivery@morocom.ma', password: 'Livraison4!' },
-    { name: 'Hamid Fast', phoneNumber: '+212695678901', email: 'hamid.fast@morocom.ma', password: 'Livraison5!' },
+    { name: 'Ahmed Livreur', phoneNumber: '+212691234567', email: 'ahmed.livreur@marnova.ma', password: 'Livraison1!' },
+    { name: 'Rachid Express', phoneNumber: '+212692345678', email: 'rachid.express@marnova.ma', password: 'Livraison2!' },
+    { name: 'Omar Dispatch', phoneNumber: '+212693456789', email: 'omar.dispatch@marnova.ma', password: 'Livraison3!' },
+    { name: 'Yassine Delivery', phoneNumber: '+212694567890', email: 'yassine.delivery@marnova.ma', password: 'Livraison4!' },
+    { name: 'Hamid Fast', phoneNumber: '+212695678901', email: 'hamid.fast@marnova.ma', password: 'Livraison5!' },
 ];
 
 // ─── Logging ──────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ function warn(msg) { console.log(`  ⚠️   ${msg}`); }
 
 async function main() {
     log(`\n${'═'.repeat(60)}`);
-    log('🌱  Morocom Demo Seeder — v2');
+    log('🌱  Marnova Demo Seeder — v2');
     log(`    Tenant: ${TENANT} | API: ${BASE_URL}`);
     log(`    ${PRODUCTS.length} products across ${CATEGORIES.length} categories`);
     log(`${'═'.repeat(60)}`);

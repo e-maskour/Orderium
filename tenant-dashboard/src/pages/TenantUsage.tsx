@@ -5,7 +5,9 @@ import { useTenantMetrics, useExportMetrics } from '../hooks/useMetrics';
 import { StatusBadge } from '../components/StatusBadge';
 import { SkeletonListItem } from '../components/Skeleton';
 import { formatBytes, formatCompact } from '../utils/format';
+import { formatLimit } from '../utils/plans';
 import type {
+  QuotaLine,
   TenantMetricRow,
   TenantMetricSortKey,
   TenantMetricsListParams,
@@ -267,11 +269,7 @@ function QuotaPill({ row }: { row: TenantMetricRow }) {
     return <span className="text-xs text-slate-400">—</span>;
   }
 
-  const exceeded =
-    row.quota.users.exceeded ||
-    row.quota.products.exceeded ||
-    row.quota.ordersPerMonth.exceeded ||
-    row.quota.storageMb.exceeded;
+  const exceeded = quotaLines(row).some(([, line]) => line.exceeded);
 
   const tone = exceeded
     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -289,14 +287,27 @@ function QuotaPill({ row }: { row: TenantMetricRow }) {
   );
 }
 
-function quotaTooltip(row: TenantMetricRow): string {
+/** Quota lines in display order; the newer limits appear once the API reports them. */
+function quotaLines(row: TenantMetricRow): Array<[string, QuotaLine, string?]> {
   const q = row.quota;
-  return [
-    `Staff seats: ${q.users.used}/${q.users.limit || '∞'}`,
-    `Products: ${q.products.used}/${q.products.limit || '∞'}`,
-    `Orders this month: ${q.ordersPerMonth.used}/${q.ordersPerMonth.limit || '∞'}`,
-    `Storage: ${q.storageMb.used}/${q.storageMb.limit || '∞'} MB`,
-  ].join('\n');
+  const lines: Array<[string, QuotaLine | undefined, string?]> = [
+    ['Staff seats', q.users],
+    ['Products', q.products],
+    ['Warehouses', q.warehouses],
+    ['Delivery persons', q.deliveryPersons],
+    ['Orders this month', q.ordersPerMonth],
+    ['Storage', q.storageMb, 'MB'],
+  ];
+  return lines.filter((l): l is [string, QuotaLine, string?] => l[1] !== undefined);
+}
+
+function quotaTooltip(row: TenantMetricRow): string {
+  return quotaLines(row)
+    .map(
+      ([label, line, unit]) =>
+        `${label}: ${line.used}/${formatLimit(line.limit)}${unit ? ` ${unit}` : ''}`,
+    )
+    .join('\n');
 }
 
 /**

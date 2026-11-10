@@ -1,8 +1,10 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { Warehouse } from './entities/warehouse.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 
 // ─── Mock Factory ──────────────────────────────────────────────────────────
 
@@ -47,6 +49,18 @@ describe('WarehouseService', () => {
       providers: [
         WarehouseService,
         { provide: TenantConnectionService, useValue: mockTenantConnService },
+        {
+          provide: CACHE_MANAGER,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
+        },
+        {
+          provide: PlanEntitlementsService,
+          useValue: {
+            assertCanAdd: jest.fn().mockResolvedValue(undefined),
+            assertFeature: jest.fn().mockResolvedValue(undefined),
+            recordStorage: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

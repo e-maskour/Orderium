@@ -1,4 +1,5 @@
-import { useTenants } from '../hooks/useTenants';
+import { usePlans, useTenants } from '../hooks/useTenants';
+import { PLAN_KEYS, planLabel, planStyle, sortPlans } from '../utils/plans';
 import { SkeletonListItem } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { Link } from 'react-router-dom';
@@ -302,9 +303,7 @@ function PlanBar({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${dotColor}`} />
-          <span className="text-xs font-semibold capitalize text-slate-700 dark:text-slate-300">
-            {plan}
-          </span>
+          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{plan}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
@@ -362,6 +361,12 @@ export function Dashboard() {
   const archived = byStatus('archived');
 
   const byPlan = (p: string) => tenants.filter((t) => t.subscriptionPlan === p).length;
+  const { data: plans } = usePlans();
+  // Highest tier first; the known keys cover the loading state.
+  const sortedPlans = sortPlans(plans);
+  const planKeys = (sortedPlans.length > 0 ? sortedPlans.map((p) => p.name) : PLAN_KEYS)
+    .slice()
+    .reverse();
 
   const expiringSoon = tenants
     .filter((t) => t.status === 'trial' && (t.trialDaysRemaining ?? 99) <= 7)
@@ -379,7 +384,7 @@ export function Dashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 mb-1.5">
-            <span>Morocom</span>
+            <span>Marnova</span>
             <span>/</span>
             <span className="font-semibold text-slate-600 dark:text-slate-300">Dashboard</span>
           </div>
@@ -547,7 +552,7 @@ export function Dashboard() {
 
             {isLoading ? (
               <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, i) => (
+                {Array.from({ length: PLAN_KEYS.length }).map((_, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between">
                       <div className="h-3 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
@@ -559,34 +564,16 @@ export function Dashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                <PlanBar
-                  plan="Enterprise"
-                  count={byPlan('enterprise')}
-                  total={total}
-                  color="bg-violet-600"
-                  dotColor="bg-violet-500"
-                />
-                <PlanBar
-                  plan="Pro"
-                  count={byPlan('pro')}
-                  total={total}
-                  color="bg-indigo-500"
-                  dotColor="bg-indigo-500"
-                />
-                <PlanBar
-                  plan="Basic"
-                  count={byPlan('basic')}
-                  total={total}
-                  color="bg-blue-400"
-                  dotColor="bg-blue-400"
-                />
-                <PlanBar
-                  plan="Trial"
-                  count={byPlan('trial')}
-                  total={total}
-                  color="bg-sky-400"
-                  dotColor="bg-sky-400"
-                />
+                {planKeys.map((key) => (
+                  <PlanBar
+                    key={key}
+                    plan={planLabel(key, plans)}
+                    count={byPlan(key)}
+                    total={total}
+                    color={planStyle(key).bar}
+                    dotColor={planStyle(key).bar}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -769,8 +756,8 @@ export function Dashboard() {
                           <span className="hidden text-[10px] text-slate-300 dark:text-slate-700 sm:inline">
                             ·
                           </span>
-                          <span className="hidden text-[11px] capitalize text-slate-400 sm:inline">
-                            {t.subscriptionPlan}
+                          <span className="hidden text-[11px] text-slate-400 sm:inline">
+                            {planLabel(t.subscriptionPlan, plans)}
                           </span>
                         </div>
                       </div>

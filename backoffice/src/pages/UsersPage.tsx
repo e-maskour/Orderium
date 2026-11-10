@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { Modal } from '../components/Modal';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -35,6 +35,7 @@ import {
   type CreateUserPayload,
   type UpdateUserPayload,
   type UserType,
+  type UserSortField,
 } from '../modules/users';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -71,6 +72,9 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
+  // Server-side sort: the table is lazy, so sorting must go through the API.
+  const [sortField, setSortField] = useState<UserSortField | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
 
   const currentUserType: UserType = activeTab === 0 ? 'admin' : 'client';
 
@@ -83,7 +87,17 @@ export default function UsersPage() {
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ['users', currentUserType, page, perPage, searchQuery, roleFilter, statusFilter],
+    queryKey: [
+      'users',
+      currentUserType,
+      page,
+      perPage,
+      searchQuery,
+      roleFilter,
+      statusFilter,
+      sortField,
+      sortOrder,
+    ],
     queryFn: () =>
       usersService.getAll({
         page,
@@ -92,6 +106,8 @@ export default function UsersPage() {
         userType: currentUserType,
         roleId: roleFilter !== 'all' ? (roleFilter as number) : undefined,
         status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
       }),
   });
 
@@ -474,6 +490,14 @@ export default function UsersPage() {
             setPage(Math.floor(e.first / e.rows) + 1);
             setPerPage(e.rows);
           }}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={(e: DataTableSortEvent) => {
+            setSortField((e.sortField || undefined) as UserSortField | undefined);
+            setSortOrder(e.sortOrder);
+            setPage(1);
+          }}
+          removableSort
           paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           currentPageReportTemplate={t('pageReportTemplate')}
           emptyMessage={<EmptyState icon={UsersIcon} title={t('noResults')} />}
@@ -499,6 +523,7 @@ export default function UsersPage() {
           <Column
             header={t('name')}
             field="name"
+            sortable
             body={(user: User) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <div
@@ -533,6 +558,7 @@ export default function UsersPage() {
           <Column
             header={t('phone')}
             field="phoneNumber"
+            sortable
             style={{ minWidth: '9rem' }}
             body={(user: User) => (
               <span

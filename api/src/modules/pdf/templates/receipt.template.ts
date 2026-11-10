@@ -1,4 +1,10 @@
-import { formatQuantity } from '../../../common/utils/french-format';
+import {
+  OrderPrintData,
+  PRINT_FONTS_LINK,
+  PRINT_FONT_FAMILY,
+  PRINT_MONO_FAMILY,
+  esc,
+} from './order-print.shared';
 
 /**
  * Printable width of an 80mm thermal roll (576 dots @ 203dpi).
@@ -6,417 +12,194 @@ import { formatQuantity } from '../../../common/utils/french-format';
  */
 export const RECEIPT_WIDTH_MM = 72;
 
-interface ReceiptTemplateData {
-  documentNumber: string;
-  date: string;
-  customerName: string;
-  customerPhone?: string;
-  itemsHtml: string;
-  totalQty: number;
-  totalProducts: number;
-  subtotal: string;
-  discount?: string;
-  discountType?: number;
-  tax: string;
-  total: string;
-  hideVAT?: boolean;
-  companyName: string;
-  companyLines: string[];
-  lang?: 'fr' | 'ar';
+export interface ReceiptTemplateData extends OrderPrintData {
+  barcodeSvg: string;
 }
 
+/**
+ * 80mm thermal ticket. Pure black on white (thermal heads can't print grey
+ * reliably), large type for the client, payment state and total.
+ */
 export function renderReceiptTemplate(data: ReceiptTemplateData): string {
-  const isRTL = data.lang === 'ar';
+  const ar = data.lang === 'ar';
   const L = {
-    receipt: isRTL ? 'إيصال' : 'Reçu',
-    client: isRTL ? 'العميل' : 'Client',
-    designation: isRTL ? 'الوصف' : 'Désignation',
-    total: isRTL ? 'المجموع' : 'Total',
-    articles: isRTL ? 'صنف' : 'article',
-    articlesPl: isRTL ? 'أصناف' : 'articles',
-    totalQty: isRTL ? 'إجمالي الكمية' : 'Qté totale',
-    subtotal: isRTL ? 'المجموع الجزئي' : 'Sous-total',
-    discount: isRTL ? 'الخصم' : 'Remise',
-    discountPct: isRTL ? 'الخصم (%)' : 'Remise (%)',
-    tva20: 'TVA (20%)',
-    thanks: isRTL ? 'شكراً لثقتكم!' : 'Merci pour votre confiance !',
-    seeYouSoon: isRTL ? 'إلى اللقاء' : 'À bientôt',
+    date: ar ? 'التاريخ' : 'Date',
+    phone: ar ? 'الهاتف' : 'Tél',
+    deliverTo: ar ? 'التسليم إلى' : 'LIVRER À',
+    total: ar ? 'المجموع' : 'TOTAL',
+    thanks: ar ? 'شكراً لثقتكم!' : 'Merci pour votre confiance !',
   };
+  const { company, client, status } = data;
 
-  const discountRowHtml =
-    data.discount && data.discount !== '0,00'
-      ? `<tr class="t-sub">
-           <td class="t-label">${data.discountType === 1 ? L.discountPct : L.discount}</td>
-           <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ` ${isRTL ? 'د.م' : 'DH'}`}</td>
-         </tr>`
-      : '';
+  const companySub = [
+    company.addressLine,
+    company.phone ? `${L.phone} ${company.phone}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-  return `
-<!DOCTYPE html>
-<html dir="${isRTL ? 'rtl' : 'ltr'}">
+  const itemsHtml = data.items
+    .map(
+      (it) => `
+      <div class="it">
+        <div class="it-name" dir="auto">${esc(it.name)}</div>
+        <div class="it-line">
+          <span class="it-calc num"><strong>${esc(it.qty)}</strong> × ${esc(it.price)}</span>
+          <span class="it-total num">${esc(it.total)}</span>
+        </div>
+        ${it.extras ? `<div class="it-sub">${esc(it.extras)}</div>` : ''}
+      </div>`,
+    )
+    .join('');
+
+  const breakdownHtml = data.breakdown.length
+    ? `<div class="bd">${data.breakdown
+        .map(
+          (b) =>
+            `<div class="bd-row"><span>${esc(b.label)}</span><span class="num">${esc(b.value)}</span></div>`,
+        )
+        .join('')}</div>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="${data.lang}" dir="${ar ? 'rtl' : 'ltr'}">
 <head>
   <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=block" rel="stylesheet">
-  <title>${L.receipt} ${data.documentNumber}</title>
+  ${PRINT_FONTS_LINK}
+  <title>${esc(data.title)} ${esc(data.documentNumber)}</title>
   <style>
     @page { size: ${RECEIPT_WIDTH_MM}mm auto; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; break-inside: avoid; page-break-inside: avoid; }
-
     body {
-      font-family: "Noto Sans", "Noto Sans Arabic", sans-serif;
+      font-family: ${PRINT_FONT_FAMILY};
       background: #fff;
+      color: #000;
       width: ${RECEIPT_WIDTH_MM}mm;
       margin: 0 auto;
-      padding: 0;
-      font-size: 7.5pt;
-      color: #1a1a1a;
-      line-height: 1.3;
-      -webkit-font-smoothing: antialiased;
+      font-size: 10.5px;
+      line-height: 1.25;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
+    .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+    .tk { display: flex; flex-direction: column; gap: 6px; padding: 3mm 2.5mm 4mm; }
 
-    /* ── Wrapper ─────────────────────────── */
-    .rcp { padding: 4mm 3mm 5mm; }
+    .brand { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+    .logo { width: 34px; height: 34px; object-fit: contain; filter: grayscale(1) contrast(1.3); }
+    .logo-fallback {
+      display: flex; align-items: center; justify-content: center;
+      background: #000; color: #fff; border-radius: 6px;
+      font-weight: 700; font-size: 18px; text-transform: uppercase;
+    }
+    .co-name { font-weight: 700; font-size: 13px; line-height: 1.15; }
+    .co-sub { font-size: 9.5px; line-height: 1.25; }
 
-    /* ── Company header ──────────────────── */
-    .rcp-brand {
-      text-align: center;
-      padding-bottom: 3mm;
+    .title {
+      border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 0;
+      display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
     }
-    .rcp-brand-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 10mm;
-      height: 10mm;
-      border-radius: 2.5mm;
-      background: #1a1a1a;
-      margin-bottom: 1.5mm;
-    }
-    .rcp-brand-initial {
-      font-size: 13pt;
-      font-weight: 700;
-      color: #fff;
-      text-transform: uppercase;
-      line-height: 1;
-      letter-spacing: -0.5pt;
-    }
-    .rcp-company-name {
-      font-size: 10.5pt;
-      font-weight: 700;
-      letter-spacing: -0.2pt;
-      line-height: 1.2;
-      color: #0a0a0a;
-    }
-    .rcp-company-detail {
-      font-size: 6.5pt;
-      color: #555;
-      line-height: 1.5;
-      margin-top: 0.3mm;
-    }
-    .rcp-company-detail b {
-      color: #222;
-      font-weight: 600;
-    }
+    .title-k { font-weight: 700; font-size: 11.5px; letter-spacing: .06em; }
+    .title-no { font: 700 12px/1 ${PRINT_MONO_FAMILY}; }
+    .title-date { font-size: 10.5px; }
 
-    /* ── Separators ──────────────────────── */
-    .sep { border: none; margin: 2.5mm 0; }
-    .sep-tight { border: none; margin: 1mm 0; }
-    .sep-solid { border-top: 1.5px solid #1a1a1a; }
-    .sep-dash  { border-top: 1px dashed #aaa; }
-    .sep-thin  { border-top: 0.5px solid #ddd; }
+    .pay {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1.5px solid #000; border-radius: 4px; padding: 4px;
+    }
+    .pay-glyph {
+      width: 17px; height: 17px; border-radius: 50%; background: #000; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; line-height: 1; flex: none;
+    }
+    .pay-label { font-weight: 700; font-size: 12.5px; letter-spacing: .04em; }
+    .pay-hint { font-size: 9.5px; text-align: center; margin-top: -3px; }
 
-    /* ── Receipt title band ──────────────── */
-    .rcp-title-band {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5mm 0;
-    }
-    .rcp-badge {
-      display: inline-block;
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 7pt;
-      font-weight: 700;
-      letter-spacing: 0.4pt;
-      text-transform: uppercase;
-      padding: 0.7mm 2.5mm;
-      border-radius: 1mm;
-    }
-    .rcp-doc-num {
-      font-size: 6.5pt;
-      font-weight: 600;
-      color: #333;
-      letter-spacing: 0.2pt;
-    }
-    .rcp-doc-date {
-      font-size: 6.5pt;
-      color: #555;
-    }
+    .client { display: flex; flex-direction: column; gap: 1px; }
+    .client-k { font-weight: 700; font-size: 8.5px; letter-spacing: .12em; }
+    .client-name { font-weight: 700; font-size: 12.5px; line-height: 1.15; }
+    .client-phone { font-weight: 700; font-size: 11px; }
+    .client-addr { font-size: 10px; line-height: 1.25; }
 
-    /* ── Customer row ────────────────────── */
-    .rcp-customer {
-      padding: 0;
-    }
-    .rcp-customer-label {
-      font-size: 6pt;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5pt;
-      color: #888;
-      margin-bottom: 0.5mm;
-    }
-    .rcp-customer-value {
-      font-size: 7.5pt;
-      font-weight: 600;
-      color: #0a0a0a;
-    }
-    .rcp-customer-meta {
-      font-size: 6.5pt;
-      color: #555;
-      margin-top: 0.3mm;
-    }
+    .items { display: flex; flex-direction: column; border-top: 1px dashed #000; }
+    .it { display: flex; flex-direction: column; gap: 1px; padding: 3px 0; border-bottom: 1px dashed #000; }
+    .it-name { font-weight: 700; font-size: 11px; line-height: 1.2; }
+    .it-line { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .it-calc { white-space: nowrap; font-size: 10.5px; }
+    .it-calc strong { font-size: 11.5px; }
+    .it-total { white-space: nowrap; font-weight: 700; font-size: 11.5px; }
+    .it-sub { font-size: 9px; }
 
-    /* ── Items table ─────────────────────── */
-    .rcp-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0;
-    }
-    .rcp-table thead tr {
-      border-bottom: 1px solid #1a1a1a;
-    }
-    .rcp-table th {
-      font-size: 6pt;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.4pt;
-      color: #555;
-      padding: 1mm 0 1.2mm;
-    }
-    .rcp-table th.th-desc  { text-align: left; }
-    .rcp-table th.th-total { text-align: right; width: 18mm; }
-${
-  isRTL
-    ? `
-    /* ── Arabic RTL overrides ─────────── */
-    .rcp-customer-label, .rcp-customer-value, .rcp-customer-meta { text-align: right; }
-    .rcp-table th.th-desc  { text-align: right; }
-    .rcp-table th.th-total { text-align: left; }
-    .t-label { text-align: right; }
-    .t-amount { text-align: left; }
-    .t-grand .t-label { text-align: right; }
-    .rcp-summary { direction: rtl; }
-`
-    : ''
-}
+    .summary { display: flex; justify-content: space-between; font-size: 9.5px; margin-top: -2px; }
+    .bd { display: flex; flex-direction: column; gap: 1px; }
+    .bd-row { display: flex; justify-content: space-between; gap: 6px; font-size: 10.5px; }
 
-    .rcp-table tbody tr.t-item td {
-      padding: 1.8mm 0 0;
-      vertical-align: top;
-    }
-    .rcp-table tbody tr.t-item + tr.t-item td {
-      border-top: 0.5px solid #eee;
-    }
-    .t-desc {
-      font-size: 7.5pt;
-      font-weight: 600;
-      color: #0a0a0a;
-      line-height: 1.3;
-      padding-bottom: 0.5mm;
-    }
-    .t-desc-sub {
-      font-size: 6pt;
-      color: #777;
-      font-weight: 700;
-      display: block;
-      margin-top: 0.3mm;
-      padding-bottom: 1.5mm;
-    }
-    .t-qty-removed {
-      text-align: center;
-      font-size: 7.5pt;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      color: #0a0a0a;
-    }
-    .t-price {
-      text-align: right;
-      font-size: 7pt;
-      color: #444;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .t-total {
-      text-align: right;
-      font-size: 7.5pt;
-      font-weight: 700;
-      color: #0a0a0a;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
+    .grand { display: flex; flex-direction: column; gap: 3px; background: #000; color: #fff; padding: 5px 8px; border-radius: 4px; }
+    .grand-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .grand-k { font-weight: 700; font-size: 10.5px; letter-spacing: .1em; }
+    .grand-v { font-weight: 700; font-size: 16px; line-height: 1; white-space: nowrap; }
+    .grand-words { font-size: 9px; line-height: 1.25; text-align: end; }
 
-    /* ── Summary bar ─────────────────────── */
-    .rcp-summary {
-      display: flex;
-      justify-content: space-between;
-      font-size: 6.5pt;
-      color: #555;
-      padding: 1.5mm 0 0;
-    }
-    .rcp-summary b {
-      color: #0a0a0a;
-      font-weight: 700;
-    }
-
-    /* ── Totals table ────────────────────── */
-    .rcp-totals-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .t-sub td {
-      font-size: 7.5pt;
-      padding: 0.6mm 0;
-      font-variant-numeric: tabular-nums;
-    }
-    .t-label {
-      text-align: left;
-      color: #444;
-      padding-right: 2mm;
-    }
-    .t-amount {
-      text-align: right;
-      color: #0a0a0a;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    .t-grand td {
-      font-size: 10.5pt;
-      font-weight: 700;
-      padding-top: 2mm;
-      padding-bottom: 0.5mm;
-      border-top: 1.5px solid #1a1a1a;
-      font-variant-numeric: tabular-nums;
-      color: #0a0a0a;
-    }
-    .t-grand .t-label {
-      color: #0a0a0a;
-    }
-
-    /* ── Footer ──────────────────────────── */
-    .rcp-footer {
-      text-align: center;
-      padding-top: 2mm;
-    }
-    .rcp-footer-thanks {
-      font-size: 7.5pt;
-      font-weight: 700;
-      color: #0a0a0a;
-      letter-spacing: 0.1pt;
-    }
-    .rcp-footer-sub {
-      font-size: 6pt;
-      color: #888;
-      margin-top: 0.8mm;
-      line-height: 1.4;
-    }
-    .rcp-footer-num {
-      font-size: 5.5pt;
-      color: #bbb;
-      margin-top: 1.5mm;
-      letter-spacing: 0.3pt;
-    }
+    .barcode { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 1px; }
+    .barcode svg { display: block; max-width: 100%; }
+    .barcode-txt { font: 400 8.5px/1 ${PRINT_MONO_FAMILY}; letter-spacing: .2em; }
+    .thanks { text-align: center; font-weight: 700; font-size: 10.5px; line-height: 1.25; }
+    .legal { text-align: center; font-size: 8.5px; margin-top: -3px; }
   </style>
 </head>
 <body>
-<div class="rcp">
+<div class="tk">
 
-  <!-- ── Brand Header ── -->
-  <div class="rcp-brand">
-    <div class="rcp-brand-badge">
-      <span class="rcp-brand-initial">${data.companyName.charAt(0)}</span>
+  <div class="brand">
+    ${
+      company.logoSrc
+        ? `<img class="logo" src="${esc(company.logoSrc)}" alt="">`
+        : `<div class="logo logo-fallback">${esc(company.name.charAt(0) || 'M')}</div>`
+    }
+    <div class="co-name" dir="auto">${esc(company.name)}</div>
+    ${companySub ? `<div class="co-sub" dir="auto">${esc(companySub)}</div>` : ''}
+  </div>
+
+  <div class="title">
+    <div class="title-k">${esc(data.title)}</div>
+    <div class="title-no num">${esc(data.documentNumber)}</div>
+    <div class="title-date">${L.date} : <strong class="num">${esc(data.date)}</strong></div>
+  </div>
+
+  <div class="pay">
+    <div class="pay-glyph">${status.glyph}</div>
+    <div class="pay-label">${esc(status.label)}</div>
+  </div>
+  ${status.state === 'partiel' ? `<div class="pay-hint">${esc(status.hint)}</div>` : ''}
+
+  <div class="client">
+    <div class="client-k">${L.deliverTo}</div>
+    <div class="client-name" dir="auto">${esc(client.name)}</div>
+    ${client.phone ? `<div class="client-phone">${L.phone} <span class="num">${esc(client.phone)}</span></div>` : ''}
+    ${client.address ? `<div class="client-addr" dir="auto">${esc(client.address)}</div>` : ''}
+  </div>
+
+  <div class="items">${itemsHtml}</div>
+  <div class="summary"><span>${esc(data.linesLabel)}</span><span>${esc(data.unitsLabel)}</span></div>
+
+  ${breakdownHtml}
+
+  <div class="grand">
+    <div class="grand-row">
+      <span class="grand-k">${L.total}</span>
+      <span class="grand-v num">${esc(data.grandTotal)} ${esc(data.currency)}</span>
     </div>
-    <div class="rcp-company-name" dir="auto">${data.companyName}</div>
-    ${data.companyLines.map((line) => `<div class="rcp-company-detail" dir="auto">${line}</div>`).join('')}
+    ${data.totalWords ? `<div class="grand-words">${esc(data.totalWords)}</div>` : ''}
   </div>
 
-  <hr class="sep sep-tight sep-solid" />
-
-  <!-- ── Receipt Title Band ── -->
-  <div class="rcp-title-band" dir="ltr">
-    <span class="rcp-badge">${L.receipt}</span>
-    <div style="text-align:right;">
-      <div class="rcp-doc-num"># ${data.documentNumber}</div>
-      <div class="rcp-doc-date">${data.date}</div>
-    </div>
-  </div>
-
-  <hr class="sep sep-tight sep-dash" />
-
-  <!-- ── Customer ── -->
-  <div class="rcp-customer">
-    <div class="rcp-customer-label">${L.client}</div>
-    <div class="rcp-customer-value" dir="auto">${data.customerName}</div>
-    ${data.customerPhone ? `<div class="rcp-customer-meta">${data.customerPhone}</div>` : ''}
-  </div>
-
-  <hr class="sep sep-tight sep-dash" />
-
-  <!-- ── Items ── -->
-  <table class="rcp-table">
-    <thead>
-      <tr>
-        <th class="th-desc">${L.designation}</th>
-        <th class="th-total">${L.total}</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${data.itemsHtml}
-    </tbody>
-  </table>
-
-  <!-- ── Summary ── -->
-  <div class="rcp-summary">
-    <span><b>${data.totalProducts}</b> ${data.totalProducts > 1 ? L.articlesPl : L.articles}</span>
-    <span>${L.totalQty} : <b>${formatQuantity(data.totalQty)}</b></span>
-  </div>
-
-  <!-- ── Totals ── -->
-  <table class="rcp-totals-table">
-    <tbody>
-      ${
-        !data.hideVAT
-          ? `<tr class="t-sub">
-             <td class="t-label">${L.subtotal}</td>
-             <td class="t-amount">${data.subtotal} ${isRTL ? 'د.م' : 'DH'}</td>
-           </tr>
-           ${discountRowHtml}
-           <tr class="t-sub">
-             <td class="t-label">${L.tva20}</td>
-             <td class="t-amount">${data.tax} ${isRTL ? 'د.م' : 'DH'}</td>
-           </tr>`
-          : discountRowHtml
-      }
-      <tr class="t-grand">
-        <td class="t-label">${L.total}</td>
-        <td class="t-amount">${data.total} ${isRTL ? 'د.م' : 'DH'}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <hr class="sep sep-dash" />
-
-  <!-- ── Footer ── -->
-  <div class="rcp-footer">
-    <div class="rcp-footer-thanks">${L.thanks}</div>
-    <div class="rcp-footer-sub">${L.seeYouSoon} · ${data.companyName}</div>
-    <div class="rcp-footer-num">${data.documentNumber}</div>
-  </div>
+  ${
+    data.barcodeSvg
+      ? `<div class="barcode">${data.barcodeSvg}<div class="barcode-txt">${esc(data.documentNumber)}</div></div>`
+      : ''
+  }
+  <div class="thanks">${L.thanks}</div>
+  ${company.legalLine ? `<div class="legal">${esc(company.legalLine)}</div>` : ''}
 
 </div>
 </body>
-</html>
-  `;
+</html>`;
 }

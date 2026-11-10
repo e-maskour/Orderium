@@ -1,15 +1,22 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LucideIcon, ArrowLeft, BarChart2 } from 'lucide-react';
-import { Button } from 'primereact/button';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { AlertTriangle, BarChart2, RefreshCw, type LucideIcon } from 'lucide-react';
 import { AdminLayout } from '../../../components/AdminLayout';
 import { PageHeader } from '../../../components/PageHeader';
 import { useLanguage } from '../../../context/LanguageContext';
+import AnalyticsNav from './AnalyticsNav';
+import {
+  ANALYTICS_CATALOG,
+  ANALYTICS_ROOT,
+  findReport,
+  pushRecentReport,
+} from '../analytics.registry';
+import '../analytics.css';
 
 interface ReportLayoutProps {
   title: string;
   subtitle?: string;
+  /** Kept for API compatibility; the report icon now comes from the registry. */
   icon?: LucideIcon;
   filterBar?: React.ReactNode;
   kpiCards?: React.ReactNode;
@@ -18,12 +25,36 @@ interface ReportLayoutProps {
   exportButtons?: React.ReactNode;
   isLoading?: boolean;
   error?: string | null;
+  /** Re-runs the report query. Enables the refresh and retry actions. */
+  onRefresh?: () => void;
 }
+
+const SkeletonBody: React.FC = () => (
+  <div className="ax-stack" aria-hidden="true">
+    <div className="ax-kpis">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="ax-kpi ax-kpi--skeleton">
+          <span className="ax-skel" style={{ width: '45%', height: '0.75rem' }} />
+          <span className="ax-skel" style={{ width: '70%', height: '1.75rem' }} />
+        </div>
+      ))}
+    </div>
+    <div className="ax-card ax-card--pad">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          className="ax-skel"
+          style={{ width: '100%', height: '1.25rem', marginBottom: '0.75rem' }}
+        />
+      ))}
+    </div>
+  </div>
+);
 
 const ReportLayout: React.FC<ReportLayoutProps> = ({
   title,
   subtitle,
-  icon: Icon = BarChart2,
+  icon: FallbackIcon = BarChart2,
   filterBar,
   kpiCards,
   chart,
@@ -31,103 +62,115 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
   exportButtons,
   isLoading,
   error,
+  onRefresh,
 }) => {
-  const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { pathname } = useLocation();
+  const match = findReport(pathname);
+  const Icon = match?.report.icon ?? FallbackIcon;
+
+  useEffect(() => {
+    if (match) pushRecentReport(pathname);
+  }, [pathname, match]);
+
+  // Track successful loads: first load shows a skeleton, later loads keep the
+  // previous result on screen (dimmed) so the page never collapses.
+  const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+  const wasLoading = useRef(isLoading);
+  useEffect(() => {
+    if (wasLoading.current && !isLoading && !error) setLoadedAt(new Date());
+    wasLoading.current = isLoading;
+  }, [isLoading, error]);
+
+  const firstLoad = isLoading && !loadedAt;
+  const refreshing = isLoading && !!loadedAt;
+
+  const timeLabel = loadedAt
+    ? loadedAt.toLocaleTimeString(language === 'ar' ? 'ar-MA' : 'fr-MA', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+
+  const crumbs = [{ label: t('analyticsPageTitle'), to: ANALYTICS_ROOT }];
+  if (match) {
+    crumbs.push({
+      label: t(match.domain.labelKey),
+      to: `${ANALYTICS_CATALOG}?domain=${match.domain.id}`,
+    });
+  }
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Header — identical to every other backoffice page */}
+      <div className={`ax-page${match ? ` ax-accent--${match.domain.accent}` : ''}`}>
         <PageHeader
           icon={Icon}
           title={title}
           subtitle={subtitle}
-          backButton={
-            <Button
-              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
-              onClick={() => navigate('/analytics')}
-              style={{
-                width: '2.25rem',
-                height: '2.25rem',
-                flexShrink: 0,
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                color: '#64748b',
-                borderRadius: '0.625rem',
-                padding: 0,
-              }}
-            />
+          crumbs={crumbs}
+          actions={
+            <div className="ax-header-actions">
+              {timeLabel && (
+                <span className="ax-updated" aria-live="polite">
+                  <span
+                    className={`ax-updated__dot${refreshing ? ' ax-updated__dot--busy' : ''}`}
+                  />
+                  {t('analyticsLastUpdated').replace('{time}', timeLabel)}
+                </span>
+              )}
+              {onRefresh && (
+                <button
+                  type="button"
+                  className="ax-icon-btn"
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  title={t('analyticsRefresh')}
+                  aria-label={t('analyticsRefresh')}
+                >
+                  <RefreshCw className={isLoading ? 'ax-spin' : undefined} aria-hidden="true" />
+                </button>
+              )}
+              {exportButtons}
+            </div>
           }
-          actions={exportButtons ? <div className="flex gap-2">{exportButtons}</div> : undefined}
         />
 
-        {/* Filter bar */}
-        {filterBar && <div className="erp-card mb-3">{filterBar}</div>}
+        <AnalyticsNav />
 
-        {/* Loading */}
-        {isLoading && (
-          <div
-            className="erp-card flex justify-content-center align-items-center"
-            style={{ minHeight: '200px' }}
-          >
-            <div className="flex flex-column align-items-center gap-3">
-              <ProgressSpinner style={{ width: '48px', height: '48px' }} strokeWidth="3" />
-              <span className="text-500 text-sm">{t('analyticsLoading')}</span>
-            </div>
-          </div>
+        {filterBar && <div className="ax-toolbar">{filterBar}</div>}
+
+        {refreshing && (
+          <div className="ax-progress" role="progressbar" aria-label={t('analyticsLoading')} />
         )}
 
-        {/* Error */}
+        {firstLoad && <SkeletonBody />}
+
         {error && !isLoading && (
-          <div
-            className="erp-card flex align-items-center gap-3 p-4"
-            style={{ borderInlineStart: '4px solid var(--red-500)' }}
-          >
-            <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
-            <div>
-              <p className="font-semibold text-900 m-0">{t('analyticsErrorTitle')}</p>
-              <p className="text-500 text-sm m-0 mt-1">{error}</p>
+          <div className="ax-card ax-state ax-state--error" role="alert">
+            <span className="ax-state__icon">
+              <AlertTriangle aria-hidden="true" />
+            </span>
+            <div className="ax-state__text">
+              <p className="ax-state__title">{t('analyticsErrorTitle')}</p>
+              <p className="ax-state__body">{error}</p>
             </div>
+            {onRefresh && (
+              <button type="button" className="ax-btn" onClick={onRefresh}>
+                <RefreshCw aria-hidden="true" />
+                {t('analyticsRetry')}
+              </button>
+            )}
           </div>
         )}
 
-        {/* Content */}
-        {!isLoading && !error && (
-          <div className="flex flex-column gap-3">
-            {kpiCards && <div>{kpiCards}</div>}
-
-            {chart && (
-              <div className="erp-card">
-                <div
-                  className="flex align-items-center gap-2 mb-3 pb-3"
-                  style={{ borderBottom: '1px solid var(--erp-border)' }}
-                >
-                  <i className="pi pi-chart-line text-primary" />
-                  <span className="font-semibold text-800 text-sm">
-                    {t('analyticsSectionChart')}
-                  </span>
-                </div>
-                {chart}
-              </div>
-            )}
-
-            {table && (
-              <div className="erp-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div
-                  className="flex align-items-center justify-content-between px-4 py-3"
-                  style={{ borderBottom: '1px solid var(--erp-border)' }}
-                >
-                  <div className="flex align-items-center gap-2">
-                    <i className="pi pi-table text-primary" />
-                    <span className="font-semibold text-800 text-sm">
-                      {t('analyticsSectionTable')}
-                    </span>
-                  </div>
-                </div>
-                <div className="px-3 pb-3">{table}</div>
-              </div>
-            )}
+        {!firstLoad && !error && (
+          <div
+            className={`ax-stack${refreshing ? ' ax-stack--refreshing' : ''}`}
+            aria-busy={refreshing}
+          >
+            {kpiCards && <section>{kpiCards}</section>}
+            {chart && <section className="ax-card ax-card--pad">{chart}</section>}
+            {table && <section className="ax-card">{table}</section>}
           </div>
         )}
       </div>

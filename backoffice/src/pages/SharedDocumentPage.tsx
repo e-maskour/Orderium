@@ -7,7 +7,7 @@ import { Button } from 'primereact/button';
 import { invoicesService } from '../modules/invoices/invoices.service';
 import { ordersService } from '../modules/orders/orders.service';
 import { quotesService } from '../modules/quotes/quotes.service';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 import { useLanguage } from '../context/LanguageContext';
 
 function getDocType(pathname: string): 'invoice' | 'order' | 'quote' {
@@ -368,6 +368,7 @@ export default function SharedDocumentPage() {
                   fontSize: '0.875rem',
                   color: '#334155',
                 }}
+                body={(item: any) => formatQuantity(item.quantity)}
               />
               <Column
                 field="unitPrice"
@@ -514,7 +515,7 @@ export default function SharedDocumentPage() {
             color: '#94a3b8',
           }}
         >
-          Document partagé via Morocom
+          Document partagé via Marnova
         </div>
       </div>
     </div>

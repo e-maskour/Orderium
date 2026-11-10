@@ -65,6 +65,7 @@ export class InvoicesController {
       pageNum,
       pageSizeNum,
       directionValue,
+      { field: filterDto.sortField, order: filterDto.sortOrder },
     );
     const effectivePage = pageNum ?? 1;
     const effectiveLimit = pageSizeNum ?? 50;
@@ -263,27 +264,49 @@ export class InvoicesController {
     return ApiRes(INV.SHARE_REVOKED, null);
   }
 
-  @Get('export/xlsx')
+  @Post('export/xlsx')
+  @HttpCode(HttpStatus.OK)
   @Header(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
-  @ApiOperation({ summary: 'Export invoices to XLSX file' })
+  @ApiOperation({
+    summary:
+      'Export invoices to XLSX file (same body filters / sort as POST /invoices/list)',
+  })
   @ApiResponse({ status: 200, description: 'Export successful' })
   @RequirePermission('invoices.export')
   async exportToXlsx(
     @Res() res: Response,
-    @Query('supplierId') supplierId?: string,
+    @Body() filterDto: FilterInvoicesDto,
+    @Query('direction') direction?: string,
   ) {
-    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
-    const buffer = await this.invoicesService.exportToXlsx(supplierIdNum);
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const buffer = await this.invoicesService.exportToXlsx(
+      undefined,
+      {
+        search: filterDto.search,
+        status: filterDto.status,
+        customerId: filterDto.customerId,
+        supplierId: filterDto.supplierId,
+        dateFrom: filterDto.dateFrom,
+        dateTo: filterDto.dateTo,
+        direction: directionValue,
+      },
+      { field: filterDto.sortField, order: filterDto.sortOrder },
+    );
 
     const filename =
-      supplierIdNum !== undefined
-        ? supplierIdNum
-          ? 'factures-achat.xlsx'
-          : 'factures-vente.xlsx'
-        : 'factures.xlsx';
+      directionValue === 'ACHAT'
+        ? 'factures-achat.xlsx'
+        : directionValue === 'VENTE'
+          ? 'factures-vente.xlsx'
+          : 'factures.xlsx';
 
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);

@@ -12,7 +12,7 @@ export default {
   createAccount: 'إنشاء الحساب',
 
   // Messages
-  appAccess: '!مرحباً بك في Morocom',
+  appAccess: '!مرحباً بك في Marnova',
   enterPhoneToStart: 'أدخل رقمك لاستعراض كتالوجك والطلب بسهولة.',
   createPasswordForNewAccount: 'أدخل اسمك وأنشئ كلمة مرور',
   enterPasswordToContinue: 'أدخل كلمة المرور للمتابعة',

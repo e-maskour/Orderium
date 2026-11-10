@@ -8,6 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Payment } from '../tenant-lifecycle/entities/payment.entity';
+import type { PlanFeatures } from './plan-features';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 
 export type TenantStatus =
@@ -19,7 +20,12 @@ export type TenantStatus =
   | 'archived'
   | 'deleted';
 
-export type SubscriptionPlan = 'trial' | 'basic' | 'pro' | 'enterprise';
+export type SubscriptionPlan =
+  | 'trial'
+  | 'starter'
+  | 'business'
+  | 'pro'
+  | 'enterprise';
 
 /**
  * Stored in the `orderium_master` database.
@@ -127,6 +133,16 @@ export class Tenant {
 
   @Column({ type: 'int', default: 500 })
   maxStorageMb: number;
+
+  @Column({ type: 'int', default: 1 })
+  maxWarehouses: number;
+
+  @Column({ type: 'int', default: 0 })
+  maxDeliveryPersons: number;
+
+  /** Plan feature flags (copied from the plan, overridable per tenant). */
+  @Column({ type: 'jsonb', default: () => "'{}'" })
+  features: PlanFeatures;
 
   // ─── Misc ──────────────────────────────────────────────────────────────────
 

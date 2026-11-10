@@ -11,10 +11,11 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { PaymentResponseDto } from './dto/payment-response.dto';
+import { FilterPaymentsDto } from './dto/filter-payments.dto';
 import { ApiRes } from '../../common/api-response';
 import { PAY } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
@@ -37,20 +38,30 @@ export class PaymentsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all payments or payments by invoice' })
-  @ApiQuery({ name: 'invoiceId', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiOperation({
+    summary: 'List payments (filters applied server-side, optional pagination)',
+    description:
+      'All filters are applied in SQL. metadata.total and metadata.totalAmount ' +
+      'reflect the filtered set. Omit page/limit to receive every matching row.',
+  })
   @ApiResponse({ status: 200, description: 'Payments retrieved' })
+  @ApiResponse({ status: 400, description: 'Invalid filter values' })
   @RequirePermission('payments.view')
-  async findAll(
-    @Query('invoiceId', new ParseIntPipe({ optional: true }))
-    invoiceId?: number,
-    @Query('search') search?: string,
-  ) {
-    const payments = invoiceId
-      ? await this.paymentsService.findByInvoice(invoiceId)
-      : await this.paymentsService.findAll(search);
-    return ApiRes(PAY.LIST, payments);
+  async findAll(@Query() filters: FilterPaymentsDto) {
+    const result = await this.paymentsService.findAll(filters);
+    const paginated = !!(filters.page || filters.limit);
+    const limit = paginated ? (filters.limit ?? 25) : result.total;
+    const offset = paginated ? ((filters.page ?? 1) - 1) * limit : 0;
+    return ApiRes(PAY.LIST, result.payments, {
+      limit,
+      offset,
+      total: result.total,
+      hasNext: paginated
+        ? offset + result.payments.length < result.total
+        : false,
+      hasPrev: offset > 0,
+      totalAmount: result.totalAmount,
+    });
   }
 
   @Get(':id')

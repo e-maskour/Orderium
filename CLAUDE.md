@@ -1,7 +1,7 @@
-# Morocom — Claude Instructions
+# Marnova — Claude Instructions
 
 ## Project Identity
-**Morocom** is a multi-tenant SaaS ERP. This is a pnpm monorepo.
+**Marnova** is a multi-tenant SaaS ERP. This is a pnpm monorepo.
 
 | Folder | Framework | Role |
 |--------|-----------|------|

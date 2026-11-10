@@ -57,7 +57,7 @@ export default {
   'notification.message.payment_failed': 'Échec du paiement pour la commande {{reference}}',
   'notification.message.new_user': "{{name}} a rejoint l'équipe en tant que {{role}}",
   'notification.message.user_deactivated': 'Le compte de {{name}} a été désactivé',
-  'notification.message.system_update': 'La version {{version}} de Morocom est disponible',
+  'notification.message.system_update': 'La version {{version}} de Marnova est disponible',
   'notification.message.backup_done': 'Sauvegarde automatique effectuée le {{date}}',
   'notification.message.order_assigned': 'La commande {{orderNumber}} vous a été assignée',
   'notification.message.order_status_changed':

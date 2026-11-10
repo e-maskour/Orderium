@@ -65,7 +65,7 @@ export interface ReportLabels {
   continued: string;
 }
 
-/** Default (French) labels — Morocom's primary back-office language. */
+/** Default (French) labels — Marnova's primary back-office language. */
 export const DEFAULT_REPORT_LABELS: ReportLabels = {
   generatedAt: 'Généré le',
   page: 'Page',

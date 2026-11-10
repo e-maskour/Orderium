@@ -1,6 +1,6 @@
 export default {
   // App & Branding
-  appName: 'Morocom',
+  appName: 'Marnova',
   tagline: 'Point de Vente',
 
   // Navigation

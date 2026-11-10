@@ -20,6 +20,17 @@ import {
 import { StockService } from './stock.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { AdjustmentLineDto } from './dto/inventory-adjustment.dto';
+import { AdjustmentSortField } from './dto/filter-inventory-adjustment.dto';
+
+/** Whitelisted sort fields → SQL columns (never interpolate user input). */
+const ADJUSTMENT_SORT_COLUMNS: Record<AdjustmentSortField, string> = {
+  reference: 'adjustment.reference',
+  name: 'adjustment.name',
+  warehouseName: 'warehouse.name',
+  adjustmentDate: 'adjustment.adjustmentDate',
+  status: 'adjustment.status',
+  dateCreated: 'adjustment.dateCreated',
+};
 
 @Injectable()
 export class InventoryAdjustmentService {
@@ -120,7 +131,13 @@ export class InventoryAdjustmentService {
     status?: AdjustmentStatus;
     startDate?: Date;
     endDate?: Date;
-  }): Promise<InventoryAdjustment[]> {
+    search?: string;
+    /** 1-based page; pagination only applies when page or limit is set. */
+    page?: number;
+    limit?: number;
+    sortField?: AdjustmentSortField;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ adjustments: InventoryAdjustment[]; total: number }> {
     const query = this.adjustmentRepository
       .createQueryBuilder('adjustment')
       .leftJoinAndSelect('adjustment.warehouse', 'warehouse');
@@ -147,9 +164,28 @@ export class InventoryAdjustmentService {
       });
     }
 
-    query.orderBy('adjustment.dateCreated', 'DESC');
+    if (filters?.search) {
+      query.andWhere(
+        '(adjustment.reference ILIKE :search OR adjustment.name ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
 
-    return query.getMany();
+    const sortColumn =
+      ADJUSTMENT_SORT_COLUMNS[filters?.sortField ?? 'dateCreated'] ??
+      ADJUSTMENT_SORT_COLUMNS.dateCreated;
+    query.orderBy(sortColumn, filters?.sortOrder ?? 'DESC', 'NULLS LAST');
+    // Stable tie-breaker so rows don't shift between pages
+    query.addOrderBy('adjustment.id', 'DESC');
+
+    // Only a many-to-one join (warehouse), so OFFSET/LIMIT is safe.
+    if (filters?.page || filters?.limit) {
+      const limit = filters.limit ?? 25;
+      query.offset(((filters.page ?? 1) - 1) * limit).limit(limit);
+    }
+
+    const [adjustments, total] = await query.getManyAndCount();
+    return { adjustments, total };
   }
 
   /**

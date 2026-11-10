@@ -19,6 +19,18 @@ import {
   renderReceiptTemplate,
   RECEIPT_WIDTH_MM,
 } from './templates/receipt.template';
+import {
+  renderDeliveryNoteTemplate,
+  renderDeliveryNotePageFooter,
+  DELIVERY_NOTE_MARGINS,
+} from './templates/delivery-note.template';
+import {
+  OrderPrintData,
+  amountToFrenchWords,
+  getPaymentStatusView,
+  renderCode128Svg,
+  resolvePaymentState,
+} from './templates/order-print.shared';
 import { renderOrdersMergeTemplate } from './templates/orders-merge.template';
 import type { OrdersMergeView } from './templates/orders-merge.template';
 import { getDocumentStyles } from './templates/document.styles';
@@ -68,6 +80,7 @@ interface DocumentData {
   originType?: string;
   isDemandePrix?: boolean; // For purchase quotes (achat)
   supplierName?: string;
+  paidAmount?: number;
 }
 
 interface DocumentItemData {
@@ -91,6 +104,7 @@ interface CompanyConfigData {
   registrationNumber?: string;
   taxId?: string;
   vatNumber?: string;
+  logo?: string;
 }
 
 @Injectable()
@@ -104,7 +118,7 @@ export class PDFService implements OnModuleDestroy {
   /** PDF buffer TTL in Redis: 5 minutes */
   private static readonly PDF_CACHE_TTL_MS = 5 * 60 * 1000;
   /** Bump whenever a PDF template/layout changes so stale cached PDFs are bypassed. */
-  private static readonly PDF_CACHE_VERSION = 'v2';
+  private static readonly PDF_CACHE_VERSION = 'v4';
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
@@ -232,6 +246,12 @@ export class PDFService implements OnModuleDestroy {
     if (documentType === 'receipt') {
       pdfBuffer = await this.generateReceiptPDF(documentData, lang);
       fileName = `Recu_${documentData.documentNumber}.pdf`;
+    } else if (
+      documentType === 'delivery-note' &&
+      !documentData.isDemandePrix
+    ) {
+      pdfBuffer = await this.generateDeliveryNotePDF(documentData, lang);
+      fileName = this.getFileName(documentType, documentData);
     } else {
       pdfBuffer = await this.generateA5PDF(documentType, documentData, lang);
       fileName = this.getFileName(documentType, documentData);
@@ -621,6 +641,7 @@ export class PDFService implements OnModuleDestroy {
       total: Number(order.total) || 0,
       originType: order.originType || 'BACKOFFICE',
       isDemandePrix,
+      paidAmount: Number(order.paidAmount) || 0,
       items: mapDocumentItems(order.items),
     };
   }
@@ -703,8 +724,8 @@ export class PDFService implements OnModuleDestroy {
         headerTemplate,
         footerTemplate,
         margin: {
-          top: '32mm',
-          bottom: '14mm',
+          top: '28mm',
+          bottom: '13mm',
           left: '5mm',
           right: '5mm',
         },
@@ -730,8 +751,11 @@ export class PDFService implements OnModuleDestroy {
     });
 
     try {
-      const companyConfig = await this.getCompanyConfig();
-      const htmlContent = this.renderReceiptHTML(data, companyConfig, lang);
+      const print = await this.buildOrderPrintData('receipt', data, lang);
+      const htmlContent = renderReceiptTemplate({
+        ...print,
+        barcodeSvg: renderCode128Svg(data.documentNumber, 32),
+      });
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
@@ -848,60 +872,168 @@ export class PDFService implements OnModuleDestroy {
     });
   }
 
-  private renderReceiptHTML(
+  /** A5 sales delivery note (purchase "bon d'achat" keeps the generic layout). */
+  private async generateDeliveryNotePDF(
     data: DocumentData,
-    company: CompanyConfigData,
     lang: 'fr' | 'ar' = 'fr',
-  ): string {
+  ): Promise<Buffer> {
+    const page = await this.getNewPage({
+      viewport: { width: 559, height: 794 },
+      deviceScaleFactor: 2,
+    });
+
+    try {
+      const print = await this.buildOrderPrintData('delivery-note', data, lang);
+      const htmlContent = renderDeliveryNoteTemplate({
+        ...print,
+        barcodeSvg: renderCode128Svg(data.documentNumber, 28),
+      });
+      await page.setContent(htmlContent, {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      await page.evaluate(() => (document as any).fonts.ready);
+
+      return await page.pdf({
+        format: 'A5',
+        printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate: '<span></span>',
+        footerTemplate: renderDeliveryNotePageFooter(lang),
+        margin: DELIVERY_NOTE_MARGINS,
+      });
+    } finally {
+      await page.close();
+    }
+  }
+
+  /** View-model shared by the A5 delivery note and the 80mm ticket. */
+  private async buildOrderPrintData(
+    documentType: 'delivery-note' | 'receipt',
+    data: DocumentData,
+    lang: 'fr' | 'ar',
+  ): Promise<OrderPrintData> {
+    const ar = lang === 'ar';
+    const currency = ar ? 'د.م' : 'DH';
+    const money = (v: number) => `${this.formatCurrency(v)} ${currency}`;
     const hideVAT =
       data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
-    const companyLines = this.buildCompanyLines(company, lang);
+    const company = await this.getCompanyConfig();
 
-    // Generate items HTML — table rows for the new design
-    const itemsHtml = data.items
-      .map((item) => {
-        const discountSub =
-          item.discount > 0
-            ? `${lang === 'ar' ? 'خصم' : 'Remise'}: -${this.formatCurrency(item.discount)} DH`
-            : '';
-        const taxSub =
-          !hideVAT && item.tax > 0 ? `TVA: ${formatQuantity(item.tax)}%` : '';
-        const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
-        const qtyLine = `${formatQuantity(item.quantity)} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
-        return `<tr class="t-item">
-            <td class="t-desc">
-              ${item.description}
-              <span class="t-desc-sub">${qtyLine}</span>
-            </td>
-            <td class="t-total">${this.formatCurrency(item.total)}</td>
-          </tr>`;
-      })
-      .join('');
+    const items = data.items.map((item) => {
+      const extras = [
+        item.discount > 0
+          ? `${ar ? 'خصم' : 'Remise'} -${money(item.discount)}`
+          : '',
+        !hideVAT && item.tax > 0 ? `TVA ${formatQuantity(item.tax)}%` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const calc = `${formatQuantity(item.quantity)} × ${money(item.unitPrice)}`;
+      return {
+        name: item.description,
+        qty: formatQuantity(item.quantity),
+        price: this.formatCurrency(item.unitPrice),
+        total: this.formatCurrency(item.total),
+        sub: extras ? `${calc} · ${extras}` : calc,
+        extras,
+      };
+    });
 
-    const totalQty = data.items.reduce((sum, i) => sum + i.quantity, 0);
-    const totalProducts = data.items.length;
+    const discount = data.discount ?? 0;
+    const discountRow =
+      discount > 0
+        ? {
+            label: ar ? 'الخصم' : 'Remise',
+            value:
+              data.discountType === 1
+                ? `-${formatQuantity(discount)}%`
+                : `-${money(discount)}`,
+          }
+        : null;
+    const breakdown = hideVAT
+      ? discountRow
+        ? [
+            {
+              label: ar ? 'المجموع الجزئي' : 'Sous-total',
+              value: money(data.subtotal),
+            },
+            discountRow,
+          ]
+        : []
+      : [
+          {
+            label: ar ? 'المجموع بدون ضريبة' : 'Sous-total HT',
+            value: money(data.subtotal),
+          },
+          ...(discountRow ? [discountRow] : []),
+          { label: 'TVA', value: money(data.tax) },
+        ];
 
-    return renderReceiptTemplate({
+    const lines = data.items.length;
+    const units = formatQuantity(
+      data.items.reduce((sum, i) => sum + i.quantity, 0),
+    );
+
+    const paid = data.paidAmount ?? 0;
+    const state = resolvePaymentState(data.total, paid);
+
+    const addressLine = [
+      company.address?.trim(),
+      [company.city?.trim(), company.zipCode?.trim()].filter(Boolean).join(' '),
+      company.country?.trim(),
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    return {
+      lang,
+      title: this.getDocumentLabel(documentType, false, lang),
       documentNumber: data.documentNumber,
       date: formatDate(data.date),
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-      itemsHtml,
-      totalQty,
-      totalProducts,
-      subtotal: this.formatCurrency(data.subtotal),
-      discount:
-        data.discount && data.discount > 0
-          ? this.formatCurrency(data.discount)
-          : undefined,
-      discountType: data.discountType,
-      tax: this.formatCurrency(data.tax),
-      total: this.formatCurrency(data.total),
-      hideVAT,
-      companyName: company.companyName || 'MOROCOM',
-      companyLines,
-      lang,
-    });
+      company: {
+        name: company.companyName?.trim() || 'MARNOVA',
+        addressLine: addressLine || undefined,
+        phone: company.phone?.trim() || undefined,
+        email: company.email?.trim() || undefined,
+        legalLine: this.buildCompanyFooterLines(company)[0],
+        logoSrc: await this.resolveLogoSrc(company.logo),
+      },
+      client: {
+        name: data.customerName,
+        phone: data.customerPhone,
+        address: data.customerAddress,
+      },
+      status: getPaymentStatusView(
+        state,
+        lang,
+        state === 'partiel' ? money(data.total - paid) : undefined,
+      ),
+      items,
+      linesLabel: ar
+        ? `${lines} ${lines > 1 ? 'أصناف' : 'صنف'}`
+        : `${lines} article${lines > 1 ? 's' : ''}`,
+      unitsLabel: ar
+        ? `${units} وحدة في المجموع`
+        : `${units} unité${units === '1' ? '' : 's'} au total`,
+      breakdown,
+      grandTotal: this.formatCurrency(data.total),
+      totalWords: ar ? undefined : amountToFrenchWords(data.total),
+      currency,
+    };
+  }
+
+  /**
+   * Company logo as something Chromium can render offline: data URIs pass
+   * through, stored MinIO images are inlined. Anything else → no logo
+   * (the template falls back to the company initial).
+   */
+  private async resolveLogoSrc(logo?: string): Promise<string | undefined> {
+    const ref = logo?.trim();
+    if (!ref) return undefined;
+    if (ref.startsWith('data:image/')) return ref;
+    return (await this.minioProvider.getObjectAsDataUri(ref)) ?? undefined;
   }
 
   private getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {

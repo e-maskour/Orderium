@@ -11,8 +11,10 @@ import {
   REPORT_VIEW_PERMISSIONS,
   REPORT_EXPORT_PERMISSIONS,
 } from '../../../common/access/access-modules';
+import { RequirePlanFeature } from '../../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Reports — PDF')
+@RequirePlanFeature('reports')
 @Controller('reports/pdf')
 export class ReportPdfController {
   constructor(private readonly service: ReportPdfService) {}

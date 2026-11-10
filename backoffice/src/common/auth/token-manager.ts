@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Token Management Strategy
+ *  MARNOVA — Token Management Strategy
  * ═══════════════════════════════════════════════════════════════
  *
  *  Handles token storage, retrieval, and unauthorized callbacks.

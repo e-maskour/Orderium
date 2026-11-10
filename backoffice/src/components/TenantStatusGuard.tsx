@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef, createContext, useContext, type ReactNode } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  createContext,
+  useContext,
+  type ReactNode,
+} from 'react';
 import { BlockedScreen } from './BlockedScreen';
 import { TrialBanner } from './TrialBanner';
 import {
@@ -31,12 +39,47 @@ const DEFAULT_MODULES: TenantModules = {
   warehouse: true,
   category: true,
   portals: { clientPortal: false, deliveryPortal: false },
+  reports: true,
+  clientRequests: true,
 };
 
-const ModulesContext = createContext<TenantModules>(DEFAULT_MODULES);
+/**
+ * Plan-driven flags default to `true` when the API does not send them, so an
+ * older API never hides reports or client requests.
+ */
+function normalizeModules(modules: TenantModules): TenantModules {
+  return {
+    ...modules,
+    reports: modules.reports ?? true,
+    clientRequests: modules.clientRequests ?? true,
+  };
+}
+
+/**
+ * - `loading`     — public status not fetched yet (modules are the defaults)
+ * - `ready`       — modules come from the API
+ * - `unavailable` — fetch failed or the API sent no modules (defaults in use)
+ */
+export type TenantModulesStatus = 'loading' | 'ready' | 'unavailable';
+
+interface ModulesState {
+  modules: TenantModules;
+  status: TenantModulesStatus;
+}
+
+const ModulesContext = createContext<ModulesState>({
+  modules: DEFAULT_MODULES,
+  status: 'loading',
+});
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTenantModules(): TenantModules {
+  return useContext(ModulesContext).modules;
+}
+
+/** Modules plus whether they are resolved — used by the plan route gate. */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useTenantModulesState(): ModulesState {
   return useContext(ModulesContext);
 }
 
@@ -136,6 +179,13 @@ export function TenantStatusGuard({ children }: Props) {
   const [blockedByApi, setBlockedByApi] = useState<BlockedReason | null>(null);
   const fetched = useRef(cachedTenantInfo !== undefined);
 
+  // Stable context value — recomputed only when the fetched status changes.
+  const modulesState = useMemo<ModulesState>(() => {
+    if (tenantInfo === undefined) return { modules: DEFAULT_MODULES, status: 'loading' };
+    if (!tenantInfo?.modules) return { modules: DEFAULT_MODULES, status: 'unavailable' };
+    return { modules: normalizeModules(tenantInfo.modules), status: 'ready' };
+  }, [tenantInfo]);
+
   // Wire the reactive interceptor callback to this component's state setter.
   useEffect(() => {
     _notifyBlocked = setBlockedByApi;
@@ -174,7 +224,6 @@ export function TenantStatusGuard({ children }: Props) {
   // structure is stable. When tenantInfo is still loading (undefined) we fall
   // back to DEFAULT_MODULES — this avoids unmounting/remounting children when
   // the proactive status fetch resolves and switches wrapper elements.
-  const modules = (tenantInfo as TenantPublicStatus | null)?.modules ?? DEFAULT_MODULES;
   const trialBanner =
     tenantInfo !== undefined &&
     tenantInfo !== null &&
@@ -188,7 +237,7 @@ export function TenantStatusGuard({ children }: Props) {
     ) : null;
 
   return (
-    <ModulesContext.Provider value={modules}>
+    <ModulesContext.Provider value={modulesState}>
       {trialBanner}
       {children}
     </ModulesContext.Provider>

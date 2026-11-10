@@ -6,8 +6,10 @@ import { RPT } from '../../../common/response-codes';
 import { ProductReportsService } from './product-reports.service';
 import { ReportFilterDto } from '../dto/report-filter.dto';
 import { RequirePermission } from '../../auth/decorators/permissions.decorator';
+import { RequirePlanFeature } from '../../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Reports — Products')
+@RequirePlanFeature('reports')
 @Controller('reports/products')
 export class ProductReportsController {
   constructor(private readonly service: ProductReportsService) {}

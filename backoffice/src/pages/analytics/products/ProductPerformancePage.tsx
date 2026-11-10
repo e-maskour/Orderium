@@ -4,6 +4,7 @@ import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportKpiCards from '../components/ReportKpiCards';
+import ReportChart from '../components/ReportChart';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
@@ -37,22 +38,6 @@ const ProductPerformancePage: React.FC = () => {
     { field: 'orderCount', header: t('analyticsProductPerformanceOrderCount') },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsProductPerformanceSoldProducts'),
-          value: Number(data.kpis.uniqueProducts ?? 0),
-          color: 'blue' as const,
-        },
-        {
-          label: t('analyticsProductPerformanceTotalRevenue'),
-          value: Number(data.kpis.totalRevenue ?? 0),
-          suffix: 'MAD',
-          color: 'green' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={BarChart2}
@@ -60,8 +45,10 @@ const ProductPerformancePage: React.FC = () => {
       subtitle={t('analyticsProductPerformanceSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      kpiCards={data && <ReportKpiCards reportKey="products-performance" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons
@@ -77,18 +64,6 @@ const ProductPerformancePage: React.FC = () => {
               title: t('analyticsProductPerformanceTitle'),
               subtitle: t('analyticsProductPerformanceSubtitle'),
               fileName: 'performance-produits',
-              kpis: [
-                {
-                  key: 'uniqueProducts',
-                  label: t('analyticsProductPerformanceSoldProducts'),
-                  format: 'integer',
-                },
-                {
-                  key: 'totalRevenue',
-                  label: t('analyticsProductPerformanceTotalRevenue'),
-                  format: 'currency',
-                },
-              ],
               columns: [
                 {
                   key: 'productName',

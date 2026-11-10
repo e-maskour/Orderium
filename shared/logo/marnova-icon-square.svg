@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Marnova">
+  <title>Marnova</title>
+  <defs>
+    <linearGradient id="icA" x1="0" y1="1" x2="0.6" y2="0"><stop offset="0" stop-color="#2F6BFF"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+    <linearGradient id="icB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E3A8A"/><stop offset="1" stop-color="#172E73"/></linearGradient>
+    <linearGradient id="icC" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="0.45" stop-color="#1E90FF"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+    <linearGradient id="icD" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E40AF"/><stop offset="1" stop-color="#14286B"/></linearGradient>
+    <linearGradient id="icS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1D8FF0"/><stop offset="1" stop-color="#38BDF8"/></linearGradient>
+    <radialGradient id="icBg" cx="0.5" cy="0.42" r="0.7"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.6" stop-color="#EAF3FF"/><stop offset="1" stop-color="#C7E0FF"/></radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#icBg)"/>
+  <g transform="translate(128 128) scale(1.02) translate(-130 -129)">
+  <path d="M104 96 L126 149" stroke="url(#icB)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <path d="M61 169 L104 96" stroke="url(#icA)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <path d="M173 98 L186 98 L186 143 Q186 148 181 149.6 L132 158 L126 149 Z" fill="url(#icD)"/>
+  <path d="M126 149 L173 98" stroke="url(#icC)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <g fill="#FFFFFF">
+    <rect x="149" y="145" width="7" height="12" rx="1.2"/>
+    <rect x="159" y="138" width="7" height="16" rx="1.2"/>
+    <rect x="169" y="128" width="7" height="23" rx="1.2"/>
+  </g>
+  <path d="M82 181 Q188 180 194 133 Q190 166 82 181 Z" fill="url(#icS)"/>
+  <path d="M124 88 C130 78 140 74 148 77 C152 62 168 56 178 61 C186 65 189 72 188 80 C200 78 212 86 211 98 C211 105 207 110 202 113" stroke="url(#icS)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <g fill="#1D8FF0">
+    <rect x="197.5" y="51.5" width="6" height="6" rx="1.2"/>
+    <rect x="189.5" y="59.5" width="6.5" height="6.5" rx="1.2"/>
+    <rect x="200" y="64" width="5" height="5" rx="1.1"/>
+  </g>
+  <path d="M64 196 Q94 189.5 118 198 Q94 193.8 64 196 Z" fill="#D7262E"/>
+  <path d="M189 196 Q159 189.5 135 198 Q159 193.8 189 196 Z" fill="#D7262E"/>
+  <path d="M126.5 188 L128.6 194.1 L135 194.2 L129.9 198.1 L131.7 204.3 L126.5 200.6 L121.3 204.3 L123.1 198.1 L118 194.2 L124.4 194.1 Z" fill="none" stroke="#0A7A3E" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

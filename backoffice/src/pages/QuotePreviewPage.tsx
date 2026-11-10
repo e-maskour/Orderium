@@ -20,7 +20,7 @@ import { quotesService } from '../modules/quotes/quotes.service';
 import { QuoteWithDetails } from '../modules/quotes/quotes.model';
 import { toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
-import { formatAmount } from '@orderium/ui';
+import { formatAmount, formatQuantity } from '@orderium/ui';
 
 export default function QuotePreviewPage() {
   const { t } = useLanguage();
@@ -379,6 +379,7 @@ export default function QuotePreviewPage() {
                   fontSize: '0.875rem',
                   color: '#334155',
                 }}
+                body={(item: any) => formatQuantity(item.quantity)}
               />
               <Column
                 field="unitPrice"

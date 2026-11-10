@@ -5,7 +5,7 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { Repository, In } from 'typeorm';
+import { Repository, In, SelectQueryBuilder } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Quote, QuoteItem, QuoteStatus } from './entities/quote.entity';
@@ -22,6 +22,23 @@ import {
   buildQuoteExportRows,
   QUOTE_XLSX_COL_WIDTHS,
 } from './quotes.helpers';
+import { QuoteSortField } from './dto/filter-quotes.dto';
+import {
+  ListSort,
+  applyListSort,
+  partnerSortColumns,
+} from '../../common/utils/list-sort';
+
+/** Filters shared by the quote list, its aggregates and the XLSX export. */
+export interface QuoteListFilters {
+  search?: string;
+  status?: string;
+  customerId?: number;
+  supplierId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  direction?: 'ACHAT' | 'VENTE';
+}
 
 @Injectable()
 export class QuotesService {
@@ -82,27 +99,12 @@ export class QuotesService {
 
   // ── CRUD ───────────────────────────────────────────────────────────────────
 
-  async findAll(
-    search?: string,
-    status?: string,
-    customerId?: number,
-    dateFrom?: string,
-    dateTo?: string,
-    page?: number,
-    pageSize?: number,
-    supplierId?: number,
-    direction?: 'ACHAT' | 'VENTE',
-  ): Promise<{
-    quotes: Quote[];
-    count: number;
-    totalCount: number;
-  }> {
-    const qb = this.quoteRepository
-      .createQueryBuilder('quote')
-      .leftJoinAndSelect('quote.customer', 'customer')
-      .leftJoinAndSelect('quote.supplier', 'supplier')
-      .leftJoinAndSelect('quote.items', 'items');
-
+  /** Filters shared by the list, the aggregates and the XLSX export. */
+  private applyListFilters(
+    qb: SelectQueryBuilder<Quote>,
+    filters: QuoteListFilters,
+  ): SelectQueryBuilder<Quote> {
+    const { search, status, customerId, supplierId, direction } = filters;
     if (search) {
       qb.andWhere(
         '(quote.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
@@ -115,10 +117,68 @@ export class QuotesService {
     if (supplierId)
       qb.andWhere('quote.supplierId = :supplierId', { supplierId });
     if (direction) qb.andWhere('quote.direction = :direction', { direction });
-    if (dateFrom) qb.andWhere('quote.date >= :dateFrom', { dateFrom });
-    if (dateTo) qb.andWhere('quote.date <= :dateTo', { dateTo });
+    if (filters.dateFrom)
+      qb.andWhere('quote.date >= :dateFrom', { dateFrom: filters.dateFrom });
+    if (filters.dateTo)
+      qb.andWhere('quote.date <= :dateTo', { dateTo: filters.dateTo });
+    return qb;
+  }
 
-    qb.orderBy('quote.dateCreated', 'DESC');
+  /** Whitelisted sort (see QUOTE_SORT_FIELDS); default newest first. */
+  private applySort(
+    qb: SelectQueryBuilder<Quote>,
+    sort: ListSort<QuoteSortField> | undefined,
+    direction?: 'ACHAT' | 'VENTE',
+  ): SelectQueryBuilder<Quote> {
+    const columns: Record<QuoteSortField, string | string[]> = {
+      number: 'quote.documentNumber',
+      partnerName: partnerSortColumns(direction),
+      date: 'quote.date',
+      dueDate: 'quote.dueDate',
+      validationDate: 'quote.validationDate',
+      subtotal: 'quote.subtotal',
+      tax: 'quote.tax',
+      total: 'quote.total',
+      status: 'quote.status',
+    };
+    return applyListSort(qb, sort, columns, {
+      column: 'quote.dateCreated',
+      order: 'DESC',
+    });
+  }
+
+  async findAll(
+    search?: string,
+    status?: string,
+    customerId?: number,
+    dateFrom?: string,
+    dateTo?: string,
+    page?: number,
+    pageSize?: number,
+    supplierId?: number,
+    direction?: 'ACHAT' | 'VENTE',
+    sort?: ListSort<QuoteSortField>,
+  ): Promise<{
+    quotes: Quote[];
+    count: number;
+    totalCount: number;
+  }> {
+    const qb = this.quoteRepository
+      .createQueryBuilder('quote')
+      .leftJoinAndSelect('quote.customer', 'customer')
+      .leftJoinAndSelect('quote.supplier', 'supplier')
+      .leftJoinAndSelect('quote.items', 'items');
+
+    this.applyListFilters(qb, {
+      search,
+      status,
+      customerId,
+      supplierId,
+      dateFrom,
+      dateTo,
+      direction,
+    });
+    this.applySort(qb, sort, direction);
 
     if (page && pageSize) {
       qb.skip((page - 1) * pageSize).take(pageSize);
@@ -158,21 +218,15 @@ export class QuotesService {
       .select('COALESCE(SUM(quote.total), 0)', 'totalAmount')
       .addSelect('COALESCE(SUM(quote.subtotal), 0)', 'totalSubtotal');
 
-    if (search) {
-      aggQb.andWhere(
-        '(quote.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-    if (status) aggQb.andWhere('quote.status = :status', { status });
-    if (customerId)
-      aggQb.andWhere('quote.customerId = :customerId', { customerId });
-    if (supplierId)
-      aggQb.andWhere('quote.supplierId = :supplierId', { supplierId });
-    if (direction)
-      aggQb.andWhere('quote.direction = :direction', { direction });
-    if (dateFrom) aggQb.andWhere('quote.date >= :dateFrom', { dateFrom });
-    if (dateTo) aggQb.andWhere('quote.date <= :dateTo', { dateTo });
+    this.applyListFilters(aggQb, {
+      search,
+      status,
+      customerId,
+      supplierId,
+      dateFrom,
+      dateTo,
+      direction,
+    });
 
     const aggResult = await aggQb.getRawOne<{
       totalAmount: string;
@@ -667,22 +721,34 @@ export class QuotesService {
 
   // ── XLSX export ────────────────────────────────────────────────────────────
 
-  async exportToXlsx(supplierId?: number): Promise<Buffer> {
+  /**
+   * `supplierId` keeps the legacy semantics (0 → sales only, >0 → that
+   * supplier). `filters`/`sort` are the list page's own filters, so the export
+   * contains exactly the rows the user is looking at (all pages).
+   */
+  async exportToXlsx(
+    supplierId?: number,
+    filters: QuoteListFilters = {},
+    sort?: ListSort<QuoteSortField>,
+  ): Promise<Buffer> {
     const qb = this.quoteRepository
       .createQueryBuilder('quote')
       .leftJoinAndSelect('quote.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('quote.customer', 'customer')
-      .leftJoinAndSelect('quote.supplier', 'supplier')
-      .orderBy('quote.dateCreated', 'DESC');
+      .leftJoinAndSelect('quote.supplier', 'supplier');
 
     if (supplierId !== undefined) {
       if (supplierId) {
-        qb.where('quote.supplierId = :supplierId', { supplierId });
+        qb.andWhere('quote.supplierId = :exportSupplierId', {
+          exportSupplierId: supplierId,
+        });
       } else {
-        qb.where('quote.supplierId IS NULL');
+        qb.andWhere('quote.supplierId IS NULL');
       }
     }
+    this.applyListFilters(qb, filters);
+    this.applySort(qb, sort, filters.direction);
 
     const quotes = await qb.getMany();
     const exportData = quotes.flatMap(buildQuoteExportRows);
@@ -691,12 +757,18 @@ export class QuotesService {
     const ws = XLSX.utils.json_to_sheet(exportData);
     ws['!cols'] = QUOTE_XLSX_COL_WIDTHS;
 
-    const sheetName =
+    const isPurchase =
       supplierId !== undefined
-        ? supplierId
+        ? Boolean(supplierId)
+        : filters.direction
+          ? filters.direction === 'ACHAT'
+          : undefined;
+    const sheetName =
+      isPurchase === undefined
+        ? 'Devis et Demandes'
+        : isPurchase
           ? 'Demandes de prix'
-          : 'Devis'
-        : 'Devis et Demandes';
+          : 'Devis';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

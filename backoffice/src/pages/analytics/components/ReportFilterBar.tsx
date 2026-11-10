@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Calendar } from 'primereact/calendar';
+import { CalendarDays } from 'lucide-react';
+import { formatDate } from '@orderium/ui';
 import type { DatePreset, ReportFilter } from '../../../modules/analytics/analytics.interface';
 import { useLanguage } from '../../../context/LanguageContext';
-
-interface Preset {
-  label: string;
-  value: DatePreset;
-}
+import {
+  parseLocalDate as parseLocal,
+  resolveRange,
+  toDateStr,
+} from '../../../modules/analytics/analytics.dates';
 
 interface ReportFilterBarProps {
   filter: ReportFilter;
@@ -16,9 +18,13 @@ interface ReportFilterBarProps {
 
 const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, extra }) => {
   const { t } = useLanguage();
-  const [customRange, setCustomRange] = useState<Date[] | null>(null);
+  const [customRange, setCustomRange] = useState<Date[] | null>(
+    filter.startDate && filter.endDate
+      ? [parseLocal(filter.startDate), parseLocal(filter.endDate)]
+      : null,
+  );
 
-  const PRESETS: Preset[] = [
+  const PRESETS: { label: string; value: DatePreset }[] = [
     { label: t('analyticsPresetToday'), value: 'today' },
     { label: t('analyticsPresetThisWeek'), value: 'this_week' },
     { label: t('analyticsPresetThisMonth'), value: 'this_month' },
@@ -28,15 +34,19 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
     { label: t('analyticsPresetCustom'), value: 'custom' },
   ];
 
-  function toDateStr(d: Date): string {
-    // Local date parts: toISOString() would shift the day in UTC+ timezones
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${mm}-${dd}`;
-  }
+  // Choosing "Custom" only reveals the picker; nothing is queried until a full
+  // range is picked, so the current result stays on screen meanwhile.
+  const [customMode, setCustomMode] = useState(filter.preset === 'custom');
+  const activePreset: DatePreset = customMode ? 'custom' : (filter.preset ?? 'this_month');
 
   const handlePreset = (preset: DatePreset) => {
-    onChange({ ...filter, preset, startDate: undefined, endDate: undefined });
+    if (preset === 'custom') {
+      setCustomMode(true);
+      return;
+    }
+    setCustomMode(false);
+    if (preset === filter.preset) return;
+    onChange({ ...filter, preset, startDate: undefined, endDate: undefined, page: 1 });
   };
 
   const handleCustomRange = (dates: Date[] | null) => {
@@ -47,55 +57,41 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
         preset: 'custom',
         startDate: toDateStr(dates[0]),
         endDate: toDateStr(dates[1]),
+        page: 1,
       });
     }
   };
 
+  const range = customMode && filter.preset !== 'custom' ? null : resolveRange(filter);
+  const rangeLabel = range
+    ? range[0].getTime() === range[1].getTime()
+      ? formatDate(range[0])
+      : `${formatDate(range[0])} – ${formatDate(range[1])}`
+    : null;
+
   return (
-    <div className="flex flex-column gap-2">
-      {/* Label row */}
-      <div className="flex align-items-center gap-2 mb-1">
-        <i className="pi pi-filter text-500" style={{ fontSize: '0.8125rem' }} />
-        <span
-          className="text-500 text-xs font-semibold uppercase"
-          style={{ letterSpacing: '0.06em' }}
-        >
-          {t('analyticsFilterPeriod')}
-        </span>
-      </div>
+    <div className="ax-filters">
+      <div className="ax-filters__group">
+        <span className="ax-filters__label">{t('analyticsFilterPeriod')}</span>
+        <div className="ax-seg" role="radiogroup" aria-label={t('analyticsFilterPeriod')}>
+          {PRESETS.map((p) => {
+            const active = activePreset === p.value;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                className={`ax-seg__btn${active ? ' ax-seg__btn--active' : ''}`}
+                onClick={() => handlePreset(p.value)}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Preset buttons + optional custom picker */}
-      <div className="flex flex-wrap align-items-center gap-2">
-        {PRESETS.map((p) => {
-          const isActive = filter.preset === p.value;
-          return (
-            <button
-              key={p.value}
-              onClick={() => handlePreset(p.value)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: '2rem',
-                padding: '0 0.875rem',
-                borderRadius: '0.5rem',
-                fontSize: '0.8125rem',
-                fontWeight: isActive ? 600 : 400,
-                cursor: 'pointer',
-                border: isActive
-                  ? '1.5px solid var(--primary-color)'
-                  : '1px solid var(--erp-border)',
-                background: isActive ? 'var(--primary-50)' : '#ffffff',
-                color: isActive ? 'var(--primary-700)' : 'var(--text-secondary)',
-                transition: 'all 0.15s ease',
-                outline: 'none',
-              }}
-            >
-              {p.label}
-            </button>
-          );
-        })}
-
-        {filter.preset === 'custom' && (
+        {customMode && (
           <Calendar
             value={customRange as Date[]}
             onChange={(e) => handleCustomRange(e.value as Date[])}
@@ -105,13 +101,19 @@ const ReportFilterBar: React.FC<ReportFilterBarProps> = ({ filter, onChange, ext
             showIcon
             placeholder={t('analyticsFilterChoosePeriod')}
             dateFormat="dd/mm/yy"
-            style={{ height: '2rem' }}
-            inputStyle={{ fontSize: '0.8125rem' }}
+            className="ax-filters__calendar"
           />
         )}
 
-        {extra && <div className="flex align-items-center gap-2">{extra}</div>}
+        {extra && <div className="ax-filters__extra">{extra}</div>}
       </div>
+
+      {rangeLabel && (
+        <span className="ax-filters__range">
+          <CalendarDays aria-hidden="true" />
+          <bdi>{rangeLabel}</bdi>
+        </span>
+      )}
     </div>
   );
 };

@@ -1,19 +1,30 @@
 import { useState, useCallback } from 'react';
-
-const KEY = 'admin_key';
+import { authStorage } from '../api/client';
+import { authApi } from '../api/auth';
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
-    Boolean(localStorage.getItem(KEY)),
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    // Drop the old key-only credential so it cannot be reused.
+    try {
+      localStorage.removeItem('admin_key');
+    } catch {
+      /* storage unavailable */
+    }
+    return authStorage.isSignedIn;
+  });
 
-  const login = useCallback((key: string) => {
-    localStorage.setItem(KEY, key);
+  const login = useCallback((token: string) => {
+    authStorage.setToken(token);
     setIsAuthenticated(true);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(KEY);
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout(); // revokes the session server-side
+    } catch {
+      /* already expired — clear locally anyway */
+    }
+    authStorage.clear();
     setIsAuthenticated(false);
   }, []);
 

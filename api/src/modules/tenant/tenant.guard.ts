@@ -2,43 +2,53 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
+  ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AdminSessionGuard, headerOf } from '../admin-auth/admin-session.guard';
+import { safeEqual } from '../admin-auth/admin-crypto';
+
+/** Messages the tenant dashboard matches on to open its "enter API key" dialog. */
+export const API_KEY_REQUIRED = 'Super-admin API key required';
+export const API_KEY_INVALID = 'Invalid super-admin API key';
 
 /**
- * Guards all tenant-management endpoints (`/api/admin/tenants`).
+ * Guards every super-admin endpoint (`/api/admin/*`, `/api/super-admin/*`).
  *
- * Authentication is done via a static `X-Super-Admin-Key` header compared
- * against the `SUPER_ADMIN_API_KEY` environment variable. This is appropriate
- * for infrastructure-level operations that run outside the normal JWT flow.
+ * A request must carry BOTH:
+ *   1. `Authorization: Bearer <session>` — from signing in with email +
+ *      password + 2FA (authenticator app or e-mail code). Missing/expired → 401.
+ *   2. `X-Super-Admin-Key` — the platform `SUPER_ADMIN_API_KEY`, entered by the
+ *      admin after signing in. Missing/wrong → 403, so the dashboard asks for
+ *      the key instead of signing the admin out.
  *
- * Rotation: update the env var and redeploy — no DB change required.
+ * The verified admin is attached as `request.superAdmin`.
  */
 @Injectable()
 export class SuperAdminGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly sessionGuard: AdminSessionGuard,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request>();
-    const headers = request.headers as unknown as Record<
-      string,
-      string | string[] | undefined
-    >;
-    const rawKey = headers['x-super-admin-key'];
-    const providedKey = Array.isArray(rawKey) ? rawKey[0] : rawKey;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    await this.sessionGuard.canActivate(context);
+
     const expectedKey = this.configService.get<string>('SUPER_ADMIN_API_KEY');
-
     if (!expectedKey) {
-      throw new UnauthorizedException(
+      throw new InternalServerErrorException(
         'SUPER_ADMIN_API_KEY is not configured on the server',
       );
     }
-
-    if (!providedKey || providedKey !== expectedKey) {
-      throw new UnauthorizedException('Invalid or missing super-admin key');
+    const providedKey = headerOf(
+      context.switchToHttp().getRequest(),
+      'x-super-admin-key',
+    );
+    if (!providedKey) throw new ForbiddenException(API_KEY_REQUIRED);
+    if (!safeEqual(providedKey, expectedKey)) {
+      throw new ForbiddenException(API_KEY_INVALID);
     }
-
     return true;
   }
 }

@@ -3,8 +3,27 @@ export interface PaymentFilters {
   customerId?: number;
   supplierId?: number;
   paymentType?: string;
+  /** Inclusive lower bound, local calendar day (YYYY-MM-DD) */
   dateFrom?: string;
+  /** Inclusive upper bound, local calendar day (YYYY-MM-DD) */
   dateTo?: string;
+  search?: string;
+  direction?: 'vente' | 'achat';
+  page?: number;
+  limit?: number;
+  sortField?: 'paymentDate' | 'paymentType' | 'referenceNumber' | 'amount' | 'createdAt';
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaymentInvoiceRef {
+  id: number;
+  documentNumber: string | null;
+  direction: string | null;
+  customerId: number | null;
+  customerName: string | null;
+  supplierId: number | null;
+  supplierName: string | null;
+  total: number | null;
 }
 
 export interface CreatePaymentDTO {

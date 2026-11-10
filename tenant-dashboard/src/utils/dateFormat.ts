@@ -1,4 +1,4 @@
-// French date conventions for every Morocom app, regardless of UI language or browser locale.
+// French date conventions for every Marnova app, regardless of UI language or browser locale.
 // Numeric dates are always dd/MM/yyyy and times are 24h HH:mm.
 
 export const APP_LOCALE = 'fr-FR';

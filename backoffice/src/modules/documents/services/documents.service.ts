@@ -31,6 +31,9 @@ export interface DocumentFilters {
   dateTo?: string;
   page?: number;
   pageSize?: number;
+  /** Server-side sort; ignored when the document type's API doesn't support the field. */
+  sortField?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface DocumentsResult {
@@ -39,95 +42,155 @@ export interface DocumentsResult {
   totalCount: number;
 }
 
+/** `YYYY-MM-DD` (a local calendar day) → local midnight. */
+function localDayStart(day?: string): Date | undefined {
+  return day ? new Date(`${day.slice(0, 10)}T00:00:00`) : undefined;
+}
+
+/** `YYYY-MM-DD` (a local calendar day) → last millisecond of that local day. */
+function localDayEnd(day?: string): Date | undefined {
+  return day ? new Date(`${day.slice(0, 10)}T23:59:59.999`) : undefined;
+}
+
+/** Today's local calendar day as `YYYY-MM-DD`. */
+function todayKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Sort fields each document API whitelists (see the API's *_SORT_FIELDS).
+ * A field outside the list is dropped so the request never fails validation.
+ */
+const SORTABLE_FIELDS: Record<DocumentType, readonly string[]> = {
+  facture: [
+    'number',
+    'partnerName',
+    'date',
+    'dueDate',
+    'validationDate',
+    'subtotal',
+    'tax',
+    'total',
+    'paidAmount',
+    'remainingAmount',
+    'status',
+  ],
+  devis: [
+    'number',
+    'partnerName',
+    'date',
+    'dueDate',
+    'validationDate',
+    'subtotal',
+    'tax',
+    'total',
+    'status',
+  ],
+  bon_livraison: [
+    'number',
+    'partnerName',
+    'date',
+    'dueDate',
+    'validationDate',
+    'subtotal',
+    'tax',
+    'total',
+    'paidAmount',
+    'remainingAmount',
+    'status',
+  ],
+};
+
+function resolveSort(
+  type: DocumentType,
+  filters?: DocumentFilters,
+): { sortField?: string; sortOrder?: 'ASC' | 'DESC' } {
+  const field = filters?.sortField;
+  if (!field || !SORTABLE_FIELDS[type]?.includes(field)) return {};
+  return { sortField: field, sortOrder: filters?.sortOrder ?? 'ASC' };
+}
+
+/** Invoice / quote filters (both APIs share the same body shape). */
+function toInvoiceLikeFilters(
+  type: DocumentType,
+  direction: DocumentDirection,
+  filters?: DocumentFilters,
+) {
+  const isVente = direction === 'vente';
+  return {
+    search: filters?.search,
+    status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
+    customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
+    supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+    direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
+    dateFrom: filters?.dateFrom,
+    dateTo: filters?.dateTo,
+    page: filters?.page,
+    pageSize: filters?.pageSize,
+    ...resolveSort(type, filters),
+  };
+}
+
+/** Delivery-note filters for POST /orders/filter (BACKOFFICE orders only). */
+function toOrderFilters(direction: DocumentDirection, filters?: DocumentFilters) {
+  return {
+    search: filters?.search,
+    startDate: localDayStart(filters?.dateFrom),
+    endDate: localDayEnd(filters?.dateTo),
+    originType: 'BACKOFFICE',
+    status: filters?.status && filters.status !== 'all' ? [filters.status] : undefined,
+    direction: direction === 'vente' ? ('VENTE' as const) : ('ACHAT' as const),
+  };
+}
+
+function toOrderSort(filters?: DocumentFilters) {
+  const { sortField, sortOrder } = resolveSort('bon_livraison', filters);
+  return sortField ? { field: sortField, order: sortOrder } : undefined;
+}
+
 export class DocumentsService {
   async getDocuments(
     type: DocumentType,
     direction: DocumentDirection,
     filters?: DocumentFilters,
   ): Promise<DocumentsResult> {
+    const isVente = direction === 'vente';
+    // Direction (and every other filter) is applied by the API — no client-side
+    // filtering, so the rows always match the server-side total/pagination.
     if (type === 'facture') {
-      const isVente = direction === 'vente';
-      const invoiceFilters = {
-        search: filters?.search,
-        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
-        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
-        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
-        dateFrom: filters?.dateFrom,
-        dateTo: filters?.dateTo,
-        page: filters?.page,
-        pageSize: filters?.pageSize,
-      };
-
-      const result = await invoicesService.getAll(invoiceFilters);
-      const invoices = result.invoices || [];
-
-      const filtered = invoices.filter((inv) =>
-        isVente ? inv.invoice.customerId : inv.invoice.supplierId,
-      );
-
-      const transformed = this.transformInvoicesToDocuments(filtered, isVente);
-
+      const result = await invoicesService.getAll(toInvoiceLikeFilters(type, direction, filters));
       return {
-        documents: transformed,
+        documents: this.transformInvoicesToDocuments(result.invoices || [], isVente),
         count: result.count,
         totalCount: result.totalCount,
       };
     } else if (type === 'devis') {
-      const isVente = direction === 'vente';
-      const quoteFilters = {
-        search: filters?.search,
-        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
-        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
-        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
-        dateFrom: filters?.dateFrom,
-        dateTo: filters?.dateTo,
-        page: filters?.page,
-        pageSize: filters?.pageSize,
-      };
-
-      const result = await quotesService.getAll(quoteFilters);
-      const quotes = result.quotes || [];
-
-      // Filter quotes based on direction
-      const filtered = quotes.filter((q) => (isVente ? q.quote.customerId : q.quote.supplierId));
-
-      const transformed = this.transformQuotesToDocuments(filtered, isVente);
-
+      const result = await quotesService.getAll(toInvoiceLikeFilters(type, direction, filters));
       return {
-        documents: transformed,
-        count: filtered.length,
-        totalCount: filtered.length,
+        documents: this.transformQuotesToDocuments(result.quotes || [], isVente),
+        count: result.count,
+        totalCount: result.totalCount,
       };
     } else if (type === 'bon_livraison') {
-      const isVente = direction === 'vente';
-      // Fetch only BACKOFFICE orders (not created from portal)
+      const f = toOrderFilters(direction, filters);
       const result = await ordersService.getAll(
-        filters?.search,
-        filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
-        filters?.dateTo ? new Date(filters.dateTo) : undefined,
-        'BACKOFFICE',
+        f.search,
+        f.startDate,
+        f.endDate,
+        f.originType,
         undefined,
         undefined,
         filters?.page,
         filters?.pageSize,
-        isVente ? 'VENTE' : 'ACHAT',
-        filters?.status && filters.status !== 'all' ? [filters.status] : undefined,
+        f.direction,
+        f.status,
+        toOrderSort(filters),
       );
-
-      // Filter orders based on direction
-      const allOrders = result.orders || [];
-      const filtered = allOrders.filter((order: any) =>
-        isVente ? order.customerId : order.supplierId,
-      );
-
-      const transformed = this.transformOrdersToDocuments(filtered, isVente);
-
       return {
-        documents: transformed,
-        count: filtered.length,
-        totalCount: filtered.length,
+        documents: this.transformOrdersToDocuments(result.orders || [], isVente),
+        count: result.count,
+        totalCount: result.totalCount,
       };
     }
 
@@ -144,43 +207,52 @@ export class DocumentsService {
     totalRemaining: number;
     totalSubtotal: number;
   }> {
-    const isVente = direction === 'vente';
     const empty = { totalAmount: 0, totalPaid: 0, totalRemaining: 0, totalSubtotal: 0 };
 
     if (type === 'facture') {
-      return invoicesService.getAggregates({
-        search: filters?.search,
-        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
-        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
-        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
-        dateFrom: filters?.dateFrom,
-        dateTo: filters?.dateTo,
-      });
+      return invoicesService.getAggregates(toInvoiceLikeFilters(type, direction, filters));
     } else if (type === 'devis') {
-      return quotesService.getAggregates({
-        search: filters?.search,
-        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
-        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
-        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
-        dateFrom: filters?.dateFrom,
-        dateTo: filters?.dateTo,
-      });
+      return quotesService.getAggregates(toInvoiceLikeFilters(type, direction, filters));
     } else if (type === 'bon_livraison') {
+      const f = toOrderFilters(direction, filters);
       return ordersService.getAggregates(
-        filters?.search,
-        filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
-        filters?.dateTo ? new Date(filters.dateTo) : undefined,
-        'BACKOFFICE',
+        f.search,
+        f.startDate,
+        f.endDate,
+        f.originType,
         undefined,
         undefined,
-        isVente ? 'VENTE' : 'ACHAT',
-        filters?.status !== 'all' ? (filters?.status as string[] | undefined) : undefined,
+        f.direction,
+        f.status,
       );
     }
 
     return empty;
+  }
+
+  /**
+   * XLSX export of every document matching the list's filters and sort (all
+   * pages) — built from the same filter mapping as `getDocuments`.
+   */
+  async exportDocuments(
+    type: DocumentType,
+    direction: DocumentDirection,
+    filters?: DocumentFilters,
+  ): Promise<Blob> {
+    const exportFilters = { ...filters, page: undefined, pageSize: undefined };
+    if (type === 'facture') {
+      return invoicesService.exportToXlsx(toInvoiceLikeFilters(type, direction, exportFilters));
+    }
+    if (type === 'devis') {
+      return quotesService.exportToXlsx(toInvoiceLikeFilters(type, direction, exportFilters));
+    }
+    if (type === 'bon_livraison') {
+      return ordersService.exportToXlsx(
+        toOrderFilters(direction, exportFilters),
+        toOrderSort(exportFilters),
+      );
+    }
+    throw new Error(`Unsupported document type: ${type}`);
   }
 
   async validateDocument(type: DocumentType, id: number): Promise<void> {
@@ -279,7 +351,8 @@ export class DocumentsService {
     if (status === 'paid') return 'paid';
     if (status === 'partial') return 'partial';
     if (status === 'draft') return 'draft';
-    if (status === 'unpaid' && dueDate && new Date(dueDate) < new Date()) {
+    // Overdue = unpaid and due before today (mirrors the API's `overdue` filter)
+    if (status === 'unpaid' && dueDate && dueDate.slice(0, 10) < todayKey()) {
       return 'overdue';
     }
     return 'unpaid';

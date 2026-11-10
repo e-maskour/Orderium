@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { ReactNode } from 'react';
 import { TenantStatusGuard } from './TenantStatusGuard';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
+import { PlanRouteGate } from './PlanRouteGate';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -14,8 +15,8 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Authentication, tenant status, and — when the route declares one — the
- * permission needed to reach it.
+ * Authentication, tenant status, subscription plan (see lib/planAccess) and —
+ * when the route declares one — the permission needed to reach it.
  *
  * Waiting for `isAccessLoaded` matters: rendering the 403 page while the
  * effective permission set is still in flight would flash "access denied" at
@@ -56,5 +57,11 @@ export const ProtectedRoute = ({ children, permission, anyPermission }: Protecte
     }
   }
 
-  return <TenantStatusGuard>{children}</TenantStatusGuard>;
+  // Plan gate last: a module the subscription excludes shows a friendly
+  // "not in your plan" screen instead of a page whose calls would 403.
+  return (
+    <TenantStatusGuard>
+      <PlanRouteGate>{children}</PlanRouteGate>
+    </TenantStatusGuard>
+  );
 };

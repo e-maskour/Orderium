@@ -172,7 +172,7 @@ export class TenantLifecycleService {
       );
     }
     const expected = `DELETE ${tenant.name.toUpperCase()}`;
-    if (confirmation !== expected) {
+    if ((confirmation ?? '').trim().toUpperCase() !== expected) {
       throw new BadRequestException(
         `Confirmation must be exactly: ${expected}`,
       );
@@ -264,6 +264,9 @@ export class TenantLifecycleService {
       tenant.maxProducts = plan.maxProducts;
       tenant.maxOrdersPerMonth = plan.maxOrdersPerMonth;
       tenant.maxStorageMb = plan.maxStorageMb;
+      tenant.maxWarehouses = plan.maxWarehouses;
+      tenant.maxDeliveryPersons = plan.maxDeliveryPersons;
+      tenant.features = { ...(plan.features ?? {}) };
     }
 
     const saved = await this.tenantRepo.save(tenant);

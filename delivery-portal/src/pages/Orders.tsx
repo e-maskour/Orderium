@@ -361,7 +361,7 @@ export default function Orders() {
         >
           <img
             src={orderiumLogo}
-            alt="Morocom"
+            alt="Marnova"
             style={{
               height: '28px',
               width: 'auto',

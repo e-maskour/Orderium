@@ -38,8 +38,12 @@ export const tenantsApi = {
     return data;
   },
 
-  resetData: async (id: number, confirmation: string): Promise<{ message: string }> => {
-    const { data } = await apiClient.post(`/admin/tenants/${id}/reset`, { confirmation });
+  resetData: async (
+    id: number,
+    confirmation: string,
+    password: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await apiClient.post(`/admin/tenants/${id}/reset`, { confirmation, password });
     return data;
   },
 
@@ -70,9 +74,13 @@ export const tenantsApi = {
     return data;
   },
 
-  deletePermanently: async (id: number, confirmation: string): Promise<{ message: string }> => {
+  deletePermanently: async (
+    id: number,
+    confirmation: string,
+    password: string,
+  ): Promise<{ message: string }> => {
     const { data } = await apiClient.delete(`/admin/tenants/${id}/permanent`, {
-      data: { confirmation },
+      data: { confirmation, password },
     });
     return data;
   },

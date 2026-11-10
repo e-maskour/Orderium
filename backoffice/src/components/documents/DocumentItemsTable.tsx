@@ -586,7 +586,7 @@ export function DocumentItemsTable({
                 body={(item: DocumentItem) =>
                   readOnly ? (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                      {item.tax}%
+                      {formatQuantity(item.tax, 2)}%
                     </span>
                   ) : (
                     <AutoCompleteSelect
@@ -675,7 +675,7 @@ export function DocumentItemsTable({
               }}
             >
               <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
-                {items.length} {t('items')} · {t('invoice.quantityHeader')}: {totalQty}
+                {items.length} {t('items')} · {t('invoice.quantityHeader')}: {formatQuantity(totalQty)}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <span

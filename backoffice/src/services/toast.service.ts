@@ -13,12 +13,36 @@ interface ToastOptions {
   duration?: number | null;
 }
 
+// ── Plan-error de-duplication ────────────────────────────
+// The global plan-error interceptor (modules/subscription/plan-errors) toasts
+// subscription 403s with a link to /subscription. Pages that also toast the
+// API message in their catch block would repeat it — those repeats are dropped.
+const PLAN_ERROR_DEDUP_MS = 5000;
+const recentPlanErrors = new Map<string, number>();
+
+export function markPlanErrorShown(message: string) {
+  recentPlanErrors.set(message, Date.now());
+}
+
+export function wasPlanErrorShown(message: unknown): boolean {
+  if (typeof message !== 'string' || !message) return false;
+  const at = recentPlanErrors.get(message);
+  if (at === undefined) return false;
+  if (Date.now() - at > PLAN_ERROR_DEDUP_MS) {
+    recentPlanErrors.delete(message);
+    return false;
+  }
+  return true;
+}
+
 // ── Base toasts ──────────────────────────────────────────
 export function toastSuccess(message: string, options?: ToastOptions) {
   notify.success(message, options);
 }
 
 export function toastError(message: string, options?: ToastOptions) {
+  // Already explained by the plan-error toast (same API sentence).
+  if (wasPlanErrorShown(message) || wasPlanErrorShown(options?.description)) return;
   notify.error(message, options);
 }
 

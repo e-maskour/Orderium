@@ -2,7 +2,9 @@ import { ScrollText } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportFilterBar from '../components/ReportFilterBar';
+import PartnerFilter from '../components/PartnerFilter';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
@@ -22,7 +24,7 @@ const MAD = (row: Record<string, unknown>, field: string) => {
 
 const SupplierStatementPage: React.FC = () => {
   const { t } = useLanguage();
-  const [filter, setFilter] = useState<PartnerStatementFilter>({ preset: 'this_month' });
+  const [filter, setFilter] = useState<PartnerStatementFilter>({ preset: 'this_year' });
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getSupplierStatement(filter),
   );
@@ -59,9 +61,24 @@ const SupplierStatementPage: React.FC = () => {
       subtitle={t('analyticsSupplierStatementSubtitle')}
       isLoading={isLoading}
       error={error}
-      filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="suppliers-statement" values={data.kpis} />}
+      filterBar={
+        <ReportFilterBar
+          filter={filter}
+          onChange={handleFilterChange}
+          extra={
+            <PartnerFilter
+              type="supplier"
+              value={filter.partnerId}
+              onChange={(partnerId) => handleFilterChange({ ...filter, partnerId, page: 1 })}
+            />
+          }
+        />
+      }
       table={
         <ReportTable
+          emptyMessage={filter.partnerId ? undefined : t('analyticsStatementPickSupplier')}
           columns={columns}
           rows={data?.rows ?? []}
           total={data?.meta?.total}

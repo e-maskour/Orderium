@@ -23,6 +23,18 @@ import {
 } from './dto/stock-movement.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { calcAvailableQty } from './stock.helpers';
+import { StockMovementSortField } from './dto/filter-stock-movement.dto';
+
+/** Whitelisted sort fields → SQL columns (never interpolate user input). */
+const MOVEMENT_SORT_COLUMNS: Record<StockMovementSortField, string> = {
+  reference: 'movement.reference',
+  movementType: 'movement.movementType',
+  productName: 'product.name',
+  quantity: 'movement.quantity',
+  status: 'movement.status',
+  dateDone: 'movement.dateDone',
+  dateCreated: 'movement.dateCreated',
+};
 
 export interface DocumentStockMovementParams {
   sourceDocumentType: SourceDocumentType;
@@ -436,7 +448,12 @@ export class StockService {
     startDate?: Date;
     endDate?: Date;
     search?: string;
-  }): Promise<StockMovement[]> {
+    /** 1-based page; pagination only applies when page or limit is set. */
+    page?: number;
+    limit?: number;
+    sortField?: StockMovementSortField;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ movements: StockMovement[]; total: number }> {
     const query = this.stockMovementRepository
       .createQueryBuilder('movement')
       .leftJoinAndSelect('movement.product', 'product')
@@ -482,14 +499,26 @@ export class StockService {
 
     if (filters?.search) {
       query.andWhere(
-        '(LOWER(movement.reference) LIKE :search OR LOWER(product.name) LIKE :search)',
+        '(LOWER(movement.reference) LIKE :search OR LOWER(product.name) LIKE :search OR LOWER(product.code) LIKE :search)',
         { search: `%${filters.search.toLowerCase()}%` },
       );
     }
 
-    query.orderBy('movement.dateCreated', 'DESC');
+    const sortColumn =
+      MOVEMENT_SORT_COLUMNS[filters?.sortField ?? 'dateCreated'] ??
+      MOVEMENT_SORT_COLUMNS.dateCreated;
+    query.orderBy(sortColumn, filters?.sortOrder ?? 'DESC', 'NULLS LAST');
+    // Stable tie-breaker so rows don't shift between pages
+    query.addOrderBy('movement.id', 'DESC');
 
-    const movements = await query.getMany();
+    // All joins are many-to-one (no row multiplication), so plain
+    // OFFSET/LIMIT is safe and cheaper than skip/take.
+    if (filters?.page || filters?.limit) {
+      const limit = filters.limit ?? 25;
+      query.offset(((filters.page ?? 1) - 1) * limit).limit(limit);
+    }
+
+    const [movements, total] = await query.getManyAndCount();
 
     // Backfill unitOfMeasure from the product's sale UOM for movements that
     // were created before unitOfMeasureId was populated (legacy data).
@@ -500,7 +529,7 @@ export class StockService {
       }
     }
 
-    return movements;
+    return { movements, total };
   }
 
   /**

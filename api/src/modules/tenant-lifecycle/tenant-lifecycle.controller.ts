@@ -14,6 +14,9 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TenantLifecycleService } from './tenant-lifecycle.service';
 import { SuperAdminGuard } from '../tenant/tenant.guard';
+import { AdminAuthService } from '../admin-auth/admin-auth.service';
+import type { AuthenticatedAdmin } from '../admin-auth/admin-auth.service';
+import { CurrentAdmin } from '../admin-auth/current-admin.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import {
   ChangeStatusDto,
@@ -28,7 +31,10 @@ import {
 @UseGuards(SuperAdminGuard)
 @Public()
 export class TenantLifecycleController {
-  constructor(private readonly lifecycleService: TenantLifecycleService) {}
+  constructor(
+    private readonly lifecycleService: TenantLifecycleService,
+    private readonly adminAuth: AdminAuthService,
+  ) {}
 
   // ─── Status management ─────────────────────────────────────────────────────
 
@@ -99,15 +105,17 @@ export class TenantLifecycleController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Permanently delete tenant' })
   @ApiResponse({ status: 200, description: 'Tenant deleted permanently' })
-  deletePermanently(
+  @ApiResponse({ status: 403, description: 'Incorrect password' })
+  async deletePermanently(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DeleteTenantDto,
-    @Body('performedBy') performedBy?: string,
+    @CurrentAdmin() admin: AuthenticatedAdmin,
   ) {
+    await this.adminAuth.assertPassword(admin.id, dto.password);
     return this.lifecycleService.deletePermanently(
       id,
       dto.confirmation,
-      performedBy,
+      admin.email,
     );
   }
 

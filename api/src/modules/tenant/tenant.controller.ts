@@ -19,6 +19,10 @@ import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { UpdateTenantModulesDto } from './dto/update-tenant-modules.dto';
 import { ListTenantsDto } from './dto/list-tenants.dto';
 import { SuperAdminGuard } from './tenant.guard';
+import { AdminAuthService } from '../admin-auth/admin-auth.service';
+import type { AuthenticatedAdmin } from '../admin-auth/admin-auth.service';
+import { CurrentAdmin } from '../admin-auth/current-admin.decorator';
+import { ResetTenantDto } from './dto/reset-tenant.dto';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Admin - Tenants')
@@ -26,7 +30,10 @@ import { Public } from '../auth/decorators/public.decorator';
 @UseGuards(SuperAdminGuard)
 @Public()
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly adminAuth: AdminAuthService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -81,11 +88,14 @@ export class TenantController {
   })
   @ApiResponse({ status: 200, description: 'Tenant data reset successfully' })
   @ApiResponse({ status: 400, description: 'Invalid confirmation string' })
-  resetData(
+  @ApiResponse({ status: 403, description: 'Incorrect password' })
+  async resetData(
     @Param('id', ParseIntPipe) id: number,
-    @Body('confirmation') confirmation: string,
+    @Body() dto: ResetTenantDto,
+    @CurrentAdmin() admin: AuthenticatedAdmin,
   ) {
-    return this.tenantService.resetData(id, confirmation);
+    await this.adminAuth.assertPassword(admin.id, dto.password);
+    return this.tenantService.resetData(id, dto.confirmation);
   }
 
   @Get(':id/modules')

@@ -22,12 +22,18 @@ import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Sidebar } from 'primereact/sidebar';
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable';
+import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
+import { Column } from 'primereact/column';
+import { PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   orderPaymentsService,
   ORDER_PAYMENT_TYPE_LABELS,
   OrderPayment,
   ICaisseOrder,
   CaissePaymentStatus,
+  CaissePage,
+  CaisseSortField,
   OrderPaymentType,
 } from '../modules/order-payments';
 import { toastConfirm, toastError, toastSuccess } from '../services/toast.service';
@@ -61,6 +67,38 @@ function fmtDatetime(d: string) {
   return formatDateTime(d);
 }
 
+/** Same date format as the Orders table "Commande" column. */
+function formatOrderDate(dateString: string, language: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  if (language?.startsWith('fr')) {
+    const m = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Aou',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return `${date.getDate()} ${m[date.getMonth()]} ${date.getFullYear()} ${time}`;
+  }
+  return new Intl.DateTimeFormat('ar-MA', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
 function initials(name: string | null) {
   if (!name) return '?';
   return name
@@ -82,6 +120,34 @@ export default function Caisse() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [first, setFirst] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  // Server-side sort (undefined → API default: newest first)
+  const [sort, setSort] = useState<{ field?: CaisseSortField; order?: 'ASC' | 'DESC' }>({});
+  const [counts, setCounts] = useState<CaissePage['counts']>({
+    all: 0,
+    paid: 0,
+    partial: 0,
+    unpaid: 0,
+  });
+  const [summary, setSummary] = useState<CaissePage['summary']>({
+    totalDue: 0,
+    totalCollected: 0,
+    totalRemaining: 0,
+  });
+
+  // Debounce the search box before it hits the API
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 400);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
+
+  // Back to page 1 whenever the filters change
+  useEffect(() => {
+    setFirst(0);
+  }, [searchTerm, statusFilter]);
 
   // Add-payment drawer
   const [payDrawer, setPayDrawer] = useState(false);
@@ -107,27 +173,44 @@ export default function Caisse() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* ─ Data loading ─ */
+  // Search, status and pagination are applied by the API; counts and
+  // summary totals come back for the whole filtered set.
+  const caisseFilters = {
+    search: debouncedSearch || undefined,
+    status: statusFilter,
+    page: Math.floor(first / pageSize) + 1,
+    limit: pageSize,
+    sortField: sort.field,
+    sortOrder: sort.order,
+  };
+
+  const applyPage = (data: CaissePage) => {
+    setOrders(data.orders);
+    setTotalRecords(data.total);
+    setCounts(data.counts);
+    setSummary(data.summary);
+  };
+
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await orderPaymentsService.getCaisseSummary();
-      setOrders(data);
+      applyPage(await orderPaymentsService.getCaissePage(caisseFilters));
     } catch {
       toastError(t('error'));
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [debouncedSearch, statusFilter, first, pageSize, sort.field, sort.order]);
 
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
     setLoading(true);
     orderPaymentsService
-      .getCaisseSummary(controller.signal)
+      .getCaissePage(caisseFilters, controller.signal)
       .then((data) => {
-        if (!cancelled) setOrders(data);
+        if (!cancelled) applyPage(data);
       })
       .catch(() => {
         if (!cancelled) toastError(t('error'));
@@ -140,29 +223,14 @@ export default function Caisse() {
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [debouncedSearch, statusFilter, first, pageSize, sort.field, sort.order]);
 
-  /* ─ Filtering ─ */
-  const filtered = orders.filter((o) => {
-    if (statusFilter !== 'all' && o.paymentStatus !== statusFilter) return false;
-    if (!searchTerm) return true;
-    const s = searchTerm.toLowerCase();
-    return (
-      (o.orderNumber ?? '').toLowerCase().includes(s) ||
-      (o.customerName ?? '').toLowerCase().includes(s)
-    );
-  });
+  /* ─ Filtering (server-side) ─ */
+  const filtered = orders;
 
-  const counts = {
-    all: orders.length,
-    paid: orders.filter((o) => o.paymentStatus === 'paid').length,
-    partial: orders.filter((o) => o.paymentStatus === 'partial').length,
-    unpaid: orders.filter((o) => o.paymentStatus === 'unpaid').length,
-  };
-
-  const summaryDue = filtered.reduce((s, o) => s + o.total, 0);
-  const summaryCollected = filtered.reduce((s, o) => s + o.paidAmount, 0);
-  const summaryRemaining = filtered.reduce((s, o) => s + o.remainingAmount, 0);
+  const summaryDue = summary.totalDue;
+  const summaryCollected = summary.totalCollected;
+  const summaryRemaining = summary.totalRemaining;
 
   /* ─ Add payment ─ */
   const openPayDrawer = (order: ICaisseOrder) => {
@@ -272,6 +340,75 @@ export default function Caisse() {
     return t('unpaid');
   };
 
+  const remainingClass = (v: number) =>
+    v > 0 ? 'caisse-card__amount-value--remaining' : 'caisse-card__amount-value--remaining-zero';
+
+  const amountCell = (value: number, cls: string) => (
+    <span className={`caisse-card__amount-value ${cls}`}>
+      {formatAmount(value, 2)} <span className="caisse-card__amount-currency">{currency}</span>
+    </span>
+  );
+
+  /* ─ Mobile card ─ */
+  const renderCard = (order: ICaisseOrder) => {
+    const pct = order.total > 0 ? Math.min((order.paidAmount / order.total) * 100, 100) : 0;
+    const st = order.paymentStatus;
+    return (
+      <div key={order.id} className={`caisse-card caisse-card--${st}`}>
+        <div className="caisse-progress">
+          <div
+            className={`caisse-progress__fill caisse-progress__fill--${st}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="caisse-card__header">
+          <div className="caisse-card__order-info">
+            <div className="caisse-card__avatar">{initials(order.customerName)}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="caisse-card__name">{order.customerName || '—'}</div>
+              <span className="caisse-card__order-num">{order.orderNumber || '—'}</span>
+            </div>
+          </div>
+          <span className={`caisse-card__status caisse-card__status--${st}`}>
+            {statusLabel(st)}
+          </span>
+        </div>
+        <div className="caisse-card__amounts">
+          <div className="caisse-card__amount-item">
+            <span className="caisse-card__amount-label">{t('orderTotal')}</span>
+            {amountCell(order.total, 'caisse-card__amount-value--total')}
+          </div>
+          <div className="caisse-card__amount-item">
+            <span className="caisse-card__amount-label">{t('amountPaid')}</span>
+            {amountCell(order.paidAmount, 'caisse-card__amount-value--paid')}
+          </div>
+          <div className="caisse-card__amount-item">
+            <span className="caisse-card__amount-label">{t('remaining')}</span>
+            {amountCell(order.remainingAmount, remainingClass(order.remainingAmount))}
+          </div>
+        </div>
+        <div className="caisse-card__actions">
+          {(st === 'partial' || st === 'unpaid') && (
+            <button
+              className="caisse-action-btn caisse-action-btn--pay"
+              onClick={() => openPayDrawer(order)}
+            >
+              <Plus />
+              {t('addPayment')}
+            </button>
+          )}
+          <button
+            className="caisse-action-btn caisse-action-btn--history"
+            onClick={() => loadHistory(order)}
+          >
+            <Clock />
+            {t('viewHistory')}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   /* ═════════════════════════════════════════════════════════════
        RENDER
        ═════════════════════════════════════════════════════════════ */
@@ -377,8 +514,8 @@ export default function Caisse() {
           </div>
         </div>
 
-        {/* ── Order Cards Grid ── */}
-        {loading ? (
+        {/* ── Orders: cards on mobile, DataTable on desktop ── */}
+        {loading && orders.length === 0 ? (
           <div className="caisse-grid">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
@@ -404,90 +541,224 @@ export default function Caisse() {
             }
           />
         ) : (
-          <div className="caisse-grid">
-            {filtered.map((order) => {
-              const pct =
-                order.total > 0 ? Math.min((order.paidAmount / order.total) * 100, 100) : 0;
-              const st = order.paymentStatus;
+          <>
+            <div className="responsive-table-mobile">
+              <div className="caisse-grid">{filtered.map((order) => renderCard(order))}</div>
+              {totalRecords > pageSize && (
+                <Paginator
+                  first={first}
+                  rows={pageSize}
+                  totalRecords={totalRecords}
+                  onPageChange={(e: PaginatorPageChangeEvent) => {
+                    setFirst(e.first);
+                    setPageSize(e.rows);
+                  }}
+                  template="PrevPageLink CurrentPageReport NextPageLink"
+                  currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                />
+              )}
+            </div>
 
-              return (
-                <div key={order.id} className={`caisse-card caisse-card--${st}`}>
-                  {/* Progress bar */}
-                  <div className="caisse-progress">
-                    <div
-                      className={`caisse-progress__fill caisse-progress__fill--${st}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-
-                  {/* Header */}
-                  <div className="caisse-card__header">
-                    <div className="caisse-card__order-info">
-                      <div className="caisse-card__avatar">{initials(order.customerName)}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="caisse-card__name">{order.customerName || '—'}</div>
-                        <span className="caisse-card__order-num">{order.orderNumber || '—'}</span>
-                      </div>
-                    </div>
-                    <span className={`caisse-card__status caisse-card__status--${st}`}>
-                      {statusLabel(st)}
-                    </span>
-                  </div>
-
-                  {/* Amounts */}
-                  <div className="caisse-card__amounts">
-                    <div className="caisse-card__amount-item">
-                      <span className="caisse-card__amount-label">{t('orderTotal')}</span>
-                      <span className="caisse-card__amount-value caisse-card__amount-value--total">
-                        {formatAmount(order.total, 2)}{' '}
-                        <span className="caisse-card__amount-currency">{currency}</span>
-                      </span>
-                    </div>
-                    <div className="caisse-card__amount-item">
-                      <span className="caisse-card__amount-label">{t('amountPaid')}</span>
-                      <span className="caisse-card__amount-value caisse-card__amount-value--paid">
-                        {formatAmount(order.paidAmount, 2)}{' '}
-                        <span className="caisse-card__amount-currency">{currency}</span>
-                      </span>
-                    </div>
-                    <div className="caisse-card__amount-item">
-                      <span className="caisse-card__amount-label">{t('remaining')}</span>
-                      <span
-                        className={`caisse-card__amount-value ${
-                          order.remainingAmount > 0
-                            ? 'caisse-card__amount-value--remaining'
-                            : 'caisse-card__amount-value--remaining-zero'
-                        }`}
-                      >
-                        {formatAmount(order.remainingAmount, 2)}{' '}
-                        <span className="caisse-card__amount-currency">{currency}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="caisse-card__actions">
-                    {(st === 'partial' || st === 'unpaid') && (
-                      <button
-                        className="caisse-action-btn caisse-action-btn--pay"
-                        onClick={() => openPayDrawer(order)}
-                      >
-                        <Plus />
-                        {t('addPayment')}
-                      </button>
-                    )}
-                    <button
-                      className="caisse-action-btn caisse-action-btn--history"
-                      onClick={() => loadHistory(order)}
+            <div
+              className="responsive-table-desktop"
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '0.875rem',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
+              }}
+            >
+              <DataTable
+                className="ord-datatable caisse-datatable"
+                value={filtered}
+                dataKey="id"
+                scrollable
+                lazy
+                loading={loading}
+                totalRecords={totalRecords}
+                paginator
+                paginatorPosition="bottom"
+                first={first}
+                rows={pageSize}
+                onPage={(e: DataTablePageEvent) => {
+                  setFirst(e.first);
+                  setPageSize(e.rows);
+                }}
+                removableSort
+                sortField={sort.field}
+                sortOrder={sort.order === 'ASC' ? 1 : sort.order === 'DESC' ? -1 : 0}
+                onSort={(e: DataTableSortEvent) => {
+                  const field = e.sortOrder ? (e.sortField as CaisseSortField) : undefined;
+                  setSort(field ? { field, order: e.sortOrder === -1 ? 'DESC' : 'ASC' } : {});
+                  setFirst(0);
+                }}
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate={t('pageReportTemplate')}
+                emptyMessage={t('noOrdersWithPayments')}
+                rowClassName={(o: ICaisseOrder) =>
+                  `ord-row-clickable caisse-row--${o.paymentStatus}`
+                }
+                onRowClick={(e) => {
+                  const target = e.originalEvent.target as HTMLElement;
+                  if (target.closest('button') || target.closest('a')) return;
+                  loadHistory(e.data as ICaisseOrder);
+                }}
+              >
+                <Column
+                  header={t('orderNumber')}
+                  sortField="orderNumber"
+                  sortable
+                  style={{ minWidth: '9rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  footer={
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        padding: '0.2rem 0.625rem',
+                        background: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+                        borderRadius: '999px',
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        color: '#fff',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                      }}
                     >
-                      <Clock />
-                      {t('viewHistory')}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      <span style={{ fontSize: '0.7rem' }}>Σ</span>
+                      {t('total')}
+                    </span>
+                  }
+                  body={(o: ICaisseOrder) => (
+                    <div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
+                        {o.orderNumber || '—'}
+                      </span>
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                        {formatOrderDate(o.dateCreated, language)}
+                      </p>
+                    </div>
+                  )}
+                />
+                <Column
+                  header={t('customer')}
+                  sortField="customerName"
+                  sortable
+                  style={{ minWidth: '13rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  body={(o: ICaisseOrder) => (
+                    <div
+                      className={`caisse-card--${o.paymentStatus}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.625rem',
+                        minWidth: 0,
+                      }}
+                    >
+                      <div className="caisse-card__avatar">{initials(o.customerName)}</div>
+                      <span className="caisse-card__name">{o.customerName || '—'}</span>
+                    </div>
+                  )}
+                />
+                <Column
+                  header={t('status')}
+                  sortField="paymentStatus"
+                  sortable
+                  style={{ minWidth: '10rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  body={(o: ICaisseOrder) => {
+                    const pct = o.total > 0 ? Math.min((o.paidAmount / o.total) * 100, 100) : 0;
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <span
+                          className={`caisse-card__status caisse-card__status--${o.paymentStatus}`}
+                          style={{ alignSelf: 'flex-start' }}
+                        >
+                          {statusLabel(o.paymentStatus)}
+                        </span>
+                        <div
+                          className="caisse-progress"
+                          style={{ borderRadius: '9999px', width: '100%', maxWidth: '8rem' }}
+                          title={`${Math.round(pct)}%`}
+                        >
+                          <div
+                            className={`caisse-progress__fill caisse-progress__fill--${o.paymentStatus}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+                <Column
+                  header={t('orderTotal')}
+                  sortField="total"
+                  sortable
+                  style={{ minWidth: '8rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  footer={amountCell(summaryDue, 'caisse-card__amount-value--total')}
+                  body={(o: ICaisseOrder) =>
+                    amountCell(o.total, 'caisse-card__amount-value--total')
+                  }
+                />
+                <Column
+                  header={t('amountPaid')}
+                  sortField="paidAmount"
+                  sortable
+                  style={{ minWidth: '8rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  footer={amountCell(summaryCollected, 'caisse-card__amount-value--paid')}
+                  body={(o: ICaisseOrder) =>
+                    amountCell(o.paidAmount, 'caisse-card__amount-value--paid')
+                  }
+                />
+                <Column
+                  header={t('remaining')}
+                  sortField="remainingAmount"
+                  sortable
+                  style={{ minWidth: '8rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  footer={amountCell(summaryRemaining, remainingClass(summaryRemaining))}
+                  body={(o: ICaisseOrder) =>
+                    amountCell(o.remainingAmount, remainingClass(o.remainingAmount))
+                  }
+                />
+                <Column
+                  header={t('actions')}
+                  style={{ minWidth: '15rem' }}
+                  headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
+                  body={(o: ICaisseOrder) => (
+                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                      {(o.paymentStatus === 'partial' || o.paymentStatus === 'unpaid') && (
+                        <button
+                          type="button"
+                          className="caisse-action-btn caisse-action-btn--pay"
+                          onClick={() => openPayDrawer(o)}
+                        >
+                          <Plus />
+                          {t('addPayment')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="caisse-action-btn caisse-action-btn--history"
+                        style={{ flex: '0 0 auto' }}
+                        onClick={() => loadHistory(o)}
+                        title={t('viewHistory')}
+                      >
+                        <Clock />
+                        {t('viewHistory')}
+                      </button>
+                    </div>
+                  )}
+                />
+              </DataTable>
+            </div>
+          </>
         )}
       </div>
 

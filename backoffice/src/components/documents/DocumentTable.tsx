@@ -10,7 +10,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { Button } from 'primereact/button';
-import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
@@ -21,6 +21,9 @@ import { MobileList } from '../MobileList';
 import { formatAmount, formatDate } from '@orderium/ui';
 import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 import { PartnerAvatar } from '@/components/ui';
+
+/** Amount columns: keep "12 983,00 DH" on one line. */
+const MONEY_COL_STYLE = { whiteSpace: 'nowrap' as const };
 
 interface Document {
   id: number;
@@ -83,6 +86,16 @@ interface DocumentTableProps {
     totalRemaining: number;
     totalSubtotal: number;
   };
+  /** Server-side sort (lazy table): the column field currently sorted on. */
+  sortField?: string;
+  sortOrder?: 'ASC' | 'DESC';
+  /** Called with `undefined` when the sort is removed (removableSort). */
+  onSortChange?: (field: string | undefined, order: 'ASC' | 'DESC' | undefined) => void;
+  /**
+   * Any value that changes when the result set changes (filters, sort…):
+   * the row selection is cleared whenever it changes.
+   */
+  selectionResetKey?: string;
 }
 
 export function DocumentTable({
@@ -106,6 +119,10 @@ export function DocumentTable({
   onShare,
   onWhatsApp,
   aggregates,
+  sortField,
+  sortOrder,
+  onSortChange,
+  selectionResetKey,
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
@@ -141,10 +158,10 @@ export function DocumentTable({
     }
   };
 
-  // Clear selection when page changes
+  // Clear selection when the page or the result set (filters / sort) changes
   useEffect(() => {
     setSelectedRows([]);
-  }, [currentPage]);
+  }, [currentPage, pageSize, selectionResetKey]);
 
   const getStatusBadgeClass = (status: string): string => {
     switch (status) {
@@ -466,8 +483,16 @@ export function DocumentTable({
           totalRecords={totalCount ?? 0}
           first={(currentPage - 1) * pageSize}
           onPage={(e: DataTablePageEvent) => {
-            onPageChange(Math.floor(e.first / e.rows) + 1);
-            onPageSizeChange(e.rows);
+            // Page-size changes reset to page 1 in the parent, so only report
+            // one of the two — reporting both always sent the user to page 1.
+            if (e.rows !== pageSize) onPageSizeChange(e.rows);
+            else onPageChange(Math.floor(e.first / e.rows) + 1);
+          }}
+          sortField={sortField}
+          sortOrder={sortOrder === 'ASC' ? 1 : sortOrder === 'DESC' ? -1 : 0}
+          onSort={(e: DataTableSortEvent) => {
+            const field = e.sortOrder ? (e.sortField as string) : undefined;
+            onSortChange?.(field, field ? (e.sortOrder === -1 ? 'DESC' : 'ASC') : undefined);
           }}
           selection={selectedRows}
           onSelectionChange={(e) => setSelectedRows(e.value as Document[])}
@@ -550,10 +575,23 @@ export function DocumentTable({
             field="partnerName"
             header={partnerLabel}
             sortable
+            headerStyle={{ minWidth: '15rem', width: '20rem' }}
+            bodyStyle={{ minWidth: '15rem', width: '20rem', maxWidth: '22rem' }}
             body={(doc: Document) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
                 <PartnerAvatar name={doc.partnerName} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                <span
+                  title={doc.partnerName}
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: '#1e293b',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    minWidth: 0,
+                  }}
+                >
                   {doc.partnerName}
                 </span>
               </div>
@@ -599,6 +637,7 @@ export function DocumentTable({
           )}
           <Column
             field="subtotal"
+            style={MONEY_COL_STYLE}
             header={t('amountHT')}
             sortable
             footer={
@@ -617,6 +656,7 @@ export function DocumentTable({
           {visibleColumns.tax && (
             <Column
               field="tax"
+              style={MONEY_COL_STYLE}
               header={t('taxAmount')}
               sortable
               body={(doc: Document) => (
@@ -628,6 +668,7 @@ export function DocumentTable({
           )}
           <Column
             field="total"
+            style={MONEY_COL_STYLE}
             header={t('amountTTC')}
             sortable
             footer={
@@ -646,6 +687,7 @@ export function DocumentTable({
           {showPaymentColumns && visibleColumns.paidAmount && (
             <Column
               field="paidAmount"
+              style={MONEY_COL_STYLE}
               header={t('alreadyPaid')}
               sortable
               footer={
@@ -665,6 +707,7 @@ export function DocumentTable({
           {showPaymentColumns && visibleColumns.remainingAmount && (
             <Column
               field="remainingAmount"
+              style={MONEY_COL_STYLE}
               header={t('remainingToPay')}
               sortable
               footer={

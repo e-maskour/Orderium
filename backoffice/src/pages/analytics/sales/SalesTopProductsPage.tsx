@@ -35,21 +35,6 @@ const SalesTopProductsPage: React.FC = () => {
     },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsSalesTopProductsUniqueProducts'),
-          value: Number(data.kpis.uniqueProducts ?? 0),
-          color: 'blue' as const,
-        },
-        {
-          label: t('analyticsSalesTopProductsTotalQuantity'),
-          value: Number(data.kpis.totalQty ?? 0),
-          color: 'green' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={Trophy}
@@ -57,8 +42,9 @@ const SalesTopProductsPage: React.FC = () => {
       subtitle={t('analyticsTopProductsSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="sales-top-products" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
@@ -75,18 +61,6 @@ const SalesTopProductsPage: React.FC = () => {
               title: t('analyticsTopProductsTitle'),
               subtitle: t('analyticsTopProductsSubtitle'),
               fileName: 'top-produits',
-              kpis: [
-                {
-                  key: 'uniqueProducts',
-                  label: t('analyticsSalesTopProductsUniqueProducts'),
-                  format: 'integer',
-                },
-                {
-                  key: 'totalQty',
-                  label: t('analyticsSalesTopProductsTotalQuantity'),
-                  format: 'integer',
-                },
-              ],
               columns: [
                 {
                   key: 'productName',

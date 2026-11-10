@@ -2,6 +2,8 @@ import {
   CreateOrderPaymentDTO,
   UpdateOrderPaymentDTO,
   ICaisseOrder,
+  CaisseFilters,
+  CaissePage,
 } from './order-payments.interface';
 import { OrderPayment } from './order-payments.model';
 import { apiClient, API_ROUTES } from '../../common';
@@ -12,6 +14,37 @@ export class OrderPaymentsService {
       signal,
     });
     return response.data || [];
+  }
+
+  /**
+   * Server-filtered, paginated caisse list. `counts` (tab badges) and
+   * `summary` (totals) describe the whole filtered set, not just the page.
+   */
+  async getCaissePage(filters: CaisseFilters, signal?: AbortSignal): Promise<CaissePage> {
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (filters.search?.trim()) params.search = filters.search.trim();
+    if (filters.status && filters.status !== 'all') params.status = filters.status;
+    if (filters.page) params.page = filters.page;
+    if (filters.limit) params.limit = filters.limit;
+    if (filters.sortField) {
+      params.sortField = filters.sortField;
+      params.sortOrder = filters.sortOrder ?? 'ASC';
+    }
+
+    const response = await apiClient.get<ICaisseOrder[]>(API_ROUTES.ORDER_PAYMENTS.CAISSE, {
+      params,
+      signal,
+    });
+    const orders = response.data || [];
+    const meta = (response.metadata ?? {}) as Partial<
+      Pick<CaissePage, 'total' | 'counts' | 'summary'>
+    >;
+    return {
+      orders,
+      total: meta.total ?? orders.length,
+      counts: meta.counts ?? { all: orders.length, paid: 0, partial: 0, unpaid: 0 },
+      summary: meta.summary ?? { totalDue: 0, totalCollected: 0, totalRemaining: 0 },
+    };
   }
 
   async getAll(): Promise<OrderPayment[]> {

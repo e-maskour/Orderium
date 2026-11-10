@@ -11,6 +11,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
 import { APP_GUARD } from '@nestjs/core';
+import { PlanFeatureGuard } from './modules/tenant/plan-feature.guard';
 import KeyvRedis from '@keyv/redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -57,6 +58,8 @@ import { SequencesModule } from './modules/sequences/sequences.module';
 // Multi-tenancy
 import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
 import { TenantLifecycleModule } from './modules/tenant-lifecycle/tenant-lifecycle.module';
+import { AdminAuthModule } from './modules/admin-auth/admin-auth.module';
+import { PlatformAdmin } from './modules/admin-auth/entities/platform-admin.entity';
 import { Tenant } from './modules/tenant/tenant.entity';
 import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
 import { PaymentInstallment } from './modules/tenant-lifecycle/entities/payment-installment.entity';
@@ -133,6 +136,7 @@ import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-h
           SeederRunLog,
           TenantDailyMetric,
           TenantHealthBucket,
+          PlatformAdmin,
         ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
@@ -167,6 +171,7 @@ import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-h
         return { connection };
       },
     }),
+    AdminAuthModule,
     TenantModule,
     TenantLifecycleModule,
     AccessModule,
@@ -208,6 +213,9 @@ import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-h
     // Runs after JwtAuthGuard so `request.user` is populated. Fail-closed:
     // an admin-scope route that declares nothing is denied.
     { provide: APP_GUARD, useClass: PermissionsGuard },
+    // Subscription feature flags (@RequirePlanFeature). Needs the tenant
+    // context set by TenantMiddleware, which runs before guards.
+    { provide: APP_GUARD, useClass: PlanFeatureGuard },
   ],
 })
 export class AppModule implements NestModule {

@@ -1,4 +1,4 @@
-import type { TenantStatus } from './tenant';
+import type { SubscriptionPlan, TenantStatus } from './tenant';
 
 /** Mirrors `api/src/modules/platform-metrics/dto/metrics-response.dto.ts`. */
 
@@ -69,6 +69,7 @@ export interface PlatformOverview {
 
 export interface QuotaLine {
   used: number;
+  /** `-1` means unlimited (no percentage). `0` means the resource is not included. */
   limit: number;
   pct: number | null;
   exceeded: boolean;
@@ -79,6 +80,9 @@ export interface TenantQuotaUsage {
   products: QuotaLine;
   ordersPerMonth: QuotaLine;
   storageMb: QuotaLine;
+  /** Present once the metrics API reports the newer limits. */
+  warehouses?: QuotaLine;
+  deliveryPersons?: QuotaLine;
   worstPct: number | null;
 }
 
@@ -99,7 +103,7 @@ export interface TenantMetricRow {
   name: string;
   slug: string;
   status: TenantStatus;
-  subscriptionPlan: string;
+  subscriptionPlan: SubscriptionPlan;
   metricDate: string | null;
   collectedAt: string | null;
   collectionError: string | null;

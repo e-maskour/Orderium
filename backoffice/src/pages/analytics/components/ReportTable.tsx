@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column, type ColumnProps } from 'primereact/column';
 import { Paginator } from 'primereact/paginator';
+import { Inbox, Search, Table2, X } from 'lucide-react';
 import { formatDate, formatQuantity } from '@orderium/ui';
 import { useLanguage } from '../../../context/LanguageContext';
 import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { codedValue, isCodedField } from '../../../modules/analytics/analytics.labels';
 
 export interface ReportColumn extends ColumnProps {
   field: string;
@@ -19,14 +22,22 @@ interface ReportTableProps {
   perPage?: number;
   onPageChange?: (page: number, perPage: number) => void;
   loading?: boolean;
+  /** Section title. Defaults to the generic "Detailed data" label. */
+  title?: string;
+  /** Overrides the empty-state text (e.g. "pick a customer first"). */
+  emptyMessage?: string;
 }
 
 const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DATE_TIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 const DECIMAL_RE = /^-?\d+\.\d+$/;
+const NUMERIC_RE = /^-?\d+(\.\d+)?$/;
 
 /** Default cell rendering: French dates (dd/MM/yyyy) and comma decimals. */
 function formatCell(value: unknown): React.ReactNode {
+  if (value === null || value === undefined || value === '') {
+    return <span className="ax-muted">—</span>;
+  }
   if (value instanceof Date) return formatDate(value);
   if (typeof value === 'number') return Number.isInteger(value) ? value : formatQuantity(value, 3);
   if (typeof value === 'string') {
@@ -41,6 +52,10 @@ function formatCell(value: unknown): React.ReactNode {
   return value as React.ReactNode;
 }
 
+function isNumericValue(v: unknown): boolean {
+  return typeof v === 'number' || (typeof v === 'string' && NUMERIC_RE.test(v));
+}
+
 const ReportTable: React.FC<ReportTableProps> = ({
   columns,
   rows,
@@ -49,29 +64,120 @@ const ReportTable: React.FC<ReportTableProps> = ({
   perPage = 50,
   onPageChange,
   loading,
+  title,
+  emptyMessage,
 }) => {
   const { t } = useLanguage();
+  const [query, setQuery] = useState('');
+
+  // A column is numeric when every non-empty value in the current rows is.
+  const numericFields = useMemo(() => {
+    const set = new Set<string>();
+    for (const col of columns) {
+      const values = rows
+        .map((r) => r[col.field])
+        .filter((v) => v !== null && v !== undefined && v !== '');
+      if (values.length > 0 && values.every(isNumericValue)) set.add(col.field);
+    }
+    return set;
+  }, [columns, rows]);
+
+  const visibleRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r) =>
+      columns.some((c) =>
+        (codedValue(c.field, r[c.field], t)?.label ?? String(r[c.field] ?? ''))
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  }, [rows, columns, query, t]);
+
+  const count = total ?? rows.length;
+  const filtered = query.trim() !== '';
 
   return (
-    <div>
+    <div className="ax-table">
+      <div className="ax-section-head ax-section-head--table">
+        <span className="ax-section-head__title">
+          <Table2 aria-hidden="true" />
+          {title ?? t('analyticsSectionTable')}
+          <span className="ax-count">
+            {filtered
+              ? `${visibleRows.length} / ${rows.length}`
+              : t(count === 1 ? 'analyticsRowsCountOne' : 'analyticsRowsCount').replace(
+                  '{count}',
+                  String(count),
+                )}
+          </span>
+        </span>
+        {rows.length > 0 && (
+          <label className="ax-search">
+            <Search aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('analyticsTableSearch')}
+              aria-label={t('analyticsTableSearch')}
+            />
+            {query && (
+              <button
+                type="button"
+                className="ax-search__clear"
+                onClick={() => setQuery('')}
+                aria-label={t('analyticsClearSearch')}
+              >
+                <X aria-hidden="true" />
+              </button>
+            )}
+          </label>
+        )}
+      </div>
+
       <DataTable
-        value={rows}
-        loading={loading}
+        value={visibleRows}
+        loading={loading && rows.length === 0}
         size="small"
         stripedRows
         scrollable
-        scrollHeight="500px"
-        emptyMessage={t('reportNoDataAvailable')}
+        scrollHeight="560px"
+        className="ax-datatable"
+        emptyMessage={
+          <div className="ax-empty">
+            <Inbox aria-hidden="true" />
+            <p>
+              {filtered
+                ? t('analyticsSearchNoResults')
+                : (emptyMessage ?? t('reportNoDataAvailable'))}
+            </p>
+          </div>
+        }
       >
-        {columns.map((col) => (
-          <Column
-            key={col.field}
-            body={(row: Record<string, unknown>) => formatCell(row[col.field])}
-            {...col}
-          />
-        ))}
+        {columns.map((col) => {
+          const numeric = numericFields.has(col.field);
+          return (
+            <Column
+              key={col.field}
+              body={(row: Record<string, unknown>) => {
+                if (isCodedField(col.field)) {
+                  const coded = codedValue(col.field, row[col.field], t);
+                  if (coded?.tone)
+                    return <StatusBadge tone={coded.tone} label={coded.label} size="sm" />;
+                  if (coded) return coded.label;
+                }
+                return formatCell(row[col.field]);
+              }}
+              {...col}
+              headerClassName={[numeric && 'ax-num', col.headerClassName].filter(Boolean).join(' ')}
+              bodyClassName={[numeric && 'ax-num', col.bodyClassName].filter(Boolean).join(' ')}
+            />
+          );
+        })}
       </DataTable>
-      {total !== undefined && onPageChange && (
+
+      {total !== undefined && onPageChange && total > 0 && (
         <Paginator
           first={(page - 1) * perPage}
           rows={perPage}
@@ -80,7 +186,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
           rowsPerPageOptions={PAGE_SIZE_OPTIONS}
           template="CurrentPageReport PrevPageLink PageLinks NextPageLink RowsPerPageDropdown"
           currentPageReportTemplate={t('pageReportTemplate')}
-          className="mt-2"
+          className="ax-paginator"
         />
       )}
     </div>

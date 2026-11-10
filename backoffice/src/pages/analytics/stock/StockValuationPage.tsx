@@ -2,7 +2,6 @@ import { DollarSign } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
-import ReportFilterBar from '../components/ReportFilterBar';
 import ReportKpiCards from '../components/ReportKpiCards';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -17,14 +16,10 @@ const MAD = (row: Record<string, unknown>, field: string) => formatAmount(Number
 
 const StockValuationPage: React.FC = () => {
   const { t } = useLanguage();
-  const [filter, setFilter] = useState<StockReportFilter>({});
+  const [filter] = useState<StockReportFilter>({});
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getStockValuation(filter),
   );
-  const handleFilterChange = (f: StockReportFilter) => {
-    setFilter(f);
-    setTimeout(refetch, 0);
-  };
 
   const columns = [
     { field: 'productName', header: t('analyticsStockProduct') },
@@ -42,22 +37,6 @@ const StockValuationPage: React.FC = () => {
     },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsStockValuationTotalValue'),
-          value: Number(data.kpis.totalValuation ?? 0),
-          suffix: 'MAD',
-          color: 'blue' as const,
-        },
-        {
-          label: t('analyticsStockValuationReferenceCount'),
-          value: Number(data.kpis.productCount ?? 0),
-          color: 'green' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={DollarSign}
@@ -65,8 +44,8 @@ const StockValuationPage: React.FC = () => {
       subtitle={t('analyticsStockValuationSubtitle')}
       isLoading={isLoading}
       error={error}
-      filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="stock-valuation" values={data.kpis} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons
@@ -79,18 +58,6 @@ const StockValuationPage: React.FC = () => {
               title: t('analyticsStockValuationTitle'),
               subtitle: t('analyticsStockValuationSubtitle'),
               fileName: 'valorisation-stock',
-              kpis: [
-                {
-                  key: 'totalValuation',
-                  label: t('analyticsStockValuationTotalValue'),
-                  format: 'currency',
-                },
-                {
-                  key: 'productCount',
-                  label: t('analyticsStockValuationReferenceCount'),
-                  format: 'integer',
-                },
-              ],
               columns: [
                 {
                   key: 'productName',

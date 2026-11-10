@@ -42,11 +42,14 @@ export interface GetProductsParams {
   categoryIds?: number[];
   brandIds?: number[];
   isService?: boolean;
-  minPrice?: number;
-  maxPrice?: number;
+  sortField?: ProductSortField;
+  sortOrder?: 'ASC' | 'DESC';
   page?: number;
   limit?: number;
 }
+
+/** Sortable columns accepted by `POST /api/products/filter`. */
+export type ProductSortField = 'name' | 'code' | 'price' | 'cost' | 'stock' | 'dateCreated';
 
 export interface CreateProductDTO {
   name: string;

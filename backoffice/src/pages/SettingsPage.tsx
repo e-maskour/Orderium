@@ -41,7 +41,7 @@ interface ProfessionalState {
   showTutorials: boolean;
 }
 
-const SETTINGS_KEY = 'morocom_user_settings';
+const SETTINGS_KEY = 'marnova_user_settings';
 
 function loadSettings() {
   try {

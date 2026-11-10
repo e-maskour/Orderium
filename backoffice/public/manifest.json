@@ -1,7 +1,7 @@
 {
-  "name": "Morocom Backoffice",
-  "short_name": "Morocom",
-  "description": "Professional backoffice and management system for Morocom",
+  "name": "Marnova Backoffice",
+  "short_name": "Marnova",
+  "description": "Professional backoffice and management system for Marnova",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
@@ -14,15 +14,21 @@
   ],
   "icons": [
     {
-      "src": "/logo-backoffice.svg",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo-backoffice.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
@@ -34,8 +40,9 @@
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/logo-backoffice.svg",
-          "sizes": "192x192"
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -46,8 +53,9 @@
       "url": "/orders",
       "icons": [
         {
-          "src": "/logo-backoffice.svg",
-          "sizes": "192x192"
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -58,8 +66,9 @@
       "url": "/products",
       "icons": [
         {
-          "src": "/logo-backoffice.svg",
-          "sizes": "192x192"
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }

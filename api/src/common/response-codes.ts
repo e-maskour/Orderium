@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Unified API Response Code Registry
+ *  MARNOVA — Unified API Response Code Registry
  * ═══════════════════════════════════════════════════════════════
  *
  *  Code format:  PREFIX + HTTP_STATUS + "_" + SEQUENCE
@@ -188,7 +188,7 @@ export const ORD = {
     status: 200,
     message: 'Order Marked as Invoiced',
   },
-  /** GET /orders/export/xlsx            → binary (not wrapped)      | metadata: n/a */
+  /** POST /orders/export/xlsx           → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'ORD200_15', status: 200, message: 'Orders Exported' },
   /** POST /orders/:id/share             → data: { shareToken, expiresAt } | metadata: null */
   SHARED: {
@@ -270,7 +270,7 @@ export const INV = {
     status: 200,
     message: 'Invoice Devalidated',
   },
-  /** GET /invoices/export/xlsx          → binary (not wrapped)      | metadata: n/a */
+  /** POST /invoices/export/xlsx         → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'INV200_09', status: 200, message: 'Invoices Exported' },
   /** POST /invoices/:id/share            → data: { shareToken, expiresAt } | metadata: null */
   SHARED: {
@@ -362,7 +362,7 @@ export const QUO = {
     status: 200,
     message: 'Quote Analytics Retrieved',
   },
-  /** GET /quotes/export/xlsx             → binary (not wrapped)     | metadata: n/a */
+  /** POST /quotes/export/xlsx            → binary (not wrapped)     | metadata: n/a */
   EXPORTED: { code: 'QUO200_17', status: 200, message: 'Quotes Exported' },
 } as const satisfies Record<string, ResponseDef>;
 
@@ -848,7 +848,7 @@ export const STT = {
 export const PAY = {
   /** POST /payments                            → data: Payment       | metadata: null */
   CREATED: { code: 'PAY201_01', status: 201, message: 'Payment Created' },
-  /** GET /payments                             → data: Payment[]     | metadata: null */
+  /** GET /payments                             → data: Payment[]     | metadata: { limit, offset, total, hasNext, hasPrev, totalAmount } */
   LIST: { code: 'PAY200_01', status: 200, message: 'Payments Retrieved' },
   /** GET /payments/:id                         → data: Payment       | metadata: null */
   DETAIL: { code: 'PAY200_02', status: 200, message: 'Payment Retrieved' },
@@ -1850,5 +1850,41 @@ export const PLM = {
     code: 'PLM200_08',
     status: 200,
     message: 'Collection Status Retrieved',
+  },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─── Admin Auth (tenant dashboard sign-in) ──────────────────────────────────
+export const ADM = {
+  /** POST /admin/auth/login      → data: { step, challengeToken, sentTo? } */
+  LOGIN_STEP: { code: 'ADM200_01', status: 200, message: 'Password Verified' },
+  /** POST /admin/auth/2fa/setup  → data: { method, qrCodeDataUrl?, secret?, sentTo? } */
+  TWO_FA_SETUP: {
+    code: 'ADM200_02',
+    status: 200,
+    message: 'Two-Factor Setup Started',
+  },
+  /** POST /admin/auth/2fa/resend → data: { sentTo } */
+  CODE_SENT: { code: 'ADM200_03', status: 200, message: 'Sign-In Code Sent' },
+  /** POST /admin/auth/2fa/verify → data: { accessToken, expiresIn, admin } */
+  SIGNED_IN: { code: 'ADM200_05', status: 200, message: 'Signed In' },
+  /** POST /admin/auth/api-key/verify → data: { valid: true } */
+  API_KEY_VERIFIED: {
+    code: 'ADM200_08',
+    status: 200,
+    message: 'API Key Verified',
+  },
+  /** GET  /admin/auth/me         → data: AuthenticatedAdmin */
+  ME: { code: 'ADM200_06', status: 200, message: 'Current Admin Retrieved' },
+  /** POST /admin/auth/logout     → data: null */
+  LOGGED_OUT: { code: 'ADM200_07', status: 200, message: 'Signed Out' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─── Subscription (current tenant's plan, limits and usage) ─────────────────
+export const SUB = {
+  /** GET /subscription/current → data: CurrentSubscription | metadata: null */
+  CURRENT: {
+    code: 'SUB200_01',
+    status: 200,
+    message: 'Current Subscription Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;

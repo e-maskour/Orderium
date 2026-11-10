@@ -5,10 +5,31 @@ import {
   IsNumber,
   IsArray,
   IsEnum,
+  IsIn,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderOriginType } from '../entities/order.entity';
+import { SORT_ORDERS, toSortOrder } from '../../../common/utils/list-sort';
+import type { SortOrder } from '../../../common/utils/list-sort';
+
+/** Columns the order list may be sorted by (whitelist → SQL column in the service). */
+export const ORDER_SORT_FIELDS = [
+  'number',
+  'partnerName',
+  'date',
+  'dateCreated',
+  'dueDate',
+  'validationDate',
+  'subtotal',
+  'tax',
+  'total',
+  'paidAmount',
+  'remainingAmount',
+  'status',
+  'originType',
+] as const;
+export type OrderSortField = (typeof ORDER_SORT_FIELDS)[number];
 
 export class FilterOrdersDto {
   @ApiProperty({
@@ -47,7 +68,7 @@ export class FilterOrdersDto {
   @ApiProperty({
     required: false,
     description:
-      'Order status filter (confirmed, picked_up, delivered, cancelled)',
+      'Order status filter (draft, validated, in_progress, confirmed, picked_up, delivered, invoiced, cancelled)',
     type: [String],
   })
   @IsOptional()
@@ -108,4 +129,21 @@ export class FilterOrdersDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    enum: ORDER_SORT_FIELDS,
+    description: 'Column to sort by (default: creation date, newest first)',
+  })
+  @IsOptional()
+  @IsIn(ORDER_SORT_FIELDS)
+  sortField?: OrderSortField;
+
+  @ApiPropertyOptional({
+    enum: SORT_ORDERS,
+    description: 'Sort direction (default: ASC when sortField is set)',
+  })
+  @IsOptional()
+  @Transform(toSortOrder)
+  @IsIn(SORT_ORDERS)
+  sortOrder?: SortOrder;
 }

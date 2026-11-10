@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 import { useLanguage } from '../context/LanguageContext';
@@ -96,7 +96,35 @@ export function MobileList<T>({
   // which only exists once the hook has run.
   const resolvedEmptyMessage = emptyMessage ?? t('noResultsFound');
   const resolvedCountLabel = countLabel ?? t('records');
-  if (loading && items.length === 0) {
+
+  // "Load more" pages append to what is already shown: callers only advance
+  // their page, and the rows of earlier pages are kept here. Any other change of
+  // `items` (filters, search, sort, refresh) drops them. Compared by key
+  // signature, not identity, because callers often pass a fresh `[]` per render.
+  const signature = items.map(keyExtractor).join('|');
+  const [prior, setPrior] = useState<T[]>([]);
+  const [lastSignature, setLastSignature] = useState(signature);
+  const [pending, setPending] = useState(false);
+  if (signature !== lastSignature) {
+    setLastSignature(signature);
+    if (pending) {
+      // Wait out the empty interim state while the next page loads
+      if (items.length > 0) setPending(false);
+    } else if (prior.length > 0) {
+      setPrior([]);
+    }
+  }
+  const currentKeys = new Set(items.map(keyExtractor));
+  const shown =
+    prior.length === 0
+      ? items
+      : [...prior.filter((it) => !currentKeys.has(keyExtractor(it))), ...items];
+  const handleLoadMore = () => {
+    setPending(true);
+    setPrior(shown);
+    onLoadMore?.();
+  };
+  if (loading && shown.length === 0) {
     return (
       <div className="ml-list">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -106,7 +134,7 @@ export function MobileList<T>({
     );
   }
 
-  if (!loading && items.length === 0) {
+  if (!loading && shown.length === 0) {
     return (
       <EmptyState
         icon={emptyIcon}
@@ -118,7 +146,7 @@ export function MobileList<T>({
     );
   }
 
-  const displayCount = totalCount ?? items.length;
+  const displayCount = totalCount ?? shown.length;
 
   return (
     <div>
@@ -128,7 +156,7 @@ export function MobileList<T>({
       </p>
 
       <div className="ml-list">
-        {items.map((item) => {
+        {shown.map((item) => {
           const itemKey = keyExtractor(item);
           const isSelected = selectedKeys?.has(itemKey) ?? false;
           const hasSelect = !!onToggleSelect;
@@ -240,7 +268,7 @@ export function MobileList<T>({
               <CardSkeleton />
             </div>
           ) : (
-            <button className="ml-load-more" onClick={onLoadMore}>
+            <button className="ml-load-more" onClick={handleLoadMore}>
               Charger plus
             </button>
           )}

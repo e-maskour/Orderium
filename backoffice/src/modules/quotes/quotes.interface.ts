@@ -63,6 +63,9 @@ export interface QuoteFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** Server-side sort — must be one of the API's whitelisted sort fields. */
+  sortField?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface CreateQuoteDTO {

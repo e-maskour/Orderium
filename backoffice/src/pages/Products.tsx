@@ -6,7 +6,7 @@ import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-quer
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import { brandsService } from '../modules/brands';
-import type { IProduct } from '../modules/products/products.interface';
+import type { IProduct, ProductSortField } from '../modules/products/products.interface';
 import {
   Plus,
   Eye,
@@ -34,7 +34,7 @@ import {
 } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { formatAmount, formatQuantity } from '@orderium/ui';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
@@ -58,6 +58,9 @@ export default function Products() {
   const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  // Server-side sort: the table is lazy, so sorting must go through the API.
+  const [sortField, setSortField] = useState<ProductSortField | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
@@ -95,13 +98,15 @@ export default function Products() {
   });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', appliedFilters, currentPage, pageSize],
+    queryKey: ['products', appliedFilters, currentPage, pageSize, sortField, sortOrder],
     queryFn: () =>
       productsService.getProducts({
         search: appliedFilters.name,
         stockFilter: appliedFilters.stockFilter,
         categoryIds: appliedFilters.categoryIds,
         brandIds: appliedFilters.brandIds,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
         page: currentPage,
         limit: pageSize,
       }),
@@ -578,6 +583,13 @@ export default function Products() {
                 onPage={(e: DataTablePageEvent) => {
                   setCurrentPage(Math.floor(e.first / e.rows) + 1);
                   setPageSize(e.rows);
+                }}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={(e: DataTableSortEvent) => {
+                  setSortField((e.sortField || undefined) as ProductSortField | undefined);
+                  setSortOrder(e.sortOrder);
+                  setCurrentPage(1);
                 }}
                 selection={productsList.filter((p: IProduct) => selectedProducts.includes(p.id))}
                 onSelectionChange={(e) =>

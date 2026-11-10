@@ -46,7 +46,7 @@ export function PrintButton({ data, printerId, label }: PrintButtonProps) {
         <Printer style={{ width: 16, height: 16 }} />
         {loading ? '...' : (label ?? 'Imprimer')}
       </button>
-      <div id="morocom-receipt">
+      <div id="marnova-receipt">
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
           <strong style={{ fontSize: 16 }}>{data.storeName}</strong>
           {data.storePhone && <div>{data.storePhone}</div>}

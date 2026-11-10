@@ -46,7 +46,7 @@ import { PosFilterRail } from '../components/pos/PosFilterRail';
 import { resolveMediaUrl } from '../lib/media';
 import { orderPaymentsService } from '../modules';
 import { productsService } from '../modules/products';
-import { formatCurrency } from '@orderium/ui';
+import { formatCurrency, formatQuantity } from '@orderium/ui';
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
@@ -477,7 +477,7 @@ export default function POS() {
                   fontWeight: 500,
                 }}
               >
-                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+                {formatQuantity(cartTotalItems)} {cartTotalItems === 1 ? t('piece') : t('pieces')}
                 <span style={{ margin: '0 0.3rem', opacity: 0.4 }}>·</span>
                 {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
               </p>
@@ -668,7 +668,7 @@ export default function POS() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {item.quantity}
+                        {formatQuantity(item.quantity)}
                       </span>
                       <span
                         style={{
@@ -705,7 +705,7 @@ export default function POS() {
                         <Tag style={{ width: '0.6875rem', height: '0.6875rem' }} />
                         {hasDiscount
                           ? item.discountType === 1
-                            ? `−${item.discount}%`
+                            ? `−${formatQuantity(item.discount, 2)}%`
                             : `−${formatCurrency(item.discount, lang)}`
                           : t('discount')}
                       </button>
@@ -817,7 +817,7 @@ export default function POS() {
                   fontWeight: 500,
                 }}
               >
-                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+                {formatQuantity(cartTotalItems)} {cartTotalItems === 1 ? t('piece') : t('pieces')}
               </p>
             </div>
           </div>
@@ -1032,7 +1032,7 @@ export default function POS() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <img
                   src={orderiumLogo}
-                  alt="Morocom"
+                  alt="Marnova"
                   style={{ width: '2.25rem', height: '2.25rem' }}
                 />
                 <div>
@@ -1057,7 +1057,7 @@ export default function POS() {
                       letterSpacing: '0.06em',
                     }}
                   >
-                    Morocom POS
+                    Marnova POS
                   </p>
                 </div>
               </div>
@@ -1489,7 +1489,7 @@ export default function POS() {
                               boxShadow: '0 2px 8px rgba(35,90,228,0.40)',
                             }}
                           >
-                            {quantity}
+                            {formatQuantity(quantity)}
                           </div>
                         )}
                       </div>

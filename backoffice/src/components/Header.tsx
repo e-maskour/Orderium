@@ -38,11 +38,14 @@ import {
   ChevronDown,
   User,
   Tags,
+  CreditCard,
 } from 'lucide-react';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toastInfo, toastConfirm } from '../services/toast.service';
+import { useTenantModules } from './TenantStatusGuard';
+import { isPathAllowedByPlan } from '../lib/planAccess';
 
-const RECENT_KEY = 'morocom_search_recent';
+const RECENT_KEY = 'marnova_search_recent';
 const MAX_RECENT = 6;
 
 interface HeaderProps {
@@ -597,6 +600,28 @@ const APP_ROUTES: SearchRoute[] = [
     type: 'settings',
     keywords: ['inventaire', 'stock', 'mouvement', 'مخزون', 'حركة', 'warehouse', 'entrepôt'],
   },
+  {
+    path: '/subscription',
+    labels: { en: 'My subscription', fr: 'Mon abonnement', ar: 'اشتراكي' },
+    descriptions: {
+      en: 'Plan, included modules & usage',
+      fr: 'Offre, modules inclus & consommation',
+      ar: 'الباقة والوحدات المضمنة والاستهلاك',
+    },
+    icon: CreditCard,
+    group: 'Settings',
+    type: 'settings',
+    keywords: [
+      'abonnement',
+      'offre',
+      'plan',
+      'forfait',
+      'اشتراك',
+      'باقة',
+      'subscription',
+      'upgrade',
+    ],
+  },
 ];
 
 const GROUP_CONFIG: Record<string, { color: string; bg: string }> = {
@@ -760,21 +785,29 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     return () => window.removeEventListener('resize', handler);
   }, []);
 
+  // Command palette never offers a screen the subscription plan excludes.
+  const modules = useTenantModules();
+  const planRoutes = useMemo(
+    () => APP_ROUTES.filter((r) => isPathAllowedByPlan(r.path, modules)),
+    [modules],
+  );
+
   // Filtered + scored results
   const filteredRoutes = useMemo(() => {
     let base: SearchRoute[];
     if (!searchQuery.trim()) {
       // No query: show recents first, then quick access
       const recentRoutes = recentPaths
-        .map((p) => APP_ROUTES.find((r) => r.path === p))
+        .map((p) => planRoutes.find((r) => r.path === p))
         .filter(Boolean) as SearchRoute[];
-      const quickRoutes = APP_ROUTES.filter(
+      const quickRoutes = planRoutes.filter(
         (r) => QUICK_ACCESS_PATHS.includes(r.path) && !recentPaths.includes(r.path),
       );
       base = [...recentRoutes, ...quickRoutes];
     } else {
       const q = searchQuery.toLowerCase().trim();
-      base = APP_ROUTES.map((r) => ({ route: r, score: scoreRoute(r, q, lang) }))
+      base = planRoutes
+        .map((r) => ({ route: r, score: scoreRoute(r, q, lang) }))
         .filter(({ score }) => score > 0)
         .sort((a, b) => b.score - a.score)
         .map(({ route }) => route);
@@ -783,7 +816,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
       base = base.filter((r) => r.group === activeGroupFilter);
     }
     return base;
-  }, [searchQuery, lang, activeGroupFilter, recentPaths]);
+  }, [searchQuery, lang, activeGroupFilter, recentPaths, planRoutes]);
 
   // Grouped results for rendering
   const groupedResults = useMemo(() => {
@@ -1206,6 +1239,18 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     onClick: () => {
                       avatarMenuRef.current?.hide();
                       navigate('/settings');
+                    },
+                  },
+                  {
+                    icon: (
+                      <CreditCard style={{ width: '1rem', height: '1rem' }} strokeWidth={1.75} />
+                    ),
+                    label: t('mySubscription'),
+                    color: '#0f766e',
+                    bg: '#f0fdfa',
+                    onClick: () => {
+                      avatarMenuRef.current?.hide();
+                      navigate('/subscription');
                     },
                   },
                 ].map((item) => (

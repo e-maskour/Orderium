@@ -5,6 +5,7 @@ import {
   ImageTransformOptions,
 } from '../interfaces/image-storage.interface';
 import { MinioProvider } from '../providers/minio.provider';
+import { PlanEntitlementsService } from '../../tenant/plan-entitlements.service';
 
 @Injectable()
 export class ImageService {
@@ -13,7 +14,10 @@ export class ImageService {
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-  constructor(private readonly minioProvider: MinioProvider) {}
+  constructor(
+    private readonly minioProvider: MinioProvider,
+    private readonly entitlements: PlanEntitlementsService,
+  ) {}
 
   /**
    * Validate an uploaded file by checking MIME type, magic bytes, and size.
@@ -53,9 +57,11 @@ export class ImageService {
     folder = 'general',
   ): Promise<ImageUploadResult> {
     await this.validateFile(file);
+    await this.entitlements.assertCanAdd('storageMb', file.size);
 
     try {
       const result = await this.minioProvider.upload(file, folder);
+      this.entitlements.recordStorage(file.size);
       this.logger.log(`✅ Image uploaded: ${result.publicId}`);
       return result;
     } catch (error) {

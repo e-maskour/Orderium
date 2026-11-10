@@ -10,7 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StockService } from './stock.service';
 import {
   CreateStockMovementDto,
@@ -18,12 +18,13 @@ import {
   ValidateMovementDto,
   InternalTransferDto,
 } from './dto/stock-movement.dto';
-import { MovementStatus, MovementType } from './entities/stock-movement.entity';
+import { FilterStockMovementDto } from './dto/filter-stock-movement.dto';
 import { StockMovementResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { MOV } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import { buildListMeta, parseEndDateFilter } from './stock.helpers';
 
 @ApiTags('Inventory - Stock Movements')
 @Serialize(StockMovementResponseDto)
@@ -41,36 +42,35 @@ export class StockMovementController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all stock movements with filters' })
+  @ApiOperation({
+    summary: 'List stock movements (filters, sorting, optional pagination)',
+    description:
+      'All filters are applied in SQL. metadata.total is the filtered count. ' +
+      'Omit page/limit to receive every matching row.',
+  })
   @ApiResponse({ status: 200, description: 'List of stock movements' })
-  @ApiQuery({ name: 'productId', required: false, type: Number })
-  @ApiQuery({ name: 'warehouseId', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: MovementStatus })
-  @ApiQuery({ name: 'movementType', required: false, enum: MovementType })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiResponse({ status: 400, description: 'Invalid filter values' })
   @RequirePermission('stock.view')
-  async findAll(
-    @Query('productId') productId?: string,
-    @Query('warehouseId') warehouseId?: string,
-    @Query('status') status?: MovementStatus,
-    @Query('movementType') movementType?: MovementType,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('search') search?: string,
-  ) {
-    const filters: any = {};
-    if (productId) filters.productId = +productId;
-    if (warehouseId) filters.warehouseId = +warehouseId;
-    if (status) filters.status = status;
-    if (movementType) filters.movementType = movementType;
-    if (startDate) filters.startDate = new Date(startDate);
-    if (endDate) filters.endDate = new Date(endDate);
-    if (search) filters.search = search;
-
-    const movements = await this.stockService.findAllMovements(filters);
-    return ApiRes(MOV.LIST, movements);
+  async findAll(@Query() query: FilterStockMovementDto = {}) {
+    const search = query.search?.trim();
+    const { movements, total } = await this.stockService.findAllMovements({
+      productId: query.productId,
+      warehouseId: query.warehouseId,
+      status: query.status,
+      movementType: query.movementType,
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? parseEndDateFilter(query.endDate) : undefined,
+      search: search || undefined,
+      page: query.page,
+      limit: query.limit,
+      sortField: query.sortField,
+      sortOrder: query.sortOrder,
+    });
+    return ApiRes(
+      MOV.LIST,
+      movements,
+      buildListMeta(query, total, movements.length),
+    );
   }
 
   @Get(':id')

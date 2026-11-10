@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Button } from 'primereact/button';
+import { FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useReportPdf } from '../../../hooks/useReportPdf';
+import { analyticsService } from '../../../modules/analytics/analytics.service';
+import { apiClient } from '../../../common/api/api-client';
 import type {
   AnyReportFilter,
   PdfReportSpec,
@@ -32,6 +34,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   onPdf,
 }) => {
   const [downloading, setDownloading] = useState(false);
+  const [xlsxError, setXlsxError] = useState<string | null>(null);
   const { t, language } = useLanguage();
 
   const {
@@ -40,73 +43,86 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
     error: pdfError,
   } = useReportPdf(pdf, filter ?? {}, PDF_LOCALES[language] ?? 'fr-MA');
 
+  const saveBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  /**
+   * Prefers the generic spec-driven export (same columns as screen and PDF,
+   * available for every report). Falls back to a legacy per-report endpoint.
+   * Both go through apiClient so auth and the tenant header are always set.
+   */
   const handleXlsx = async () => {
-    if (!xlsxUrl) return;
     setDownloading(true);
+    setXlsxError(null);
     try {
-      const token = localStorage.getItem('adminToken');
-      const host = window.location.hostname;
-      const subdomain = host.split('.')[0];
-      const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-
-      const response = await fetch(`${baseUrl}${xlsxUrl}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'X-Tenant-Slug': subdomain,
-        },
-      });
-
-      if (!response.ok) throw new Error(t('analyticsDownloadError'));
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = xlsxFilename;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
+      if (pdf) {
+        const { blob, fileName } = await analyticsService.generateReportXlsx(pdf, filter ?? {});
+        saveBlob(blob, fileName);
+      } else if (xlsxUrl) {
+        const response = await apiClient.raw('GET', xlsxUrl);
+        if (!response.ok) throw new Error(t('analyticsDownloadError'));
+        saveBlob(await response.blob(), xlsxFilename);
+      }
+    } catch {
+      setXlsxError(t('analyticsDownloadError'));
     } finally {
       setDownloading(false);
     }
   };
 
+  const showXlsxButton = Boolean(pdf) || Boolean(xlsxUrl);
   const showPdfButton = Boolean(pdf) || Boolean(onPdf);
 
+  const errorText = xlsxError ?? (pdfError ? t('analyticsPdfError') : null);
+
   return (
-    <div className="flex align-items-center gap-2">
-      {pdfError && (
-        <span className="text-red-500 text-xs" title={pdfError}>
-          {t('analyticsPdfError')}
+    <div className="ax-export">
+      {errorText && (
+        <span className="ax-export__error" role="alert" title={pdfError ?? undefined}>
+          {errorText}
         </span>
       )}
 
-      {xlsxUrl && (
-        <Button
-          label={t('analyticsExportExcel')}
-          icon="pi pi-file-excel"
-          size="small"
-          severity="success"
-          outlined
-          loading={downloading}
-          onClick={handleXlsx}
-          style={{ height: '2.25rem', borderRadius: '0.625rem', fontSize: '0.8125rem' }}
-        />
+      {showXlsxButton && (
+        <button
+          type="button"
+          className="ax-btn ax-btn--excel"
+          onClick={() => void handleXlsx()}
+          disabled={downloading}
+          aria-busy={downloading}
+        >
+          {downloading ? (
+            <Loader2 className="ax-spin" aria-hidden="true" />
+          ) : (
+            <FileSpreadsheet aria-hidden="true" />
+          )}
+          {t('analyticsExportExcel')}
+        </button>
       )}
 
       {showPdfButton && (
-        <Button
-          label={isGenerating ? t('analyticsPdfGenerating') : t('analyticsExportPdf')}
-          icon="pi pi-file-pdf"
-          size="small"
-          severity="danger"
-          outlined
-          loading={isGenerating}
-          disabled={isGenerating}
+        <button
+          type="button"
+          className="ax-btn ax-btn--pdf"
           onClick={pdf ? () => void downloadPdf() : onPdf}
-          style={{ height: '2.25rem', borderRadius: '0.625rem', fontSize: '0.8125rem' }}
-        />
+          disabled={isGenerating}
+          aria-busy={isGenerating}
+        >
+          {isGenerating ? (
+            <Loader2 className="ax-spin" aria-hidden="true" />
+          ) : (
+            <FileText aria-hidden="true" />
+          )}
+          {isGenerating ? t('analyticsPdfGenerating') : t('analyticsExportPdf')}
+        </button>
       )}
     </div>
   );

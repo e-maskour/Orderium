@@ -65,7 +65,7 @@ async function bootstrap() {
     ) => {
       if (req.path === '/') {
         res.json({
-          message: 'Morocom API',
+          message: 'Marnova API',
           version: '1.0.0',
           docs: '/api/docs',
           health: '/api/health',

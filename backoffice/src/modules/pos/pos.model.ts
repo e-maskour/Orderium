@@ -12,7 +12,7 @@ export class PosCart {
   }
 
   get itemCount(): number {
-    return this._items.reduce((sum, item) => sum + item.quantity, 0);
+    return Math.round(this._items.reduce((sum, item) => sum + item.quantity, 0) * 1000) / 1000;
   }
 
   get lineCount(): number {

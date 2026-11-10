@@ -54,7 +54,20 @@ import {
   useTenantActivity,
   useTenantModules,
   useUpdateTenantModules,
+  usePlans,
 } from '../hooks/useTenants';
+import { FeaturesList } from '../components/PlanLimitsEditor';
+import {
+  LIMIT_FIELDS,
+  UNLIMITED_LABEL,
+  formatLimit,
+  formatLimitValue,
+  isUnlimited,
+  normalizeFeatures,
+  planLabel,
+  planStyle,
+  usagePct,
+} from '../utils/plans';
 import { StatusBadge } from '../components/StatusBadge';
 import { CopyableUrl } from '../components/CopyableUrl';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -96,7 +109,9 @@ function UsageMeter({
   max: number;
   icon?: React.ReactNode;
 }) {
-  const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+  const unlimited = isUnlimited(max);
+  const rawPct = usagePct(used, max);
+  const pct = rawPct === null ? 0 : Math.min(100, rawPct);
   const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-indigo-500';
   const trackColor =
     pct >= 90
@@ -118,18 +133,20 @@ function UsageMeter({
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>
+          {!unlimited && <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>}
           <span className="text-xs text-slate-400 dark:text-slate-500">
-            {formatQuantity(used)} / {formatQuantity(max)}
+            {formatQuantity(used)} / {unlimited ? UNLIMITED_LABEL : formatLimit(max)}
           </span>
         </div>
       </div>
-      <div className={`h-2.5 w-full overflow-hidden rounded-full ${trackColor}`}>
-        <div
-          className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      {!unlimited && (
+        <div className={`h-2.5 w-full overflow-hidden rounded-full ${trackColor}`}>
+          <div
+            className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -170,6 +187,7 @@ export function TenantDetail() {
   const { data: activityData } = useTenantActivity(tenantId);
   const { data: paymentsData } = useTenantPayments(tenantId);
   const { data: modulesData } = useTenantModules(tenantId);
+  const { data: plans } = usePlans();
   const updateModulesMutation = useUpdateTenantModules(tenantId);
 
   const updateMutation = useUpdateTenant(tenantId);
@@ -188,6 +206,7 @@ export function TenantDetail() {
     'activate' | 'disable' | 'suspend' | 'archive' | 'unarchive' | 'delete' | 'reset' | null
   >(null);
   const [confirmText, setConfirmText] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [extendDays, setExtendDays] = useState(14);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
   const [draftModules, setDraftModules] = useState<TenantModulesConfig>(DEFAULT_MODULES);
@@ -210,6 +229,8 @@ export function TenantDetail() {
     () => (tenant ? trialDaysRemaining(tenant.trialEndsAt) : null),
     [tenant],
   );
+
+  const deletePhrase = tenant ? `DELETE ${tenant.name.toUpperCase()}` : '';
 
   const handleUpdate = async (data: UpdateTenantInput) => {
     try {
@@ -247,30 +268,40 @@ export function TenantDetail() {
           toast.success('Tenant restored');
           break;
         case 'delete':
-          if (confirmText !== `DELETE ${tenant.name}`) return;
-          await softDelete.mutateAsync({ id: tenantId, confirmation: confirmText });
+          if (confirmText.trim().toUpperCase() !== deletePhrase || !adminPassword) return;
+          await softDelete.mutateAsync({
+            id: tenantId,
+            confirmation: deletePhrase,
+            password: adminPassword,
+          });
           toast.success('Tenant deleted');
           navigate('/tenants');
           break;
         case 'reset':
-          if (confirmText !== 'RESET') return;
-          await reset.mutateAsync({ id: tenantId, confirmation: 'RESET' });
+          if (confirmText !== 'RESET' || !adminPassword) return;
+          await reset.mutateAsync({ id: tenantId, confirmation: 'RESET', password: adminPassword });
           toast.success('Tenant data reset');
           refetchStats();
           break;
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Operation failed';
+      const serverMsg = (e as { response?: { data?: { message?: string } } }).response?.data
+        ?.message;
+      const msg = serverMsg ?? (e instanceof Error ? e.message : 'Operation failed');
       toast.error(msg);
-    } finally {
-      setDialog(null);
-      setConfirmText('');
+      // Wrong password: keep the dialog open so the admin can retry
+      if ((e as { response?: { status?: number } }).response?.status === 403) {
+        setAdminPassword('');
+        return;
+      }
     }
+    closeDialog();
   };
 
   const closeDialog = () => {
     setDialog(null);
     setConfirmText('');
+    setAdminPassword('');
   };
 
   if (isLoading) {
@@ -325,31 +356,11 @@ export function TenantDetail() {
   const canActivate = ['disabled', 'suspended', 'expired'].includes(tenant.status);
   const canDisable = ['active', 'trial'].includes(tenant.status);
 
-  const PLAN_META: Record<string, { gradient: string; badge: string; label: string }> = {
-    trial: {
-      gradient: 'from-slate-400 to-slate-500',
-      badge: 'bg-slate-100 text-slate-600 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-300',
-      label: 'Trial',
-    },
-    basic: {
-      gradient: 'from-indigo-400 to-indigo-600',
-      badge:
-        'bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/40 dark:text-indigo-300',
-      label: 'Basic',
-    },
-    pro: {
-      gradient: 'from-violet-500 to-purple-600',
-      badge:
-        'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/40 dark:text-violet-300',
-      label: 'Pro',
-    },
-    enterprise: {
-      gradient: 'from-rose-500 to-pink-600',
-      badge: 'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/40 dark:text-rose-300',
-      label: 'Enterprise',
-    },
+  const planMeta = {
+    ...planStyle(tenant.subscriptionPlan),
+    label: planLabel(tenant.subscriptionPlan, plans),
   };
-  const planMeta = PLAN_META[tenant.subscriptionPlan?.toLowerCase()] ?? PLAN_META.basic;
+  const tenantFeatures = normalizeFeatures(tenant.features);
   const accentColor = tenant.primaryColor ?? '#6366f1';
 
   return (
@@ -404,7 +415,7 @@ export function TenantDetail() {
                   </code>
                   <StatusBadge status={tenant.status} trialDaysRemaining={daysLeft} />
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset capitalize ${planMeta.badge}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${planMeta.badge}`}
                   >
                     {planMeta.label}
                   </span>
@@ -788,7 +799,7 @@ export function TenantDetail() {
               <div className="relative flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-white/70">Current Plan</p>
-                  <h3 className="mt-0.5 text-3xl font-extrabold capitalize tracking-tight">
+                  <h3 className="mt-0.5 text-3xl font-extrabold tracking-tight">
                     {planMeta.label}
                   </h3>
                   <p className="mt-2 text-sm text-white/80">
@@ -804,19 +815,29 @@ export function TenantDetail() {
                   </span>
                 </div>
               </div>
-              <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-4">
-                {[
-                  { label: 'Max Users', value: formatQuantity(tenant.maxUsers) },
-                  { label: 'Max Products', value: formatQuantity(tenant.maxProducts) },
-                  { label: 'Orders/month', value: formatQuantity(tenant.maxOrdersPerMonth) },
-                  { label: 'Storage', value: `${formatQuantity(tenant.maxStorageMb)} MB` },
-                ].map(({ label, value }) => (
-                  <div key={label}>
+              <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+                {LIMIT_FIELDS.map(({ key, label }) => (
+                  <div key={key}>
                     <p className="text-xs font-medium text-white/60">{label}</p>
-                    <p className="mt-0.5 text-lg font-bold">{value}</p>
+                    <p className="mt-0.5 text-lg font-bold">{formatLimitValue(key, tenant[key])}</p>
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Features */}
+            <div className="card p-6">
+              <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <Zap className="h-4 w-4 text-indigo-500" />
+                Plan Features
+              </h3>
+              <p className="mb-4 text-xs text-slate-400">
+                Enforced by the API. Edit the tenant to override the plan defaults.
+              </p>
+              <FeaturesList
+                features={tenantFeatures}
+                className="grid gap-2 text-sm sm:grid-cols-2"
+              />
             </div>
 
             {/* Trial info */}
@@ -979,8 +1000,8 @@ export function TenantDetail() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold capitalize text-slate-900 dark:text-slate-100">
-                            {p.planName}
+                          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {planLabel(p.planName, plans)}
                           </span>
                           <span className="text-xs text-slate-400">
                             ({BILLING_CYCLE_LABELS[p.billingCycle]})
@@ -1576,12 +1597,19 @@ export function TenantDetail() {
                         <p className="text-xs text-red-500/80 dark:text-red-500">
                           Destroys the DB, MinIO bucket, and Redis keys for{' '}
                           <strong>{tenant.name}</strong>.
+                          {tenant.status !== 'archived' && <> Archive the tenant first.</>}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setDialog('delete')}
-                      className="btn-danger text-xs py-2 px-4"
+                      disabled={tenant.status !== 'archived'}
+                      title={
+                        tenant.status !== 'archived'
+                          ? 'Archive the tenant before deleting it permanently'
+                          : undefined
+                      }
+                      className="btn-danger text-xs py-2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Delete Forever
                     </button>
@@ -1714,7 +1742,7 @@ export function TenantDetail() {
         confirmVariant="danger"
         loadingLabel="Deleting…"
         loading={softDelete.isPending}
-        confirmDisabled={confirmText !== `DELETE ${tenant.name}`}
+        confirmDisabled={confirmText.trim().toUpperCase() !== deletePhrase || !adminPassword}
         onConfirm={handleConfirm}
         onCancel={closeDialog}
       >
@@ -1727,7 +1755,7 @@ export function TenantDetail() {
         <label htmlFor="delete-confirm" className="label mt-4">
           Type{' '}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono normal-case tracking-normal dark:bg-slate-800">
-            DELETE {tenant.name}
+            {deletePhrase}
           </code>{' '}
           to confirm
         </label>
@@ -1736,9 +1764,21 @@ export function TenantDetail() {
           type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
-          placeholder={`DELETE ${tenant.name}`}
+          placeholder={deletePhrase}
           className="input font-mono"
           autoComplete="off"
+        />
+        <label htmlFor="delete-password" className="label mt-4">
+          Your account password
+        </label>
+        <input
+          id="delete-password"
+          type="password"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+          placeholder="Re-enter your sign-in password"
+          className="input"
+          autoComplete="current-password"
         />
       </ConfirmDialog>
 
@@ -1756,7 +1796,7 @@ export function TenantDetail() {
         confirmVariant="danger"
         loadingLabel="Resetting…"
         loading={reset.isPending}
-        confirmDisabled={confirmText !== 'RESET'}
+        confirmDisabled={confirmText !== 'RESET' || !adminPassword}
         onConfirm={handleConfirm}
         onCancel={closeDialog}
       >
@@ -1771,6 +1811,18 @@ export function TenantDetail() {
           placeholder="RESET"
           className="input font-mono"
           autoComplete="off"
+        />
+        <label htmlFor="reset-password" className="label mt-4">
+          Your account password
+        </label>
+        <input
+          id="reset-password"
+          type="password"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+          placeholder="Re-enter your sign-in password"
+          className="input"
+          autoComplete="current-password"
         />
       </ConfirmDialog>
     </div>

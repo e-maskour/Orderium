@@ -65,7 +65,7 @@ export default function Profile() {
         >
           <img
             src={orderiumLogo}
-            alt="Morocom"
+            alt="Marnova"
             style={{
               height: '28px',
               width: 'auto',
@@ -358,7 +358,7 @@ export default function Profile() {
               letterSpacing: '0.01em',
             }}
           >
-            Morocom Delivery
+            Marnova Delivery
             <span
               style={{
                 background: '#1d4ed8',

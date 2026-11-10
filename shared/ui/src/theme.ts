@@ -26,7 +26,7 @@
 // PrimeReact provider config and documents the brand token palette.
 
 /**
- * Base Morocom PrimeReact configuration.
+ * Base Marnova PrimeReact configuration.
  * Each app extends this via its own theme-preset.ts.
  * Pass to: <PrimeReactProvider value={appConfig}>
  */

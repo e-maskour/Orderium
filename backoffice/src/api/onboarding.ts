@@ -77,6 +77,16 @@ export interface TenantModules {
     clientPortal: boolean;
     deliveryPortal: boolean;
   };
+  /**
+   * Subscription plan includes advanced reports / analytics. Optional: older
+   * APIs omit it, in which case the module stays visible.
+   */
+  reports?: boolean;
+  /**
+   * Subscription plan includes the customer portal (client sign-up requests).
+   * Optional: older APIs omit it, in which case the module stays visible.
+   */
+  clientRequests?: boolean;
 }
 
 export interface TenantPublicStatus {

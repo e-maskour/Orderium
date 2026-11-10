@@ -15,7 +15,12 @@ interface ListParams {
   userType?: UserType;
   status?: UserStatus;
   roleId?: number;
+  sortField?: UserSortField;
+  sortOrder?: 'ASC' | 'DESC';
 }
+
+/** Sortable columns accepted by `GET /api/users`. */
+export type UserSortField = 'name' | 'email' | 'phoneNumber' | 'dateCreated';
 
 class UsersService {
   async getAll(params: ListParams = {}): Promise<{ users: User[]; total: number }> {
@@ -26,6 +31,10 @@ class UsersService {
     if (params.userType) query.set('userType', params.userType);
     if (params.status) query.set('status', params.status);
     if (params.roleId) query.set('roleId', String(params.roleId));
+    if (params.sortField && params.sortOrder) {
+      query.set('sortField', params.sortField);
+      query.set('sortOrder', params.sortOrder);
+    }
 
     const qs = query.toString();
     const url = qs ? `${API_ROUTES.USERS.LIST}?${qs}` : API_ROUTES.USERS.LIST;

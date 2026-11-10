@@ -116,6 +116,33 @@ export const analyticsService = {
       fileName: parseFileName(response) ?? `${spec.fileName ?? reportKey}.pdf`,
     };
   },
+
+  /**
+   * Exports a report as a spreadsheet using the same spec as the PDF, so both
+   * downloads carry the columns shown on screen. Unpaginated, like the PDF.
+   */
+  async generateReportXlsx(
+    spec: PdfReportSpec,
+    filter: AnyReportFilter,
+  ): Promise<{ blob: Blob; fileName: string }> {
+    const { reportKey, ...presentation } = spec;
+    const { page: _page, perPage: _perPage, ...exportFilter } = filter as Record<string, unknown>;
+
+    const response = await apiClient.raw(
+      'POST',
+      `${API_ROUTES.REPORTS.XLSX(reportKey)}${buildReportQueryString(exportFilter as AnyFilter)}`,
+      { body: presentation, timeout: PDF_REQUEST_TIMEOUT_MS },
+    );
+
+    if (!response.ok) {
+      throw new Error(await readPdfError(response));
+    }
+
+    return {
+      blob: await response.blob(),
+      fileName: parseFileName(response) ?? `${spec.fileName ?? reportKey}.xlsx`,
+    };
+  },
 };
 
 /** PDF rendering goes through an external API — allow more than the default 30s. */

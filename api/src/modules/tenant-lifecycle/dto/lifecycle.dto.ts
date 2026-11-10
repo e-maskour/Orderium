@@ -4,6 +4,8 @@ import {
   MaxLength,
   IsNumber,
   IsBoolean,
+  IsNotEmpty,
+  IsObject,
 } from 'class-validator';
 
 export class ChangeStatusDto {
@@ -33,6 +35,11 @@ export class DeleteTenantDto {
   /** Admin must type "DELETE {TENANT_NAME}" exactly */
   @IsString()
   confirmation: string;
+
+  /** Signed-in admin's account password, re-entered to authorise the deletion */
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
 
 export class UpdatePlanDto {
@@ -65,7 +72,19 @@ export class UpdatePlanDto {
   @IsNumber()
   maxStorageMb?: number;
 
+  /** -1 = unlimited */
   @IsOptional()
+  @IsNumber()
+  maxWarehouses?: number;
+
+  /** -1 = unlimited */
+  @IsOptional()
+  @IsNumber()
+  maxDeliveryPersons?: number;
+
+  /** { pos, delivery, client_portal, reports } */
+  @IsOptional()
+  @IsObject()
   features?: Record<string, boolean>;
 
   @IsOptional()

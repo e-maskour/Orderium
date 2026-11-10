@@ -41,7 +41,7 @@ import { PageHeader } from '../components/PageHeader';
 import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
-import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Dialog } from 'primereact/dialog';
@@ -57,6 +57,7 @@ import { PeriodFilter } from '../components/PeriodFilter';
 import { presetRange } from '../utils/datePresets';
 import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 import { PartnerAvatar } from '@/components/ui';
+import { useTenantModules } from '../components/TenantStatusGuard';
 
 /** 'yyyy-MM-dd' → local Date (no timezone shift). */
 /** Statuses a user can set by hand on POS orders (mirrors the API's POS_SETTABLE_STATUSES). */
@@ -77,6 +78,8 @@ function localDateToIso(d: Date | null | undefined): string {
 export default function Orders() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  // "New order" opens the POS — hidden when the subscription excludes it.
+  const { pos: posEnabled } = useTenantModules();
   const queryClient = useQueryClient();
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
@@ -143,6 +146,14 @@ export default function Orders() {
     'all',
   );
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
+  // Server-side sort (undefined → API default: newest first)
+  const [sort, setSort] = useState<{ field?: string; order?: 'ASC' | 'DESC' }>({});
+
+  // A new result set (filters or sort changed) invalidates the row selection
+  const filtersKey = JSON.stringify(appliedFilters);
+  useEffect(() => {
+    setSelectedOrders([]);
+  }, [filtersKey, sort.field, sort.order]);
 
   const getDateRange = useMemo(() => {
     if (appliedFilters.dateFilterType !== 'custom') {
@@ -168,7 +179,7 @@ export default function Orders() {
     },
     isLoading: ordersLoading,
   } = useQuery({
-    queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
+    queryKey: ['orders', filtersKey, sort.field, sort.order, currentPage, pageSize],
     queryFn: () =>
       ordersService.getAll(
         appliedFilters.search,
@@ -183,13 +194,14 @@ export default function Orders() {
         pageSize,
         undefined,
         appliedFilters.orderStatus?.length > 0 ? appliedFilters.orderStatus : undefined,
+        sort.field ? { field: sort.field, order: sort.order } : undefined,
       ),
   });
 
   const {
     data: orderAggregates = { totalAmount: 0, totalPaid: 0, totalRemaining: 0, totalSubtotal: 0 },
   } = useQuery({
-    queryKey: ['orders-aggregates', JSON.stringify(appliedFilters)],
+    queryKey: ['orders-aggregates', filtersKey],
     queryFn: () =>
       ordersService.getAggregates(
         appliedFilters.search,
@@ -303,6 +315,13 @@ export default function Orders() {
         bg: '#ecfdf5',
         color: '#047857',
         border: '#a7f3d0',
+      },
+      invoiced: {
+        label: t('invoiced'),
+        icon: '🧾',
+        bg: '#faf5ff',
+        color: '#7e22ce',
+        border: '#e9d5ff',
       },
       cancelled: {
         label: t('cancelled'),
@@ -622,6 +641,7 @@ export default function Orders() {
     { label: t('confirmed'), value: 'confirmed' },
     { label: t('pickedUp'), value: 'picked_up' },
     { label: t('delivered'), value: 'delivered' },
+    { label: t('invoiced'), value: 'invoiced' },
     { label: t('cancelled'), value: 'cancelled' },
   ];
 
@@ -676,11 +696,13 @@ export default function Orders() {
             title={t('orders')}
             subtitle={t('viewAndAssignOrders')}
             actions={
-              <Button
-                onClick={() => navigate('/pos')}
-                icon={<Plus style={{ width: 16, height: 16 }} />}
-                label={t('newOrder')}
-              />
+              posEnabled ? (
+                <Button
+                  onClick={() => navigate('/pos')}
+                  icon={<Plus style={{ width: 16, height: 16 }} />}
+                  label={t('newOrder')}
+                />
+              ) : undefined
             }
           />
         </div>
@@ -1036,18 +1058,18 @@ export default function Orders() {
                 {appliedFilters.search ||
                 appliedFilters.orderNumber ||
                 appliedFilters.deliveryStatus?.length > 0 ||
+                appliedFilters.orderStatus?.length > 0 ||
                 appliedFilters.originType !== 'all' ||
-                appliedFilters.dateRange.start ||
-                appliedFilters.dateRange.end
+                appliedFilters.dateFilterType !== 'all'
                   ? t('noOrdersMatchFilter')
                   : t('noOrdersYet')}
               </p>
               {(appliedFilters.search ||
                 appliedFilters.orderNumber ||
                 appliedFilters.deliveryStatus?.length > 0 ||
+                appliedFilters.orderStatus?.length > 0 ||
                 appliedFilters.originType !== 'all' ||
-                appliedFilters.dateRange.start ||
-                appliedFilters.dateRange.end) && (
+                appliedFilters.dateFilterType !== 'all') && (
                 <Button
                   label={t('resetFilters')}
                   onClick={resetFilters}
@@ -1077,8 +1099,20 @@ export default function Orders() {
                 totalRecords={totalCount}
                 first={(currentPage - 1) * pageSize}
                 onPage={(e: DataTablePageEvent) => {
-                  setCurrentPage(Math.floor(e.first / e.rows) + 1);
-                  setPageSize(e.rows);
+                  if (e.rows !== pageSize) {
+                    setPageSize(e.rows);
+                    setCurrentPage(1);
+                  } else {
+                    setCurrentPage(Math.floor(e.first / e.rows) + 1);
+                  }
+                }}
+                removableSort
+                sortField={sort.field}
+                sortOrder={sort.order === 'ASC' ? 1 : sort.order === 'DESC' ? -1 : 0}
+                onSort={(e: DataTableSortEvent) => {
+                  const field = e.sortOrder ? (e.sortField as string) : undefined;
+                  setSort(field ? { field, order: e.sortOrder === -1 ? 'DESC' : 'ASC' } : {});
+                  setCurrentPage(1);
                 }}
                 selection={orders.filter((o: any) => selectedOrders.includes(o.id))}
                 onSelectionChange={(e) => setSelectedOrders((e.value as any[]).map((o) => o.id))}
@@ -1115,6 +1149,9 @@ export default function Orders() {
                   style={{ width: '2.5rem', minWidth: '2.5rem' }}
                 />
                 <Column
+                  field="dateCreated"
+                  sortField="dateCreated"
+                  sortable
                   header={t('orderNumber')}
                   style={{ minWidth: '10rem' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
@@ -1156,6 +1193,9 @@ export default function Orders() {
                   )}
                 />
                 <Column
+                  field="status"
+                  sortField="status"
+                  sortable
                   header={t('status')}
                   style={{ minWidth: '9rem' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
@@ -1186,6 +1226,9 @@ export default function Orders() {
                   }}
                 />
                 <Column
+                  field="originType"
+                  sortField="originType"
+                  sortable
                   header={t('orderSource')}
                   style={{ minWidth: '8rem' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
@@ -1214,6 +1257,9 @@ export default function Orders() {
                   }}
                 />
                 <Column
+                  field="partnerName"
+                  sortField="partnerName"
+                  sortable
                   header={t('customer')}
                   style={{ minWidth: '14rem' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
@@ -1256,8 +1302,11 @@ export default function Orders() {
                   }}
                 />
                 <Column
+                  field="total"
+                  sortField="total"
+                  sortable
                   header={t('total')}
-                  style={{ minWidth: '8rem' }}
+                  style={{ minWidth: '8rem', whiteSpace: 'nowrap' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   footer={
                     <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
@@ -1273,8 +1322,11 @@ export default function Orders() {
                   )}
                 />
                 <Column
+                  field="paidAmount"
+                  sortField="paidAmount"
+                  sortable
                   header={t('paidAmount')}
-                  style={{ minWidth: '9rem' }}
+                  style={{ minWidth: '9rem', whiteSpace: 'nowrap' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   footer={
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
@@ -1290,8 +1342,11 @@ export default function Orders() {
                   )}
                 />
                 <Column
+                  field="remainingAmount"
+                  sortField="remainingAmount"
+                  sortable
                   header={t('remainingAmount')}
-                  style={{ minWidth: '11rem' }}
+                  style={{ minWidth: '11rem', whiteSpace: 'nowrap' }}
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   footer={
                     <span

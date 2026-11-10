@@ -542,7 +542,7 @@ export default function Profile() {
               letterSpacing: '0.01em',
             }}
           >
-            Morocom
+            Marnova
             <span
               style={{
                 background: '#1d4ed8',

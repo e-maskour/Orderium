@@ -388,7 +388,7 @@ export class OrderWithDetails implements IOrderWithDetails {
   }
 
   get totalQuantity(): number {
-    return this.items.reduce((sum, item) => sum + item.quantity, 0);
+    return Math.round(this.items.reduce((sum, item) => sum + item.quantity, 0) * 1000) / 1000;
   }
 
   canBeEdited(): boolean {

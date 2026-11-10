@@ -1,6 +1,6 @@
-# Morocom Client Portal
+# Marnova Client Portal
 
-Customer-facing portal for Morocom.
+Customer-facing portal for Marnova.
 
 ## Development
 

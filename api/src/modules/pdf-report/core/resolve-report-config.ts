@@ -7,7 +7,7 @@ import {
   resolveTheme,
 } from '../types';
 
-/** Module-wide fallbacks, aligned with Morocom's primary market. */
+/** Module-wide fallbacks, aligned with Marnova's primary market. */
 export const REPORT_DEFAULTS = {
   locale: 'fr-MA',
   currency: 'MAD',

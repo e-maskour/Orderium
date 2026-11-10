@@ -1,4 +1,4 @@
-/* Safe Production Service Worker for Morocom Backoffice */
+/* Safe Production Service Worker for Marnova Backoffice */
 const CACHE_NAME = 'orderium-backoffice-v2';
 
 // Do NOT pre-cache index.html — always fetch it from network

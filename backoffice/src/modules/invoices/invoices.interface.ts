@@ -48,7 +48,7 @@ export interface IInvoiceWithDetails {
 }
 
 export interface InvoiceFilters {
-  status?: 'draft' | 'unpaid' | 'partial' | 'paid';
+  status?: 'draft' | 'unpaid' | 'partial' | 'paid' | 'overdue';
   customerId?: number;
   supplierId?: number;
   direction?: 'ACHAT' | 'VENTE';
@@ -57,6 +57,9 @@ export interface InvoiceFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** Server-side sort — must be one of the API's whitelisted sort fields. */
+  sortField?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface InvoiceStatistics {

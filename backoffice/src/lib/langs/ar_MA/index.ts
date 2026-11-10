@@ -16,6 +16,7 @@ import company from './company';
 import inventoryAdjustments from './inventory-adjustments';
 import onboarding from './onboarding';
 import access from './access';
+import subscription from './subscription';
 
 export default {
   ...common,
@@ -36,4 +37,5 @@ export default {
   ...inventoryAdjustments,
   ...onboarding,
   ...access,
+  ...subscription,
 };

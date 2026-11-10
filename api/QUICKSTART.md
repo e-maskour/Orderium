@@ -1,6 +1,6 @@
-# 🚀 Quick Start Guide - Morocom NestJS API
+# 🚀 Quick Start Guide - Marnova NestJS API
 
-Get the Morocom API running in under 5 minutes!
+Get the Marnova API running in under 5 minutes!
 
 ## Prerequisites ✓
 

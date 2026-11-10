@@ -10,8 +10,10 @@ import {
   AgingReportFilterDto,
 } from '../dto/report-filter.dto';
 import { RequirePermission } from '../../auth/decorators/permissions.decorator';
+import { RequirePlanFeature } from '../../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Reports — Invoices')
+@RequirePlanFeature('reports')
 @Controller('reports/invoices')
 export class InvoiceReportsController {
   constructor(private readonly service: InvoiceReportsService) {}

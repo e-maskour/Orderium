@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Access Control Module Registry
+ *  MARNOVA — Access Control Module Registry
  * ═══════════════════════════════════════════════════════════════
  *
  *  The SINGLE SOURCE OF TRUTH for the permission catalogue.

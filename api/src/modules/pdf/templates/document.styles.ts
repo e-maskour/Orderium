@@ -62,7 +62,7 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
       }
 
       .customer-grid {
-        margin-bottom: 3mm;
+        margin-bottom: 2mm;
       }
 
       .bill-to {
@@ -75,13 +75,13 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
         text-transform: uppercase;
         letter-spacing: 0.8pt;
         color: var(--accent);
-        margin-bottom: 1.5mm;
+        margin-bottom: 1mm;
       }
 
       .info-box {
         font-size: 8.5pt;
-        line-height: 1.55;
-        padding: 2.5mm 3mm;
+        line-height: 1.4;
+        padding: 1.5mm 2.5mm;
         background: var(--bg-alt);
         border-left: 2pt solid var(--accent);
         border-radius: 0 2pt 2pt 0;
@@ -127,7 +127,7 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.4pt;
-        padding: 2mm 1.5mm;
+        padding: 1.4mm 1.5mm;
         border: none;
       }
 
@@ -141,10 +141,11 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
       }
 
       .table-row td {
-        padding: 1.8mm 1.5mm;
+        padding: 1mm 1.5mm;
         vertical-align: middle;
         border-bottom: 0.5pt solid var(--border-light);
-        font-size: 8pt;
+        font-size: 7.5pt;
+        line-height: 1.25;
       }
 
       .table-row:nth-child(even) td {
@@ -165,8 +166,8 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
       .totals-section {
         width: 50%;
         margin-left: auto;
-        margin-top: 3mm;
-        margin-bottom: 3mm;
+        margin-top: 2mm;
+        margin-bottom: 2mm;
         page-break-inside: avoid;
         border-radius: 2pt;
         overflow: hidden;
@@ -177,8 +178,8 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.2mm 2.5mm;
-        font-size: 8pt;
+        padding: 0.9mm 2.5mm;
+        font-size: 7.5pt;
         border-bottom: 0.5pt solid var(--border-light);
       }
 
@@ -200,7 +201,7 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
 
       .totals-grand {
         background: var(--accent);
-        padding: 2mm 2.5mm;
+        padding: 1.4mm 2.5mm;
       }
 
       .totals-grand .totals-label {
@@ -217,8 +218,8 @@ export function getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
 
       /* ── Notes ─────────────────────────────────────────────────────── */
       .notes-block {
-        margin-top: 3mm;
-        padding: 2mm 3mm;
+        margin-top: 2mm;
+        padding: 1.5mm 2.5mm;
         background: var(--bg-alt);
         border-radius: 2pt;
         border: 0.5pt solid var(--border);

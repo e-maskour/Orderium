@@ -46,29 +46,6 @@ const InOutFlowPage: React.FC = () => {
     },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsInOutFlowTotalInflow'),
-          value: Number(data.kpis.totalInflow ?? 0),
-          suffix: 'MAD',
-          color: 'green' as const,
-        },
-        {
-          label: t('analyticsInOutFlowTotalOutflow'),
-          value: Number(data.kpis.totalOutflow ?? 0),
-          suffix: 'MAD',
-          color: 'red' as const,
-        },
-        {
-          label: t('analyticsInOutFlowNetBalance'),
-          value: Number(data.kpis.net ?? 0),
-          suffix: 'MAD',
-          color: 'blue' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={ArrowLeftRight}
@@ -76,8 +53,9 @@ const InOutFlowPage: React.FC = () => {
       subtitle={t('analyticsInOutFlowSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="payments-in-out" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
@@ -91,23 +69,6 @@ const InOutFlowPage: React.FC = () => {
               title: t('analyticsInOutFlowTitle'),
               subtitle: t('analyticsInOutFlowSubtitle'),
               fileName: 'entrees-sorties',
-              kpis: [
-                {
-                  key: 'totalInflow',
-                  label: t('analyticsInOutFlowTotalInflow'),
-                  format: 'currency',
-                },
-                {
-                  key: 'totalOutflow',
-                  label: t('analyticsInOutFlowTotalOutflow'),
-                  format: 'currency',
-                },
-                {
-                  key: 'net',
-                  label: t('analyticsInOutFlowNetBalance'),
-                  format: 'currency',
-                },
-              ],
               columns: [
                 {
                   key: 'period',

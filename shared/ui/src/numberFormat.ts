@@ -1,4 +1,4 @@
-// French number conventions for every Morocom app: "," is the decimal separator.
+// French number conventions for every Marnova app: "," is the decimal separator.
 // Display values use formatAmount (12.374,90). Input values are never grouped (14230,12).
 
 /**

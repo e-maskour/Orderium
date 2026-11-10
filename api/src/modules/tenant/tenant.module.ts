@@ -6,7 +6,11 @@ import { TenantConnectionService } from './tenant-connection.service';
 import { TenantMiddleware } from './tenant.middleware';
 import { TenantController } from './tenant.controller';
 import { SuperAdminGuard } from './tenant.guard';
+import { PlanEntitlementsService } from './plan-entitlements.service';
+import { PlanFeatureGuard } from './plan-feature.guard';
+import { SubscriptionController } from './subscription.controller';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
+import { SubscriptionPlan } from '../tenant-lifecycle/entities/subscription-plan.entity';
 
 /**
  * TenantModule uses the named 'master' TypeORM connection
@@ -19,11 +23,25 @@ import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-
 @Module({
   imports: [
     // Registers Tenant repository against the 'master' connection only
-    TypeOrmModule.forFeature([Tenant, TenantActivityLog], 'master'),
+    TypeOrmModule.forFeature(
+      [Tenant, TenantActivityLog, SubscriptionPlan],
+      'master',
+    ),
   ],
-  controllers: [TenantController],
-  providers: [TenantService, TenantConnectionService, SuperAdminGuard],
-  exports: [TenantService, TenantConnectionService],
+  controllers: [TenantController, SubscriptionController],
+  providers: [
+    TenantService,
+    TenantConnectionService,
+    SuperAdminGuard,
+    PlanEntitlementsService,
+    PlanFeatureGuard,
+  ],
+  exports: [
+    TenantService,
+    TenantConnectionService,
+    PlanEntitlementsService,
+    PlanFeatureGuard,
+  ],
 })
 export class TenantModule {}
 

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Unified API Response & Request Types
+ *  MARNOVA — Unified API Response & Request Types
  * ═══════════════════════════════════════════════════════════════
  *
  *  Mirrors the backend ApiResponseBody contract exactly.

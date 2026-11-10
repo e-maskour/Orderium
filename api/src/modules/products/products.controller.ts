@@ -95,6 +95,7 @@ export class ProductsController {
       filterDto.categoryIds,
       filterDto.isService,
       filterDto.brandIds,
+      { field: filterDto.sortField, order: filterDto.sortOrder },
     );
 
     const offset = (pageNum - 1) * perPageNum;

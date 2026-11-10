@@ -10,8 +10,10 @@ import {
   PartnerStatementFilterDto,
 } from '../dto/report-filter.dto';
 import { RequirePermission } from '../../auth/decorators/permissions.decorator';
+import { RequirePlanFeature } from '../../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Reports — Clients')
+@RequirePlanFeature('reports')
 @Controller('reports/clients')
 export class ClientReportsController {
   constructor(private readonly service: ClientReportsService) {}

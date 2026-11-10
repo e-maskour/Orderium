@@ -1,7 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 import React, { useState } from 'react';
 import ReportLayout from '../components/ReportLayout';
-import ReportFilterBar from '../components/ReportFilterBar';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
@@ -13,14 +13,10 @@ import type { StockReportFilter, ReportData } from '../../../modules/analytics/a
 
 const LowStockPage: React.FC = () => {
   const { t } = useLanguage();
-  const [filter, setFilter] = useState<StockReportFilter>({});
+  const [filter] = useState<StockReportFilter>({});
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getLowStock(filter),
   );
-  const handleFilterChange = (f: StockReportFilter) => {
-    setFilter(f);
-    setTimeout(refetch, 0);
-  };
 
   const columns = [
     { field: 'productName', header: t('analyticsStockProduct') },
@@ -37,7 +33,8 @@ const LowStockPage: React.FC = () => {
       subtitle={t('analyticsLowStockSubtitle')}
       isLoading={isLoading}
       error={error}
-      filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="stock-low-stock" values={data.kpis} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons

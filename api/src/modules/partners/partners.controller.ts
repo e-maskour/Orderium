@@ -11,12 +11,14 @@ import {
   HttpCode,
   HttpStatus,
   SetMetadata,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { PartnerResponseDto } from './dto/partner-response.dto';
+import { PartnerSortField, PartnerSortOrder } from './dto/partner-sort.dto';
 import { ApiRes } from '../../common/api-response';
 import { PTR } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
@@ -64,6 +66,18 @@ export class PartnersController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, enum: ['customer', 'supplier'] })
   @ApiQuery({ name: 'isEnabled', required: false, type: Boolean })
+  @ApiQuery({
+    name: 'sortField',
+    required: false,
+    enum: PartnerSortField,
+    description: 'Column to sort by (default: name)',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: PartnerSortOrder,
+    description: 'Sort direction (default: ASC)',
+  })
   @ApiResponse({ status: 200, description: 'Partners retrieved successfully' })
   @RequirePermission('partners.view')
   async findAll(
@@ -72,6 +86,10 @@ export class PartnersController {
     @Query('search') search?: string,
     @Query('type') type?: string,
     @Query('isEnabled') isEnabledStr?: string,
+    @Query('sortField', new ParseEnumPipe(PartnerSortField, { optional: true }))
+    sortField?: PartnerSortField,
+    @Query('sortOrder', new ParseEnumPipe(PartnerSortOrder, { optional: true }))
+    sortOrder?: PartnerSortOrder,
   ) {
     const limitNum = Math.min(
       100,
@@ -91,6 +109,7 @@ export class PartnersController {
       search,
       type as 'customer' | 'supplier' | undefined,
       isEnabled,
+      { field: sortField, order: sortOrder },
     );
 
     return ApiRes(PTR.LIST, partners, {

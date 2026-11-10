@@ -12,15 +12,17 @@ import { Portal } from '../portal/entities/portal.entity';
 import { Role } from '../roles/entities/role.entity';
 import { CreateUserDto, UserType, UserStatus } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FilterUsersDto } from './dto/filter-users.dto';
+import { FilterUsersDto, USERS_MAX_PER_PAGE } from './dto/filter-users.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { AccessControlService } from '../access/access-control.service';
 
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class UsersService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly accessControl: AccessControlService,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get portalRepo(): Repository<Portal> {
@@ -35,7 +37,7 @@ export class UsersService {
     dto: FilterUsersDto,
   ): Promise<{ users: Portal[]; total: number }> {
     const page = dto.page ?? 1;
-    const perPage = Math.min(dto.perPage ?? 20, 100);
+    const perPage = Math.min(dto.perPage ?? 20, USERS_MAX_PER_PAGE);
     const skip = (page - 1) * perPage;
 
     const where: FindOptionsWhere<Portal>[] = [];
@@ -71,10 +73,25 @@ export class UsersService {
     const [users, total] = await this.portalRepo.findAndCount({
       where,
       relations: ['role', 'roles'],
-      order: { dateCreated: 'DESC' },
+      // `id` tie-breaker keeps page boundaries stable on duplicate values.
+      order: {
+        [dto.sortField ?? 'dateCreated']: dto.sortOrder ?? 'DESC',
+        id: dto.sortOrder ?? 'DESC',
+      },
       skip,
       take: perPage,
     });
+
+    // Filtering on the `roles` relation also filters the loaded join, so each
+    // row would only carry the filtered role. Reload the full role set.
+    if (dto.roleId && users.length > 0) {
+      const withRoles = await this.portalRepo.find({
+        where: { id: In(users.map((u) => u.id)) },
+        relations: ['role', 'roles'],
+      });
+      const byId = new Map(withRoles.map((u) => [u.id, u]));
+      return { users: users.map((u) => byId.get(u.id) ?? u), total };
+    }
 
     return { users, total };
   }
@@ -96,6 +113,10 @@ export class UsersService {
       throw new ConflictException(
         `A user with phone number "${dto.phoneNumber}" already exists`,
       );
+    }
+
+    if (dto.userType === UserType.ADMIN || dto.isAdmin === true) {
+      await this.entitlements.assertCanAdd('users');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -173,6 +194,10 @@ export class UsersService {
       user.isActive = dto.status === UserStatus.ACTIVE;
     }
     if (dto.userType !== undefined) {
+      // Promoting a customer to staff takes a back-office seat.
+      if (dto.userType === UserType.ADMIN && !user.isAdmin) {
+        await this.entitlements.assertCanAdd('users');
+      }
       (user as any).userType = dto.userType;
       user.isAdmin = dto.userType === UserType.ADMIN;
       user.isCustomer = dto.userType === UserType.CLIENT;

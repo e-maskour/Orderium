@@ -3,25 +3,11 @@ import {
   UpdateStockMovementDTO,
   ValidateMovementDTO,
   InternalTransferDTO,
-  StockFilters,
 } from './stock.interface';
 import { StockMovement, StockQuant } from './stock.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class StockService {
-  async getAllMovements(filters?: StockFilters): Promise<StockMovement[]> {
-    const params: Record<string, string | number | boolean | undefined> = {};
-    if (filters?.productId) params.productId = filters.productId;
-    if (filters?.warehouseId) params.warehouseId = filters.warehouseId;
-    if (filters?.status) params.status = filters.status;
-    if (filters?.movementType) params.movementType = filters.movementType;
-    if (filters?.startDate) params.startDate = filters.startDate;
-    if (filters?.endDate) params.endDate = filters.endDate;
-
-    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.MOVEMENTS, { params });
-    return (response.data || []).map((m: any) => StockMovement.fromApiResponse(m));
-  }
-
   async getMovementById(id: number): Promise<StockMovement> {
     const response = await apiClient.get<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id));
     return StockMovement.fromApiResponse(response.data);

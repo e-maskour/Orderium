@@ -6,8 +6,10 @@ import { RPT } from '../../../common/response-codes';
 import { StockReportsService } from './stock-reports.service';
 import { StockReportFilterDto } from '../dto/report-filter.dto';
 import { RequirePermission } from '../../auth/decorators/permissions.decorator';
+import { RequirePlanFeature } from '../../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Reports — Stock')
+@RequirePlanFeature('reports')
 @Controller('reports/stock')
 export class StockReportsController {
   constructor(private readonly service: StockReportsService) {}

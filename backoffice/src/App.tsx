@@ -84,6 +84,11 @@ function KeyboardRouteWatcher() {
 }
 import Login from './pages/Login';
 import { REPORT_VIEW_PERMISSIONS } from './modules/access';
+import { registerPlanErrorInterceptor } from './modules/subscription';
+
+// Subscription 403s (PLAN_LIMIT_REACHED / PLAN_FEATURE_UNAVAILABLE) → one toast
+// with a link to /subscription, on top of each caller's own error handling.
+registerPlanErrorInterceptor();
 const OnboardingPage = lazy(() => import('./pages/onboarding/OnboardingPage'));
 
 // ── Onboarding Gate ───────────────────────────────────────────────────────────
@@ -168,6 +173,7 @@ const ClientRequestsPage = lazy(() => import('./pages/ClientRequestsPage'));
 const RolesPage = lazy(() => import('./pages/RolesPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage'));
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'));
 
 // Document pages
@@ -190,6 +196,7 @@ const BonAchatEdit = lazy(() => import('./pages/documents/BonAchatEditWrapper'))
 
 // Analytics pages
 const AnalyticsHub = lazy(() => import('./pages/analytics/AnalyticsHub'));
+const AnalyticsCatalog = lazy(() => import('./pages/analytics/AnalyticsCatalog'));
 const SalesRevenuePage = lazy(() => import('./pages/analytics/sales/SalesRevenuePage'));
 const SalesTopProductsPage = lazy(() => import('./pages/analytics/sales/SalesTopProductsPage'));
 const SalesByCustomerPage = lazy(() => import('./pages/analytics/sales/SalesByCustomerPage'));
@@ -795,6 +802,14 @@ function App() {
                               }
                             />
                             <Route
+                              path="/subscription"
+                              element={
+                                <ProtectedRoute>
+                                  <SubscriptionPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
                               path="/settings/notifications"
                               element={
                                 <ProtectedRoute>
@@ -808,6 +823,14 @@ function App() {
                               element={
                                 <ProtectedRoute anyPermission={REPORT_VIEW_PERMISSIONS}>
                                   <AnalyticsHub />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/analytics/reports"
+                              element={
+                                <ProtectedRoute anyPermission={REPORT_VIEW_PERMISSIONS}>
+                                  <AnalyticsCatalog />
                                 </ProtectedRoute>
                               }
                             />

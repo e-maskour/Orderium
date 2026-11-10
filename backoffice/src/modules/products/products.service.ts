@@ -16,8 +16,8 @@ export class ProductsService {
       categoryIds = [],
       brandIds = [],
       isService,
-      minPrice,
-      maxPrice,
+      sortField,
+      sortOrder,
       page = 1,
       limit = 50,
     } = params;
@@ -29,8 +29,10 @@ export class ProductsService {
     if (categoryIds.length > 0) filterBody.categoryIds = categoryIds;
     if (brandIds.length > 0) filterBody.brandIds = brandIds;
     if (isService !== undefined) filterBody.isService = isService;
-    if (minPrice !== undefined) filterBody.minPrice = minPrice;
-    if (maxPrice !== undefined) filterBody.maxPrice = maxPrice;
+    if (sortField && sortOrder) {
+      filterBody.sortField = sortField;
+      filterBody.sortOrder = sortOrder;
+    }
 
     const response = await apiClient.post<Product[]>(API_ROUTES.PRODUCTS.FILTER, filterBody, {
       params: { page, perPage: limit },

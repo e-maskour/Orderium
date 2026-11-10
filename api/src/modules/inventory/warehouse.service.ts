@@ -11,11 +11,13 @@ import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto, UpdateWarehouseDto } from './dto/warehouse.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class WarehouseService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get warehouseRepository(): Repository<Warehouse> {
@@ -40,6 +42,7 @@ export class WarehouseService {
   }
 
   async create(createDto: CreateWarehouseDto): Promise<Warehouse> {
+    await this.entitlements.assertCanAdd('warehouses');
     // Check if code already exists
     const existing = await this.warehouseRepository.findOne({
       where: { code: createDto.code },

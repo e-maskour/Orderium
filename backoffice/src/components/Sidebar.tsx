@@ -37,6 +37,7 @@ import {
   TrendingDown,
   BarChart2,
   Tags,
+  CreditCard,
 } from 'lucide-react';
 import type { TranslationKey } from '../lib/i18n';
 import { useTenantModules } from './TenantStatusGuard';
@@ -136,6 +137,7 @@ const TOP_FLAT: FlatItem[] = [
     icon: BarChart2,
     labelKey: 'analytics',
     activePaths: ['/analytics'],
+    moduleKey: 'reports',
   },
 ];
 
@@ -329,6 +331,7 @@ const BOTTOM_FLAT: FlatItem[] = [
     icon: UserRoundCheck,
     labelKey: 'clientRequests',
     activePaths: ['/client-requests'],
+    moduleKey: 'clientRequests',
   },
   {
     kind: 'flat',
@@ -360,7 +363,17 @@ const PINNED: FlatItem = {
   activePaths: ['/configurations'],
 };
 
-const LOCALSTORAGE_KEY = 'morocom_sidebar_open_group';
+/** Plan & usage — open to every logged-in admin, no permission required. */
+const SUBSCRIPTION_ITEM: FlatItem = {
+  kind: 'flat',
+  id: 'sb-subscription',
+  to: '/subscription',
+  icon: CreditCard,
+  labelKey: 'mySubscription',
+  activePaths: ['/subscription'],
+};
+
+const LOCALSTORAGE_KEY = 'marnova_sidebar_open_group';
 
 /** Section headings shown above each block of the rail (hidden when collapsed). */
 const SECTIONS = {
@@ -581,7 +594,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
             <img
               src={orderiumLogo}
-              alt="Morocom"
+              alt="Marnova"
               style={{ width: '2.5rem', height: '2.5rem', flexShrink: 0 }}
             />
             {!isCollapsed && (
@@ -601,7 +614,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                     lineHeight: 1.25,
                   }}
                 >
-                  Morocom
+                  Marnova
                 </div>
                 <div
                   style={{
@@ -788,18 +801,23 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
           </ul>
         </nav>
 
-        {/* ── Pinned footer (settings) — stays at the bottom, outside the scroll area ── */}
-        {showPinned && (
-          <div
-            style={{
-              borderTop: '1px solid var(--sb-border)',
-              padding: isCollapsed ? '0.5rem 0.625rem' : '0.5rem 1rem',
-              flexShrink: 0,
-            }}
-          >
+        {/* ── Pinned footer (subscription + settings) — stays at the bottom, outside the scroll area ── */}
+        <div
+          style={{
+            borderTop: '1px solid var(--sb-border)',
+            padding: isCollapsed ? '0.5rem 0.625rem' : '0.5rem 1rem',
+            flexShrink: 0,
+          }}
+        >
+          <FlatLink
+            item={SUBSCRIPTION_ITEM}
+            label={getLabel(SUBSCRIPTION_ITEM)}
+            collapsed={isCollapsed}
+          />
+          {showPinned && (
             <FlatLink item={PINNED} label={getLabel(PINNED)} collapsed={isCollapsed} />
-          </div>
-        )}
+          )}
+        </div>
 
         <style>{`
                 .sidebar-enterprise .sb-section-label {
