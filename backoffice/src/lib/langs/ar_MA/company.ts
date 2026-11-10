@@ -58,7 +58,8 @@ export default {
   uploadLogo: 'إضافة شعار',
   changeLogo: 'تغيير',
   removeLogo: 'حذف',
-  logoDocumentsHint: 'يظهر على الفواتير وعروض الأسعار والوصولات والإيصالات. PNG أو JPG أو WebP، بحد أقصى 2 ميغابايت.',
+  logoDocumentsHint:
+    'يظهر على الفواتير وعروض الأسعار والوصولات والإيصالات. PNG أو JPG أو WebP، بحد أقصى 2 ميغابايت.',
   logoUploaded: 'تم تحديث الشعار',
   logoRemoved: 'تم حذف الشعار',
   logoInvalidType: 'يجب أن يكون الشعار صورة PNG أو JPG أو WebP',

@@ -661,6 +661,12 @@ export class TenantService implements OnModuleInit {
     products: true,
     warehouse: true,
     category: true,
+    brands: true,
+    stockMovements: true,
+    inventoryAdjustments: true,
+    // Also need the matching plan feature (reports / client_portal).
+    reports: true,
+    clientRequests: true,
     portals: {
       clientPortal: false,
       deliveryPortal: false,

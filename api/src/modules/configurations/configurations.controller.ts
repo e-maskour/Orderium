@@ -746,7 +746,10 @@ export class ConfigurationsController {
     },
   })
   @ApiOperation({ summary: 'Upload or replace the company logo' })
-  @ApiResponse({ status: 200, description: 'Logo stored; returns company info' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logo stored; returns company info',
+  })
   @ApiResponse({ status: 400, description: 'Missing or invalid image file' })
   @RequirePermission('configurations.edit')
   async uploadCompanyLogo(@UploadedFile() file?: Express.Multer.File) {
@@ -763,7 +766,10 @@ export class ConfigurationsController {
   @Delete('entity/my_company/logo')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remove the company logo' })
-  @ApiResponse({ status: 200, description: 'Logo removed; returns company info' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logo removed; returns company info',
+  })
   @RequirePermission('configurations.edit')
   async removeCompanyLogo() {
     const values = await this.configurationsService.removeCompanyLogo();

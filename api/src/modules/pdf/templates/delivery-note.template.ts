@@ -1,5 +1,6 @@
 import {
   OrderPrintData,
+  PaymentStatusView,
   PRINT_FONTS_LINK,
   PRINT_FONT_FAMILY,
   PRINT_MONO_FAMILY,
@@ -16,8 +17,31 @@ export const DELIVERY_NOTE_MARGINS = {
   right: '8mm',
 };
 
-export interface DeliveryNoteTemplateData extends OrderPrintData {
+/**
+ * Every option defaults to the sales delivery-note behaviour, so the same
+ * layout also prints invoices, quotes and the purchase documents.
+ */
+export interface DeliveryNoteTemplateData extends Omit<
+  OrderPrintData,
+  'status'
+> {
   barcodeSvg: string;
+  /** Payment badge; omitted for documents without a payment (quotes). */
+  status?: PaymentStatusView;
+  /** Key above the number, e.g. "N° FACTURE". */
+  numberLabel?: string;
+  /** Extra header dates such as the due date or quote validity. */
+  extraDates?: Array<{ label: string; value: string }>;
+  /** Key of the client/supplier block, e.g. "CLIENT" or "FOURNISSEUR". */
+  partyLabel?: string;
+  partyIce?: string;
+  /** Dashed "repère" line for the delivery person. */
+  showLandmark?: boolean;
+  /** Key of the grand-total bar, e.g. "TOTAL TTC". */
+  totalLabel?: string;
+  notes?: string;
+  /** Demande de prix: no price columns, the bar shows the quantity asked. */
+  hidePrices?: boolean;
 }
 
 const NAVY = '#14264f';
@@ -26,7 +50,9 @@ const MUTED = '#555';
 const RULE = '#e4e0d6';
 
 /**
- * A5 "Bon de livraison" built for the delivery person and the customer:
+ * A5 sales/purchase document layout. Originally the "Bon de livraison" built
+ * for the delivery person and the customer, it now also prints invoices,
+ * quotes, factures d'achat, demandes de prix and bons d'achat:
  * big client block, explicit payment badge, quantities in chips and the
  * total spelled out. Long orders flow onto extra pages (the table header
  * repeats); the thank-you/barcode footer sits at the bottom of the last page.
@@ -48,8 +74,13 @@ export function renderDeliveryNoteTemplate(
     toPay: ar ? 'المبلغ الواجب أداؤه' : 'TOTAL À PAYER',
     thanks: ar ? 'شكراً لثقتكم!' : 'Merci pour votre confiance !',
     questions: ar ? 'لأي سؤال، اتصلوا بـ' : 'Pour toute question, appelez le',
+    notes: ar ? 'ملاحظات' : 'NOTES',
+    qtyAsked: ar ? 'إجمالي الكمية المطلوبة' : 'QUANTITÉ TOTALE DEMANDÉE',
   };
   const { company, client, status } = data;
+  const isDelivery = !data.partyLabel;
+  const showLandmark = data.showLandmark ?? isDelivery;
+  const hidePrices = !!data.hidePrices;
 
   const logoHtml = company.logoSrc
     ? `<img class="logo" src="${esc(company.logoSrc)}" alt="">`
@@ -64,20 +95,25 @@ export function renderDeliveryNoteTemplate(
           ${it.extras ? `<div class="it-sub">${esc(it.extras)}</div>` : ''}
         </td>
         <td class="c-qty"><span class="qty-chip">${esc(it.qty)}</span></td>
-        <td class="c-num it-price">${esc(it.price)}</td>
-        <td class="c-num it-total">${esc(it.total)}</td>
+        ${
+          hidePrices
+            ? ''
+            : `<td class="c-num it-price">${esc(it.price)}</td>
+        <td class="c-num it-total">${esc(it.total)}</td>`
+        }
       </tr>`,
     )
     .join('');
 
-  const breakdownHtml = data.breakdown.length
-    ? `<div class="breakdown">${data.breakdown
-        .map(
-          (b) =>
-            `<div class="bd-row"><span>${esc(b.label)}</span><span class="num">${esc(b.value)}</span></div>`,
-        )
-        .join('')}</div>`
-    : '';
+  const breakdownHtml =
+    !hidePrices && data.breakdown.length
+      ? `<div class="breakdown">${data.breakdown
+          .map(
+            (b) =>
+              `<div class="bd-row"><span>${esc(b.label)}</span><span class="num">${esc(b.value)}</span></div>`,
+          )
+          .join('')}</div>`
+      : '';
 
   return `<!DOCTYPE html>
 <html lang="${data.lang}" dir="${ar ? 'rtl' : 'ltr'}">
@@ -135,6 +171,11 @@ export function renderDeliveryNoteTemplate(
 
     /* ── Client + payment ─────────────────── */
     .meta { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; align-items: stretch; }
+    .meta.solo { grid-template-columns: minmax(0, 1fr); }
+    .client-ice { font-size: 9.5px; color: ${MUTED}; }
+    .notes { border-inline-start: 3px solid ${GOLD}; background: #faf9f6; border-radius: 4px; padding: 5px 9px; break-inside: avoid; page-break-inside: avoid; }
+    .notes-k { font-weight: 700; font-size: 8.5px; color: ${GOLD}; letter-spacing: .12em; margin-bottom: 2px; }
+    .notes-v { font-size: 10px; line-height: 1.35; white-space: pre-line; }
     .client {
       display: flex; flex-direction: column; gap: 3px;
       background: #f7f5f0; border-radius: 6px; padding: 7px 10px;
@@ -152,12 +193,10 @@ export function renderDeliveryNoteTemplate(
     .pay {
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
       border-radius: 6px; padding: 6px; text-align: center;
-      background: ${status.bg}; color: ${status.fg};
     }
     .pay-k { font-size: 8px; letter-spacing: .12em; opacity: .9; }
     .pay-glyph {
       width: 22px; height: 22px; border-radius: 50%;
-      background: ${status.fg}; color: ${status.bg};
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 15px; line-height: 1;
     }
@@ -235,33 +274,50 @@ export function renderDeliveryNoteTemplate(
     <div class="doc">
       <div class="doc-title">${esc(data.title)}</div>
       <div class="doc-no">
-        <div class="doc-k">${L.orderNo}</div>
+        <div class="doc-k">${esc(data.numberLabel ?? L.orderNo)}</div>
         <div class="doc-no-v num">${esc(data.documentNumber)}</div>
       </div>
       <div class="doc-date">
         <span class="doc-k">${L.date}</span>
         <span class="doc-date-v num">${esc(data.date)}</span>
       </div>
+      ${(data.extraDates ?? [])
+        .map(
+          (d) => `<div class="doc-date">
+        <span class="doc-k">${esc(d.label)}</span>
+        <span class="doc-date-v num">${esc(d.value)}</span>
+      </div>`,
+        )
+        .join('')}
     </div>
   </div>
 
-  <div class="meta">
+  <div class="meta${status ? '' : ' solo'}">
     <div class="client">
-      <div class="client-k">${pinIcon(10, GOLD)}${L.deliverTo}</div>
+      <div class="client-k">${isDelivery ? pinIcon(10, GOLD) : ''}${esc(data.partyLabel ?? L.deliverTo)}</div>
       <div class="client-name" dir="auto">${esc(client.name)}</div>
       ${client.phone ? `<div class="client-phone">${phoneIcon(12, NAVY)}<span class="num">${esc(client.phone)}</span></div>` : ''}
       ${client.address ? `<div class="client-addr" dir="auto">${esc(client.address)}</div>` : ''}
-      <div class="landmark">
+      ${data.partyIce ? `<div class="client-ice">ICE : <span class="num">${esc(data.partyIce)}</span></div>` : ''}
+      ${
+        showLandmark
+          ? `<div class="landmark">
         <span class="landmark-k">${L.landmark}</span>
         <span class="landmark-line"></span>
-      </div>
+      </div>`
+          : ''
+      }
     </div>
-    <div class="pay">
+    ${
+      status
+        ? `<div class="pay" style="background:${status.bg};color:${status.fg}">
       <div class="pay-k">${L.payment}</div>
-      <div class="pay-glyph">${status.glyph}</div>
+      <div class="pay-glyph" style="background:${status.fg};color:${status.bg}">${status.glyph}</div>
       <div class="pay-label">${esc(status.label)}</div>
       <div class="pay-hint">${esc(status.hint)}</div>
-    </div>
+    </div>`
+        : ''
+    }
   </div>
 
   <div>
@@ -270,8 +326,12 @@ export function renderDeliveryNoteTemplate(
         <tr>
           <th>${L.product}</th>
           <th class="c-qty">${L.qty}</th>
-          <th class="c-num">${L.price}</th>
-          <th class="c-num">${L.total}</th>
+          ${
+            hidePrices
+              ? ''
+              : `<th class="c-num">${L.price}</th>
+          <th class="c-num">${L.total}</th>`
+          }
         </tr>
       </thead>
       <tbody>${rowsHtml}</tbody>
@@ -282,13 +342,24 @@ export function renderDeliveryNoteTemplate(
   <div class="totals">
     ${breakdownHtml}
     <div class="grand">
-      <div>
-        <div class="grand-k">${L.toPay}</div>
+      ${
+        hidePrices
+          ? `<div><div class="grand-k">${L.qtyAsked}</div></div>
+      <div class="grand-v num">${esc(data.unitsLabel)}</div>`
+          : `<div>
+        <div class="grand-k">${esc(data.totalLabel ?? L.toPay)}</div>
         ${data.totalWords ? `<div class="grand-words">${esc(data.totalWords)}</div>` : ''}
       </div>
-      <div class="grand-v num">${esc(data.grandTotal)} <span class="grand-cur">${esc(data.currency)}</span></div>
+      <div class="grand-v num">${esc(data.grandTotal)} <span class="grand-cur">${esc(data.currency)}</span></div>`
+      }
     </div>
   </div>
+
+  ${
+    data.notes?.trim()
+      ? `<div class="notes"><div class="notes-k">${L.notes}</div><div class="notes-v" dir="auto">${esc(data.notes.trim())}</div></div>`
+      : ''
+  }
 
   <div class="ftr">
     <div class="ftr-txt">

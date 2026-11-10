@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DecimalInput,
   getMoroccanPhoneError,
@@ -16,10 +16,12 @@ import {
   Mail,
   Phone,
   Globe,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toastUpdated, toastError } from '../../services/toast.service';
-import { companyService, ICompany } from '../../modules/company';
+import { companyService, Company, ICompany } from '../../modules/company';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
@@ -50,6 +52,10 @@ const MOROCCAN_CITIES = [
   'Essaouira',
   'Larache',
 ];
+
+// Mirrors the API limits on POST /configurations/entity/my_company/logo.
+const LOGO_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 
 const LEGAL_STRUCTURES = [
   'SARL',
@@ -82,15 +88,18 @@ export default function CompanySettings() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<ICompany | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: company, isLoading } = useQuery({
     queryKey: ['company', 'info'],
     queryFn: () => companyService.getCompanyInfo(),
   });
 
+  // Seed the form once; later refetches (e.g. after a logo change) must not
+  // clobber edits the user hasn't saved yet.
   useEffect(() => {
     if (company) {
-      setFormData(company.toJSON());
+      setFormData((prev) => prev ?? company.toJSON());
     }
   }, [company]);
 
@@ -104,6 +113,49 @@ export default function CompanySettings() {
       toastError(error.message || t('errorSaving'));
     },
   });
+
+  // The logo is saved on its own endpoint, immediately. Only `logo` is
+  // patched into the form so unsaved edits to other fields are kept, and the
+  // next "Save" (which sends every field) carries the new value.
+  const applyLogo = (updated: Company) => {
+    setFormData((prev) => (prev ? { ...prev, logo: updated.logo } : prev));
+    queryClient.invalidateQueries({ queryKey: ['company'] });
+  };
+
+  const uploadLogoMutation = useMutation({
+    mutationFn: (file: File) => companyService.uploadLogo(file),
+    onSuccess: (updated) => {
+      applyLogo(updated);
+      toastUpdated(t('logoUploaded' as any));
+    },
+    onError: (error: Error) => toastError(error.message || t('errorSaving')),
+  });
+
+  const removeLogoMutation = useMutation({
+    mutationFn: () => companyService.removeLogo(),
+    onSuccess: (updated) => {
+      applyLogo(updated);
+      toastUpdated(t('logoRemoved' as any));
+    },
+    onError: (error: Error) => toastError(error.message || t('errorSaving')),
+  });
+
+  const logoBusy = uploadLogoMutation.isPending || removeLogoMutation.isPending;
+
+  const handleLogoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    if (!LOGO_MIME_TYPES.includes(file.type)) {
+      toastError(t('logoInvalidType' as any));
+      return;
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      toastError(t('logoTooLarge' as any));
+      return;
+    }
+    uploadLogoMutation.mutate(file);
+  };
 
   const phoneError = getMoroccanPhoneError(formData?.phone || '');
   const faxError = getMoroccanPhoneError(formData?.fax || '');
@@ -210,6 +262,19 @@ export default function CompanySettings() {
                 .cs-identity-wrap { display: flex; gap: 1.25rem; align-items: flex-start; }
                 @media (max-width: 480px) { .cs-identity-wrap { flex-direction: column; align-items: stretch; } }
                 .cs-avatar { flex-shrink: 0; width: 4.5rem; height: 4.5rem; border-radius: 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; font-size: 1.375rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
+                .cs-avatar { position: relative; border: none; padding: 0; cursor: pointer; font-family: inherit; }
+                .cs-avatar:disabled { cursor: progress; }
+                .cs-avatar:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+                .cs-avatar-logo { background: #fff; border: 1px solid var(--erp-border); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+                .cs-avatar-logo img { width: 100%; height: 100%; object-fit: contain; padding: 0.375rem; border-radius: 1rem; }
+                .cs-avatar-badge { position: absolute; right: -0.25rem; bottom: -0.25rem; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: #fff; color: #4f46e5; border: 1px solid var(--erp-border); display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+                .cs-logo-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+                @media (max-width: 480px) { .cs-logo-col { flex-direction: row; align-items: center; gap: 1rem; } }
+                .cs-logo-actions { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+                @media (max-width: 480px) { .cs-logo-actions { align-items: flex-start; } }
+                .cs-link { background: none; border: none; padding: 0.25rem 0; font: inherit; font-size: 0.75rem; font-weight: 500; color: #4f46e5; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; min-height: 1.75rem; }
+                .cs-link:disabled { opacity: 0.5; cursor: progress; }
+                .cs-link-danger { color: #e11d48; }
                 .cs-identity-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.875rem; }
             `}</style>
 
@@ -239,13 +304,61 @@ export default function CompanySettings() {
             </div>
             <div className="cs-card-body">
               <div className="cs-identity-wrap">
-                <div className="cs-avatar">
-                  {(formData.companyName || 'EN')
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((w) => w[0]?.toUpperCase() || '')
-                    .join('') || 'E'}
+                <div className="cs-logo-col">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept={LOGO_MIME_TYPES.join(',')}
+                    onChange={handleLogoSelected}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className={`cs-avatar${formData.logo ? ' cs-avatar-logo' : ''}`}
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoBusy}
+                    aria-label={formData.logo ? t('changeLogo' as any) : t('uploadLogo' as any)}
+                    title={formData.logo ? t('changeLogo' as any) : t('uploadLogo' as any)}
+                  >
+                    {logoBusy ? (
+                      <Loader2 className="animate-spin" style={{ width: 20, height: 20 }} />
+                    ) : formData.logo ? (
+                      <img src={formData.logo} alt={t('companyLogo' as any)} />
+                    ) : (
+                      (formData.companyName || 'EN')
+                        .trim()
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map((w) => w[0]?.toUpperCase() || '')
+                        .join('') || 'E'
+                    )}
+                    {!logoBusy && (
+                      <span className="cs-avatar-badge" aria-hidden="true">
+                        <Camera style={{ width: 12, height: 12 }} />
+                      </span>
+                    )}
+                  </button>
+                  <div className="cs-logo-actions">
+                    <button
+                      type="button"
+                      className="cs-link"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={logoBusy}
+                    >
+                      {formData.logo ? t('changeLogo' as any) : t('uploadLogo' as any)}
+                    </button>
+                    {formData.logo && (
+                      <button
+                        type="button"
+                        className="cs-link cs-link-danger"
+                        onClick={() => removeLogoMutation.mutate()}
+                        disabled={logoBusy}
+                      >
+                        <Trash2 style={{ width: 12, height: 12 }} />
+                        {t('removeLogo' as any)}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="cs-identity-fields">
                   <div>
@@ -275,6 +388,9 @@ export default function CompanySettings() {
                     />
                     <p className="cs-hint">{t('appearsOnDocs' as any)}</p>
                   </div>
+                  <p className="cs-hint" style={{ margin: 0 }}>
+                    {t('logoDocumentsHint' as any)}
+                  </p>
                 </div>
               </div>
             </div>

@@ -100,6 +100,31 @@ export class UpdateTenantModulesDto {
   @IsBoolean()
   category?: boolean;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  brands?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  stockMovements?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  inventoryAdjustments?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  reports?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  clientRequests?: boolean;
+
   @ApiPropertyOptional({ type: () => PortalAccessDto })
   @IsOptional()
   @ValidateNested()

@@ -73,6 +73,10 @@ export interface TenantModules {
   products: boolean;
   warehouse: boolean;
   category: boolean;
+  /** Optional: older APIs omit them, in which case the module stays visible. */
+  brands?: boolean;
+  stockMovements?: boolean;
+  inventoryAdjustments?: boolean;
   portals: {
     clientPortal: boolean;
     deliveryPortal: boolean;

@@ -36,6 +36,8 @@ describe('renderHeaderTemplate logo', () => {
       ...base,
       logoSrc: 'data:image/png;base64,AA" onerror="x',
     });
-    expect(html).toContain('src="data:image/png;base64,AA&quot; onerror=&quot;x"');
+    expect(html).toContain(
+      'src="data:image/png;base64,AA&quot; onerror=&quot;x"',
+    );
   });
 });

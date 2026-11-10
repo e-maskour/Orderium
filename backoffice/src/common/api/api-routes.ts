@@ -170,6 +170,7 @@ export const API_ROUTES = {
     UPDATE: (id: number) => `/api/configurations/${id}`,
     GENERAL: '/api/configurations/entity/general',
     GENERAL_UPDATE: '/api/configurations/entity/general',
+    COMPANY_LOGO: '/api/configurations/entity/my_company/logo',
   },
 
   // ─── Sequences ─────────────────────────────────────────────

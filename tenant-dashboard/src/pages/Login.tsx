@@ -149,8 +149,8 @@ export function Login({ onLogin }: Props) {
           Remember this device for 30 days
         </span>
         <span className="block text-xs text-slate-500 dark:text-slate-400">
-          No code at your next sign-ins here — your password is still required. Don&apos;t use
-          on a shared computer.
+          No code at your next sign-ins here — your password is still required. Don&apos;t use on a
+          shared computer.
         </span>
       </span>
     </label>

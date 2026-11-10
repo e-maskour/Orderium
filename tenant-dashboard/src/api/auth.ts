@@ -28,7 +28,11 @@ export interface SignedIn {
 
 export const authApi = {
   /** `deviceToken` (from a previous "remember this device") skips the 2FA step while valid. */
-  login: async (email: string, password: string, deviceToken?: string | null): Promise<LoginStep> => {
+  login: async (
+    email: string,
+    password: string,
+    deviceToken?: string | null,
+  ): Promise<LoginStep> => {
     const { data } = await apiClient.post('/admin/auth/login', {
       email,
       password,

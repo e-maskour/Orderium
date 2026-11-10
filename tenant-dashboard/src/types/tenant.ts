@@ -203,6 +203,13 @@ export interface TenantModulesConfig {
   products: boolean;
   warehouse: boolean;
   category: boolean;
+  brands: boolean;
+  stockMovements: boolean;
+  inventoryAdjustments: boolean;
+  /** Shown only when the plan also includes `reports`. */
+  reports: boolean;
+  /** Shown only when the plan also includes `client_portal`. */
+  clientRequests: boolean;
   portals: TenantPortalAccess;
 }
 
@@ -226,6 +233,11 @@ export const DEFAULT_MODULES: TenantModulesConfig = {
   products: true,
   warehouse: true,
   category: true,
+  brands: true,
+  stockMovements: true,
+  inventoryAdjustments: true,
+  reports: true,
+  clientRequests: true,
   portals: {
     clientPortal: false,
     deliveryPortal: false,

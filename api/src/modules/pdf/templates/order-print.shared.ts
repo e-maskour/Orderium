@@ -41,10 +41,17 @@ export function resolvePaymentState(
   return 'non_paye';
 }
 
+/** Badge wording that depends on the document (delivery, invoice, purchase). */
+export interface PaymentHints {
+  paid?: string;
+  unpaid?: string;
+}
+
 export function getPaymentStatusView(
   state: PaymentState,
   lang: PrintLang,
   remainingLabel?: string,
+  hints: PaymentHints = {},
 ): PaymentStatusView {
   const ar = lang === 'ar';
   switch (state) {
@@ -52,7 +59,7 @@ export function getPaymentStatusView(
       return {
         state,
         label: ar ? 'مدفوع' : 'PAYÉ',
-        hint: ar ? 'لا شيء للتحصيل' : 'Rien à encaisser',
+        hint: hints.paid ?? (ar ? 'لا شيء للتحصيل' : 'Rien à encaisser'),
         glyph: '✓',
         bg: '#1e7a3c',
         fg: '#fff',
@@ -74,7 +81,9 @@ export function getPaymentStatusView(
       return {
         state,
         label: ar ? 'غير مدفوع' : 'NON PAYÉ',
-        hint: ar ? 'للتحصيل عند التسليم' : 'À encaisser à la livraison',
+        hint:
+          hints.unpaid ??
+          (ar ? 'للتحصيل عند التسليم' : 'À encaisser à la livraison'),
         glyph: '!',
         bg: '#b3261e',
         fg: '#fff',

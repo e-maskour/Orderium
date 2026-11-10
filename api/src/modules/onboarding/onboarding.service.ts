@@ -102,8 +102,8 @@ export class OnboardingService {
       pos: configured.pos && plan.pos === true,
       caisse: configured.caisse && plan.pos === true,
       livreurs: configured.livreurs && plan.delivery === true,
-      reports: plan.reports === true,
-      clientRequests: plan.client_portal === true,
+      reports: configured.reports && plan.reports === true,
+      clientRequests: configured.clientRequests && plan.client_portal === true,
       portals: {
         clientPortal:
           configured.portals.clientPortal && plan.client_portal === true,

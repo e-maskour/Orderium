@@ -68,10 +68,23 @@ import { PaymentStatusBadge, PaymentProgress } from '../components/PaymentStatus
 import { useTenantPayments } from '../hooks/usePayments';
 import { BILLING_CYCLE_LABELS } from '../types/payment';
 import { formatMoney } from '../utils/format';
-import type { UpdateTenantInput, TenantModulesConfig } from '../types/tenant';
+import type {
+  UpdateTenantInput,
+  TenantModulesConfig,
+  TenantModuleKey,
+  PlanFeatureKey,
+} from '../types/tenant';
 import { DEFAULT_MODULES } from '../types/tenant';
 import { formatDate as formatAppDate, formatDateTime } from '../utils/dateFormat';
 import { formatQuantity } from '../utils/numberFormat';
+
+/** A module switch; `plan` names the subscription feature it also needs. */
+interface ModuleToggle {
+  key: TenantModuleKey;
+  label: string;
+  description: string;
+  plan?: PlanFeatureKey;
+}
 
 type Tab = 'overview' | 'metrics' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
 
@@ -1077,7 +1090,8 @@ export function TenantDetail() {
             </div>
 
             {/* Module toggles by category */}
-            {[
+            {(
+              [
               {
                 title: 'Operations',
                 description: 'Core order and point-of-sale features.',
@@ -1087,8 +1101,26 @@ export function TenantDetail() {
                     label: 'Commandes',
                     description: 'Order management',
                   },
-                  { key: 'pos' as const, label: 'POS', description: 'Point of sale' },
-                  { key: 'caisse' as const, label: 'Caisse', description: 'Cash register' },
+                  { key: 'pos', label: 'POS', description: 'Point of sale', plan: 'pos' },
+                  { key: 'caisse', label: 'Caisse', description: 'Cash register', plan: 'pos' },
+                ],
+              },
+              {
+                title: 'Insights & portal',
+                description: 'Reporting and requests coming from the client portal.',
+                modules: [
+                  {
+                    key: 'reports',
+                    label: 'Rapports',
+                    description: 'Analytics and reports (sales, stock, finance)',
+                    plan: 'reports',
+                  },
+                  {
+                    key: 'clientRequests',
+                    label: 'Demandes clients',
+                    description: 'Sign-up requests from the client portal',
+                    plan: 'client_portal',
+                  },
                 ],
               },
               {
@@ -1127,9 +1159,10 @@ export function TenantDetail() {
                     description: 'Supplier directory',
                   },
                   {
-                    key: 'livreurs' as const,
+                    key: 'livreurs',
                     label: 'Livreurs',
                     description: 'Delivery personnel',
+                    plan: 'delivery',
                   },
                 ],
               },
@@ -1155,19 +1188,31 @@ export function TenantDetail() {
                 ],
               },
               {
-                title: 'Catalog',
-                description: 'Products and inventory organisation.',
+                title: 'Catalog & inventory',
+                description: 'Products, their organisation and stock operations.',
                 modules: [
-                  { key: 'products' as const, label: 'Products', description: 'Product catalogue' },
+                  { key: 'products', label: 'Products', description: 'Product catalogue' },
+                  { key: 'category', label: 'Category', description: 'Category tree' },
+                  { key: 'brands', label: 'Marques', description: 'Product brands' },
                   {
-                    key: 'warehouse' as const,
+                    key: 'warehouse',
                     label: 'Warehouse',
                     description: 'Warehouse management',
                   },
-                  { key: 'category' as const, label: 'Category', description: 'Category tree' },
+                  {
+                    key: 'stockMovements',
+                    label: 'Mouvements de stock',
+                    description: 'Stock in / out / transfer history',
+                  },
+                  {
+                    key: 'inventoryAdjustments',
+                    label: "Ajustements d'inventaire",
+                    description: 'Stock counts and corrections',
+                  },
                 ],
               },
-            ].map((group) => {
+              ] as { title: string; description: string; modules: ModuleToggle[] }[]
+            ).map((group) => {
               const allOn = group.modules.every((m) => draftModules[m.key]);
               return (
                 <div key={group.title} className="card overflow-hidden">
@@ -1195,8 +1240,9 @@ export function TenantDetail() {
                     </button>
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {group.modules.map(({ key, label, description }) => {
+                    {group.modules.map(({ key, label, description, plan }) => {
                       const enabled = draftModules[key];
+                      const missingFromPlan = Boolean(plan) && tenant?.features?.[plan!] !== true;
                       return (
                         <div
                           key={key}
@@ -1218,6 +1264,11 @@ export function TenantDetail() {
                                 {label}
                               </p>
                               <p className="text-xs text-slate-400">{description}</p>
+                              {missingFromPlan && (
+                                <p className="mt-1 inline-flex rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                                  Not in plan — stays hidden until the plan includes it
+                                </p>
+                              )}
                             </div>
                           </div>
                           {/* Toggle */}

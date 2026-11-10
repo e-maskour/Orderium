@@ -282,6 +282,7 @@ const GROUPS: GroupItem[] = [
         icon: Tags,
         labelKey: 'brands',
         activePaths: ['/brands'],
+        moduleKey: 'brands',
       },
       {
         id: 'sb-wh',
@@ -299,6 +300,7 @@ const GROUPS: GroupItem[] = [
         icon: ArrowLeftRight,
         labelKey: 'stockMovements',
         activePaths: ['/stock-movements'],
+        moduleKey: 'stockMovements',
       },
       {
         id: 'sb-adj',
@@ -307,6 +309,7 @@ const GROUPS: GroupItem[] = [
         icon: SlidersHorizontal,
         labelKey: 'inventoryAdjustments',
         activePaths: ['/inventory-adjustments'],
+        moduleKey: 'inventoryAdjustments',
       },
     ],
   },

@@ -66,7 +66,9 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
     apiKeyStore.clear();
     qc.clear();
     toast.success(
-      remembered ? 'This device is forgotten — admin tools locked' : 'API key removed — admin tools locked',
+      remembered
+        ? 'This device is forgotten — admin tools locked'
+        : 'API key removed — admin tools locked',
     );
     onClose();
   };
@@ -114,7 +116,9 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-slate-400">Wrong keys count toward the account lockout.</p>
+          <p className="mt-1.5 text-xs text-slate-400">
+            Wrong keys count toward the account lockout.
+          </p>
         </div>
         <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-700">
           <input

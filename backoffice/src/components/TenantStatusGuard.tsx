@@ -41,17 +41,23 @@ const DEFAULT_MODULES: TenantModules = {
   portals: { clientPortal: false, deliveryPortal: false },
   reports: true,
   clientRequests: true,
+  brands: true,
+  stockMovements: true,
+  inventoryAdjustments: true,
 };
 
 /**
- * Plan-driven flags default to `true` when the API does not send them, so an
- * older API never hides reports or client requests.
+ * Optional flags default to `true` when the API does not send them, so an
+ * older API never hides reports, client requests or the inventory pages.
  */
 function normalizeModules(modules: TenantModules): TenantModules {
   return {
     ...modules,
     reports: modules.reports ?? true,
     clientRequests: modules.clientRequests ?? true,
+    brands: modules.brands ?? true,
+    stockMovements: modules.stockMovements ?? true,
+    inventoryAdjustments: modules.inventoryAdjustments ?? true,
   };
 }
 
