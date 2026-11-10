@@ -5,7 +5,9 @@ export type TwoFactorMethod = 'totp' | 'email';
 export type LoginStep =
   | { step: 'enroll'; challengeToken: string }
   | { step: 'totp'; challengeToken: string }
-  | { step: 'email'; challengeToken: string; sentTo: string };
+  | { step: 'email'; challengeToken: string; sentTo: string }
+  /** The browser was trusted at a previous sign-in: no code needed. */
+  | ({ step: 'signed-in' } & SignedIn);
 
 export type TwoFactorSetup =
   | { method: 'totp'; secret: string; otpauthUrl: string; qrCodeDataUrl: string }
@@ -25,8 +27,13 @@ export interface SignedIn {
 }
 
 export const authApi = {
-  login: async (email: string, password: string): Promise<LoginStep> => {
-    const { data } = await apiClient.post('/admin/auth/login', { email, password });
+  /** `deviceToken` (from a previous "remember this device") skips the 2FA step while valid. */
+  login: async (email: string, password: string, deviceToken?: string | null): Promise<LoginStep> => {
+    const { data } = await apiClient.post('/admin/auth/login', {
+      email,
+      password,
+      ...(deviceToken ? { deviceToken } : {}),
+    });
     return data;
   },
 
@@ -43,15 +50,26 @@ export const authApi = {
     return data;
   },
 
-  /** Verifies the 2FA code and returns the session. */
-  verifyCode: async (challengeToken: string, code: string): Promise<SignedIn> => {
-    const { data } = await apiClient.post('/admin/auth/2fa/verify', { challengeToken, code });
+  /** Verifies the 2FA code and returns the session (+ a device token when remembering). */
+  verifyCode: async (
+    challengeToken: string,
+    code: string,
+    rememberDevice = false,
+  ): Promise<SignedIn & { deviceToken?: string }> => {
+    const { data } = await apiClient.post('/admin/auth/2fa/verify', {
+      challengeToken,
+      code,
+      rememberDevice,
+    });
     return data;
   },
 
-  /** Checks the platform API key for the signed-in admin (403 if wrong). */
-  verifyApiKey: async (apiKey: string): Promise<{ valid: true }> => {
-    const { data } = await apiClient.post('/admin/auth/api-key/verify', { apiKey });
+  /** Checks the platform API key (403 if wrong); `remember` returns a 30-day grant. */
+  verifyApiKey: async (
+    apiKey: string,
+    remember = false,
+  ): Promise<{ valid: true; grant?: string }> => {
+    const { data } = await apiClient.post('/admin/auth/api-key/verify', { apiKey, remember });
     return data;
   },
 

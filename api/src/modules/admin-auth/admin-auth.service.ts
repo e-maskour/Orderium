@@ -44,9 +44,15 @@ const ISSUER = 'Marnova Admin';
 const DUMMY_HASH =
   '$2b$12$D/IRmMZVtHk.42nzqsxz1.Hxn9HcmMlTawTT.P7gXRht67285mhru';
 
+/** "Remember this device" lifetime, for both the 2FA skip and the API-key grant. */
+const TRUST_TTL = '30d';
+export const TRUST_TTL_DAYS = 30;
+
 type Stage = '2fa';
 const AUD_CHALLENGE = 'marnova-admin-challenge';
 const AUD_SESSION = 'marnova-admin-session';
+const AUD_DEVICE = 'marnova-admin-device';
+const AUD_KEY_GRANT = 'marnova-admin-key-grant';
 
 interface ChallengePayload {
   sub: number;
@@ -57,11 +63,28 @@ interface SessionPayload {
   email: string;
   ver: number;
 }
+/** Trusted browser: skips the 2FA step. `fp` dies with a password or 2FA change. */
+interface DevicePayload {
+  sub: number;
+  fp: string;
+}
+/** Remembered API key: `kfp` dies when SUPER_ADMIN_API_KEY is rotated. */
+interface KeyGrantPayload {
+  sub: number;
+  kfp: string;
+}
+
+export interface SessionResult {
+  accessToken: string;
+  expiresIn: number;
+  admin: AuthenticatedAdmin;
+}
 
 export type LoginStep =
   | { step: 'enroll'; challengeToken: string }
   | { step: 'totp'; challengeToken: string }
-  | { step: 'email'; challengeToken: string; sentTo: string };
+  | { step: 'email'; challengeToken: string; sentTo: string }
+  | ({ step: 'signed-in' } & SessionResult);
 
 export interface AuthenticatedAdmin {
   id: number;
@@ -106,7 +129,12 @@ export class AdminAuthService {
 
   // ─── Step 1: email + password ─────────────────────────────────────────────
 
-  async login(email: string, password: string): Promise<LoginStep> {
+  async login(
+    email: string,
+    password: string,
+    deviceToken?: string,
+    ip?: string,
+  ): Promise<LoginStep> {
     const admin = await this.repo.findOne({
       where: { email: email.trim().toLowerCase() },
     });
@@ -125,6 +153,12 @@ export class AdminAuthService {
     admin.failedLoginCount = 0;
     admin.otpAttempts = 0;
     await this.repo.save(admin);
+
+    // A browser trusted at a previous sign-in skips the second factor
+    // (the password above is still required).
+    if (deviceToken && (await this.isTrustedDevice(admin, deviceToken))) {
+      return { step: 'signed-in', ...(await this.issueSession(admin, ip)) };
+    }
 
     const challengeToken = await this.signChallenge(admin.id, '2fa');
 
@@ -191,7 +225,12 @@ export class AdminAuthService {
 
   // ─── Step 2b: verify the second factor ────────────────────────────────────
 
-  async verifyTwoFactor(challengeToken: string, code: string, ip?: string) {
+  async verifyTwoFactor(
+    challengeToken: string,
+    code: string,
+    ip?: string,
+    rememberDevice = false,
+  ): Promise<SessionResult & { deviceToken?: string }> {
     const admin = await this.adminFromChallenge(challengeToken, '2fa');
     this.assertNotLocked(admin);
 
@@ -230,10 +269,15 @@ export class AdminAuthService {
     admin.otpAttempts = 0;
     await this.repo.save(admin);
 
-    return this.issueSession(admin, ip);
+    const session = await this.issueSession(admin, ip);
+    if (!rememberDevice) return session;
+    return { ...session, deviceToken: await this.signDeviceToken(admin) };
   }
 
-  private async issueSession(admin: PlatformAdmin, ip?: string) {
+  private async issueSession(
+    admin: PlatformAdmin,
+    ip?: string,
+  ): Promise<SessionResult> {
     admin.lastLoginAt = new Date();
     admin.lastLoginIp = ip?.slice(0, 64) ?? null;
     await this.repo.save(admin);
@@ -261,17 +305,16 @@ export class AdminAuthService {
    * Checks the platform API key for a signed-in admin. Wrong keys count
    * toward the account lockout; reaching it also revokes every session.
    */
-  async verifyApiKey(adminId: number, apiKey: string) {
+  async verifyApiKey(
+    adminId: number,
+    apiKey: string,
+    remember = false,
+  ): Promise<{ valid: true; grant?: string }> {
     const admin = await this.repo.findOne({ where: { id: adminId } });
     if (!admin) throw new UnauthorizedException('Account unavailable');
     this.assertNotLocked(admin);
 
-    const expected = this.config.get<string>('SUPER_ADMIN_API_KEY');
-    if (!expected) {
-      throw new InternalServerErrorException(
-        'SUPER_ADMIN_API_KEY is not configured on the server',
-      );
-    }
+    const expected = this.expectedApiKey();
     if (!safeEqual(apiKey.trim(), expected)) {
       await this.registerFailure(admin);
       throw new ForbiddenException('Invalid super-admin API key');
@@ -280,7 +323,79 @@ export class AdminAuthService {
       admin.failedLoginCount = 0;
       await this.repo.save(admin);
     }
-    return { valid: true };
+    if (!remember) return { valid: true };
+
+    // The browser keeps this signed grant instead of the raw key.
+    const payload: KeyGrantPayload = { sub: admin.id, kfp: this.keyFingerprint(expected) };
+    const grant = await this.jwt.signAsync(payload, {
+      audience: AUD_KEY_GRANT,
+      expiresIn: TRUST_TTL,
+    });
+    return { valid: true, grant };
+  }
+
+  /**
+   * True when `grant` was issued to this admin for the current platform key.
+   * Used by SuperAdminGuard in place of the raw `X-Super-Admin-Key` header.
+   */
+  async isValidApiKeyGrant(adminId: number, grant: string): Promise<boolean> {
+    try {
+      const payload = await this.jwt.verifyAsync<KeyGrantPayload>(grant, {
+        audience: AUD_KEY_GRANT,
+      });
+      return (
+        payload.sub === adminId &&
+        safeEqual(payload.kfp, this.keyFingerprint(this.expectedApiKey()))
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  private expectedApiKey(): string {
+    const expected = this.config.get<string>('SUPER_ADMIN_API_KEY');
+    if (!expected) {
+      throw new InternalServerErrorException(
+        'SUPER_ADMIN_API_KEY is not configured on the server',
+      );
+    }
+    return expected;
+  }
+
+  private keyFingerprint(key: string): string {
+    return sha256(`api-key|${key}`).slice(0, 32);
+  }
+
+  // ─── Trusted devices (skip 2FA) ──────────────────────────────────────────
+
+  /** Changes whenever the password or the second factor changes. */
+  private deviceFingerprint(admin: PlatformAdmin): string {
+    return sha256(
+      `device|${admin.passwordHash}|${admin.twoFactorMethod ?? ''}|${admin.totpSecretEnc ?? ''}`,
+    ).slice(0, 32);
+  }
+
+  private signDeviceToken(admin: PlatformAdmin): Promise<string> {
+    const payload: DevicePayload = { sub: admin.id, fp: this.deviceFingerprint(admin) };
+    return this.jwt.signAsync(payload, { audience: AUD_DEVICE, expiresIn: TRUST_TTL });
+  }
+
+  private async isTrustedDevice(
+    admin: PlatformAdmin,
+    token: string,
+  ): Promise<boolean> {
+    if (!admin.twoFactorMethod) return false; // must have enrolled 2FA first
+    try {
+      const payload = await this.jwt.verifyAsync<DevicePayload>(token, {
+        audience: AUD_DEVICE,
+      });
+      return (
+        payload.sub === admin.id &&
+        safeEqual(payload.fp, this.deviceFingerprint(admin))
+      );
+    } catch {
+      return false;
+    }
   }
 
   // ─── Session (used by SuperAdminGuard) ────────────────────────────────────

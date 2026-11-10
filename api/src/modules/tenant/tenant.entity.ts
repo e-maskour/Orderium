@@ -8,7 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Payment } from '../tenant-lifecycle/entities/payment.entity';
-import type { PlanFeatures } from './plan-features';
+import type { PlanFeatures, TenantAddons } from './plan-features';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 
 export type TenantStatus =
@@ -143,6 +143,10 @@ export class Tenant {
   /** Plan feature flags (copied from the plan, overridable per tenant). */
   @Column({ type: 'jsonb', default: () => "'{}'" })
   features: PlanFeatures;
+
+  /** Add-ons bought on top of the plan (packs + extra features). */
+  @Column({ type: 'jsonb', default: () => "'{}'" })
+  addons: TenantAddons;
 
   // ─── Misc ──────────────────────────────────────────────────────────────────
 

@@ -259,15 +259,8 @@ export class TenantLifecycleService {
     tenant.isActive = true;
     tenant.disabledAt = null;
 
-    if (plan) {
-      tenant.maxUsers = plan.maxUsers;
-      tenant.maxProducts = plan.maxProducts;
-      tenant.maxOrdersPerMonth = plan.maxOrdersPerMonth;
-      tenant.maxStorageMb = plan.maxStorageMb;
-      tenant.maxWarehouses = plan.maxWarehouses;
-      tenant.maxDeliveryPersons = plan.maxDeliveryPersons;
-      tenant.features = { ...(plan.features ?? {}) };
-    }
+    // Plan limits + the tenant's add-ons (kept across renewals and plan changes).
+    if (plan) await this.tenantService.applyPlanDefaults(tenant, planName);
 
     const saved = await this.tenantRepo.save(tenant);
     await this.setRedisStatus(tenant.slug, 'active');

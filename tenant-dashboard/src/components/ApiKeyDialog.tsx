@@ -16,18 +16,25 @@ interface DialogProps {
   onClose: () => void;
 }
 
-/** Enter / replace / remove the super-admin API key for this browser session. */
+/**
+ * Enter / replace / remove the super-admin API key. By default it is kept for
+ * this browser session; "remember on this device" stores a signed 30-day grant
+ * instead (the key itself is never persisted).
+ */
 export function ApiKeyDialog({ open, onClose }: DialogProps) {
   const qc = useQueryClient();
   const current = useApiKey();
   const [value, setValue] = useState('');
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const remembered = Boolean(current) && apiKeyStore.isRemembered();
 
   useEffect(() => {
     if (open) {
       setValue('');
       setShow(false);
+      setRemember(apiKeyStore.isRemembered());
     }
   }, [open]);
 
@@ -37,9 +44,15 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
     if (!key) return;
     setBusy(true);
     try {
-      await authApi.verifyApiKey(key);
-      apiKeyStore.set(key);
-      toast.success('API key accepted — admin tools unlocked');
+      const res = await authApi.verifyApiKey(key, remember);
+      if (remember && res.grant) {
+        apiKeyStore.remember(res.grant);
+        toast.success('API key accepted — remembered on this device for 30 days');
+      } else {
+        apiKeyStore.clear(); // drop any older remembered grant
+        apiKeyStore.set(key);
+        toast.success('API key accepted — admin tools unlocked');
+      }
       onClose();
       void qc.invalidateQueries(); // reload everything that failed while locked
     } catch (err) {
@@ -52,7 +65,9 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
   const remove = () => {
     apiKeyStore.clear();
     qc.clear();
-    toast.success('API key removed — admin tools locked');
+    toast.success(
+      remembered ? 'This device is forgotten — admin tools locked' : 'API key removed — admin tools locked',
+    );
     onClose();
   };
 
@@ -65,9 +80,11 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
       icon={<KeyRound />}
       title="Super-admin API key"
       description={
-        current
-          ? 'The key is set for this browser session. Enter a new one to replace it.'
-          : 'Tenant data and admin tools are locked until you enter the platform API key.'
+        remembered
+          ? 'The key is remembered on this device. Enter a new one to replace it.'
+          : current
+            ? 'The key is set for this browser session. Enter a new one to replace it.'
+            : 'Tenant data and admin tools are locked until you enter the platform API key.'
       }
     >
       <form onSubmit={save} className="space-y-4">
@@ -97,10 +114,25 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-slate-400">
-            Kept only for this browser session. Wrong keys count toward the account lockout.
-          </p>
+          <p className="mt-1.5 text-xs text-slate-400">Wrong keys count toward the account lockout.</p>
         </div>
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-700">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span>
+            <span className="block font-medium text-slate-700 dark:text-slate-200">
+              Remember on this device for 30 days
+            </span>
+            <span className="block text-xs text-slate-500 dark:text-slate-400">
+              Otherwise the key is asked again when the browser closes. Don&apos;t use on a shared
+              computer.
+            </span>
+          </span>
+        </label>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           {current && (
             <button
@@ -109,7 +141,7 @@ export function ApiKeyDialog({ open, onClose }: DialogProps) {
               disabled={busy}
               className="btn-secondary sm:mr-auto"
             >
-              Remove key
+              {remembered ? 'Forget this device' : 'Remove key'}
             </button>
           )}
           <button type="button" onClick={onClose} disabled={busy} className="btn-secondary">

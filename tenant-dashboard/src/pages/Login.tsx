@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, ShieldCheck, Smartphone, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { apiErrorMessage } from '../api/client';
+import { apiErrorMessage, trustedDevice } from '../api/client';
 import { authApi, type TwoFactorMethod } from '../api/auth';
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
  * Sign-in: 1) email + password → 2) authenticator app or e-mail code
  * (enrolled on first sign-in). The platform API key is entered afterwards,
  * from inside the dashboard.
+ *
+ * "Remember this device" stores a 30-day trusted-device token: later sign-ins on
+ * this browser skip step 2 (the password is still required).
  */
 type Step =
   | { kind: 'credentials' }
@@ -35,6 +38,7 @@ export function Login({ onLogin }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState('');
   const [resendIn, setResendIn] = useState(0);
+  const [rememberDevice, setRememberDevice] = useState(false);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -66,8 +70,16 @@ export function Login({ onLogin }: Props) {
     e.preventDefault();
     if (!email.trim() || !password) return;
     void run(async () => {
-      const res = await authApi.login(email.trim(), password);
+      const device = trustedDevice.get();
+      const res = await authApi.login(email.trim(), password, device);
       setPassword('');
+      if (res.step === 'signed-in') {
+        onLogin(res.accessToken);
+        toast.success(`Welcome back${res.admin.name ? `, ${res.admin.name}` : ''}`);
+        return;
+      }
+      // A stored token that no longer skips the code has expired or been revoked.
+      if (device) trustedDevice.clear();
       if (res.step === 'enroll') setStep({ kind: 'enroll', token: res.challengeToken });
       else if (res.step === 'totp')
         setStep({ kind: 'code', token: res.challengeToken, method: 'totp' });
@@ -94,8 +106,9 @@ export function Login({ onLogin }: Props) {
     e.preventDefault();
     if (!/^\d{6}$/.test(code)) return;
     void run(async () => {
-      const res = await authApi.verifyCode(token, code);
+      const res = await authApi.verifyCode(token, code, rememberDevice);
       setCode('');
+      if (res.deviceToken) trustedDevice.set(res.deviceToken);
       onLogin(res.accessToken);
       toast.success(`Welcome${res.admin.name ? `, ${res.admin.name}` : ''}`);
     }, 'Invalid code');
@@ -121,6 +134,26 @@ export function Login({ onLogin }: Props) {
       autoFocus
       className="input text-center font-mono text-lg tracking-[0.5em]"
     />
+  );
+
+  const rememberToggle = (
+    <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900">
+      <input
+        type="checkbox"
+        checked={rememberDevice}
+        onChange={(e) => setRememberDevice(e.target.checked)}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+      />
+      <span>
+        <span className="block font-medium text-slate-700 dark:text-slate-200">
+          Remember this device for 30 days
+        </span>
+        <span className="block text-xs text-slate-500 dark:text-slate-400">
+          No code at your next sign-ins here — your password is still required. Don&apos;t use
+          on a shared computer.
+        </span>
+      </span>
+    </label>
   );
 
   const submitButton = (label: string, disabled: boolean) => (
@@ -362,6 +395,7 @@ export function Login({ onLogin }: Props) {
                 </label>
                 {codeInput}
               </div>
+              {rememberToggle}
               {submitButton('Verify & continue', code.length !== 6)}
             </form>
           )}
@@ -374,6 +408,7 @@ export function Login({ onLogin }: Props) {
                 </label>
                 {codeInput}
               </div>
+              {rememberToggle}
               {submitButton('Verify', code.length !== 6)}
               {step.method === 'email' && (
                 <button

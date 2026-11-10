@@ -118,7 +118,7 @@ export class PDFService implements OnModuleDestroy {
   /** PDF buffer TTL in Redis: 5 minutes */
   private static readonly PDF_CACHE_TTL_MS = 5 * 60 * 1000;
   /** Bump whenever a PDF template/layout changes so stale cached PDFs are bypassed. */
-  private static readonly PDF_CACHE_VERSION = 'v4';
+  private static readonly PDF_CACHE_VERSION = 'v5';
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
@@ -354,6 +354,7 @@ export class PDFService implements OnModuleDestroy {
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
         companyLines: this.buildCompanyLines(companyConfig, lang),
+        logoSrc: await this.resolveLogoSrc(companyConfig.logo),
         documentLabel:
           lang === 'ar' ? 'ملخص الطلبات' : 'RÉCAPITULATIF DE COMMANDES',
         documentNumber: String(summary.orderCount),
@@ -696,6 +697,7 @@ export class PDFService implements OnModuleDestroy {
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
         companyLines,
+        logoSrc: await this.resolveLogoSrc(companyConfig.logo),
         documentLabel: this.getDocumentLabel(
           documentType,
           data.isDemandePrix,

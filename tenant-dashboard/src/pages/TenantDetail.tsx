@@ -55,19 +55,10 @@ import {
   useTenantModules,
   useUpdateTenantModules,
   usePlans,
+  useTenantSubscription,
 } from '../hooks/useTenants';
-import { FeaturesList } from '../components/PlanLimitsEditor';
-import {
-  LIMIT_FIELDS,
-  UNLIMITED_LABEL,
-  formatLimit,
-  formatLimitValue,
-  isUnlimited,
-  normalizeFeatures,
-  planLabel,
-  planStyle,
-  usagePct,
-} from '../utils/plans';
+import { TenantSubscriptionPanel } from '../components/TenantSubscriptionPanel';
+import { planLabel, planStyle } from '../utils/plans';
 import { StatusBadge } from '../components/StatusBadge';
 import { CopyableUrl } from '../components/CopyableUrl';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -97,59 +88,6 @@ function formatDate(s: string | null) {
 }
 
 // ───────────────────────── sub-components ────────────────────────────────────
-
-function UsageMeter({
-  label,
-  used,
-  max,
-  icon,
-}: {
-  label: string;
-  used: number;
-  max: number;
-  icon?: React.ReactNode;
-}) {
-  const unlimited = isUnlimited(max);
-  const rawPct = usagePct(used, max);
-  const pct = rawPct === null ? 0 : Math.min(100, rawPct);
-  const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-indigo-500';
-  const trackColor =
-    pct >= 90
-      ? 'bg-red-50 dark:bg-red-950/30'
-      : pct >= 70
-        ? 'bg-amber-50 dark:bg-amber-950/30'
-        : 'bg-indigo-50 dark:bg-indigo-950/30';
-  const labelColor =
-    pct >= 90
-      ? 'text-red-600 dark:text-red-400'
-      : pct >= 70
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-slate-500 dark:text-slate-400';
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon && <span className={`${labelColor}`}>{icon}</span>}
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {!unlimited && <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>}
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            {formatQuantity(used)} / {unlimited ? UNLIMITED_LABEL : formatLimit(max)}
-          </span>
-        </div>
-      </div>
-      {!unlimited && (
-        <div className={`h-2.5 w-full overflow-hidden rounded-full ${trackColor}`}>
-          <div
-            className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
 
 function InfoRow({
   icon,
@@ -184,6 +122,9 @@ export function TenantDetail() {
 
   const { data: tenant, isLoading, error } = useTenant(tenantId);
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useTenantStats(tenantId);
+  // Live plan usage (same source as the Subscription tab; shared query cache).
+  const { data: subscriptionDetail } = useTenantSubscription(tenantId);
+  const liveUsage = subscriptionDetail?.usage ?? null;
   const { data: activityData } = useTenantActivity(tenantId);
   const { data: paymentsData } = useTenantPayments(tenantId);
   const { data: modulesData } = useTenantModules(tenantId);
@@ -360,7 +301,6 @@ export function TenantDetail() {
     ...planStyle(tenant.subscriptionPlan),
     label: planLabel(tenant.subscriptionPlan, plans),
   };
-  const tenantFeatures = normalizeFeatures(tenant.features);
   const accentColor = tenant.primaryColor ?? '#6366f1';
 
   return (
@@ -470,21 +410,17 @@ export function TenantDetail() {
             {[
               {
                 icon: <Users className="h-4 w-4" />,
-                label: 'Users',
-                value: statsLoading
-                  ? '—'
-                  : stats?.usersCount != null
-                    ? formatQuantity(stats.usersCount)
-                    : '—',
+                // Staff seats (what the plan limits), not portal customers.
+                label: 'Staff users',
+                value: liveUsage?.users != null ? formatQuantity(liveUsage.users.used) : '—',
                 color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400',
               },
               {
                 icon: <ShoppingCart className="h-4 w-4" />,
-                label: 'Orders',
-                value: statsLoading
-                  ? '—'
-                  : stats?.ordersCount != null
-                    ? formatQuantity(stats.ordersCount)
+                label: 'Orders this month',
+                value:
+                  liveUsage?.ordersPerMonth != null
+                    ? formatQuantity(liveUsage.ordersPerMonth.used)
                     : '—',
                 color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400',
               },
@@ -780,66 +716,12 @@ export function TenantDetail() {
           </div>
         )}
 
-        {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
         {/* ══════════════════ METRICS TAB ══════════════════ */}
         {activeTab === 'metrics' && <TenantMetricsPanel tenantId={tenant.id} />}
 
+        {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
         {activeTab === 'subscription' && (
-          <div className="space-y-6">
-            {/* Plan card */}
-            <div
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${planMeta.gradient} p-6 text-white shadow-lg`}
-            >
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: 'radial-gradient(circle at 70% 30%, white 0%, transparent 60%)',
-                }}
-              />
-              <div className="relative flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-white/70">Current Plan</p>
-                  <h3 className="mt-0.5 text-3xl font-extrabold tracking-tight">
-                    {planMeta.label}
-                  </h3>
-                  <p className="mt-2 text-sm text-white/80">
-                    {formatDate(tenant.subscriptionStartedAt)} →{' '}
-                    {formatDate(tenant.subscriptionEndsAt)}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur-sm ${tenant.autoRenew ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'}`}
-                  >
-                    {tenant.autoRenew ? '↻ Auto-renew on' : 'Auto-renew off'}
-                  </span>
-                </div>
-              </div>
-              <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-3 lg:grid-cols-6">
-                {LIMIT_FIELDS.map(({ key, label }) => (
-                  <div key={key}>
-                    <p className="text-xs font-medium text-white/60">{label}</p>
-                    <p className="mt-0.5 text-lg font-bold">{formatLimitValue(key, tenant[key])}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="card p-6">
-              <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                <Zap className="h-4 w-4 text-indigo-500" />
-                Plan Features
-              </h3>
-              <p className="mb-4 text-xs text-slate-400">
-                Enforced by the API. Edit the tenant to override the plan defaults.
-              </p>
-              <FeaturesList
-                features={tenantFeatures}
-                className="grid gap-2 text-sm sm:grid-cols-2"
-              />
-            </div>
-
+          <TenantSubscriptionPanel tenantId={tenantId} plans={plans}>
             {/* Trial info */}
             {tenant.status === 'trial' && (
               <div className="card overflow-hidden p-6">
@@ -920,36 +802,7 @@ export function TenantDetail() {
                 </div>
               </div>
             )}
-
-            {/* Usage meters */}
-            <div className="card p-6">
-              <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                <Shield className="h-4 w-4 text-indigo-500" />
-                Plan Usage
-              </h3>
-              <p className="mb-5 text-xs text-slate-400">Live usage vs. plan limits.</p>
-              <div className="space-y-5">
-                <UsageMeter
-                  label="Users"
-                  used={stats?.usersCount ?? 0}
-                  max={tenant.maxUsers}
-                  icon={<Users className="h-4 w-4" />}
-                />
-                <UsageMeter
-                  label="Orders / month"
-                  used={stats?.ordersCount ?? 0}
-                  max={tenant.maxOrdersPerMonth}
-                  icon={<ShoppingCart className="h-4 w-4" />}
-                />
-                <UsageMeter
-                  label="Storage (MB)"
-                  used={stats ? Math.round(stats.storageUsedBytes / (1024 * 1024)) : 0}
-                  max={tenant.maxStorageMb}
-                  icon={<HardDrive className="h-4 w-4" />}
-                />
-              </div>
-            </div>
-          </div>
+          </TenantSubscriptionPanel>
         )}
 
         {/* ══════════════════ PAYMENTS TAB ══════════════════ */}

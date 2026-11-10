@@ -12,8 +12,17 @@ import {
   BadRequestException,
   Inject,
   Logger,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
 import { ConfigurationsService } from './configurations.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
@@ -35,6 +44,11 @@ import {
   NoPermissionRequired,
   RequirePermission,
 } from '../auth/decorators/permissions.decorator';
+
+const COMPANY_LOGO_MAX_BYTES = 2 * 1024 * 1024;
+// SVG is excluded on purpose: it can carry scripts and sharp's rasterising of
+// it is inconsistent. Uploads are transcoded to WebP by the storage provider.
+const COMPANY_LOGO_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 @ApiTags('Configurations')
 @Controller('configurations')
@@ -716,5 +730,43 @@ export class ConfigurationsController {
       values: companyDto,
     });
     return ApiRes(CFG.COMPANY_UPDATED, updated.values);
+  }
+
+  @Post('entity/my_company/logo')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FileInterceptor('logo', { limits: { fileSize: COMPANY_LOGO_MAX_BYTES } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { logo: { type: 'string', format: 'binary' } },
+      required: ['logo'],
+    },
+  })
+  @ApiOperation({ summary: 'Upload or replace the company logo' })
+  @ApiResponse({ status: 200, description: 'Logo stored; returns company info' })
+  @ApiResponse({ status: 400, description: 'Missing or invalid image file' })
+  @RequirePermission('configurations.edit')
+  async uploadCompanyLogo(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No logo file provided');
+    }
+    if (!COMPANY_LOGO_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Logo must be a PNG, JPEG or WebP image');
+    }
+    const values = await this.configurationsService.setCompanyLogo(file);
+    return ApiRes(CFG.COMPANY_LOGO_UPLOADED, values);
+  }
+
+  @Delete('entity/my_company/logo')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove the company logo' })
+  @ApiResponse({ status: 200, description: 'Logo removed; returns company info' })
+  @RequirePermission('configurations.edit')
+  async removeCompanyLogo() {
+    const values = await this.configurationsService.removeCompanyLogo();
+    return ApiRes(CFG.COMPANY_LOGO_REMOVED, values);
   }
 }

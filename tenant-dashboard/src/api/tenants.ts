@@ -10,6 +10,9 @@ import type {
   SubscriptionPlanData,
   ActivityLogEntry,
   TenantModulesConfig,
+  AddonCatalogue,
+  TenantSubscriptionDetail,
+  UpdateTenantSubscriptionInput,
 } from '../types/tenant';
 
 export const tenantsApi = {
@@ -101,6 +104,26 @@ export const tenantsApi = {
 
   listPlans: async (): Promise<SubscriptionPlanData[]> => {
     const { data } = await apiClient.get('/admin/plans');
+    return data;
+  },
+
+  // ── Subscription (plan + add-ons) ──────────────────────────────────────────
+
+  getSubscription: async (id: number): Promise<TenantSubscriptionDetail> => {
+    const { data } = await apiClient.get(`/admin/tenants/${id}/subscription`);
+    return data;
+  },
+
+  updateSubscription: async (
+    id: number,
+    input: UpdateTenantSubscriptionInput,
+  ): Promise<TenantSubscriptionDetail> => {
+    const { data } = await apiClient.put(`/admin/tenants/${id}/subscription`, input);
+    return data;
+  },
+
+  getAddonCatalogue: async (): Promise<AddonCatalogue> => {
+    const { data } = await apiClient.get('/admin/subscription/addons');
     return data;
   },
 

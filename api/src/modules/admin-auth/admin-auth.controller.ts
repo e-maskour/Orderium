@@ -40,13 +40,23 @@ export class AdminAuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ short: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Step 1 — email and password' })
-  @ApiResponse({ status: 200, description: 'Next step: enroll | totp | email' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Next step: enroll | totp | email — or signed-in when the browser is trusted',
+  })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   @ApiResponse({ status: 429, description: 'Account locked' })
-  async login(@Body() dto: AdminLoginDto) {
+  async login(@Body() dto: AdminLoginDto, @Ip() ip: string) {
+    const result = await this.auth.login(
+      dto.email,
+      dto.password,
+      dto.deviceToken,
+      ip,
+    );
     return ApiRes(
-      ADM.LOGIN_STEP,
-      await this.auth.login(dto.email, dto.password),
+      result.step === 'signed-in' ? ADM.SIGNED_IN : ADM.LOGIN_STEP,
+      result,
     );
   }
 
@@ -90,7 +100,12 @@ export class AdminAuthController {
   async verify(@Body() dto: VerifyCodeDto, @Ip() ip: string) {
     return ApiRes(
       ADM.SIGNED_IN,
-      await this.auth.verifyTwoFactor(dto.challengeToken, dto.code, ip),
+      await this.auth.verifyTwoFactor(
+        dto.challengeToken,
+        dto.code,
+        ip,
+        dto.rememberDevice === true,
+      ),
     );
   }
 
@@ -109,7 +124,7 @@ export class AdminAuthController {
   ) {
     return ApiRes(
       ADM.API_KEY_VERIFIED,
-      await this.auth.verifyApiKey(admin.id, dto.apiKey),
+      await this.auth.verifyApiKey(admin.id, dto.apiKey, dto.remember === true),
     );
   }
 

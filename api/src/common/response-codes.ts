@@ -784,6 +784,18 @@ export const CFG = {
     status: 200,
     message: 'Company Info Updated',
   },
+  /** POST /configurations/entity/my_company/logo              → data: company          | metadata: null */
+  COMPANY_LOGO_UPLOADED: {
+    code: 'CFG200_13',
+    status: 200,
+    message: 'Company Logo Uploaded',
+  },
+  /** DELETE /configurations/entity/my_company/logo            → data: company          | metadata: null */
+  COMPANY_LOGO_REMOVED: {
+    code: 'CFG200_14',
+    status: 200,
+    message: 'Company Logo Removed',
+  },
   /** GET /configurations/entity/general                       → data: generalParams    | metadata: null */
   GENERAL_DETAIL: {
     code: 'CFG200_11',
@@ -1886,5 +1898,23 @@ export const SUB = {
     code: 'SUB200_01',
     status: 200,
     message: 'Current Subscription Retrieved',
+  },
+  /** GET   /admin/tenants/:id/subscription → data: TenantSubscriptionDetail */
+  ADMIN_DETAIL: {
+    code: 'SUB200_02',
+    status: 200,
+    message: 'Tenant Subscription Retrieved',
+  },
+  /** PUT   /admin/tenants/:id/subscription → data: TenantSubscriptionDetail */
+  ADMIN_UPDATED: {
+    code: 'SUB200_03',
+    status: 200,
+    message: 'Tenant Subscription Updated',
+  },
+  /** GET   /admin/subscription/addons      → data: AddonCatalogue */
+  ADDONS: {
+    code: 'SUB200_04',
+    status: 200,
+    message: 'Add-on Catalogue Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;

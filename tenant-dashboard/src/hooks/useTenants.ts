@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantsApi } from '../api/tenants';
+import { metricsKeys } from './useMetrics';
 import type {
   ListTenantsParams,
   CreateTenantInput,
   UpdateTenantInput,
   TenantModulesConfig,
+  UpdateTenantSubscriptionInput,
 } from '../types/tenant';
 
 export const tenantKeys = {
@@ -17,6 +19,8 @@ export const tenantKeys = {
   activity: (id: number) => [...tenantKeys.all, 'activity', id] as const,
   plans: () => ['plans'] as const,
   modules: (id: number) => [...tenantKeys.all, 'modules', id] as const,
+  subscription: (id: number) => [...tenantKeys.all, 'subscription', id] as const,
+  addonCatalogue: () => ['subscription-addons'] as const,
 };
 
 export function useTenants(params: ListTenantsParams = {}) {
@@ -201,6 +205,40 @@ export function useUpdateTenantModules(id: number) {
     mutationFn: (input: Partial<TenantModulesConfig>) => tenantsApi.updateModules(id, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tenantKeys.modules(id) });
+    },
+  });
+}
+
+// ─── Subscription (plan + add-ons) ───────────────────────────────────────────
+
+export function useTenantSubscription(id: number) {
+  return useQuery({
+    queryKey: tenantKeys.subscription(id),
+    queryFn: () => tenantsApi.getSubscription(id),
+    enabled: id > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useAddonCatalogue() {
+  return useQuery({
+    queryKey: tenantKeys.addonCatalogue(),
+    queryFn: () => tenantsApi.getAddonCatalogue(),
+    staleTime: 10 * 60_000,
+  });
+}
+
+/** Changes plan and/or add-ons; the server recomputes limits = plan + add-ons. */
+export function useUpdateTenantSubscription(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateTenantSubscriptionInput) => tenantsApi.updateSubscription(id, input),
+    onSuccess: (data) => {
+      qc.setQueryData(tenantKeys.subscription(id), data);
+      qc.invalidateQueries({ queryKey: tenantKeys.subscription(id) });
+      qc.invalidateQueries({ queryKey: tenantKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: tenantKeys.lists() });
+      qc.invalidateQueries({ queryKey: metricsKeys.all });
     },
   });
 }

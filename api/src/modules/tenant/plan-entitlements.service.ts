@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import type { DataSource } from 'typeorm';
 import { TenantService } from './tenant.service';
 import { TenantConnectionService } from './tenant-connection.service';
 import { tenantStorage } from './tenant.context';
@@ -99,7 +100,16 @@ export class PlanEntitlementsService {
     if (entry) entry.bytes += bytes;
   }
 
-  async usage(tenant: Tenant): Promise<PlanUsage> {
+  /**
+   * Usage for any tenant, outside its request context (super-admin screens).
+   * Opens / reuses that tenant's connection.
+   */
+  async usageForTenant(tenant: Tenant): Promise<PlanUsage> {
+    const ds = await this.tenantConn.getConnection(tenant.slug);
+    return this.usage(tenant, ds);
+  }
+
+  async usage(tenant: Tenant, dataSource?: DataSource): Promise<PlanUsage> {
     const resources: PlanResource[] = [
       'users',
       'products',
@@ -107,7 +117,9 @@ export class PlanEntitlementsService {
       'deliveryPersons',
       'ordersPerMonth',
     ];
-    const counts = await Promise.all(resources.map((r) => this.countUsed(r)));
+    const counts = await Promise.all(
+      resources.map((r) => this.countUsed(r, dataSource)),
+    );
     const result = {} as PlanUsage;
     resources.forEach((r, i) => {
       result[r] = { used: counts[i], max: this.limitOf(tenant, r) };
@@ -139,7 +151,10 @@ export class PlanEntitlementsService {
     }
   }
 
-  private async countUsed(resource: PlanResource): Promise<number> {
+  private async countUsed(
+    resource: PlanResource,
+    dataSource?: DataSource,
+  ): Promise<number> {
     const sql: Record<Exclude<PlanResource, 'storageMb'>, string> = {
       // Only back-office staff consume seats; portal customers are unlimited.
       users: `SELECT COUNT(*)::int AS c FROM portal WHERE "userType" = 'admin' OR "isAdmin" = true`,
@@ -149,7 +164,7 @@ export class PlanEntitlementsService {
       ordersPerMonth: `SELECT COUNT(*)::int AS c FROM orders WHERE "dateCreated" >= date_trunc('month', now())`,
     };
     if (resource === 'storageMb') return 0;
-    const ds = this.tenantConn.getCurrentDataSource();
+    const ds = dataSource ?? this.tenantConn.getCurrentDataSource();
     const [row] = await ds.query<Array<{ c: number }>>(sql[resource]);
     return Number(row?.c ?? 0);
   }

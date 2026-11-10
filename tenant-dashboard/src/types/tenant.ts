@@ -231,3 +231,103 @@ export const DEFAULT_MODULES: TenantModulesConfig = {
     deliveryPortal: false,
   },
 };
+
+// ─── Subscription (plan + add-ons) ───────────────────────────────────────────
+
+/** Resources that can be extended with add-on packs. */
+export type AddonResourceKey = 'users' | 'warehouses' | 'deliveryPersons' | 'storageMb';
+
+/** Add-ons bought on top of the plan: pack counts plus features outside the plan. */
+export interface TenantAddons {
+  users?: number;
+  warehouses?: number;
+  deliveryPersons?: number;
+  storageMb?: number;
+  features?: Partial<PlanFeatures>;
+}
+
+export interface AddonResourceDef {
+  label: string;
+  /** Limit units added by one pack (storage: MB). */
+  unit: number;
+  /** DH HT per pack per month. */
+  priceMonthly: number;
+}
+
+export interface AddonFeatureDef {
+  label: string;
+  /** DH HT per month, charged only when the plan does not include it. */
+  priceMonthly: number;
+}
+
+/** `GET /admin/subscription/addons`. */
+export interface AddonCatalogue {
+  resources: Record<AddonResourceKey, AddonResourceDef>;
+  features: Record<PlanFeatureKey, AddonFeatureDef>;
+}
+
+export interface SubscriptionPricingLine {
+  key: string;
+  label: string;
+  quantity: number;
+  priceMonthly: number;
+}
+
+export interface SubscriptionPricing {
+  planMonthly: number;
+  planYearly: number;
+  addonsMonthly: number;
+  totalMonthly: number;
+  totalYearly: number;
+  lines: SubscriptionPricingLine[];
+}
+
+export type UsageResourceKey =
+  | 'users'
+  | 'products'
+  | 'warehouses'
+  | 'deliveryPersons'
+  | 'ordersPerMonth'
+  | 'storageMb';
+
+export interface QuotaUsage {
+  used: number;
+  /** `-1` unlimited, `0` not included. */
+  max: number;
+}
+
+/** The plan as described by the subscription endpoint (fields absent for an unknown plan). */
+export interface SubscriptionPlanSummary extends Partial<PlanLimits> {
+  name: SubscriptionPlan;
+  displayName: string;
+  priceMonthly?: number;
+  priceYearly?: number;
+  currency?: string;
+  features?: Partial<PlanFeatures>;
+}
+
+/** `GET /admin/tenants/:id/subscription`. `-1` = unlimited everywhere. */
+export interface TenantSubscriptionDetail {
+  tenantId: number;
+  status: TenantStatus;
+  trialEndsAt: string | null;
+  subscriptionStartedAt: string | null;
+  subscriptionEndsAt: string | null;
+  autoRenew: boolean;
+  plan: SubscriptionPlanSummary;
+  addons: TenantAddons;
+  /** Enforced now (plan + add-ons, or a manual override). */
+  limits: PlanLimits;
+  features: PlanFeatures;
+  /** True when the limits were hand-edited away from plan + add-ons. */
+  customized: boolean;
+  pricing: SubscriptionPricing | null;
+  /** Live counts; users = staff only, orders = this calendar month, storage in MB. */
+  usage: Record<UsageResourceKey, QuotaUsage> | null;
+  catalogue: AddonCatalogue;
+}
+
+export interface UpdateTenantSubscriptionInput {
+  planName?: SubscriptionPlan;
+  addons?: TenantAddons;
+}

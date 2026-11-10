@@ -7,9 +7,17 @@ const API_URL = import.meta.env.VITE_API_URL ?? '';
  * closes. Signing in (email + password + 2FA) yields the session token; the
  * platform API key is entered afterwards from the dashboard and is required by
  * every admin endpoint.
+ *
+ * "Remember this device" keeps two signed, 30-day tokens in localStorage so they
+ * survive a browser restart and a sign-out:
+ *   - the device token, which skips the 2FA step (the password is still asked);
+ *   - the API-key grant, sent instead of the raw key (the key itself is never
+ *     persisted).
  */
 const TOKEN_KEY = 'admin_token';
 const API_KEY = 'admin_key';
+const DEVICE_KEY = 'admin_trusted_device';
+const GRANT_KEY = 'admin_key_grant';
 
 function read(key: string): string | null {
   try {
@@ -26,6 +34,28 @@ function write(key: string, value: string | null) {
     /* storage unavailable */
   }
 }
+function readLocal(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function writeLocal(key: string, value: string | null) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Trusted-device token: skips the 2FA code at the next sign-ins on this browser. */
+export const trustedDevice = {
+  get: () => readLocal(DEVICE_KEY),
+  set: (token: string) => writeLocal(DEVICE_KEY, token),
+  clear: () => writeLocal(DEVICE_KEY, null),
+};
 
 export const authStorage = {
   get token() {
@@ -37,14 +67,11 @@ export const authStorage = {
   setToken(token: string) {
     write(TOKEN_KEY, token);
   },
+  /** Ends the session. A remembered device and API-key grant are kept on purpose. */
   clear() {
     write(TOKEN_KEY, null);
-    apiKeyStore.clear();
-    try {
-      localStorage.removeItem(API_KEY); // legacy key-only login
-    } catch {
-      /* storage unavailable */
-    }
+    apiKeyStore.clearSessionKey();
+    writeLocal(API_KEY, null); // legacy key-only login
   },
 };
 
@@ -56,18 +83,40 @@ type KeyListener = () => void;
 const keyListeners = new Set<KeyListener>();
 const requestListeners = new Set<KeyListener>();
 let cachedKey = read(API_KEY);
+let cachedGrant = readLocal(GRANT_KEY);
+const notify = () => keyListeners.forEach((l) => l());
 
 export const apiKeyStore = {
-  get: () => cachedKey,
+  /** Truthy while admin tools are unlocked (raw key for this session, or a remembered grant). */
+  get: () => cachedKey ?? cachedGrant,
+  /** True when the unlock comes from a remembered grant on this device. */
+  isRemembered: () => !cachedKey && Boolean(cachedGrant),
+  /** Raw key, kept for this browser session only. */
   set(key: string) {
     cachedKey = key;
     write(API_KEY, key);
-    keyListeners.forEach((l) => l());
+    notify();
   },
-  clear() {
+  /** Signed grant returned by the API when "remember on this device" is ticked. */
+  remember(grant: string) {
     cachedKey = null;
     write(API_KEY, null);
-    keyListeners.forEach((l) => l());
+    cachedGrant = grant;
+    writeLocal(GRANT_KEY, grant);
+    notify();
+  },
+  clearSessionKey() {
+    cachedKey = null;
+    write(API_KEY, null);
+    notify();
+  },
+  /** Forgets both the session key and the remembered grant. */
+  clear() {
+    cachedKey = null;
+    cachedGrant = null;
+    write(API_KEY, null);
+    writeLocal(GRANT_KEY, null);
+    notify();
   },
   subscribe(l: KeyListener) {
     keyListeners.add(l);
@@ -101,12 +150,13 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = authStorage.token;
-  const apiKey = apiKeyStore.get();
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  if (apiKey && !config.headers['X-Super-Admin-Key']) {
-    config.headers['X-Super-Admin-Key'] = apiKey;
+  if (cachedKey && !config.headers['X-Super-Admin-Key']) {
+    config.headers['X-Super-Admin-Key'] = cachedKey;
+  } else if (cachedGrant && !config.headers['X-Super-Admin-Key']) {
+    config.headers['X-Super-Admin-Grant'] = cachedGrant;
   }
   return config;
 });

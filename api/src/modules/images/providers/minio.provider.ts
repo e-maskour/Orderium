@@ -298,6 +298,21 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     }
   }
 
+  /**
+   * Object key for a public URL produced by {@link upload}, or null when the
+   * URL doesn't point into the current tenant bucket (foreign bucket, data
+   * URI, external host). Lets callers delete only what this tenant owns.
+   */
+  objectKeyFromUrl(url?: string): string | null {
+    const ref = url?.trim();
+    if (!ref) return null;
+    const prefix = `${this.publicUrl}/${this.getTenantBucket()}/`;
+    if (!ref.startsWith(prefix)) return null;
+    const key = ref.slice(prefix.length);
+    if (!key || key.includes('..') || key.startsWith('/')) return null;
+    return key;
+  }
+
   isConfigured(): boolean {
     return this.ready;
   }

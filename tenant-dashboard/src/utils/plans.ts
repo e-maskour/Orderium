@@ -1,12 +1,16 @@
 import { formatAmount } from './formatAmount';
 import { formatQuantity } from './numberFormat';
 import type {
+  AddonCatalogue,
+  AddonResourceKey,
   PlanFeatureKey,
   PlanFeatures,
   PlanLimitKey,
   PlanLimits,
   SubscriptionPlan,
   SubscriptionPlanData,
+  SubscriptionPricingLine,
+  TenantAddons,
 } from '../types/tenant';
 
 /**
@@ -218,4 +222,143 @@ export function differsFromPlan(
     LIMIT_KEYS.some((k) => plan[k] !== limits[k]) ||
     FEATURE_FIELDS.some(({ key }) => planFeatures[key] !== features[key])
   );
+}
+
+// ─── Prices & add-ons ────────────────────────────────────────────────────────
+
+/** `1490` → `1.490 DH HT`, `49.5` → `49,50 DH HT`. Plan and add-on prices are HT. */
+export function formatPriceHt(amount: number | null | undefined): string {
+  const n = Number(amount) || 0;
+  return `${formatAmount(n, Number.isInteger(n) ? 0 : 2)} DH HT`;
+}
+
+/** Add-on yearly price: 10 × monthly, like plans (2 months free). */
+export const ADDON_YEARLY_MULTIPLIER = 10;
+
+export interface AddonResourceField {
+  key: AddonResourceKey;
+  /** The limit a pack of this resource raises. */
+  limitKey: PlanLimitKey;
+  label: string;
+}
+
+export const ADDON_RESOURCE_FIELDS: AddonResourceField[] = [
+  { key: 'users', limitKey: 'maxUsers', label: 'Extra users' },
+  { key: 'warehouses', limitKey: 'maxWarehouses', label: 'Extra warehouses' },
+  { key: 'deliveryPersons', limitKey: 'maxDeliveryPersons', label: 'Delivery persons packs' },
+  { key: 'storageMb', limitKey: 'maxStorageMb', label: 'Storage packs' },
+];
+
+/** Max packs per resource accepted by the API. */
+export const MAX_ADDON_PACKS = 1000;
+
+/** What one pack adds, e.g. `+3 delivery persons`, `+50 Go`. */
+export function formatPackSize(key: AddonResourceKey, unit: number): string {
+  if (key === 'storageMb') return `+${formatStorageMb(unit)}`;
+  const noun = key === 'users' ? 'user' : key === 'warehouses' ? 'warehouse' : 'delivery person';
+  return `+${formatQuantity(unit)} ${noun}${unit === 1 ? '' : 's'}`;
+}
+
+export interface NormalizedAddons {
+  users: number;
+  warehouses: number;
+  deliveryPersons: number;
+  storageMb: number;
+  features: PlanFeatures;
+}
+
+/** Fills missing pack counts / feature flags so drafts compare reliably. */
+export function normalizeAddons(addons: TenantAddons | null | undefined): NormalizedAddons {
+  const count = (v: number | undefined) => {
+    const n = Math.floor(Number(v ?? 0));
+    return Number.isFinite(n) && n > 0 ? Math.min(n, MAX_ADDON_PACKS) : 0;
+  };
+  return {
+    users: count(addons?.users),
+    warehouses: count(addons?.warehouses),
+    deliveryPersons: count(addons?.deliveryPersons),
+    storageMb: count(addons?.storageMb),
+    features: normalizeFeatures(addons?.features),
+  };
+}
+
+export function sameAddons(a: NormalizedAddons, b: NormalizedAddons): boolean {
+  return (
+    ADDON_RESOURCE_FIELDS.every(({ key }) => a[key] === b[key]) &&
+    FEATURE_FIELDS.every(({ key }) => a.features[key] === b.features[key])
+  );
+}
+
+/** Compact body for `PUT /admin/tenants/:id/subscription` (zero counts / false flags dropped). */
+export function toAddonsInput(addons: NormalizedAddons): TenantAddons {
+  const out: TenantAddons = {};
+  for (const { key } of ADDON_RESOURCE_FIELDS) if (addons[key] > 0) out[key] = addons[key];
+  const features = Object.fromEntries(
+    FEATURE_FIELDS.filter(({ key }) => addons.features[key]).map(({ key }) => [key, true]),
+  );
+  if (Object.keys(features).length) out.features = features;
+  return out;
+}
+
+export interface AddonsComputation {
+  limits: PlanLimits;
+  features: PlanFeatures;
+  /** Limit units each resource add-on contributes (0 when ignored on an unlimited limit). */
+  extra: Record<AddonResourceKey, number>;
+  lines: SubscriptionPricingLine[];
+  addonsMonthly: number;
+}
+
+/**
+ * Plan + add-ons → effective limits, features and add-on price. Mirrors the
+ * API's `computeSubscription` so the UI can preview changes before saving:
+ * packs on an unlimited limit are ignored, a feature the plan already
+ * includes is never charged.
+ */
+export function computeAddons(
+  planLimits: PlanLimits,
+  planFeatures: PlanFeatures,
+  addons: NormalizedAddons,
+  catalogue: AddonCatalogue,
+): AddonsComputation {
+  const limits = { ...planLimits };
+  const extra = { users: 0, warehouses: 0, deliveryPersons: 0, storageMb: 0 };
+  const lines: SubscriptionPricingLine[] = [];
+  for (const { key, limitKey } of ADDON_RESOURCE_FIELDS) {
+    const qty = addons[key];
+    const def = catalogue.resources[key];
+    if (!qty || !def || isUnlimited(planLimits[limitKey])) continue;
+    extra[key] = qty * def.unit;
+    limits[limitKey] = planLimits[limitKey] + extra[key];
+    lines.push({ key, label: def.label, quantity: qty, priceMonthly: qty * def.priceMonthly });
+  }
+  const features = { ...planFeatures };
+  for (const { key } of FEATURE_FIELDS) {
+    if (!addons.features[key] || planFeatures[key]) continue;
+    features[key] = true;
+    const def = catalogue.features[key];
+    lines.push({
+      key: `feature:${key}`,
+      label: def?.label ?? key,
+      quantity: 1,
+      priceMonthly: def?.priceMonthly ?? 0,
+    });
+  }
+  return {
+    limits,
+    features,
+    extra,
+    lines,
+    addonsMonthly: lines.reduce((sum, l) => sum + l.priceMonthly, 0),
+  };
+}
+
+/** English label for a pricing line key (`users`, `feature:pos`, …). */
+export function pricingLineLabel(line: SubscriptionPricingLine): string {
+  if (line.key.startsWith('feature:')) {
+    const key = line.key.slice('feature:'.length);
+    return FEATURE_FIELDS.find((f) => f.key === key)?.label ?? line.label;
+  }
+  const field = ADDON_RESOURCE_FIELDS.find((f) => f.key === line.key);
+  return field ? `${field.label} × ${formatQuantity(line.quantity)}` : line.label;
 }

@@ -29,6 +29,8 @@ interface DocumentTemplateData {
 interface HeaderTemplateData {
   companyName: string;
   companyLines: string[];
+  /** Inline `data:` URI — header templates can't fetch remote resources. */
+  logoSrc?: string;
   documentLabel: string;
   documentNumber: string;
   date: string;
@@ -54,6 +56,12 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     dueDate: isRTL ? 'الاستحقاق' : 'Échéance',
     validUntil: isRTL ? 'صالح حتى' : "Valide jusqu'au",
   };
+  // Only inline images are usable here; anything else would make Chromium
+  // try (and fail) to fetch it while printing the header.
+  const logoHtml =
+    data.logoSrc && data.logoSrc.startsWith('data:image/')
+      ? `<img class="hdr-logo" src="${data.logoSrc.replace(/"/g, '&quot;')}" alt="">`
+      : '';
   return `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,7 +84,14 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         border-bottom: 1.5pt solid #1B5E7B;
       }
       /* Company side */
-      .hdr-company { max-width: 58%; }
+      .hdr-brand { display: flex; align-items: flex-start; gap: 2.5mm; max-width: 62%; }
+      .hdr-logo {
+        flex: none;
+        max-width: 22mm;
+        max-height: 14mm;
+        object-fit: contain;
+      }
+      .hdr-company { min-width: 0; }
       .hdr-company-name {
         font-size: 11pt;
         font-weight: 700;
@@ -125,10 +140,13 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     </style>
     <div class="hdr-wrap" dir="ltr">
       <div class="hdr-inner">
-        <div class="hdr-company">
-          <div class="hdr-company-name" dir="auto">${data.companyName}</div>
-          <div class="hdr-company-lines">
-            ${data.companyLines.map((line) => `<div dir="auto">${line}</div>`).join('')}
+        <div class="hdr-brand">
+          ${logoHtml}
+          <div class="hdr-company">
+            <div class="hdr-company-name" dir="auto">${data.companyName}</div>
+            <div class="hdr-company-lines">
+              ${data.companyLines.map((line) => `<div dir="auto">${line}</div>`).join('')}
+            </div>
           </div>
         </div>
         <div class="hdr-doc">

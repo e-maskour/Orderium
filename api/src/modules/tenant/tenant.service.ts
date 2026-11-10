@@ -23,6 +23,7 @@ import { TenantConnectionService } from './tenant-connection.service';
 import { runTenantSeeders } from '../../database/seeders';
 import { runTenantInitScripts } from '../../database/init-scripts';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
+import { computeSubscription } from './plan-features';
 import { SubscriptionPlan as SubscriptionPlanEntity } from '../tenant-lifecycle/entities/subscription-plan.entity';
 
 export interface TenantUrls {
@@ -578,20 +579,37 @@ export class TenantService implements OnModuleInit {
 
   // ─── Plan limits & features ───────────────────────────────────────────────
 
-  /** Copies the catalogue limits and feature flags of `planName` onto the tenant. */
-  async applyPlanDefaults(tenant: Tenant, planName: string): Promise<void> {
+  /**
+   * Copies the plan's limits and features onto the tenant, plus the tenant's
+   * add-ons (packs and extra features). Returns false for an unknown plan.
+   */
+  async applyPlanDefaults(tenant: Tenant, planName: string): Promise<boolean> {
     const plan = await this.planRepo.findOne({ where: { name: planName } });
     if (!plan) {
       this.logger.warn(`Unknown subscription plan '${planName}' — limits kept`);
-      return;
+      return false;
     }
-    tenant.maxUsers = plan.maxUsers;
-    tenant.maxProducts = plan.maxProducts;
-    tenant.maxWarehouses = plan.maxWarehouses;
-    tenant.maxDeliveryPersons = plan.maxDeliveryPersons;
-    tenant.maxOrdersPerMonth = plan.maxOrdersPerMonth;
-    tenant.maxStorageMb = plan.maxStorageMb;
-    tenant.features = { ...(plan.features ?? {}) };
+    const eff = computeSubscription(plan, tenant.addons);
+    tenant.maxUsers = eff.maxUsers;
+    tenant.maxProducts = eff.maxProducts;
+    tenant.maxWarehouses = eff.maxWarehouses;
+    tenant.maxDeliveryPersons = eff.maxDeliveryPersons;
+    tenant.maxOrdersPerMonth = eff.maxOrdersPerMonth;
+    tenant.maxStorageMb = eff.maxStorageMb;
+    tenant.features = eff.features;
+    return true;
+  }
+
+  findPlan(name: string): Promise<SubscriptionPlanEntity | null> {
+    return this.planRepo.findOne({ where: { name } });
+  }
+
+  /** Saves a tenant and refreshes the request-path cache. */
+  async saveAndRefresh(tenant: Tenant): Promise<Tenant> {
+    const saved = await this.tenantRepo.save(tenant);
+    if (saved.isActive && !saved.deletedAt) this.cache.set(saved.slug, saved);
+    else this.cache.delete(saved.slug);
+    return saved;
   }
 
   private applyLimitOverrides(

@@ -9,6 +9,8 @@ import { SuperAdminGuard } from './tenant.guard';
 import { PlanEntitlementsService } from './plan-entitlements.service';
 import { PlanFeatureGuard } from './plan-feature.guard';
 import { SubscriptionController } from './subscription.controller';
+import { SubscriptionAdminController } from './subscription-admin.controller';
+import { SubscriptionAdminService } from './subscription-admin.service';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 import { SubscriptionPlan } from '../tenant-lifecycle/entities/subscription-plan.entity';
 
@@ -28,13 +30,18 @@ import { SubscriptionPlan } from '../tenant-lifecycle/entities/subscription-plan
       'master',
     ),
   ],
-  controllers: [TenantController, SubscriptionController],
+  controllers: [
+    TenantController,
+    SubscriptionController,
+    SubscriptionAdminController,
+  ],
   providers: [
     TenantService,
     TenantConnectionService,
     SuperAdminGuard,
     PlanEntitlementsService,
     PlanFeatureGuard,
+    SubscriptionAdminService,
   ],
   exports: [
     TenantService,
