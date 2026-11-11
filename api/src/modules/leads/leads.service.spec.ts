@@ -6,7 +6,7 @@ import type { AdminMailerService } from '../admin-auth/admin-mailer.service';
 
 function setup(
   recent: Partial<Lead> | null = null,
-  send = jest.fn(() => Promise.resolve()),
+  send = jest.fn((_message: unknown) => Promise.resolve()),
 ) {
   const repo = {
     findOne: jest.fn(() => Promise.resolve(recent)),
@@ -82,11 +82,55 @@ describe('LeadsService.capture', () => {
   });
 
   it('reports a failed e-mail submission so the visitor can use WhatsApp', async () => {
-    const failing = jest.fn(() => Promise.reject(new Error('SMTP down')));
+    const failing = jest.fn((_message: unknown) =>
+      Promise.reject(new Error('SMTP down')),
+    );
     const { service, repo } = setup(null, failing);
     await expect(
       service.capture({ ...lead, channel: 'email' } as never),
     ).rejects.toThrow(ServiceUnavailableException);
     expect(repo.save).toHaveBeenCalled(); // the lead is still kept
+  });
+
+  it('confirms receipt to the visitor in their language', async () => {
+    const { service, send } = setup();
+    await service.capture({
+      ...lead,
+      email: 'youssef@example.ma',
+      locale: 'ar',
+      channel: 'email',
+    } as never);
+    expect(send).toHaveBeenCalledTimes(2);
+    const [team, visitor] = send.mock.calls.map(
+      (c) =>
+        c[0] as never as {
+          to: string;
+          replyTo?: string;
+          subject: string;
+          html: string;
+          attachments: { cid: string }[];
+        },
+    );
+    expect(team).toMatchObject({
+      to: 'team@example.com',
+      replyTo: 'youssef@example.ma',
+    });
+    expect(visitor.to).toBe('youssef@example.ma');
+    expect(visitor.replyTo).toBe('team@example.com');
+    expect(visitor.subject).toContain('مارنوفا');
+    expect(visitor.html).toContain('dir="rtl"');
+    expect(visitor.html).toContain(`cid:${visitor.attachments[0].cid}`);
+  });
+
+  it('escapes visitor input in the e-mails', async () => {
+    const { service, send } = setup();
+    await service.capture({
+      ...lead,
+      name: '<script>x</script>',
+      channel: 'email',
+    } as never);
+    const html = (send.mock.calls[0][0] as never as { html: string }).html;
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
   });
 });

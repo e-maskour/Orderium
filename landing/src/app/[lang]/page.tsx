@@ -492,7 +492,7 @@ export default async function Home({ params }: PageProps<'/[lang]'>) {
               </ul>
             </div>
             <div data-anim>
-              <LeadForm t={t.form} wa={t.wa} />
+              <LeadForm t={t.form} />
             </div>
           </div>
         </section>

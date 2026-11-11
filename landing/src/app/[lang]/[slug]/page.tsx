@@ -288,7 +288,7 @@ export default async function SolutionPage({ params }: PageProps<'/[lang]/[slug]
               </ul>
             </div>
             <div data-anim>
-              <LeadForm t={t.form} wa={{ ...t.wa, greeting: p.wa }} />
+              <LeadForm t={t.form} />
             </div>
           </div>
         </section>

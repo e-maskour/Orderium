@@ -53,6 +53,12 @@ export class AdminMailerService {
     text: string;
     html?: string;
     replyTo?: string;
+    attachments?: {
+      filename: string;
+      content: Buffer;
+      contentType: string;
+      cid?: string;
+    }[];
   }): Promise<void> {
     const transporter = this.getTransporter();
     if (!transporter) {

@@ -355,7 +355,7 @@ export const fr = {
   },
   contact: {
     title: 'Voyons ensemble si Marnova convient à votre entreprise.',
-    lead: 'Laissez-nous quelques informations, nous vous répondons sous 24 h. Vous préférez WhatsApp ? C’est possible aussi.',
+    lead: 'Laissez-nous quelques informations : vous recevez une confirmation par email et nous vous répondons sous 24 h.',
     email: 'Email',
   },
   form: {
@@ -364,7 +364,7 @@ export const fr = {
     company: 'Entreprise',
     phone: 'Téléphone',
     email: 'Email',
-    errEmail: 'Cette adresse email ne semble pas valide, par exemple nom@exemple.ma.',
+    errEmail: 'Indiquez une adresse email valide, par exemple nom@exemple.ma : nous vous y confirmons la réception.',
     errPhone: 'Indiquez un numéro de téléphone valide, par exemple 06 12 34 56 78.',
     activity: 'Activité',
     choose: 'Choisir',
@@ -381,10 +381,8 @@ export const fr = {
     msgPh: 'Ex. : 3 dépôts, 5 commerciaux, facturation en arabe',
     submit: 'Envoyer ma demande',
     sending: 'Envoi en cours…',
-    sent: 'Merci, votre demande est bien envoyée. Nous vous contactons sous 24 h.',
-    sendFailed: 'L’envoi a échoué. Réessayez, ou envoyez votre demande sur WhatsApp.',
-    whatsapp: 'Envoyer plutôt sur WhatsApp',
-    opened: 'WhatsApp s’est ouvert avec votre message. Il ne reste qu’à l’envoyer.',
+    sent: 'Merci, votre demande est bien envoyée. Un email de confirmation vient de vous être adressé, et nous vous contactons sous 24 h.',
+    sendFailed: 'L’envoi a échoué. Vérifiez votre connexion et réessayez dans un instant.',
   },
   wa: {
     greeting: 'Bonjour, je souhaite une démo de Marnova.',

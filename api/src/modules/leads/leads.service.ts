@@ -14,6 +14,11 @@ import { FilterLeadsDto } from './dto/filter-leads.dto';
 import type { LeadListDto } from './dto/lead-response.dto';
 import { AdminMailerService } from '../admin-auth/admin-mailer.service';
 import { sha256 } from '../admin-auth/admin-crypto';
+import {
+  renderLeadConfirmation,
+  renderTeamNotification,
+  type LeadEmailLinks,
+} from './emails/lead-emails';
 
 /** A second submission from the same phone within this window updates the first. */
 const DEDUPE_WINDOW_MS = 30 * 60 * 1000;
@@ -102,7 +107,24 @@ export class LeadsService {
     return lead;
   }
 
-  /** E-mails the lead to the team. Resolves false when sending failed. */
+  private get links(): LeadEmailLinks {
+    const url = (key: string, fallback: string) =>
+      (this.config.get<string>(key) || fallback).replace(/\/$/, '');
+    return {
+      siteUrl: url('LANDING_URL', 'https://mar-nova.com'),
+      dashboardUrl: `${url('TENANT_DASHBOARD_URL', 'https://tenants.mar-nova.com')}/leads`,
+      whatsapp: this.config.get<string>('CONTACT_WHATSAPP') || '212666473116',
+      whatsappDisplay:
+        this.config.get<string>('CONTACT_WHATSAPP_DISPLAY') ||
+        '+212 6 66 47 31 16',
+    };
+  }
+
+  /**
+   * E-mails the lead to the team and, when the visitor left an address, sends
+   * them a branded confirmation. Resolves false when the team e-mail failed
+   * (the confirmation is best-effort and never fails the request).
+   */
   private async notify(lead: Lead): Promise<boolean> {
     const to = this.config.get<string>('LEADS_NOTIFY_EMAIL');
     if (!to) {
@@ -118,56 +140,35 @@ export class LeadsService {
       this.logger.error(`Lead #${lead.id} not e-mailed: SMTP_HOST is not set`);
       return false;
     }
-    const rows: [string, string | null][] = [
-      ['Nom', lead.name],
-      ['Entreprise', lead.company],
-      ['Téléphone', lead.phone],
-      ['E-mail', lead.email],
-      ['Activité', lead.activity],
-      ['Message', lead.message],
-      ['Langue', lead.locale],
-      ['Canal choisi', lead.channel],
-      [
-        'Source',
-        [lead.utmSource, lead.utmMedium, lead.utmCampaign]
-          .filter(Boolean)
-          .join(' / ') || lead.referrer,
-      ],
-    ];
-    const filled = rows.filter(([, v]) => v);
-    const digits = lead.phone.replace(/\D/g, '');
-    const wa = `https://wa.me/${digits.startsWith('0') ? `212${digits.slice(1)}` : digits}`;
-    const esc = (s: string) =>
-      s.replace(
-        /[&<>"]/g,
-        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!,
-      );
+    const links = this.links;
 
     try {
       await this.mailer.send({
         to,
-        subject: `Nouveau lead Marnova : ${lead.name}${lead.company ? ` (${lead.company})` : ''}`,
         replyTo: lead.email ?? undefined,
-        text: `${filled.map(([k, v]) => `${k} : ${v}`).join('\n')}\n\nWhatsApp : ${wa}`,
-        html:
-          `<h2 style="font-family:sans-serif">Nouveau lead depuis le site</h2>` +
-          `<table style="font-family:sans-serif;border-collapse:collapse">` +
-          filled
-            .map(
-              ([k, v]) =>
-                `<tr><td style="padding:4px 12px 4px 0;color:#64748b">${k}</td>` +
-                `<td style="padding:4px 0"><b>${esc(String(v))}</b></td></tr>`,
-            )
-            .join('') +
-          `</table><p style="font-family:sans-serif"><a href="${wa}">Répondre sur WhatsApp</a></p>`,
+        ...renderTeamNotification(lead, links),
       });
-      return true;
     } catch (err) {
       this.logger.error(
         `Lead #${lead.id} notification failed: ${(err as Error).message}`,
       );
       return false;
     }
+
+    if (lead.email) {
+      try {
+        await this.mailer.send({
+          to: lead.email,
+          replyTo: to,
+          ...renderLeadConfirmation(lead, links),
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Lead #${lead.id} confirmation to visitor failed: ${(err as Error).message}`,
+        );
+      }
+    }
+    return true;
   }
 
   // ─── Super-admin management ──────────────────────────────────────────────

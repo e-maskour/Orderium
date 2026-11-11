@@ -1,15 +1,15 @@
 'use client';
 
 import { useRef, useState, type FormEvent } from 'react';
-import { API_URL, waLink } from '@/i18n/config';
+import { API_URL } from '@/i18n/config';
 import { track } from '@/lib/analytics';
 import { getAttribution } from '@/lib/attribution';
 import type { Dictionary } from '@/i18n/dictionaries/fr';
 
-type Props = { t: Dictionary['form']; wa: Dictionary['wa'] };
+type Props = { t: Dictionary['form'] };
 
 const validPhone = (v: string) => v.replace(/\D/g, '').length >= 9;
-const validEmail = (v: string) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 type LeadValues = {
   name: string;
@@ -21,7 +21,7 @@ type LeadValues = {
   website: string;
 };
 
-const leadBody = (v: LeadValues, channel: 'whatsapp' | 'email') => JSON.stringify({
+const leadBody = (v: LeadValues) => JSON.stringify({
   name: v.name,
   company: v.company || undefined,
   phone: v.phone,
@@ -30,20 +30,21 @@ const leadBody = (v: LeadValues, channel: 'whatsapp' | 'email') => JSON.stringif
   message: v.message || undefined,
   website: v.website || undefined,
   locale: document.documentElement.lang === 'ar' ? 'ar' : 'fr',
-  channel,
+  channel: 'email',
   ...getAttribution(),
 });
 
 /**
- * Default path: the API stores the lead and e-mails it to the team. Resolves
- * true only once the server confirms the e-mail went out.
+ * The API stores the lead (tenant dashboard → Leads), e-mails it to the team
+ * and sends the visitor a confirmation. Resolves true only once the server
+ * confirms the team e-mail went out.
  */
 async function emailLead(v: LeadValues): Promise<boolean> {
   try {
     const res = await fetch(`${API_URL}/api/public/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: leadBody(v, 'email'),
+      body: leadBody(v),
     });
     if (res.ok) track('generate_lead', { method: 'email', activity: v.activity || undefined });
     return res.ok;
@@ -52,29 +53,7 @@ async function emailLead(v: LeadValues): Promise<boolean> {
   }
 }
 
-/**
- * WhatsApp path: saves the lead before the visitor leaves. `keepalive` lets the
- * request finish during navigation, and it is not awaited so the WhatsApp
- * window still opens inside the click (popup blockers only allow that
- * synchronously).
- */
-function saveWhatsAppLead(v: LeadValues) {
-  try {
-    void fetch(`${API_URL}/api/public/leads`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: leadBody(v, 'whatsapp'),
-      keepalive: true,
-    }).catch(() => {
-      /* offline or API down: the WhatsApp message still carries the request */
-    });
-  } catch {
-    /* never block the visitor */
-  }
-  track('generate_lead', { method: 'whatsapp', activity: v.activity || undefined });
-}
-
-export function LeadForm({ t, wa }: Props) {
+export function LeadForm({ t }: Props) {
   const form = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState({ name: false, phone: false, email: false });
   const [status, setStatus] = useState<{ text: string; error?: boolean }>({ text: '' });
@@ -93,24 +72,19 @@ export function LeadForm({ t, wa }: Props) {
     };
   };
 
+  const check = (v: LeadValues) => ({
+    name: v.name.length < 2,
+    phone: !validPhone(v.phone),
+    email: !isEmail(v.email), // required: the visitor gets a confirmation there
+  });
+
   const validate = () => {
     const v = read();
-    const next = { name: v.name.length < 2, phone: !validPhone(v.phone), email: !validEmail(v.email) };
+    const next = check(v);
     setErrors(next);
     const first = next.name ? '#f-name' : next.phone ? '#f-phone' : next.email ? '#f-email' : null;
     if (first) form.current!.querySelector<HTMLInputElement>(first)?.focus();
     return first ? null : v;
-  };
-
-  const compose = (v: ReturnType<typeof read>) => {
-    const L = wa.labels;
-    const lines = [wa.greeting, '', `${L.name} : ${v.name}`];
-    if (v.company) lines.push(`${L.company} : ${v.company}`);
-    lines.push(`${L.phone} : ${v.phone}`);
-    if (v.email) lines.push(`${L.email} : ${v.email}`);
-    if (v.activity) lines.push(`${L.activity} : ${v.activity}`);
-    if (v.message) lines.push(`${L.message} : ${v.message}`);
-    return lines.join('\n');
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -130,18 +104,9 @@ export function LeadForm({ t, wa }: Props) {
     }
   };
 
-  const onWhatsApp = () => {
-    const v = validate();
-    if (!v) return;
-    saveWhatsAppLead(v);
-    window.open(waLink(compose(v)), '_blank', 'noopener');
-    setStatus({ text: t.opened });
-  };
-
   const recheck = (field: 'name' | 'phone' | 'email') => {
     if (errors[field]) {
-      const v = read();
-      const bad = { name: v.name.length < 2, phone: !validPhone(v.phone), email: !validEmail(v.email) }[field];
+      const bad = check(read())[field];
       setErrors((e) => ({ ...e, [field]: bad }));
     }
   };
@@ -166,11 +131,10 @@ export function LeadForm({ t, wa }: Props) {
         <p className="field__err" id="f-phone-err">{t.errPhone}</p>
       </div>
       <div className={`field${errors.email ? ' is-invalid' : ''}`}>
-        <label htmlFor="f-email">
-          {t.email} <span className="opt">{t.optional}</span>
-        </label>
+        <label htmlFor="f-email">{t.email}</label>
         <input
-          id="f-email" name="email" type="email" autoComplete="email" inputMode="email" dir="ltr"
+          id="f-email" name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required
+          placeholder="nom@exemple.ma"
           aria-invalid={errors.email} aria-describedby="f-email-err" onInput={() => recheck('email')}
         />
         <p className="field__err" id="f-email-err">{t.errEmail}</p>
@@ -199,7 +163,6 @@ export function LeadForm({ t, wa }: Props) {
         <button className="btn btn--primary btn--lg" type="submit" disabled={sending} aria-busy={sending}>
           {sending ? t.sending : t.submit}
         </button>
-        <button className="btn btn--link" type="button" onClick={onWhatsApp}>{t.whatsapp}</button>
       </div>
       <p className={`form__ok${status.error ? ' form__ok--error' : ''}`} role="status" aria-live="polite">
         {status.text}
