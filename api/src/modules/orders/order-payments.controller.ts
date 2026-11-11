@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderPaymentsService } from './order-payments.service';
@@ -19,6 +20,7 @@ import {
 } from './dto/create-order-payment.dto';
 import { OrderPaymentResponseDto } from './dto/order-payment-response.dto';
 import { CaisseOrderResponseDto } from './dto/caisse-order-response.dto';
+import { FilterCaisseDto } from './dto/filter-caisse.dto';
 import { ApiRes } from '../../common/api-response';
 import { OPAY } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
@@ -43,12 +45,29 @@ export class OrderPaymentsController {
 
   @Get('caisse')
   @Serialize(CaisseOrderResponseDto)
-  @ApiOperation({ summary: 'Get caisse summary — orders with payment status' })
+  @ApiOperation({
+    summary: 'Get caisse summary — orders with payment status',
+    description:
+      'Search, status and pagination are applied server-side. metadata carries ' +
+      'total, per-status counts and summary totals of the filtered set.',
+  })
   @ApiResponse({ status: 200, description: 'Caisse summary retrieved' })
+  @ApiResponse({ status: 400, description: 'Invalid filter values' })
   @RequirePermission('caisse.view')
-  async getCaisseSummary() {
-    const summary = await this.orderPaymentsService.getCaisseSummary();
-    return ApiRes(OPAY.CAISSE, summary);
+  async getCaisseSummary(@Query() filters: FilterCaisseDto) {
+    const result = await this.orderPaymentsService.getCaisseSummary(filters);
+    const paginated = !!(filters.page || filters.limit);
+    const limit = paginated ? (filters.limit ?? 25) : result.total;
+    const offset = paginated ? ((filters.page ?? 1) - 1) * limit : 0;
+    return ApiRes(OPAY.CAISSE, result.rows, {
+      limit,
+      offset,
+      total: result.total,
+      hasNext: paginated ? offset + result.rows.length < result.total : false,
+      hasPrev: offset > 0,
+      counts: result.counts,
+      summary: result.summary,
+    });
   }
 
   @Get()

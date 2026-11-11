@@ -39,22 +39,6 @@ const OutstandingInvoicesPage: React.FC = () => {
     { field: 'daysOverdue', header: t('analyticsOutstandingInvoicesDaysOverdue') },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsOutstandingInvoicesTotalDue'),
-          value: Number(data.kpis.totalDue ?? 0),
-          suffix: 'MAD',
-          color: 'red' as const,
-        },
-        {
-          label: t('analyticsOutstandingInvoicesInvoiceCount'),
-          value: Number(data.kpis.count ?? 0),
-          color: 'blue' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={AlertCircle}
@@ -62,8 +46,9 @@ const OutstandingInvoicesPage: React.FC = () => {
       subtitle={t('analyticsOutstandingInvoicesSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="invoices-outstanding" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       table={
         <ReportTable
           columns={columns}
@@ -90,18 +75,6 @@ const OutstandingInvoicesPage: React.FC = () => {
               subtitle: t('analyticsOutstandingInvoicesSubtitle'),
               fileName: 'factures-impayees',
               landscape: true,
-              kpis: [
-                {
-                  key: 'totalDue',
-                  label: t('analyticsOutstandingInvoicesTotalDue'),
-                  format: 'currency',
-                },
-                {
-                  key: 'count',
-                  label: t('analyticsOutstandingInvoicesInvoiceCount'),
-                  format: 'integer',
-                },
-              ],
               columns: [
                 {
                   key: 'invoiceNumber',

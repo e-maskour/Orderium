@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { normalizePhoneInputEvent, phoneInputProps } from '@orderium/ui';
 import { useForm } from 'react-hook-form';
@@ -8,30 +8,302 @@ import { useLanguage } from '../context/LanguageContext';
 import { getOnboardingStatus } from '../api/onboarding';
 import { LanguageToggle } from '../components/LanguageToggle';
 import {
-  Shield,
-  Phone,
-  Lock,
+  AlertCircle,
+  ArrowRight,
   Eye,
   EyeOff,
-  BarChart3,
+  Lock,
   Package,
+  Phone,
+  ShieldCheck,
+  ShoppingCart,
   Users,
-  TrendingUp,
 } from 'lucide-react';
-import orderiumLogo from '../assets/logo-backoffice.svg';
-import { InputText } from 'primereact/inputtext';
+import marnovaLogo from '../assets/marnova-logo.svg';
 import { loginSchema, type LoginFormValues } from '../modules/auth/schemas/login.schema';
 import { useApiErrors } from '../hooks/useApiErrors';
 import type { TranslationKey } from '../lib/i18n';
 
-const BRAND = '#235ae4';
-const BRAND_DARK = '#1a47b8';
-const BRAND_DEEP = '#0f2d7a';
+const LOGIN_STYLES = `
+  .lg-root {
+    --lg-brand: #235ae4;
+    --lg-brand-hover: #1c4ccc;
+    --lg-brand-ring: rgba(35, 90, 228, 0.12);
+    --lg-tint: #eef3ff;
+    --lg-tint-line: #dbe5fd;
+    --lg-ink: #0f172a;
+    --lg-ink-2: #334155;
+    --lg-muted: #64748b;
+    --lg-line: #e2e8f0;
+    --lg-field: #f8fafc;
+    --lg-danger: #dc2626;
+    --lg-warn: #b45309;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    background: #fff;
+    color: var(--lg-ink);
+    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* ── Form column ───────────────────────────── */
+  .lg-main {
+    flex: 999 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 1rem;
+  }
+  .lg-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .lg-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; min-width: 0; }
+  .lg-brand-logo { display: block; height: 3.25rem; width: auto; max-width: 100%; }
+  @media (min-width: 640px) { .lg-brand-logo { height: 4.25rem; } }
+  .lg-brand-sub { font-size: 0.8125rem; font-weight: 600; color: var(--lg-muted); padding-inline-start: 0.25rem; }
+
+  .lg-center { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 0; }
+  .lg-card { width: 100%; max-width: 400px; animation: lg-rise 0.4s ease both; }
+
+  .lg-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 0.5rem; }
+  .lg-subtitle { font-size: 1rem; color: var(--lg-muted); margin: 0 0 2rem; line-height: 1.5; }
+
+  .lg-form { display: flex; flex-direction: column; gap: 1.25rem; }
+  .lg-label { display: block; font-size: 0.9375rem; font-weight: 600; color: var(--lg-ink-2); margin-bottom: 0.5rem; }
+
+  .lg-field {
+    display: flex;
+    align-items: center;
+    height: 3.5rem;
+    border: 1.5px solid var(--lg-line);
+    border-radius: 0.875rem;
+    background: var(--lg-field);
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  }
+  .lg-field:hover { border-color: #cbd5e1; }
+  .lg-field:focus-within { border-color: var(--lg-brand); background: #fff; box-shadow: 0 0 0 4px var(--lg-brand-ring); }
+  .lg-field.is-invalid { border-color: var(--lg-danger); background: #fff; }
+  .lg-field.is-invalid:focus-within { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12); }
+  .lg-field.is-disabled { opacity: 0.6; }
+
+  .lg-field-icon { flex-shrink: 0; width: 1.25rem; height: 1.25rem; margin-inline: 1rem 0.75rem; color: #94a3b8; }
+  .lg-field:focus-within .lg-field-icon { color: var(--lg-brand); }
+
+  .lg-prefix {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 100%;
+    padding-inline: 1rem 0.875rem;
+    margin-inline-end: 0.75rem;
+    border-inline-end: 1.5px solid var(--lg-line);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--lg-ink-2);
+    flex-shrink: 0;
+  }
+  .lg-prefix svg { width: 1.125rem; height: 1.125rem; color: var(--lg-muted); }
+  .lg-field:focus-within .lg-prefix svg { color: var(--lg-brand); }
+
+  .lg-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 1.0625rem;
+    color: var(--lg-ink);
+    padding-inline-end: 1rem;
+  }
+  .lg-input::placeholder { color: #a0aec0; }
+  /* Browser autofill paints its own background on the <input> only, which
+     breaks the field at the prefix divider. Keep it transparent so the
+     whole .lg-field keeps one consistent background. */
+  .lg-input:-webkit-autofill,
+  .lg-input:-webkit-autofill:hover,
+  .lg-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--lg-ink);
+    caret-color: var(--lg-ink);
+    transition: background-color 600000s 0s, color 600000s 0s;
+  }
+  .lg-input:autofill { background: transparent; }
+  .lg-input.is-phone { letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+  [dir='rtl'] .lg-input.is-phone { text-align: right; }
+
+  .lg-eye {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-inline-end: 0.375rem;
+    border: 0;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: var(--lg-muted);
+    cursor: pointer;
+  }
+  .lg-eye:hover:not(:disabled) { background: #eef2f7; color: var(--lg-ink); }
+  .lg-eye:focus-visible { outline: 2px solid var(--lg-brand); outline-offset: 1px; }
+  .lg-eye svg { width: 1.25rem; height: 1.25rem; }
+
+  .lg-msg { display: flex; align-items: center; gap: 0.375rem; margin: 0.5rem 0 0; font-size: 0.875rem; line-height: 1.35; }
+  .lg-msg.is-error { color: var(--lg-danger); }
+  .lg-msg.is-warn { color: var(--lg-warn); }
+  .lg-msg svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+  .lg-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    animation: lg-shake 0.35s ease;
+  }
+  .lg-alert svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; color: var(--lg-danger); }
+
+  .lg-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    height: 3.5rem;
+    margin-top: 0.5rem;
+    border: 0;
+    border-radius: 0.875rem;
+    background: var(--lg-brand);
+    color: #fff;
+    font: inherit;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+  }
+  .lg-submit:hover:not(:disabled) { background: var(--lg-brand-hover); }
+  .lg-submit:active:not(:disabled) { transform: translateY(1px); }
+  .lg-submit:focus-visible { outline: 3px solid rgba(35, 90, 228, 0.4); outline-offset: 2px; }
+  .lg-submit:disabled { cursor: progress; opacity: 0.8; }
+  .lg-submit svg { width: 1.25rem; height: 1.25rem; }
+  [dir='rtl'] .lg-submit-arrow { transform: scaleX(-1); }
+
+  .lg-spinner {
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: lg-spin 0.7s linear infinite;
+  }
+
+  .lg-help { margin: 1.5rem 0 0; text-align: center; font-size: 0.875rem; color: var(--lg-muted); line-height: 1.5; }
+  .lg-secure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-top: 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #15803d;
+  }
+  .lg-secure svg { width: 1rem; height: 1rem; }
+  .lg-footer { font-size: 0.8125rem; color: var(--lg-muted); text-align: center; }
+
+  /* ── Light showcase panel (desktop) ────────── */
+  .lg-aside { display: none; }
+
+  @media (min-width: 640px) {
+    .lg-main { padding: 1.5rem 2.5rem; }
+    .lg-title { font-size: 2rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .lg-aside {
+      flex: 0 1 520px;
+      min-width: 360px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.75rem;
+      margin: 1rem;
+      padding: 3rem 2.5rem;
+      border-radius: 1.5rem;
+      background: var(--lg-tint);
+      border: 1px solid var(--lg-tint-line);
+    }
+  }
+
+  .lg-aside-title { margin: 0 0 0.625rem; font-size: 1.75rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; }
+  .lg-aside-desc { margin: 0; font-size: 1rem; line-height: 1.55; color: #475569; }
+
+  .lg-preview {
+    padding: 1.25rem;
+    border-radius: 1.125rem;
+    background: #fff;
+    border: 1px solid var(--lg-tint-line);
+    box-shadow: 0 20px 40px -24px rgba(35, 90, 228, 0.35);
+    animation: lg-rise 0.5s ease 0.1s both;
+  }
+  .lg-preview-label { font-size: 0.875rem; font-weight: 600; color: var(--lg-ink-2); margin-bottom: 1rem; }
+  .lg-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    height: 5.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--lg-line);
+  }
+  .lg-bar {
+    flex: 1;
+    border-radius: 0.375rem 0.375rem 0.125rem 0.125rem;
+    background: var(--lg-tint-line);
+    transform-origin: bottom;
+    animation: lg-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .lg-bar.is-active { background: var(--lg-brand); }
+  .lg-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.625rem; margin-top: 1rem; }
+  .lg-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: var(--lg-field);
+    border: 1px solid #eef2f7;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lg-ink-2);
+  }
+  .lg-tile svg { width: 1.125rem; height: 1.125rem; color: var(--lg-brand); }
+
+  @keyframes lg-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes lg-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes lg-spin { to { transform: rotate(360deg); } }
+  @keyframes lg-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lg-root * { animation: none !important; transition: none !important; }
+  }
+`;
+
+const PREVIEW_BARS = [40, 55, 46, 68, 60, 85, 72];
+const ACTIVE_BAR = 5;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const { login } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -63,13 +335,6 @@ export default function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const featureCards = [
-    { icon: BarChart3, label: t('loginFeatureAnalytics') },
-    { icon: Package, label: t('loginFeatureInventory') },
-    { icon: Users, label: t('loginFeatureCustomers') },
-    { icon: TrendingUp, label: t('loginFeatureSales') },
-  ];
-
   const onSubmit = async (data: LoginFormValues) => {
     setApiError('');
     setIsLoading(true);
@@ -87,562 +352,205 @@ export default function Login() {
     }
   };
 
+  const phoneField = register('phoneNumber');
+  const passwordField = register('password');
+
+  const clearApiError = () => {
+    if (apiError) setApiError('');
+  };
+
+  const trackCapsLock = (e: KeyboardEvent<HTMLInputElement>) => {
+    setCapsLockOn(e.getModifierState?.('CapsLock') ?? false);
+  };
+
+  const tiles = [
+    { icon: ShoppingCart, label: t('loginTileOrders') },
+    { icon: Users, label: t('loginTileCustomers') },
+    { icon: Package, label: t('loginTileStock') },
+  ];
+
+  const passwordDescribedBy =
+    [errors.password && 'password-error', capsLockOn && 'password-caps']
+      .filter(Boolean)
+      .join(' ') || undefined;
+
   return (
-    <>
-      <style>{`
-        @keyframes login-breathe {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-5px); }
-        }
-        @keyframes login-fade-in {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes login-blob {
-          0%, 100% { transform: scale(1) translate(0, 0); }
-          33%       { transform: scale(1.08) translate(20px, -15px); }
-          66%       { transform: scale(0.94) translate(-15px, 10px); }
-        }
-        @keyframes login-ring-pulse {
-          0%   { box-shadow: 0 0 36px rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.25), 0 0 0 0 rgba(255,255,255,0.22); }
-          70%  { box-shadow: 0 0 36px rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.25), 0 0 0 14px rgba(255,255,255,0); }
-          100% { box-shadow: 0 0 36px rgba(255,255,255,0.14), 0 4px 16px rgba(0,0,0,0.25), 0 0 0 0 rgba(255,255,255,0); }
-        }
-        @keyframes login-icon-breathe {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          50%       { transform: scale(1.08) rotate(4deg); }
-        }
-        .login-panel-left  { animation: login-fade-in 0.6s ease both; }
-        .login-panel-right { animation: login-fade-in 0.6s ease 0.15s both; }
-        .login-feature-card {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .login-feature-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-        }
-        .login-submit-btn:hover:not(:disabled) {
-          filter: brightness(1.08);
-          box-shadow: 0 8px 24px rgba(35,90,228,0.4);
-          transform: translateY(-1px);
-        }
-        .login-submit-btn { transition: filter 0.2s, box-shadow 0.2s, transform 0.2s; }
-        .login-input-wrap { position: relative; }
-        .login-input-wrap .login-input-icon {
-          position: absolute;
-          left: 0.875rem;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #94a3b8;
-          pointer-events: none;
-          z-index: 1;
-        }
-        .login-input-wrap .p-inputtext {
-          padding-left: 2.75rem !important;
-        }
-        .login-input-wrap.has-toggle .p-inputtext {
-          padding-right: 2.75rem !important;
-        }
-        .login-password-toggle {
-          position: absolute;
-          right: 0.625rem;
-          top: 50%;
-          transform: translateY(-50%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0.25rem;
-          border: none;
-          border-radius: 0.375rem;
-          background: transparent;
-          color: #94a3b8;
-          cursor: pointer;
-          z-index: 1;
-          transition: color 0.2s, background-color 0.2s;
-        }
-        .login-password-toggle:hover:not(:disabled) {
-          color: #475569;
-          background: #f1f5f9;
-        }
-        .login-password-toggle:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-        }
-        @media (max-width: 767px) {
-          .login-left-panel { display: none !important; }
-          .login-right-panel { border-radius: 1.25rem !important; }
-        }
-      `}</style>
+    <div className="lg-root">
+      <style>{LOGIN_STYLES}</style>
 
-      {/* Page shell */}
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: `linear-gradient(135deg, ${BRAND_DEEP} 0%, #0a1535 100%)`,
-          padding: '1rem',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
-      >
-        {/* Card wrapper */}
-        <div
-          style={{
-            display: 'flex',
-            width: '100%',
-            maxWidth: '960px',
-            minHeight: '580px',
-            borderRadius: '1.5rem',
-            overflow: 'hidden',
-            boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
-          }}
-        >
-          {/* ── LEFT BRAND PANEL ─────────────────────────────── */}
-          <div
-            className="login-left-panel login-panel-left"
-            style={{
-              flex: '1 1 45%',
-              background: `linear-gradient(145deg, ${BRAND} 0%, ${BRAND_DARK} 50%, ${BRAND_DEEP} 100%)`,
-              padding: '3rem 2.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Decorative blobs */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '-80px',
-                right: '-80px',
-                width: '320px',
-                height: '320px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.06)',
-                animation: 'login-blob 8s ease-in-out infinite',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-60px',
-                left: '-60px',
-                width: '240px',
-                height: '240px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.05)',
-                animation: 'login-blob 11s ease-in-out infinite reverse',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: '40%',
-                left: '60%',
-                width: '140px',
-                height: '140px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.04)',
-                animation: 'login-blob 14s ease-in-out infinite',
-              }}
-            />
-
-            {/* Logo */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '2.5rem',
-                }}
-              >
-                <img
-                  src={orderiumLogo}
-                  alt="Morocom"
-                  style={{
-                    width: '4.25rem',
-                    height: '4.25rem',
-                    flexShrink: 0,
-                    filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.25))',
-                  }}
-                />
-                <div>
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      fontSize: '1.625rem',
-                      color: '#fff',
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {t('appName')}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '0.875rem',
-                      color: 'rgba(255,255,255,0.82)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      marginTop: '0.2rem',
-                    }}
-                  >
-                    <Shield style={{ width: '0.875rem', height: '0.875rem' }} />
-                    {t('adminBackoffice')}
-                  </div>
-                </div>
-              </div>
-
-              {/* Hero text */}
-              <div
-                style={{
-                  animation: 'login-breathe 7s ease-in-out infinite',
-                  marginBottom: '2rem',
-                }}
-              >
-                <h2
-                  style={{
-                    fontSize: '2rem',
-                    fontWeight: 800,
-                    color: '#fff',
-                    lineHeight: 1.2,
-                    marginBottom: '0.75rem',
-                    margin: '0 0 0.75rem',
-                  }}
-                >
-                  {t('loginHeroTitle')}
-                  <br />
-                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{t('loginHeroSubtitle')}</span>
-                </h2>
-                <p
-                  style={{
-                    color: 'rgba(255,255,255,0.65)',
-                    fontSize: '0.95rem',
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  {t('loginHeroDesc')}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature cards */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                {featureCards.map(({ icon: Icon, label }) => (
-                  <div
-                    key={label}
-                    className="login-feature-card"
-                    style={{
-                      background: 'rgba(255,255,255,0.1)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(255,255,255,0.18)',
-                      borderRadius: '0.875rem',
-                      padding: '0.875rem 1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.625rem',
-                      cursor: 'default',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '2rem',
-                        height: '2rem',
-                        borderRadius: '0.5rem',
-                        background: 'rgba(255,255,255,0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Icon style={{ width: '1rem', height: '1rem', color: '#fff' }} />
-                    </div>
-                    <span
-                      style={{
-                        fontSize: '0.8rem',
-                        color: 'rgba(255,255,255,0.85)',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* ── Form column ─────────────────────────── */}
+      <div className="lg-main">
+        <header className="lg-topbar">
+          <div className="lg-brand">
+            <img className="lg-brand-logo" src={marnovaLogo} alt={t('appName')} />
+            <div className="lg-brand-sub">{t('adminBackoffice')}</div>
           </div>
+          <LanguageToggle />
+        </header>
 
-          {/* ── RIGHT FORM PANEL ─────────────────────────────── */}
-          <div
-            className="login-right-panel login-panel-right"
-            style={{
-              flex: '1 1 55%',
-              background: '#fff',
-              padding: '3rem 2.75rem',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}
-          >
-            {/* Header */}
-            <div style={{ marginBottom: '2rem' }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  background: `rgba(35,90,228,0.08)`,
-                  borderRadius: '999px',
-                  padding: '0.25rem 0.75rem',
-                  marginBottom: '1rem',
-                }}
-              >
-                <Shield style={{ width: '0.875rem', height: '0.875rem', color: BRAND }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: BRAND }}>
-                  {t('secureAdminAccess')}
-                </span>
-              </div>
-              <h1
-                style={{
-                  fontSize: '1.75rem',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  margin: '0 0 0.375rem',
-                  lineHeight: 1.2,
-                }}
-              >
-                {t('welcomeBack')} 👋
-              </h1>
-              <p style={{ color: '#64748b', fontSize: '0.925rem', margin: 0 }}>
-                {t('loginSignInDesc')}
-              </p>
-            </div>
+        <main className="lg-center">
+          <div className="lg-card">
+            <h1 className="lg-title">{t('welcomeBack')}</h1>
+            <p className="lg-subtitle">{t('loginPhoneSubtitle')}</p>
 
-            {/* Form */}
-            <form
-              onSubmit={rhfHandleSubmit(onSubmit)}
-              noValidate
-              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-            >
+            <form className="lg-form" onSubmit={rhfHandleSubmit(onSubmit)} noValidate>
               {/* Phone */}
               <div>
-                <label
-                  htmlFor="login-phone"
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '0.5rem',
-                    letterSpacing: '0.01em',
-                  }}
-                >
+                <label htmlFor="login-phone" className="lg-label">
                   {t('phoneNumber')}
                 </label>
-                <div className="login-input-wrap">
-                  <Phone className="login-input-icon" style={{ width: '1rem', height: '1rem' }} />
-                  <InputText
+                <div
+                  className={`lg-field${errors.phoneNumber ? ' is-invalid' : ''}${
+                    isLoading ? ' is-disabled' : ''
+                  }`}
+                >
+                  <span className="lg-prefix" aria-hidden="true">
+                    <Phone />
+                  </span>
+                  <input
                     id="login-phone"
+                    className="lg-input is-phone"
                     {...phoneInputProps}
-                    {...register('phoneNumber')}
-                    onChange={(e) => register('phoneNumber').onChange(normalizePhoneInputEvent(e))}
+                    {...phoneField}
+                    onChange={(e) => {
+                      clearApiError();
+                      phoneField.onChange(normalizePhoneInputEvent(e));
+                    }}
+                    autoFocus
                     disabled={isLoading}
-                    className={errors.phoneNumber ? 'p-invalid' : ''}
                     aria-invalid={!!errors.phoneNumber}
                     aria-describedby={errors.phoneNumber ? 'phone-error' : undefined}
-                    style={{
-                      width: '100%',
-                      borderRadius: '0.75rem',
-                      border: `1.5px solid ${errors.phoneNumber ? '#ef4444' : '#e2e8f0'}`,
-                      fontSize: '0.9375rem',
-                      transition: 'border-color 0.2s',
-                    }}
                   />
                 </div>
                 {errors.phoneNumber && (
-                  <small
-                    id="phone-error"
-                    role="alert"
-                    style={{
-                      display: 'block',
-                      marginTop: '0.25rem',
-                      fontSize: '0.75rem',
-                      color: '#ef4444',
-                    }}
-                  >
+                  <p id="phone-error" role="alert" className="lg-msg is-error">
+                    <AlertCircle aria-hidden="true" />
                     {t(errors.phoneNumber.message as TranslationKey)}
-                  </small>
+                  </p>
                 )}
               </div>
 
               {/* Password */}
               <div>
-                <label
-                  htmlFor="login-password"
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '0.5rem',
-                    letterSpacing: '0.01em',
-                  }}
-                >
+                <label htmlFor="login-password" className="lg-label">
                   {t('password')}
                 </label>
-                <div className="login-input-wrap has-toggle">
-                  <Lock className="login-input-icon" style={{ width: '1rem', height: '1rem' }} />
-                  <InputText
+                <div
+                  className={`lg-field${errors.password ? ' is-invalid' : ''}${
+                    isLoading ? ' is-disabled' : ''
+                  }`}
+                >
+                  <Lock className="lg-field-icon" aria-hidden="true" />
+                  <input
                     id="login-password"
+                    className="lg-input"
                     type={showPassword ? 'text' : 'password'}
-                    {...register('password')}
+                    autoComplete="current-password"
                     placeholder={t('enterYourPassword')}
-                    disabled={isLoading}
-                    className={errors.password ? 'p-invalid' : ''}
-                    aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? 'password-error' : undefined}
-                    style={{
-                      width: '100%',
-                      borderRadius: '0.75rem',
-                      border: `1.5px solid ${errors.password ? '#ef4444' : '#e2e8f0'}`,
-                      fontSize: '0.9375rem',
-                      transition: 'border-color 0.2s',
+                    {...passwordField}
+                    onChange={(e) => {
+                      clearApiError();
+                      passwordField.onChange(e);
                     }}
+                    onKeyDown={trackCapsLock}
+                    onKeyUp={trackCapsLock}
+                    onBlur={(e) => {
+                      setCapsLockOn(false);
+                      passwordField.onBlur(e);
+                    }}
+                    disabled={isLoading}
+                    aria-invalid={!!errors.password}
+                    aria-describedby={passwordDescribedBy}
                   />
                   <button
                     type="button"
-                    className="login-password-toggle"
+                    className="lg-eye"
                     onClick={() => setShowPassword((v) => !v)}
                     disabled={isLoading}
                     aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                     aria-pressed={showPassword}
                     aria-controls="login-password"
                   >
-                    {showPassword ? (
-                      <EyeOff style={{ width: '1rem', height: '1rem' }} />
-                    ) : (
-                      <Eye style={{ width: '1rem', height: '1rem' }} />
-                    )}
+                    {showPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
                 {errors.password && (
-                  <small
-                    id="password-error"
-                    role="alert"
-                    style={{
-                      display: 'block',
-                      marginTop: '0.25rem',
-                      fontSize: '0.75rem',
-                      color: '#ef4444',
-                    }}
-                  >
+                  <p id="password-error" role="alert" className="lg-msg is-error">
+                    <AlertCircle aria-hidden="true" />
                     {t(errors.password.message as TranslationKey)}
-                  </small>
+                  </p>
+                )}
+                {capsLockOn && !errors.password && (
+                  <p id="password-caps" className="lg-msg is-warn" aria-live="polite">
+                    <AlertCircle aria-hidden="true" />
+                    {t('capsLockOn')}
+                  </p>
                 )}
               </div>
 
-              {/* API/server error banner */}
               {apiError && (
-                <div
-                  style={{
-                    padding: '0.75rem 1rem',
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '0.5rem',
-                  }}
-                >
-                  <span
-                    style={{
-                      color: '#ef4444',
-                      fontSize: '1rem',
-                      lineHeight: 1,
-                      marginTop: '0.05rem',
-                    }}
-                  >
-                    ⚠
-                  </span>
-                  <p style={{ fontSize: '0.875rem', color: '#dc2626', margin: 0 }}>{apiError}</p>
+                <div className="lg-alert" role="alert" aria-live="assertive">
+                  <AlertCircle aria-hidden="true" />
+                  <span>{apiError}</span>
                 </div>
               )}
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="login-submit-btn"
-                style={{
-                  width: '100%',
-                  padding: '0.875rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '0.875rem',
-                  background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
-                  color: '#fff',
-                  fontSize: '0.9375rem',
-                  fontWeight: 700,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.75 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  letterSpacing: '0.02em',
-                  marginTop: '0.25rem',
-                  boxShadow: `0 4px 16px rgba(35,90,228,0.3)`,
-                }}
-              >
+              <button type="submit" className="lg-submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '1rem',
-                        height: '1rem',
-                        border: '2px solid rgba(255,255,255,0.4)',
-                        borderTopColor: '#fff',
-                        borderRadius: '50%',
-                        animation: 'spin 0.7s linear infinite',
-                      }}
-                    />
+                    <span className="lg-spinner" aria-hidden="true" />
                     {t('loggingIn')}
                   </>
                 ) : (
-                  t('login')
+                  <>
+                    {t('login')}
+                    <ArrowRight className="lg-submit-arrow" aria-hidden="true" />
+                  </>
                 )}
               </button>
             </form>
 
-            {/* Footer */}
-            <div
-              style={{
-                marginTop: '2rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid #f1f5f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
-                © {new Date().getFullYear()} {t('appName')}. {t('allRightsReserved')}
-              </p>
-              <LanguageToggle />
+            <p className="lg-help">{t('loginHelp')}</p>
+            <div className="lg-secure">
+              <ShieldCheck aria-hidden="true" />
+              {t('loginSecureConnection')}
             </div>
           </div>
-        </div>
+        </main>
+
+        <footer className="lg-footer">
+          © {new Date().getFullYear()} {t('appName')}. {t('allRightsReserved')}
+        </footer>
       </div>
 
-      {/* Spinner keyframe (global) */}
-      <style> {`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </>
+      {/* ── Light showcase panel (desktop only, decorative) ── */}
+      <aside className="lg-aside" aria-hidden="true">
+        <div>
+          <h2 className="lg-aside-title">{t('loginShowcaseTitle')}</h2>
+          <p className="lg-aside-desc">{t('loginShowcaseDesc')}</p>
+        </div>
+
+        <div className="lg-preview">
+          <div className="lg-preview-label">{t('loginWeeklySales')}</div>
+          <div className="lg-bars">
+            {PREVIEW_BARS.map((h, i) => (
+              <div
+                key={i}
+                className={`lg-bar${i === ACTIVE_BAR ? ' is-active' : ''}`}
+                style={{ height: `${h}%`, animationDelay: `${0.2 + i * 0.05}s` }}
+              />
+            ))}
+          </div>
+          <div className="lg-tiles">
+            {tiles.map(({ icon: Icon, label }) => (
+              <div key={label} className="lg-tile">
+                <Icon />
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
   );
 }

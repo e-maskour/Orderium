@@ -190,7 +190,7 @@ export default function Settings() {
               letterSpacing: '0.01em',
             }}
           >
-            Morocom
+            Marnova
             <span
               style={{
                 background: '#1d4ed8',

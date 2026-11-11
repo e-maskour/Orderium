@@ -24,6 +24,7 @@ import { PortalService } from './portal.service';
 import { LoginDto, RegisterDto } from './dto/portal.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -63,6 +64,7 @@ function clampRailLimit(raw?: string): number {
 @PortalRoute()
 export class PortalController {
   constructor(
+    private readonly entitlements: PlanEntitlementsService,
     private readonly portalService: PortalService,
     private readonly jwtService: JwtService,
     private readonly accessControl: AccessControlService,
@@ -104,6 +106,8 @@ export class PortalController {
     if (user.status === 'rejected') {
       throw new ForbiddenException('Account registration has been rejected');
     }
+    // Customers only reach the portal when the plan includes it.
+    if (!user.isAdmin) await this.entitlements.assertFeature('client_portal');
     const payload = {
       sub: user.id,
       phoneNumber: user.phoneNumber,
@@ -198,6 +202,7 @@ export class PortalController {
   })
   @ApiResponse({ status: 409, description: 'Phone number already registered' })
   async register(@Body() body: RegisterDto) {
+    await this.entitlements.assertFeature('client_portal');
     const existingUser = await this.portalService.findByPhoneNumber(
       body.phoneNumber,
     );

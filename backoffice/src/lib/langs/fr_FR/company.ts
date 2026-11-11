@@ -40,7 +40,6 @@ export default {
   invalidEmail: 'Adresse e-mail invalide',
   imageFilesOnly: 'Seuls les fichiers image sont acceptés',
   clickToUpload: 'Cliquer pour télécharger',
-  companyLogo: "Logo de l'entreprise",
 
   // AdminStep password strength
   passwordWeak: 'Faible',
@@ -53,4 +52,14 @@ export default {
   // SuccessScreen
   copyCredentials: 'Copier les identifiants',
   credentialsCopied: 'Identifiants copiés',
+  // Company logo
+  companyLogo: 'Logo',
+  uploadLogo: 'Ajouter un logo',
+  changeLogo: 'Changer',
+  removeLogo: 'Supprimer',
+  logoDocumentsHint: 'Affiché sur les factures, devis, bons et reçus. PNG, JPG ou WebP, 2 Mo max.',
+  logoUploaded: 'Logo mis à jour',
+  logoRemoved: 'Logo supprimé',
+  logoInvalidType: 'Le logo doit être une image PNG, JPG ou WebP',
+  logoTooLarge: 'Le logo doit faire moins de 2 Mo',
 };

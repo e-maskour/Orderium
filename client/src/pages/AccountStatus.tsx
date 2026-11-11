@@ -134,7 +134,7 @@ export default function AccountStatus() {
 
           <img
             src={orderiumLogo}
-            alt="Morocom"
+            alt="Marnova"
             style={{
               width: '72px',
               height: '72px',
@@ -155,7 +155,7 @@ export default function AccountStatus() {
               zIndex: 1,
             }}
           >
-            Morocom
+            Marnova
           </h1>
           <p
             style={{

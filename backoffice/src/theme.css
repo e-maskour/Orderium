@@ -19,7 +19,7 @@
     --primary-800: #0f2d7a;
     --primary-900: #0a1e52;
 
-    /* ── Morocom semantic palette ── */
+    /* ── Marnova semantic palette ── */
     --orderium-primary: #235ae4;
     --orderium-primary-light: #4a78ea;
     --orderium-primary-dark: #1a47b8;
@@ -2163,16 +2163,16 @@ input[type='number'] {
 }
 
 /* ── Print styles ───────────────────────────────────────── */
-#morocom-receipt {
+#marnova-receipt {
     display: none;
 }
 
 @media print {
-    body>*:not(#morocom-receipt) {
+    body>*:not(#marnova-receipt) {
         display: none !important;
     }
 
-    #morocom-receipt {
+    #marnova-receipt {
         display: block !important;
         width: 80mm;
         margin: 0;
@@ -2433,6 +2433,7 @@ input[type='number'] {
 }
 
 .caisse-card__amount-value {
+  white-space: nowrap;
     font-size: 0.875rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;

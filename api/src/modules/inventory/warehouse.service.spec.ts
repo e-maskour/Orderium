@@ -1,8 +1,10 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { Warehouse } from './entities/warehouse.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 
 // ─── Mock Factory ──────────────────────────────────────────────────────────
 
@@ -11,6 +13,8 @@ const mockRepository = () => ({
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  // remove() counts the products still assigned to the warehouse.
+  manager: { query: jest.fn().mockResolvedValue([{ count: '0' }]) },
 });
 
 // ─── Test Data Factory ────────────────────────────────────────────────────────
@@ -41,12 +45,26 @@ describe('WarehouseService', () => {
         return mockRepository();
       }),
       getCurrentDataSource: jest.fn(() => mockDataSource),
+      // Warehouse cache keys are namespaced per tenant.
+      getCurrentTenantSlug: jest.fn(() => 'test-tenant'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WarehouseService,
         { provide: TenantConnectionService, useValue: mockTenantConnService },
+        {
+          provide: CACHE_MANAGER,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
+        },
+        {
+          provide: PlanEntitlementsService,
+          useValue: {
+            assertCanAdd: jest.fn().mockResolvedValue(undefined),
+            assertFeature: jest.fn().mockResolvedValue(undefined),
+            recordStorage: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

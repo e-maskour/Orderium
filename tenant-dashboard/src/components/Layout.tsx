@@ -13,10 +13,18 @@ import {
   Activity,
   BarChart3,
   HeartPulse,
+  Lock,
+  LockOpen,
+  Inbox,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTenants } from '../hooks/useTenants';
 import { usePaymentsSummary } from '../hooks/usePayments';
+import { useNewLeadsCount } from '../hooks/useLeads';
+import { useQuery } from '@tanstack/react-query';
+import { apiKeyStore } from '../api/client';
+import { authApi } from '../api/auth';
+import { ApiKeyBanner, ApiKeyButton, ApiKeyDialog, useApiKey } from './ApiKeyDialog';
 
 interface Props {
   onLogout: () => void;
@@ -28,6 +36,15 @@ export function Layout({ onLogout }: Props) {
   const location = useLocation();
   const { data } = useTenants({ limit: 100 });
   const { data: paymentsSummary } = usePaymentsSummary();
+  const { data: me } = useQuery({
+    queryKey: ['admin-me'],
+    queryFn: authApi.me,
+    staleTime: 300_000,
+  });
+  const apiKey = useApiKey();
+  // Open on first load when no key is set, and whenever a request is refused for lack of one.
+  const [keyDialogOpen, setKeyDialogOpen] = useState(() => !apiKeyStore.get());
+  useEffect(() => apiKeyStore.onRequest(() => setKeyDialogOpen(true)), []);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -59,6 +76,7 @@ export function Layout({ onLogout }: Props) {
   // Summed across currencies deliberately: this is a count of late payments,
   // not a monetary total.
   const overdueCount = paymentsSummary?.reduce((sum, row) => sum + row.overdueCount, 0) ?? 0;
+  const newLeads = useNewLeadsCount();
 
   const activeClass = 'nav-link bg-indigo-600 text-white shadow-sm shadow-indigo-500/30';
   const inactiveClass =
@@ -73,7 +91,7 @@ export function Layout({ onLogout }: Props) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50 truncate leading-tight">
-            Morocom
+            Marnova
           </p>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
             Admin Portal
@@ -156,6 +174,27 @@ export function Layout({ onLogout }: Props) {
           <span className="flex-1">App Health</span>
         </NavLink>
 
+        <p className="nav-section-title">Sales</p>
+
+        <NavLink to="/leads" className={({ isActive }) => (isActive ? activeClass : inactiveClass)}>
+          {({ isActive }) => (
+            <>
+              <Inbox className="h-4 w-4 shrink-0" />
+              <span className="flex-1">Leads</span>
+              {newLeads > 0 && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                  }`}
+                  title={`${newLeads} new lead${newLeads !== 1 ? 's' : ''} to contact`}
+                >
+                  {newLeads}
+                </span>
+              )}
+            </>
+          )}
+        </NavLink>
+
         <p className="nav-section-title">Billing</p>
 
         <NavLink to="/payments" className={() => (isPaymentsActive ? activeClass : inactiveClass)}>
@@ -196,16 +235,23 @@ export function Layout({ onLogout }: Props) {
       <div className="shrink-0 border-t border-slate-100 p-3 space-y-0.5 dark:border-slate-800/80">
         {/* Admin badge */}
         <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-xs font-bold text-white shadow-sm">
-            A
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-xs font-bold uppercase text-white shadow-sm">
+            {(me?.name ?? me?.email ?? 'A').charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
-              Admin
+              {me?.name ?? 'Admin'}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">Super Admin</p>
+            <p
+              className="truncate text-[10px] text-slate-400 dark:text-slate-500"
+              title={me?.email}
+            >
+              {me?.email ?? 'Super Admin'}
+            </p>
           </div>
         </div>
+
+        <ApiKeyButton onClick={() => setKeyDialogOpen(true)} />
 
         <button
           onClick={toggleDark}
@@ -267,22 +313,38 @@ export function Layout({ onLogout }: Props) {
               <span className="text-[11px] font-extrabold text-white">M</span>
             </div>
             <span className="text-sm font-extrabold text-slate-900 dark:text-slate-50">
-              Morocom
+              Marnova
             </span>
           </div>
 
-          <button
-            onClick={toggleDark}
-            className="icon-btn h-9 w-9 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-            aria-label="Toggle theme"
-          >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setKeyDialogOpen(true)}
+              className={`icon-btn h-9 w-9 ${
+                apiKey
+                  ? 'text-emerald-600 hover:bg-slate-100 dark:text-emerald-400 dark:hover:bg-slate-800'
+                  : 'text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10'
+              }`}
+              aria-label={apiKey ? 'API key set — manage' : 'Enter API key'}
+            >
+              {apiKey ? <LockOpen className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={toggleDark}
+              className="icon-btn h-9 w-9 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="Toggle theme"
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </header>
+
+        <ApiKeyBanner onClick={() => setKeyDialogOpen(true)} />
 
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
+        <ApiKeyDialog open={keyDialogOpen} onClose={() => setKeyDialogOpen(false)} />
       </div>
     </div>
   );

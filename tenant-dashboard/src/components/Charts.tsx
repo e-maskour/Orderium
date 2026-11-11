@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { formatQuantity } from '../utils/numberFormat';
+import { UNLIMITED_LABEL } from '../utils/plans';
 
 /**
  * Small SVG chart primitives.
@@ -221,11 +222,30 @@ interface QuotaBarProps {
 }
 
 export function QuotaBar({ label, used, limit, pct, exceeded, unit }: QuotaBarProps) {
+  // -1 = unlimited: show usage only, no percentage bar.
+  if (limit < 0) {
+    return (
+      <div>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</span>
+          <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+            <span className="font-semibold">{formatQuantity(used)}</span>
+            {unit ? ` ${unit}` : ''}
+            {' / '}
+            {UNLIMITED_LABEL}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   // A tenant can be over 100%; the bar clamps but the number does not.
-  const width = pct === null ? 0 : Math.min(100, pct);
+  // A zero limit means the resource is not included in the plan.
+  const effectivePct = pct ?? (limit === 0 ? (used > 0 ? 100 : 0) : null);
+  const width = effectivePct === null ? 0 : Math.min(100, effectivePct);
   const tone = exceeded
     ? 'bg-red-500'
-    : pct !== null && pct >= 80
+    : effectivePct !== null && effectivePct >= 80
       ? 'bg-amber-500'
       : 'bg-emerald-500';
 
@@ -238,7 +258,7 @@ export function QuotaBar({ label, used, limit, pct, exceeded, unit }: QuotaBarPr
             {formatQuantity(used)}
           </span>
           {' / '}
-          {limit > 0 ? formatQuantity(limit) : '∞'}
+          {formatQuantity(limit)}
           {unit ? ` ${unit}` : ''}
         </span>
       </div>

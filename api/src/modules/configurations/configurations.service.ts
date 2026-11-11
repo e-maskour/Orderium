@@ -3,7 +3,10 @@ import {
   NotFoundException,
   ConflictException,
   Inject,
+  Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
+import { MinioProvider } from '../images/providers/minio.provider';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Configuration } from './entities/configuration.entity';
@@ -32,12 +35,66 @@ export function configurationListCacheKey(tenantSlug: string): string {
   return `configurations:${tenantSlug}:all`;
 }
 
+const COMPANY_ENTITY = 'my_company';
+const COMPANY_LOGO_FOLDER = 'company';
+
 @Injectable()
 export class ConfigurationsService {
+  private readonly logger = new Logger(ConfigurationsService.name);
+
   constructor(
     private readonly tenantConnService: TenantConnectionService,
+    private readonly minioProvider: MinioProvider,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  /**
+   * Store a new company logo and point `my_company.logo` at it. The previous
+   * logo file is removed afterwards (best effort) so replacements don't pile
+   * up in the tenant bucket.
+   */
+  async setCompanyLogo(
+    file: Express.Multer.File,
+  ): Promise<Record<string, unknown>> {
+    if (!this.minioProvider.isConfigured()) {
+      throw new ServiceUnavailableException('Image storage is unavailable');
+    }
+    const config = await this.findByEntity(COMPANY_ENTITY);
+    const previous = config.values?.logo as string | undefined;
+
+    const { url } = await this.minioProvider.upload(file, COMPANY_LOGO_FOLDER);
+    const saved = await this.update(config.id, {
+      values: { ...config.values, logo: url },
+    });
+
+    await this.deleteStoredLogo(previous);
+    return saved.values;
+  }
+
+  /** Clear `my_company.logo` and delete the stored file if this tenant owns it. */
+  async removeCompanyLogo(): Promise<Record<string, unknown>> {
+    const config = await this.findByEntity(COMPANY_ENTITY);
+    const previous = config.values?.logo as string | undefined;
+
+    const saved = await this.update(config.id, {
+      values: { ...config.values, logo: '' },
+    });
+
+    await this.deleteStoredLogo(previous);
+    return saved.values;
+  }
+
+  private async deleteStoredLogo(url?: string): Promise<void> {
+    const key = this.minioProvider.objectKeyFromUrl(url);
+    if (!key) return;
+    try {
+      await this.minioProvider.delete(key);
+    } catch (error) {
+      this.logger.warn(
+        `Could not delete previous company logo ${key}: ${(error as Error).message}`,
+      );
+    }
+  }
 
   private get configRepository(): Repository<Configuration> {
     return this.tenantConnService.getRepository(Configuration);

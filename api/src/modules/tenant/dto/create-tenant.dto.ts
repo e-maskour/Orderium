@@ -11,6 +11,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+import { PLAN_KEYS, type PlanFeatures } from '../plan-features';
 
 export class CreateTenantDto {
   /** Display name, e.g. "ACME Corporation" */
@@ -70,7 +71,7 @@ export class CreateTenantDto {
   notes?: string;
 
   @IsOptional()
-  @IsIn(['trial', 'basic', 'pro', 'enterprise'])
+  @IsIn(PLAN_KEYS as unknown as string[])
   subscriptionPlan?: string;
 
   @IsOptional()
@@ -81,9 +82,44 @@ export class CreateTenantDto {
 
   @IsOptional()
   @IsInt()
-  @Min(1)
+  @Min(-1)
   @Max(10000)
   maxUsers?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-1)
+  @Max(1000000)
+  maxProducts?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-1)
+  @Max(10000000)
+  maxOrdersPerMonth?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-1)
+  @Max(10000000)
+  maxStorageMb?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-1)
+  @Max(10000)
+  maxWarehouses?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-1)
+  @Max(10000)
+  maxDeliveryPersons?: number;
+
+  /** Plan feature flags: { pos, delivery, client_portal, reports }. */
+  @IsOptional()
+  @IsObject()
+  features?: PlanFeatures;
 
   /** Arbitrary JSON settings (timezone, locale, enabled features, …) */
   @IsOptional()

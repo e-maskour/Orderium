@@ -23,6 +23,7 @@ import * as bcrypt from 'bcrypt';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { applyDeliveryStatusTimestamp } from './delivery.helpers';
 
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
@@ -33,6 +34,7 @@ export class DeliveryService {
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
@@ -56,9 +58,10 @@ export class DeliveryService {
       .orderBy('dp.name', 'ASC');
 
     if (search) {
-      qb.andWhere('(LOWER(dp.name) LIKE :q OR dp.phoneNumber LIKE :q)', {
-        q: `%${search.toLowerCase()}%`,
-      });
+      qb.andWhere(
+        '(dp.name ILIKE :q OR dp.phoneNumber ILIKE :q OR dp.email ILIKE :q)',
+        { q: `%${search}%` },
+      );
     }
 
     if (isActive !== undefined) {
@@ -120,6 +123,7 @@ export class DeliveryService {
   async createDeliveryPerson(
     createDto: CreateDeliveryPersonDto,
   ): Promise<DeliveryPerson> {
+    await this.entitlements.assertCanAdd('deliveryPersons');
     // Check if email already exists
     if (createDto.email) {
       const existing = await this.deliveryPersonRepository.findOne({

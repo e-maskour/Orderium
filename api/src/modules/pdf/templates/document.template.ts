@@ -1,34 +1,8 @@
-interface DocumentTemplateData {
-  documentTitle: string;
-  documentLabel: string;
-  documentNumber: string;
-  date: string;
-  dueDate?: string;
-  expirationDate?: string;
-  customerName: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  customerIce?: string;
-  documentType: string;
-  signedBy?: string;
-  itemsHtml: string;
-  subtotal: string;
-  discount?: string;
-  discountType?: number;
-  tax: string;
-  total: string;
-  notes?: string;
-  styles: string;
-  hideVAT?: boolean;
-  isPurchaseDocument?: boolean;
-  isDemandePrix?: boolean;
-  totalQuantity?: string;
-  lang?: 'fr' | 'ar';
-}
-
 interface HeaderTemplateData {
   companyName: string;
   companyLines: string[];
+  /** Inline `data:` URI — header templates can't fetch remote resources. */
+  logoSrc?: string;
   documentLabel: string;
   documentNumber: string;
   date: string;
@@ -54,6 +28,12 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     dueDate: isRTL ? 'الاستحقاق' : 'Échéance',
     validUntil: isRTL ? 'صالح حتى' : "Valide jusqu'au",
   };
+  // Only inline images are usable here; anything else would make Chromium
+  // try (and fail) to fetch it while printing the header.
+  const logoHtml =
+    data.logoSrc && data.logoSrc.startsWith('data:image/')
+      ? `<img class="hdr-logo" src="${data.logoSrc.replace(/"/g, '&quot;')}" alt="">`
+      : '';
   return `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,7 +56,14 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         border-bottom: 1.5pt solid #1B5E7B;
       }
       /* Company side */
-      .hdr-company { max-width: 58%; }
+      .hdr-brand { display: flex; align-items: flex-start; gap: 2.5mm; max-width: 62%; }
+      .hdr-logo {
+        flex: none;
+        max-width: 22mm;
+        max-height: 14mm;
+        object-fit: contain;
+      }
+      .hdr-company { min-width: 0; }
       .hdr-company-name {
         font-size: 11pt;
         font-weight: 700;
@@ -125,10 +112,13 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     </style>
     <div class="hdr-wrap" dir="ltr">
       <div class="hdr-inner">
-        <div class="hdr-company">
-          <div class="hdr-company-name" dir="auto">${data.companyName}</div>
-          <div class="hdr-company-lines">
-            ${data.companyLines.map((line) => `<div dir="auto">${line}</div>`).join('')}
+        <div class="hdr-brand">
+          ${logoHtml}
+          <div class="hdr-company">
+            <div class="hdr-company-name" dir="auto">${data.companyName}</div>
+            <div class="hdr-company-lines">
+              ${data.companyLines.map((line) => `<div dir="auto">${line}</div>`).join('')}
+            </div>
           </div>
         </div>
         <div class="hdr-doc">
@@ -201,158 +191,4 @@ export function renderFooterTemplate(data: FooterTemplateData): string {
       </div>
     </div>
   `;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   A5 DOCUMENT BODY
-   ═══════════════════════════════════════════════════════════════ */
-export function renderDocumentTemplate(data: DocumentTemplateData): string {
-  const isRTL = data.lang === 'ar';
-
-  // Arabic label dictionary
-  const L = {
-    client: isRTL ? 'العميل' : 'Client',
-    fournisseur: isRTL ? 'المورد' : 'Fournisseur',
-    tel: isRTL ? 'الهاتف' : 'Tél',
-    address: isRTL ? 'العنوان' : 'Adresse',
-    description: isRTL ? 'الوصف' : 'Description',
-    qty: isRTL ? 'الكمية' : 'Qté',
-    unitPrice: isRTL ? 'سعر الوحدة' : 'P.U.',
-    discount: isRTL ? 'الخصم' : 'Remise',
-    discountPct: isRTL ? 'الخصم (%)' : 'Remise (%)',
-    tva: 'TVA',
-    total: isRTL ? 'المجموع' : 'Total',
-    subtotalHT: isRTL ? 'المجموع بدون الضريبة' : 'Sous-total HT',
-    tva20: 'TVA (20%)',
-    totalTTC: isRTL ? 'المجموع الإجمالي' : 'Total TTC',
-    notes: isRTL ? 'ملاحظات' : 'Notes',
-    totalQtyDemandee: isRTL
-      ? 'إجمالي الكمية المطلوبة'
-      : 'Total Quantité Demandée',
-    dh: 'DH',
-  };
-
-  // Build discount row if it exists
-  const discountRowHtml =
-    data.discount && data.discount !== '0,00'
-      ? `<div class="totals-row">
-           <span class="totals-label">${data.discountType === 1 ? L.discountPct : L.discount}</span>
-           <span class="totals-value">${data.discountType === 1 ? `-${data.discount}%` : `-${data.discount} DH`}</span>
-         </div>`
-      : '';
-
-  const descAlign = isRTL ? 'right' : 'left';
-  const numAlign = isRTL ? 'left' : 'right';
-  const thNumAlign = isRTL ? 'center' : numAlign;
-  const thTotalAlign = 'right'; // total th always right in both languages
-
-  return `
-        <!DOCTYPE html>
-        <html lang="${data.lang ?? 'fr'}" dir="${isRTL ? 'rtl' : 'ltr'}">
-        <head>
-        <meta charset="UTF-8">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=block" rel="stylesheet">
-        <title>${data.documentTitle} ${data.documentNumber}</title>
-        ${data.styles}
-        </head>
-        <body>
-        <div class="invoice-page">
-            <main class="content-wrapper">
-                <!-- Customer / Supplier Section -->
-                <section class="customer-section">
-                    <div class="customer-grid">
-                        <div class="bill-to">
-                            <div class="section-label">${data.isPurchaseDocument ? L.fournisseur : L.client}</div>
-                            <div class="info-box">
-                                <div dir="auto" class="customer-name">${data.customerName}</div>
-                                ${data.customerPhone ? `<div dir="auto" class="customer-detail"><strong>${L.tel}:</strong> ${data.customerPhone}</div>` : ''}
-                                ${data.customerAddress ? `<div dir="auto" class="customer-detail"><strong>${L.address}:</strong> ${data.customerAddress}</div>` : ''}
-                                ${data.customerIce ? `<div dir="auto" class="customer-detail"><strong>ICE:</strong> ${data.customerIce}</div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Items Table -->
-                <section class="table-section">
-                    <table class="invoice-table">
-                        <thead class="table-header">
-                            <tr>
-                                ${
-                                  data.isDemandePrix
-                                    ? `
-                                <th style="text-align: ${descAlign}; width: 70%;">${L.description}</th>
-                                <th style="text-align: center; width: 30%;">${L.qty}</th>
-                                `
-                                    : `
-                                <th style="text-align: ${descAlign}; width: ${data.hideVAT ? '48%' : '40%'};">${L.description}</th>
-                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">${L.qty}</th>
-                                <th style="text-align: ${thNumAlign}; width: ${data.hideVAT ? '13%' : '12%'};">${L.unitPrice}</th>
-                                <th style="text-align: ${thNumAlign}; width: ${data.hideVAT ? '13%' : '12%'};">${L.discount}</th>
-                                ${!data.hideVAT ? `<th style="text-align: ${thNumAlign}; width: 12%;">${L.tva}</th>` : ''}
-                                <th style="text-align: ${thTotalAlign}; width: ${data.hideVAT ? '13%' : '14%'};">${L.total}</th>
-                                `
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.itemsHtml}
-                        </tbody>
-                    </table>
-
-                    <!-- Totals -->
-                    <div class="totals-section">
-                      ${
-                        data.isDemandePrix
-                          ? `
-                      <div class="totals-row totals-grand">
-                        <span class="totals-label">${L.totalQtyDemandee}</span>
-                        <span class="totals-value">${data.totalQuantity || '0'}</span>
-                      </div>
-                      `
-                          : !data.hideVAT
-                            ? `
-                      <div class="totals-row">
-                        <span class="totals-label">${L.subtotalHT}</span>
-                        <span class="totals-value">${data.subtotal} DH</span>
-                      </div>
-                      ${discountRowHtml}
-                      <div class="totals-row">
-                        <span class="totals-label">${L.tva20}</span>
-                        <span class="totals-value">${data.tax} DH</span>
-                      </div>
-                      <div class="totals-row totals-grand">
-                        <span class="totals-label">${L.totalTTC}</span>
-                        <span class="totals-value">${data.total} DH</span>
-                      </div>
-                      `
-                            : `
-                      ${discountRowHtml}
-                      <div class="totals-row totals-grand">
-                        <span class="totals-label">${L.total}</span>
-                        <span class="totals-value">${data.total} DH</span>
-                      </div>
-                      `
-                      }
-                    </div>
-
-                    <!-- Notes -->
-                    ${
-                      data.notes
-                        ? `
-                    <div class="notes-block">
-                      <div class="notes-title">${L.notes}</div>
-                      <div dir="auto" class="notes-body">${data.notes}</div>
-                    </div>
-                    `
-                        : ''
-                    }
-                </section>
-            </main>
-        </div>
-        </body>
-        </html>
-    `;
 }

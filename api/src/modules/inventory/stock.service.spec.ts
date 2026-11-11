@@ -24,8 +24,11 @@ const makeQueryBuilderMock = () => ({
   getMany: jest.fn(),
   getOne: jest.fn(),
   getCount: jest.fn(),
+  getManyAndCount: jest.fn(),
   skip: jest.fn().mockReturnThis(),
   take: jest.fn().mockReturnThis(),
+  offset: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
 });
 
 const mockRepository = () => {
@@ -811,13 +814,48 @@ describe('StockService', () => {
 
   describe('findAllMovements', () => {
     beforeEach(() => {
-      stockMovementRepo._qb.getMany.mockResolvedValue([makeMovement()]);
+      stockMovementRepo._qb.getManyAndCount.mockResolvedValue([
+        [makeMovement()],
+        1,
+      ]);
     });
 
-    it('returns all movements without filters', async () => {
+    it('returns all movements without filters (no pagination)', async () => {
       const result = await service.findAllMovements();
 
-      expect(result).toHaveLength(1);
+      expect(result.movements).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(stockMovementRepo._qb.offset).not.toHaveBeenCalled();
+      expect(stockMovementRepo._qb.limit).not.toHaveBeenCalled();
+      expect(stockMovementRepo._qb.orderBy).toHaveBeenCalledWith(
+        'movement.dateCreated',
+        'DESC',
+        'NULLS LAST',
+      );
+    });
+
+    it('applies offset/limit when paginated', async () => {
+      await service.findAllMovements({ page: 3, limit: 25 });
+
+      expect(stockMovementRepo._qb.offset).toHaveBeenCalledWith(50);
+      expect(stockMovementRepo._qb.limit).toHaveBeenCalledWith(25);
+    });
+
+    it('maps whitelisted sort fields to SQL columns', async () => {
+      await service.findAllMovements({
+        sortField: 'productName',
+        sortOrder: 'ASC',
+      });
+
+      expect(stockMovementRepo._qb.orderBy).toHaveBeenCalledWith(
+        'product.name',
+        'ASC',
+        'NULLS LAST',
+      );
+      expect(stockMovementRepo._qb.addOrderBy).toHaveBeenCalledWith(
+        'movement.id',
+        'DESC',
+      );
     });
 
     it('applies productId filter', async () => {

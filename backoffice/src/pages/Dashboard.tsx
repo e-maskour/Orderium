@@ -31,6 +31,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
+import { useTenantModules } from '../components/TenantStatusGuard';
 import { statisticsService } from '../modules/statistics';
 import type { DashboardPeriod, IDashboardKpi, IDashboardStats } from '../modules/statistics';
 import { APP_LOCALE, formatDate } from '@orderium/ui';
@@ -430,6 +431,8 @@ export default function Dashboard() {
   const { admin } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  // Advanced reports are plan-gated; the dashboard itself stays on every plan.
+  const { reports: reportsEnabled } = useTenantModules();
   const lang = (language === 'ar' ? 'ar' : 'fr') as 'fr' | 'ar';
   const tx = L[lang];
   const locale = lang === 'ar' ? 'ar-MA' : 'fr-FR';
@@ -700,7 +703,9 @@ export default function Dashboard() {
                 value={money(k.profit.value)}
                 kpi={k.profit}
                 accent
-                onClick={() => navigate('/analytics/sales/revenue')}
+                onClick={
+                  reportsEnabled !== false ? () => navigate('/analytics/sales/revenue') : goSales
+                }
                 vsPrev={tx.vsPrev}
               />
             </>

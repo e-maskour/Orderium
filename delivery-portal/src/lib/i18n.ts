@@ -3,7 +3,7 @@ export type Language = 'ar' | 'fr';
 export const translations = {
   ar: {
     // App
-    appName: 'Morocom',
+    appName: 'Marnova',
     tagline: 'بوابة التوصيل',
 
     // Navigation
@@ -210,7 +210,7 @@ export const translations = {
   },
   fr: {
     // App
-    appName: 'Morocom',
+    appName: 'Marnova',
     tagline: 'Portail de Livraison',
 
     // Navigation

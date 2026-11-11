@@ -1,7 +1,7 @@
 import { Warehouse } from 'lucide-react';
 import React, { useState } from 'react';
 import ReportLayout from '../components/ReportLayout';
-import ReportFilterBar from '../components/ReportFilterBar';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportChart from '../components/ReportChart';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -14,14 +14,10 @@ import type { StockReportFilter, ReportData } from '../../../modules/analytics/a
 
 const StockByWarehousePage: React.FC = () => {
   const { t } = useLanguage();
-  const [filter, setFilter] = useState<StockReportFilter>({});
+  const [filter] = useState<StockReportFilter>({});
   const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getStockByWarehouse(filter),
   );
-  const handleFilterChange = (f: StockReportFilter) => {
-    setFilter(f);
-    setTimeout(refetch, 0);
-  };
 
   const columns = [
     { field: 'warehouseName', header: t('analyticsStockWarehouse') },
@@ -37,8 +33,9 @@ const StockByWarehousePage: React.FC = () => {
       subtitle={t('analyticsStockByWarehouseSubtitle')}
       isLoading={isLoading}
       error={error}
-      filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="stock-by-warehouse" values={data.kpis} />}
+      chart={data?.chart ? <ReportChart chart={data.chart} unit="" /> : undefined}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons

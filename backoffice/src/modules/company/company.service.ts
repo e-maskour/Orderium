@@ -16,6 +16,19 @@ export class CompanyService {
     });
     return Company.fromApiResponse(response.data.values);
   }
+
+  /** Upload or replace the logo printed on documents. */
+  async uploadLogo(file: File): Promise<Company> {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const response = await apiClient.upload<any>(API_ROUTES.CONFIGURATIONS.COMPANY_LOGO, formData);
+    return Company.fromApiResponse(response.data);
+  }
+
+  async removeLogo(): Promise<Company> {
+    const response = await apiClient.delete<any>(API_ROUTES.CONFIGURATIONS.COMPANY_LOGO);
+    return Company.fromApiResponse(response.data);
+  }
 }
 
 export const companyService = new CompanyService();

@@ -1,4 +1,9 @@
-import { PartnersResponse, CreatePartnerDTO, UpdatePartnerDTO } from './partners.interface';
+import {
+  PartnersResponse,
+  CreatePartnerDTO,
+  UpdatePartnerDTO,
+  PartnerSortField,
+} from './partners.interface';
 import { Partner } from './partners.model';
 import { apiClient, API_ROUTES } from '../../common';
 
@@ -7,11 +12,21 @@ export class PartnersService {
     search?: string;
     type?: 'customer' | 'supplier';
     isEnabled?: boolean;
+    limit?: number;
+    offset?: number;
+    sortField?: PartnerSortField;
+    sortOrder?: 'ASC' | 'DESC';
   }): Promise<PartnersResponse> {
     const queryParams: Record<string, string> = {};
+    if (params?.limit !== undefined) queryParams.limit = String(params.limit);
+    if (params?.offset !== undefined) queryParams.offset = String(params.offset);
     if (params?.search) queryParams.search = params.search;
     if (params?.type) queryParams.type = params.type;
     if (params?.isEnabled !== undefined) queryParams.isEnabled = String(params.isEnabled);
+    if (params?.sortField && params.sortOrder) {
+      queryParams.sortField = params.sortField;
+      queryParams.sortOrder = params.sortOrder;
+    }
     const response = await apiClient.get<Partner[]>(API_ROUTES.PARTNERS.LIST, {
       params: queryParams,
     });

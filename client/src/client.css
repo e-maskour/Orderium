@@ -1,5 +1,5 @@
 /* ============================================================
-   Morocom Client Portal — Comprehensive Design System
+   Marnova Client Portal — Comprehensive Design System
    Emerald #059669 brand — Simplicity-first for end users
    ============================================================ */
 
@@ -1077,7 +1077,6 @@ a,
     select {
         font-size: 16px !important;
     }
-}
 }
 /* ===== MEDIA THUMB (shared image + placeholder) ===== */
 .cl-thumb {

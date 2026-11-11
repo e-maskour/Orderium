@@ -13,9 +13,10 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PLAN_KEYS } from '../../tenant/plan-features';
 
 export const BILLING_CYCLES = ['monthly', 'yearly'] as const;
-export const PLAN_NAMES = ['trial', 'basic', 'pro', 'enterprise'] as const;
+export const PLAN_NAMES = PLAN_KEYS;
 export const PAYMENT_TYPES = [
   'bank_transfer',
   'cash',

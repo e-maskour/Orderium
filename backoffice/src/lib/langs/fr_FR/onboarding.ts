@@ -1,6 +1,6 @@
 export default {
   // ── Welcome screen ──
-  onboardingWelcomeTitle: 'Bienvenue sur Morocom',
+  onboardingWelcomeTitle: 'Bienvenue sur Marnova',
   onboardingWelcomeSubtitle: 'Configurons votre entreprise en 2 étapes seulement',
   onboardingTimeEstimate: 'Environ 2 minutes',
   onboardingGetStarted: 'Commencer →',
@@ -65,7 +65,7 @@ export default {
 
   // ── Success screen ──
   onboardingSuccessSubtitle:
-    'Bienvenue sur Morocom, {company}. Votre compte administrateur est prêt.',
+    'Bienvenue sur Marnova, {company}. Votre compte administrateur est prêt.',
   onboardingCopied: 'Copié !',
   onboardingAllSet: 'Tout est prêt !',
   onboardingCompanyLogoAlt: "Logo de l'entreprise",

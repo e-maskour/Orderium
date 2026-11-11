@@ -7,17 +7,33 @@ import {
 import { InvoiceWithDetails } from './invoices.model';
 import { apiClient, API_ROUTES } from '../../common';
 
+/**
+ * Request body shared by the list, the aggregates and the XLSX export, so the
+ * export always applies exactly the filters (and sort) of the list.
+ */
+function buildFilterBody(
+  filters: InvoiceFilters | undefined,
+  withSort: boolean,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  if (filters?.status) body.status = filters.status;
+  if (filters?.customerId) body.customerId = filters.customerId;
+  if (filters?.supplierId) body.supplierId = filters.supplierId;
+  if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
+  if (filters?.dateTo) body.dateTo = filters.dateTo;
+  if (filters?.search) body.search = filters.search;
+  if (withSort && filters?.sortField) {
+    body.sortField = filters.sortField;
+    body.sortOrder = filters.sortOrder ?? 'ASC';
+  }
+  return body;
+}
+
 export class InvoicesService {
   async getAll(
     filters?: InvoiceFilters,
   ): Promise<{ invoices: InvoiceWithDetails[]; count: number; totalCount: number }> {
-    const body: any = {};
-    if (filters?.status) body.status = filters.status;
-    if (filters?.customerId) body.customerId = filters.customerId;
-    if (filters?.supplierId) body.supplierId = filters.supplierId;
-    if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
-    if (filters?.dateTo) body.dateTo = filters.dateTo;
-    if (filters?.search) body.search = filters.search;
+    const body = buildFilterBody(filters, true);
 
     const queryParams: Record<string, string | number | boolean | undefined> = {};
     if (filters?.page) queryParams.page = filters.page;
@@ -41,13 +57,7 @@ export class InvoicesService {
     totalRemaining: number;
     totalSubtotal: number;
   }> {
-    const body: any = {};
-    if (filters?.status) body.status = filters.status;
-    if (filters?.customerId) body.customerId = filters.customerId;
-    if (filters?.supplierId) body.supplierId = filters.supplierId;
-    if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
-    if (filters?.dateTo) body.dateTo = filters.dateTo;
-    if (filters?.search) body.search = filters.search;
+    const body = buildFilterBody(filters, false);
 
     const queryParams: Record<string, string | number | boolean | undefined> = {};
     if (filters?.direction) queryParams.direction = filters.direction;
@@ -120,9 +130,11 @@ export class InvoicesService {
     return response.data;
   }
 
-  async exportToXlsx(supplierId?: number): Promise<Blob> {
-    const raw = await apiClient.raw('GET', API_ROUTES.INVOICES.EXPORT_XLSX, {
-      params: supplierId !== undefined ? { supplierId } : undefined,
+  /** XLSX export of every row matching the list filters/sort (not just the current page). */
+  async exportToXlsx(filters?: InvoiceFilters): Promise<Blob> {
+    const raw = await apiClient.raw('POST', API_ROUTES.INVOICES.EXPORT_XLSX, {
+      body: buildFilterBody(filters, true),
+      params: filters?.direction ? { direction: filters.direction } : undefined,
     });
     return raw.blob();
   }

@@ -10,6 +10,9 @@ import type {
   SubscriptionPlanData,
   ActivityLogEntry,
   TenantModulesConfig,
+  AddonCatalogue,
+  TenantSubscriptionDetail,
+  UpdateTenantSubscriptionInput,
 } from '../types/tenant';
 
 export const tenantsApi = {
@@ -38,8 +41,12 @@ export const tenantsApi = {
     return data;
   },
 
-  resetData: async (id: number, confirmation: string): Promise<{ message: string }> => {
-    const { data } = await apiClient.post(`/admin/tenants/${id}/reset`, { confirmation });
+  resetData: async (
+    id: number,
+    confirmation: string,
+    password: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await apiClient.post(`/admin/tenants/${id}/reset`, { confirmation, password });
     return data;
   },
 
@@ -70,9 +77,13 @@ export const tenantsApi = {
     return data;
   },
 
-  deletePermanently: async (id: number, confirmation: string): Promise<{ message: string }> => {
+  deletePermanently: async (
+    id: number,
+    confirmation: string,
+    password: string,
+  ): Promise<{ message: string }> => {
     const { data } = await apiClient.delete(`/admin/tenants/${id}/permanent`, {
-      data: { confirmation },
+      data: { confirmation, password },
     });
     return data;
   },
@@ -93,6 +104,26 @@ export const tenantsApi = {
 
   listPlans: async (): Promise<SubscriptionPlanData[]> => {
     const { data } = await apiClient.get('/admin/plans');
+    return data;
+  },
+
+  // ── Subscription (plan + add-ons) ──────────────────────────────────────────
+
+  getSubscription: async (id: number): Promise<TenantSubscriptionDetail> => {
+    const { data } = await apiClient.get(`/admin/tenants/${id}/subscription`);
+    return data;
+  },
+
+  updateSubscription: async (
+    id: number,
+    input: UpdateTenantSubscriptionInput,
+  ): Promise<TenantSubscriptionDetail> => {
+    const { data } = await apiClient.put(`/admin/tenants/${id}/subscription`, input);
+    return data;
+  },
+
+  getAddonCatalogue: async (): Promise<AddonCatalogue> => {
+    const { data } = await apiClient.get('/admin/subscription/addons');
     return data;
   },
 

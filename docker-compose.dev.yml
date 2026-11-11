@@ -80,6 +80,7 @@ services:
     volumes:
       - ./backoffice/src:/app/src
       - ./backoffice/public:/app/public
+      - ./backoffice/index.html:/app/index.html:ro
       - ./shared/ui:/shared/ui:ro
       - ./shared/components:/shared/components:ro
       - bo_node_modules:/app/node_modules
@@ -104,6 +105,7 @@ services:
     volumes:
       - ./client/src:/app/src
       - ./client/public:/app/public
+      - ./client/index.html:/app/index.html:ro
       - ./shared/ui:/shared/ui:ro
       - ./shared/components:/shared/components:ro
       - client_node_modules:/app/node_modules
@@ -128,6 +130,7 @@ services:
     volumes:
       - ./delivery-portal/src:/app/src
       - ./delivery-portal/public:/app/public
+      - ./delivery-portal/index.html:/app/index.html:ro
       - ./shared/ui:/shared/ui:ro
       - ./shared/components:/shared/components:ro
       - delivery_node_modules:/app/node_modules

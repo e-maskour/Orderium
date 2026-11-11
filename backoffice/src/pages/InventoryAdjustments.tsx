@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import {
@@ -19,10 +19,13 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { DecimalInput, formatDate, formatQuantity } from '@orderium/ui';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag as PTag } from 'primereact/tag';
-import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
+import {
+  inventoryAdjustmentService,
+  type AdjustmentSortField,
+} from '../modules/inventory/inventory-adjustments.service';
 import { warehousesService } from '../modules/warehouses';
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import {
@@ -39,13 +42,20 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 import { RefLink } from '../components/ui/RefLink';
 import { entityRoutes } from '../lib/entityRoutes';
-import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function InventoryAdjustments() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [warehouseFilter, _setWarehouseFilter] = useState<string>('all');
+  // Server-side pagination/sort. Any filter or sort change jumps back to page 1.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [sortField, setSortField] = useState<AdjustmentSortField | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '', warehouseId: 0, notes: '' });
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustment | null>(null);
@@ -77,14 +87,41 @@ export default function InventoryAdjustments() {
     queryFn: () => warehousesService.getAll(),
   });
 
-  const { data: adjustments = [], isLoading } = useQuery({
-    queryKey: ['inventory-adjustments', statusFilter, warehouseFilter],
+  const { data: listData, isLoading } = useQuery({
+    queryKey: [
+      'inventory-adjustments',
+      { statusFilter, warehouseFilter, debouncedSearch, page, pageSize, sortField, sortOrder },
+    ],
     queryFn: () =>
-      inventoryAdjustmentService.getAll({
+      inventoryAdjustmentService.getPage({
         status: statusFilter !== 'all' ? statusFilter : undefined,
         warehouseId: warehouseFilter !== 'all' ? parseInt(warehouseFilter) : undefined,
+        search: debouncedSearch.trim() || undefined,
+        page,
+        limit: pageSize,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
       }),
+    placeholderData: keepPreviousData,
   });
+  const adjustments = listData?.adjustments ?? [];
+  const totalRecords = listData?.total ?? 0;
+
+  // After a delete empties the last page, step back to the new last page.
+  useEffect(() => {
+    if (listData && listData.adjustments.length === 0 && page > 1 && totalRecords > 0) {
+      setPage(Math.ceil(totalRecords / pageSize));
+    }
+  }, [listData, page, pageSize, totalRecords]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+      setPage(1);
+    }, 500);
+  };
 
   // Paginated product search for validate modal — only runs when user has typed a search term
   const { data: searchResult, isFetching: isFetchingSearch } = useQuery({
@@ -166,11 +203,8 @@ export default function InventoryAdjustments() {
     },
   });
 
-  const filteredAdjustments = adjustments.filter(
-    (adj) =>
-      adj.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      adj.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Search / status / warehouse are all applied by the API.
+  const filteredAdjustments = adjustments;
 
   const closeDialog = () => {
     setSelectedAdjustment(null);
@@ -369,7 +403,7 @@ export default function InventoryAdjustments() {
                   type="text"
                   placeholder={t('searchByReference')}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   aria-label={t('searchByReference')}
                   style={{ width: '100%', paddingLeft: '2.5rem' }}
                 />
@@ -389,7 +423,10 @@ export default function InventoryAdjustments() {
               {/* Status Filter */}
               <AutoCompleteSelect
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.value);
+                  setPage(1);
+                }}
                 options={[
                   { label: t('allStatuses'), value: 'all' },
                   { label: t('adjDraft'), value: 'draft' },
@@ -418,7 +455,9 @@ export default function InventoryAdjustments() {
             items={filteredAdjustments}
             keyExtractor={(adj: InventoryAdjustment) => adj.id}
             loading={isLoading}
-            totalCount={filteredAdjustments.length}
+            totalCount={totalRecords}
+            hasMore={page * pageSize < totalRecords}
+            onLoadMore={() => setPage((p) => p + 1)}
             countLabel={t('inventoryAdjustments')}
             emptyMessage={t('noAdjustmentsFound')}
             config={{
@@ -445,9 +484,23 @@ export default function InventoryAdjustments() {
             onSelectionChange={(e) => setSelectedRows(e.value as InventoryAdjustment[])}
             selectionMode="checkbox"
             dataKey="id"
+            lazy
             paginator
             paginatorPosition="bottom"
-            rows={25}
+            first={(page - 1) * pageSize}
+            rows={pageSize}
+            totalRecords={totalRecords}
+            onPage={(e) => {
+              setPage(Math.floor(e.first / e.rows) + 1);
+              setPageSize(e.rows);
+            }}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={(e: DataTableSortEvent) => {
+              setSortField((e.sortField || undefined) as AdjustmentSortField | undefined);
+              setSortOrder(e.sortOrder);
+              setPage(1);
+            }}
             rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             loading={isLoading}

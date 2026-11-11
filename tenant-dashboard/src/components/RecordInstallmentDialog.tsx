@@ -6,6 +6,8 @@ import { DecimalInput } from './DecimalInput';
 import { DateInput } from './DateInput';
 import { PaymentProgress } from './PaymentStatusBadge';
 import { useAddInstallment } from '../hooks/usePayments';
+import { usePlans } from '../hooks/useTenants';
+import { planLabel } from '../utils/plans';
 import { formatMoney, todayIso } from '../utils/format';
 import {
   PAYMENT_TYPES,
@@ -36,6 +38,7 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
   const [validateImmediately, setValidateImmediately] = useState(true);
 
   const addInstallment = useAddInstallment();
+  const { data: plans } = usePlans();
 
   useEffect(() => {
     if (!open) return;
@@ -100,7 +103,7 @@ export function RecordInstallmentDialog({ open, payment, onClose }: Props) {
     <Modal
       open={open}
       title="Record a payment"
-      description={`${payment.tenant?.name ?? `Tenant #${payment.tenantId}`} — ${payment.planName} ${payment.billingCycle}`}
+      description={`${payment.tenant?.name ?? `Tenant #${payment.tenantId}`} — ${planLabel(payment.planName, plans)} ${payment.billingCycle}`}
       onClose={onClose}
       footer={
         <>

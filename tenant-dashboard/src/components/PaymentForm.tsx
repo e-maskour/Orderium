@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { AlertCircle } from 'lucide-react';
 import { Modal } from './Modal';
 import { DecimalInput } from './DecimalInput';
 import { DateInput } from './DateInput';
-import { useTenants, usePlans } from '../hooks/useTenants';
+import { useTenants, usePlans, useTenantSubscription } from '../hooks/useTenants';
 import { useCreatePayment, useUpdatePayment } from '../hooks/usePayments';
 import { formatMoney, todayIso, addMonths } from '../utils/format';
 import { BILLING_CYCLE_LABELS, type BillingCycle, type Payment } from '../types/payment';
+import { formatPriceHt, planLabel, sortPlans } from '../utils/plans';
 import type { SubscriptionPlan } from '../types/tenant';
 
-const PLANS: SubscriptionPlan[] = ['trial', 'basic', 'pro', 'enterprise'];
+/** Pre-selected for a new payment: the recommended paid plan. */
+const DEFAULT_PAYMENT_PLAN: SubscriptionPlan = 'business';
 const CYCLES: BillingCycle[] = ['monthly', 'yearly'];
 
 interface Props {
@@ -26,7 +28,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   const isEdit = !!payment;
 
   const [tenantId, setTenantId] = useState<number | ''>(fixedTenantId ?? '');
-  const [planName, setPlanName] = useState<SubscriptionPlan>('basic');
+  const [planName, setPlanName] = useState<SubscriptionPlan>(DEFAULT_PAYMENT_PLAN);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
   const [periodStart, setPeriodStart] = useState(todayIso());
   const [periodEnd, setPeriodEnd] = useState(addMonths(todayIso(), 12));
@@ -42,6 +44,36 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
   const updatePayment = useUpdatePayment();
 
   const plan = plans?.find((p) => p.name === planName);
+  // New payment for a known tenant: when billing its current plan, the amount
+  // includes the add-ons it subscribed to (plan + add-ons).
+  const { data: subscription } = useTenantSubscription(
+    !isEdit && typeof tenantId === 'number' ? tenantId : 0,
+  );
+  // A new payment starts on the tenant's current paid plan (once per opening),
+  // so the plan + add-ons amount is prefilled without picking the plan again.
+  const planPrefilledFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (!open) planPrefilledFor.current = null;
+  }, [open]);
+  useEffect(() => {
+    if (!open || isEdit || !subscription || typeof tenantId !== 'number') return;
+    if (planPrefilledFor.current === tenantId) return;
+    planPrefilledFor.current = tenantId;
+    const current = subscription.plan.name as SubscriptionPlan;
+    const billable = plans?.some(
+      (p) => p.name === current && (p.priceMonthly > 0 || p.priceYearly > 0),
+    );
+    if (billable) setPlanName(current);
+  }, [open, isEdit, subscription, tenantId, plans]);
+
+  const tenantPricing =
+    subscription && subscription.plan.name === planName && subscription.pricing?.addonsMonthly
+      ? subscription.pricing
+      : null;
+  // The free trial is never billed; keep it listed only when editing a record that uses it.
+  const planOptions = sortPlans(plans).filter(
+    (p) => p.priceMonthly > 0 || p.priceYearly > 0 || p.name === planName,
+  );
   const currency = payment?.currency ?? plan?.currency ?? 'MAD';
 
   useEffect(() => {
@@ -59,7 +91,7 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
     } else {
       const today = todayIso();
       setTenantId(fixedTenantId ?? '');
-      setPlanName('basic');
+      setPlanName(DEFAULT_PAYMENT_PLAN);
       setBillingCycle('yearly');
       setPeriodStart(today);
       setPeriodEnd(addMonths(today, 12));
@@ -76,12 +108,19 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
     setPeriodEnd(addMonths(start, cycle === 'yearly' ? 12 : 1));
   };
 
-  // Prefill from the plan's list price — the operator can still override it.
+  // Prefill from the plan's list price (+ the tenant's add-ons when billing its
+  // current plan) — the operator can still override it.
   useEffect(() => {
     if (amountTouched || !plan) return;
-    const price = billingCycle === 'yearly' ? plan.priceYearly : plan.priceMonthly;
+    const price = tenantPricing
+      ? billingCycle === 'yearly'
+        ? tenantPricing.totalYearly
+        : tenantPricing.totalMonthly
+      : billingCycle === 'yearly'
+        ? plan.priceYearly
+        : plan.priceMonthly;
     if (price > 0) setAmountDue(price);
-  }, [plan, billingCycle, amountTouched]);
+  }, [plan, billingCycle, amountTouched, tenantPricing]);
 
   const parsedAmount = amountDue ?? NaN;
   const amountValid = amountDue !== null && Number.isFinite(parsedAmount) && parsedAmount > 0;
@@ -200,12 +239,19 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <select
               id="pf-plan"
               value={planName}
-              onChange={(e) => setPlanName(e.target.value as SubscriptionPlan)}
+              onChange={(e) => {
+                setPlanName(e.target.value as SubscriptionPlan);
+                // On a new payment, a deliberate plan change re-applies its list price.
+                if (!isEdit) setAmountTouched(false);
+              }}
               className="input"
             >
-              {PLANS.map((p) => (
-                <option key={p} value={p}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
+              {!planOptions.some((p) => p.name === planName) && (
+                <option value={planName}>{planLabel(planName, plans)}</option>
+              )}
+              {planOptions.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.displayName}
                 </option>
               ))}
             </select>
@@ -217,7 +263,10 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
             <select
               id="pf-cycle"
               value={billingCycle}
-              onChange={(e) => applyCycle(e.target.value as BillingCycle, periodStart)}
+              onChange={(e) => {
+                applyCycle(e.target.value as BillingCycle, periodStart);
+                if (!isEdit) setAmountTouched(false);
+              }}
               className="input"
             >
               {CYCLES.map((c) => (
@@ -292,8 +341,28 @@ export function PaymentForm({ open, onClose, payment, fixedTenantId }: Props) {
           />
           {!error && plan && !amountTouched && (
             <p id="pf-amount-hint" className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-              Prefilled from the {plan.displayName} {billingCycle} list price — edit it for a
-              negotiated amount.
+              {tenantPricing ? (
+                <>
+                  Prefilled with the tenant&apos;s current subscription ({billingCycle}): plan{' '}
+                  {formatPriceHt(
+                    billingCycle === 'yearly'
+                      ? tenantPricing.planYearly
+                      : tenantPricing.planMonthly,
+                  )}{' '}
+                  + add-ons{' '}
+                  {formatPriceHt(
+                    billingCycle === 'yearly'
+                      ? tenantPricing.totalYearly - tenantPricing.planYearly
+                      : tenantPricing.addonsMonthly,
+                  )}{' '}
+                  — edit it for a negotiated amount.
+                </>
+              ) : (
+                <>
+                  Prefilled from the {plan.displayName} {billingCycle} list price (HT) — edit it for
+                  a negotiated amount.
+                </>
+              )}
             </p>
           )}
           {error && (

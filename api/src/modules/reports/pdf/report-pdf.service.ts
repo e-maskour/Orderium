@@ -149,7 +149,7 @@ export class ReportPdfService {
     const company = await this.loadCompanyConfig();
 
     return {
-      companyName: company.companyName?.trim() || 'Morocom',
+      companyName: company.companyName?.trim() || 'Marnova',
       logo: company.logo?.trim() ? { url: company.logo.trim() } : undefined,
       address: {
         line1: company.address?.trim(),

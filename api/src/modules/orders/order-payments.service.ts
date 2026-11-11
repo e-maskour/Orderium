@@ -7,6 +7,8 @@ import {
   CreateOrderPaymentDto,
   UpdateOrderPaymentDto,
 } from './dto/create-order-payment.dto';
+import { FilterCaisseDto, CaissePaymentStatus } from './dto/filter-caisse.dto';
+import { applyListSort } from '../../common/utils/list-sort';
 
 @Injectable()
 export class OrderPaymentsService {
@@ -39,10 +41,85 @@ export class OrderPaymentsService {
     });
   }
 
-  async getCaisseSummary(): Promise<any[]> {
-    const rows = await this.orderRepo
-      .createQueryBuilder('o')
-      .leftJoin('o.customer', 'customer')
+  /**
+   * Caisse list. Search, status and pagination are applied in SQL; `counts`
+   * (per-status tab badges, search applied) and `summary` (totals of the
+   * filtered set) are computed over the whole filtered set, not the page.
+   * When neither `page` nor `limit` is given every matching row is returned.
+   */
+  async getCaisseSummary(filters: FilterCaisseDto = {}): Promise<{
+    rows: any[];
+    total: number;
+    counts: Record<'all' | CaissePaymentStatus, number>;
+    summary: {
+      totalDue: number;
+      totalCollected: number;
+      totalRemaining: number;
+    };
+  }> {
+    const paidExpr = 'COALESCE("o"."paidAmount", 0)';
+    const totalExpr = 'COALESCE("o"."total", 0)';
+    const statusSql: Record<CaissePaymentStatus, string> = {
+      paid: `(${paidExpr} >= ${totalExpr} AND ${totalExpr} > 0)`,
+      partial: `(${paidExpr} > 0 AND NOT (${paidExpr} >= ${totalExpr} AND ${totalExpr} > 0))`,
+      unpaid: `(${paidExpr} <= 0)`,
+    };
+
+    const base = () => {
+      const qb = this.orderRepo
+        .createQueryBuilder('o')
+        .leftJoin('o.customer', 'customer')
+        .where('o.direction = :dir', { dir: 'VENTE' })
+        .andWhere('o.originType != :origin', {
+          origin: OrderOriginType.BACKOFFICE,
+        });
+      const search = filters.search?.trim();
+      if (search) {
+        qb.andWhere(
+          `(COALESCE("o"."orderNumber", "o"."documentNumber") ILIKE :q
+           OR COALESCE("customer"."name", "o"."customerName", '') ILIKE :q)`,
+          { q: `%${search}%` },
+        );
+      }
+      return qb;
+    };
+
+    // Tab badge counts: search applied, status not applied
+    const countsRaw = await base()
+      .select('COUNT(*)', 'all')
+      .addSelect(`COUNT(*) FILTER (WHERE ${statusSql.paid})`, 'paid')
+      .addSelect(`COUNT(*) FILTER (WHERE ${statusSql.partial})`, 'partial')
+      .addSelect(`COUNT(*) FILTER (WHERE ${statusSql.unpaid})`, 'unpaid')
+      .getRawOne<Record<string, string>>();
+    const counts = {
+      all: parseInt(countsRaw?.all ?? '0', 10),
+      paid: parseInt(countsRaw?.paid ?? '0', 10),
+      partial: parseInt(countsRaw?.partial ?? '0', 10),
+      unpaid: parseInt(countsRaw?.unpaid ?? '0', 10),
+    };
+
+    const filtered = () => {
+      const qb = base();
+      if (filters.status) qb.andWhere(statusSql[filters.status]);
+      return qb;
+    };
+
+    const sumRaw = await filtered()
+      .select(`COALESCE(SUM(${totalExpr}), 0)`, 'totalDue')
+      .addSelect(`COALESCE(SUM(${paidExpr}), 0)`, 'totalCollected')
+      .addSelect(
+        'COALESCE(SUM(COALESCE("o"."remainingAmount", 0)), 0)',
+        'totalRemaining',
+      )
+      .getRawOne<Record<string, string>>();
+    const summary = {
+      totalDue: parseFloat(sumRaw?.totalDue ?? '0'),
+      totalCollected: parseFloat(sumRaw?.totalCollected ?? '0'),
+      totalRemaining: parseFloat(sumRaw?.totalRemaining ?? '0'),
+    };
+    const total = filters.status ? counts[filters.status] : counts.all;
+
+    const rowsQb = filtered()
       .select('"o"."id"', 'id')
       .addSelect(
         'COALESCE("o"."orderNumber", "o"."documentNumber")',
@@ -57,19 +134,37 @@ export class OrderPaymentsService {
       .addSelect('"o"."paidAmount"', 'paidAmount')
       .addSelect('"o"."remainingAmount"', 'remainingAmount')
       .addSelect('"o"."date"', 'date')
-      .addSelect('"o"."dateCreated"', 'dateCreated')
-      .where('o.direction = :dir', { dir: 'VENTE' })
-      .andWhere('o.originType != :origin', {
-        origin: OrderOriginType.BACKOFFICE,
-      })
-      .orderBy('"o"."dateCreated"', 'DESC')
-      .getRawMany();
+      .addSelect('"o"."dateCreated"', 'dateCreated');
 
-    return rows.map((row) => {
+    // Whitelisted sort; creation date (newest first) is the default and the
+    // id is always appended so paginated pages stay stable.
+    applyListSort(
+      rowsQb,
+      { field: filters.sortField, order: filters.sortOrder },
+      {
+        orderNumber: 'COALESCE("o"."orderNumber", "o"."documentNumber")',
+        customerName: `COALESCE("customer"."name", NULLIF("o"."customerName", ''))`,
+        // Share of the total already paid: unpaid → partial → paid
+        paymentStatus: `CASE WHEN ${totalExpr} > 0 THEN ${paidExpr} / ${totalExpr} ELSE 0 END`,
+        total: totalExpr,
+        paidAmount: paidExpr,
+        remainingAmount: 'COALESCE("o"."remainingAmount", 0)',
+        dateCreated: '"o"."dateCreated"',
+      },
+      { column: '"o"."dateCreated"', order: 'DESC' },
+    );
+    rowsQb.addOrderBy('"o"."id"', 'DESC');
+    if (filters.page || filters.limit) {
+      const limit = filters.limit ?? 25;
+      rowsQb.offset(((filters.page ?? 1) - 1) * limit).limit(limit);
+    }
+    const rawRows = await rowsQb.getRawMany();
+
+    const rows = rawRows.map((row) => {
       const total = parseFloat(row.total?.toString() || '0');
       const paid = parseFloat(row.paidAmount?.toString() || '0');
       const remaining = parseFloat(row.remainingAmount?.toString() || '0');
-      let paymentStatus: 'paid' | 'partial' | 'unpaid' = 'unpaid';
+      let paymentStatus: CaissePaymentStatus = 'unpaid';
       if (paid >= total && total > 0) paymentStatus = 'paid';
       else if (paid > 0) paymentStatus = 'partial';
 
@@ -86,6 +181,8 @@ export class OrderPaymentsService {
         dateCreated: row.dateCreated,
       };
     });
+
+    return { rows, total, counts, summary };
   }
 
   async findByOrder(orderId: number): Promise<OrderPayment[]> {

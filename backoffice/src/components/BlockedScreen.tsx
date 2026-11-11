@@ -175,7 +175,7 @@ export function BlockedScreen({ reason }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <img
                   src={orderiumLogo}
-                  alt="Morocom"
+                  alt="Marnova"
                   style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
                 />
                 <span
@@ -186,7 +186,7 @@ export function BlockedScreen({ reason }: Props) {
                     letterSpacing: '-0.01em',
                   }}
                 >
-                  Morocom
+                  Marnova
                 </span>
               </div>
 
@@ -366,7 +366,7 @@ export function BlockedScreen({ reason }: Props) {
             <AlertTriangle size={12} color="#94a3b8" />
             <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
               If you believe this is an error, please contact{' '}
-              <strong style={{ color: '#64748b' }}>support@morocom.io</strong>
+              <strong style={{ color: '#64748b' }}>support@marnova.io</strong>
             </span>
           </div>
         </div>

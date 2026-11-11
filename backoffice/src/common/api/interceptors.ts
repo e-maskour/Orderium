@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Default Request & Response Interceptors
+ *  MARNOVA — Default Request & Response Interceptors
  * ═══════════════════════════════════════════════════════════════
  *
  *  Pre-configured interceptors for:

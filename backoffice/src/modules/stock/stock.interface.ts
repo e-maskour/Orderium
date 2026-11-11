@@ -118,12 +118,3 @@ export interface InternalTransferDTO {
   unitOfMeasureId?: number;
   notes?: string;
 }
-
-export interface StockFilters {
-  productId?: number;
-  warehouseId?: number;
-  status?: MovementStatus;
-  movementType?: MovementType;
-  startDate?: string;
-  endDate?: string;
-}

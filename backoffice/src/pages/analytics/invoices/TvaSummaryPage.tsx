@@ -2,6 +2,8 @@ import { Percent } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
+import ReportChart from '../components/ReportChart';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -26,26 +28,35 @@ const TvaSummaryPage: React.FC = () => {
   };
 
   const columns = [
-    { field: 'tvaRate', header: t('analyticsTvaRate') },
+    {
+      field: 'tvaRate',
+      header: t('analyticsTvaRate'),
+      body: (row: Record<string, unknown>) => `${formatAmount(Number(row.tvaRate), 0)} %`,
+    },
     {
       field: 'baseHt',
-      header: `${t('analyticsBaseHt')} (MAD)`,
+      header: `${t('analyticsSalesHt')} (MAD)`,
       body: (row: Record<string, unknown>) => MAD(row, 'baseHt'),
     },
     {
-      field: 'collectedTva',
+      field: 'achatHT',
+      header: `${t('analyticsPurchasesHt')} (MAD)`,
+      body: (row: Record<string, unknown>) => MAD(row, 'achatHT'),
+    },
+    {
+      field: 'tvaCollected',
       header: t('analyticsCollectedTva'),
-      body: (row: Record<string, unknown>) => MAD(row, 'collectedTva'),
+      body: (row: Record<string, unknown>) => MAD(row, 'tvaCollected'),
     },
     {
-      field: 'deductibleTva',
+      field: 'tvaDeductible',
       header: t('analyticsDeductibleTva'),
-      body: (row: Record<string, unknown>) => MAD(row, 'deductibleTva'),
+      body: (row: Record<string, unknown>) => MAD(row, 'tvaDeductible'),
     },
     {
-      field: 'netDue',
+      field: 'tvaDue',
       header: t('analyticsNetDueTva'),
-      body: (row: Record<string, unknown>) => MAD(row, 'netDue'),
+      body: (row: Record<string, unknown>) => MAD(row, 'tvaDue'),
     },
   ];
 
@@ -56,6 +67,9 @@ const TvaSummaryPage: React.FC = () => {
       subtitle={t('analyticsTvaSummarySubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      kpiCards={data && <ReportKpiCards reportKey="invoices-tva-summary" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
@@ -81,24 +95,30 @@ const TvaSummaryPage: React.FC = () => {
                 },
                 {
                   key: 'baseHt',
-                  header: t('analyticsBaseHt'),
+                  header: t('analyticsSalesHt'),
                   format: 'currency',
                   total: true,
                 },
                 {
-                  key: 'collectedTva',
+                  key: 'achatHT',
+                  header: t('analyticsPurchasesHt'),
+                  format: 'currency',
+                  total: true,
+                },
+                {
+                  key: 'tvaCollected',
                   header: t('analyticsCollectedTva'),
                   format: 'currency',
                   total: true,
                 },
                 {
-                  key: 'deductibleTva',
+                  key: 'tvaDeductible',
                   header: t('analyticsDeductibleTva'),
                   format: 'currency',
                   total: true,
                 },
                 {
-                  key: 'netDue',
+                  key: 'tvaDue',
                   header: t('analyticsNetDueTva'),
                   format: 'currency',
                   signed: true,

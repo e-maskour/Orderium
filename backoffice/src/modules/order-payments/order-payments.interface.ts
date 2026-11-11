@@ -57,3 +57,30 @@ export const ORDER_PAYMENT_TYPE_LABELS: Record<OrderPaymentType, string> = {
   mobile_payment: 'Paiement mobile',
   other: 'Autre',
 };
+
+export interface CaisseFilters {
+  search?: string;
+  status?: 'all' | CaissePaymentStatus;
+  page?: number;
+  limit?: number;
+  /** Server-side sort; omitted → newest first. */
+  sortField?: CaisseSortField;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+/** Mirrors CAISSE_SORT_FIELDS in api/src/modules/orders/dto/filter-caisse.dto.ts. */
+export type CaisseSortField =
+  | 'orderNumber'
+  | 'customerName'
+  | 'paymentStatus'
+  | 'total'
+  | 'paidAmount'
+  | 'remainingAmount'
+  | 'dateCreated';
+
+export interface CaissePage {
+  orders: ICaisseOrder[];
+  total: number;
+  counts: Record<'all' | CaissePaymentStatus, number>;
+  summary: { totalDue: number; totalCollected: number; totalRemaining: number };
+}

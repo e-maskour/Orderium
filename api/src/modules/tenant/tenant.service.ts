@@ -23,6 +23,8 @@ import { TenantConnectionService } from './tenant-connection.service';
 import { runTenantSeeders } from '../../database/seeders';
 import { runTenantInitScripts } from '../../database/init-scripts';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
+import { computeSubscription } from './plan-features';
+import { SubscriptionPlan as SubscriptionPlanEntity } from '../tenant-lifecycle/entities/subscription-plan.entity';
 
 export interface TenantUrls {
   admin: string;
@@ -68,6 +70,9 @@ export class TenantService implements OnModuleInit {
 
     @InjectRepository(TenantActivityLog, 'master')
     private readonly activityLogRepo: Repository<TenantActivityLog>,
+
+    @InjectRepository(SubscriptionPlanEntity, 'master')
+    private readonly planRepo: Repository<SubscriptionPlanEntity>,
 
     @InjectDataSource('master')
     private readonly masterDs: DataSource,
@@ -237,7 +242,6 @@ export class TenantService implements OnModuleInit {
       address: dto.address ?? null,
       notes: dto.notes ?? null,
       subscriptionPlan: (dto.subscriptionPlan ?? 'trial') as any,
-      maxUsers: dto.maxUsers ?? 5,
       settings: dto.settings ?? null,
       databaseName,
       databaseHost: this.configService.get<string>('DB_HOST') || 'localhost',
@@ -252,6 +256,8 @@ export class TenantService implements OnModuleInit {
           ? null
           : new Date(Date.now() + (dto.trialDays ?? 30) * 24 * 60 * 60 * 1000),
     });
+    await this.applyPlanDefaults(tenant, tenant.subscriptionPlan);
+    this.applyLimitOverrides(tenant, dto);
     const saved = await this.tenantRepo.save(tenant);
     this.cache.set(saved.slug, saved);
 
@@ -273,7 +279,16 @@ export class TenantService implements OnModuleInit {
 
   async update(id: number, dto: UpdateTenantDto): Promise<Tenant> {
     const tenant = await this.findOne(id);
+    const planChanged =
+      dto.subscriptionPlan !== undefined &&
+      dto.subscriptionPlan !== tenant.subscriptionPlan;
     Object.assign(tenant, dto);
+    // A plan change resets limits and features to the new plan, then any
+    // explicit values sent alongside it win (manual per-tenant overrides).
+    if (planChanged) {
+      await this.applyPlanDefaults(tenant, tenant.subscriptionPlan);
+      this.applyLimitOverrides(tenant, dto);
+    }
     const updated = await this.tenantRepo.save(tenant);
     if (updated.isActive && !updated.deletedAt) {
       this.cache.set(updated.slug, updated);
@@ -562,6 +577,70 @@ export class TenantService implements OnModuleInit {
     }
   }
 
+  // ─── Plan limits & features ───────────────────────────────────────────────
+
+  /**
+   * Copies the plan's limits and features onto the tenant, plus the tenant's
+   * add-ons (packs and extra features). Returns false for an unknown plan.
+   */
+  async applyPlanDefaults(tenant: Tenant, planName: string): Promise<boolean> {
+    const plan = await this.planRepo.findOne({ where: { name: planName } });
+    if (!plan) {
+      this.logger.warn(`Unknown subscription plan '${planName}' — limits kept`);
+      return false;
+    }
+    const eff = computeSubscription(plan, tenant.addons);
+    tenant.maxUsers = eff.maxUsers;
+    tenant.maxProducts = eff.maxProducts;
+    tenant.maxWarehouses = eff.maxWarehouses;
+    tenant.maxDeliveryPersons = eff.maxDeliveryPersons;
+    tenant.maxOrdersPerMonth = eff.maxOrdersPerMonth;
+    tenant.maxStorageMb = eff.maxStorageMb;
+    tenant.features = eff.features;
+    return true;
+  }
+
+  findPlan(name: string): Promise<SubscriptionPlanEntity | null> {
+    return this.planRepo.findOne({ where: { name } });
+  }
+
+  /** Saves a tenant and refreshes the request-path cache. */
+  async saveAndRefresh(tenant: Tenant): Promise<Tenant> {
+    const saved = await this.tenantRepo.save(tenant);
+    if (saved.isActive && !saved.deletedAt) this.cache.set(saved.slug, saved);
+    else this.cache.delete(saved.slug);
+    return saved;
+  }
+
+  private applyLimitOverrides(
+    tenant: Tenant,
+    dto: Partial<
+      Pick<
+        Tenant,
+        | 'maxUsers'
+        | 'maxProducts'
+        | 'maxWarehouses'
+        | 'maxDeliveryPersons'
+        | 'maxOrdersPerMonth'
+        | 'maxStorageMb'
+        | 'features'
+      >
+    >,
+  ): void {
+    const keys = [
+      'maxUsers',
+      'maxProducts',
+      'maxWarehouses',
+      'maxDeliveryPersons',
+      'maxOrdersPerMonth',
+      'maxStorageMb',
+    ] as const;
+    for (const key of keys) {
+      if (dto[key] !== undefined && dto[key] !== null) tenant[key] = dto[key];
+    }
+    if (dto.features) tenant.features = { ...tenant.features, ...dto.features };
+  }
+
   // ─── Module configuration ─────────────────────────────────────────────────
 
   static readonly DEFAULT_MODULES = {
@@ -582,6 +661,12 @@ export class TenantService implements OnModuleInit {
     products: true,
     warehouse: true,
     category: true,
+    brands: true,
+    stockMovements: true,
+    inventoryAdjustments: true,
+    // Also need the matching plan feature (reports / client_portal).
+    reports: true,
+    clientRequests: true,
     portals: {
       clientPortal: false,
       deliveryPortal: false,

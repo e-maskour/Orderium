@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import type { PlanFeatures } from '../../tenant/plan-features';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 @Entity('subscription_plans')
@@ -12,7 +13,7 @@ export class SubscriptionPlan {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** Internal key: 'trial' | 'basic' | 'pro' | 'enterprise' */
+  /** Internal key: 'trial' | 'starter' | 'business' | 'pro' | 'enterprise' */
   @Column({ type: 'varchar', length: 50, unique: true })
   name: string;
 
@@ -53,9 +54,16 @@ export class SubscriptionPlan {
   @Column({ type: 'int' })
   maxStorageMb: number;
 
-  /** Feature flags: { delivery, reports, api_access, white_label } */
+  /** -1 = unlimited (same convention for every limit). */
+  @Column({ type: 'int', default: 1 })
+  maxWarehouses: number;
+
+  @Column({ type: 'int', default: 0 })
+  maxDeliveryPersons: number;
+
+  /** Feature flags: { pos, delivery, client_portal, reports } */
   @Column({ type: 'jsonb', default: '{}' })
-  features: Record<string, boolean>;
+  features: PlanFeatures;
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;

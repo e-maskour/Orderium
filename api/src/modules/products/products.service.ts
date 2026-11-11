@@ -16,6 +16,7 @@ import { Brand } from '../brands/entities/brand.entity';
 import { UnitOfMeasure } from '../inventory/entities/unit-of-measure.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { ImportResultDto } from './dto/import-result.dto';
+import { ProductSortField } from './dto/filter-products.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import {
   PRODUCT_XLSX_COL_WIDTHS,
@@ -23,11 +24,23 @@ import {
   mapImportRow,
 } from './products.helpers';
 
+/** Whitelisted sort field → query-builder column for `findAll`. */
+const PRODUCT_SORT_COLUMNS: Record<ProductSortField, string> = {
+  name: 'product.name',
+  code: 'product.code',
+  price: 'product.price',
+  cost: 'product.cost',
+  stock: 'product.stock',
+  dateCreated: 'product.dateCreated',
+};
+
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get productRepository(): Repository<Product> {
@@ -71,6 +84,7 @@ export class ProductsService {
   // ─── CRUD ─────────────────────────────────────────────────────────────────
 
   async create(dto: CreateProductDto): Promise<Product> {
+    await this.entitlements.assertCanAdd('products');
     const { categoryIds, ...productData } = dto;
 
     await this.assertBrandExists(productData.brandId);
@@ -105,6 +119,7 @@ export class ProductsService {
     categoryIds?: number[],
     isService?: boolean,
     brandIds?: number[],
+    sort?: { field?: ProductSortField; order?: 'ASC' | 'DESC' },
   ): Promise<{ products: Product[]; count: number; totalCount: number }> {
     const qb = this.productRepository
       .createQueryBuilder('product')
@@ -117,9 +132,12 @@ export class ProductsService {
       )
       .where('product.isEnabled = :isEnabled', { isEnabled: true });
 
+    // Category conditions go through EXISTS on the join table rather than the
+    // `categories` alias: filtering the selected join would strip a matching
+    // product's other categories from the returned rows.
     if (search) {
       qb.andWhere(
-        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search OR brand.name ILIKE :search)',
+        `(product.name ILIKE :search OR product.code ILIKE :search OR brand.name ILIKE :search OR EXISTS (SELECT 1 FROM product_categories pc INNER JOIN categories c ON c.id = pc."categoryId" WHERE pc."productId" = product.id AND c.name ILIKE :search))`,
         { search: `%${search}%` },
       );
     }
@@ -128,13 +146,20 @@ export class ProductsService {
     else if (stockFilter === 'zero') qb.andWhere('product.stock = 0');
     else if (stockFilter === 'positive') qb.andWhere('product.stock > 0');
     if (categoryIds?.length)
-      qb.andWhere('categories.id IN (:...categoryIds)', { categoryIds });
+      qb.andWhere(
+        'EXISTS (SELECT 1 FROM product_categories pc WHERE pc."productId" = product.id AND pc."categoryId" IN (:...categoryIds))',
+        { categoryIds },
+      );
     if (brandIds?.length)
       qb.andWhere('product.brandId IN (:...brandIds)', { brandIds });
     if (isService !== undefined)
       qb.andWhere('product.isService = :isService', { isService });
 
-    qb.orderBy('product.name', 'ASC')
+    const sortColumn = PRODUCT_SORT_COLUMNS[sort?.field ?? 'name'];
+    const sortOrder = sort?.order ?? 'ASC';
+    // `product.id` tie-breaker keeps page boundaries stable on duplicate values.
+    qb.orderBy(sortColumn, sortOrder)
+      .addOrderBy('product.id', sortOrder)
       .skip((page - 1) * perPage)
       .take(perPage);
     const [products, totalCount] = await qb.getManyAndCount();
@@ -341,7 +366,10 @@ export class ProductsService {
             });
           }
           const isUpdate = !!product;
-          if (!product) product = this.productRepository.create();
+          if (!product) {
+            await this.entitlements.assertCanAdd('products');
+            product = this.productRepository.create();
+          }
 
           mapImportRow(row, product, units, warehouses, categories, brands);
           await this.productRepository.save(product);

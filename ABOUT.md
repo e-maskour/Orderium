@@ -1,4 +1,4 @@
-# Morocom
+# Marnova
 
 > **Cloud-based ERP platform built for Moroccan businesses.**
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Morocom is a multi-tenant SaaS ERP system that digitalizes and centralizes the core operations of small and medium-sized businesses — from sales and purchasing, to inventory, invoicing, delivery, and customer management — all in one platform.
+Marnova is a multi-tenant SaaS ERP system that digitalizes and centralizes the core operations of small and medium-sized businesses — from sales and purchasing, to inventory, invoicing, delivery, and customer management — all in one platform.
 
 It is purpose-built for the Moroccan market: bilingual (Arabic & French), compliant with local business document standards (ICE, IF, RC), and designed to replace the manual, paper-based workflows that most SMEs still rely on today.
 
@@ -72,10 +72,10 @@ It is purpose-built for the Moroccan market: bilingual (Arabic & French), compli
 
 ## Architecture
 
-Morocom is a **pnpm monorepo** composed of five applications sharing a single REST API:
+Marnova is a **pnpm monorepo** composed of five applications sharing a single REST API:
 
 ```
-morocom/
+marnova/
 ├── api/                 # NestJS 10 + TypeORM + PostgreSQL  — Central REST API
 ├── backoffice/          # React 18 + Vite + PrimeReact      — Admin dashboard
 ├── client/              # React 18 + Vite                   — Customer portal
@@ -95,9 +95,9 @@ morocom/
 
 ## Built for Moroccan SMEs
 
-Most small and medium businesses in Morocco still manage orders via WhatsApp, track stock in Excel, and issue handwritten invoices. Morocom replaces this entirely:
+Most small and medium businesses in Morocco still manage orders via WhatsApp, track stock in Excel, and issue handwritten invoices. Marnova replaces this entirely:
 
-| Problem | Morocom Solution |
+| Problem | Marnova Solution |
 |---------|-----------------|
 | Orders tracked via WhatsApp/phone | Structured order management with full history |
 | Stock counted manually | Real-time inventory across warehouses |

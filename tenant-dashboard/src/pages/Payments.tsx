@@ -11,7 +11,8 @@ import {
   Receipt,
 } from 'lucide-react';
 import { usePayments, usePaymentsSummary } from '../hooks/usePayments';
-import { useTenants } from '../hooks/useTenants';
+import { usePlans, useTenants } from '../hooks/useTenants';
+import { planLabel } from '../utils/plans';
 import { PaymentForm } from '../components/PaymentForm';
 import { PaymentStatusBadge, PaymentProgress } from '../components/PaymentStatusBadge';
 import { Pagination } from '../components/Pagination';
@@ -61,6 +62,7 @@ export function Payments() {
   const { data, isLoading, isError, error, refetch } = usePayments(params);
   const { data: summary } = usePaymentsSummary({ ...params, page: undefined, limit: undefined });
   const { data: tenantsData } = useTenants({ limit: 200, status: 'all' });
+  const { data: plans } = usePlans();
 
   const set = <K extends keyof ListPaymentsParams>(key: K, value: ListPaymentsParams[K]) =>
     setParams((p) => ({ ...p, [key]: value, page: 1 }));
@@ -366,8 +368,8 @@ export function Payments() {
                         </p>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="font-medium capitalize text-slate-700 dark:text-slate-300">
-                          {p.planName}
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {planLabel(p.planName, plans)}
                         </span>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           {BILLING_CYCLE_LABELS[p.billingCycle]}

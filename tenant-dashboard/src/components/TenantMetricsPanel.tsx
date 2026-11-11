@@ -184,6 +184,12 @@ export function TenantMetricsPanel({ tenantId }: { tenantId: number }) {
             <div className="space-y-4">
               <QuotaBar label="Staff seats" {...metric.quota.users} />
               <QuotaBar label="Products" {...metric.quota.products} />
+              {metric.quota.warehouses && (
+                <QuotaBar label="Warehouses" {...metric.quota.warehouses} />
+              )}
+              {metric.quota.deliveryPersons && (
+                <QuotaBar label="Delivery persons" {...metric.quota.deliveryPersons} />
+              )}
               <QuotaBar label="Orders this month" {...metric.quota.ordersPerMonth} />
               <QuotaBar label="Storage" unit="MB" {...metric.quota.storageMb} />
             </div>

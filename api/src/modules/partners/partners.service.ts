@@ -9,6 +9,7 @@ import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Partner } from './entities/partner.entity';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PartnerSortField, PartnerSortOrder } from './dto/partner-sort.dto';
 import { Portal } from '../portal/entities/portal.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
@@ -61,12 +62,44 @@ export class PartnersService {
     }
   }
 
+  private async findLinkedPortalPartner(
+    portalPhoneNumber?: string,
+  ): Promise<Partner | null> {
+    if (!portalPhoneNumber) return null;
+    const portal = await this.portalRepository.findOne({
+      where: { phoneNumber: portalPhoneNumber },
+    });
+    if (!portal?.customerId) return null;
+    return this.partnerRepository.findOne({ where: { id: portal.customerId } });
+  }
+
   // ─── CRUD ─────────────────────────────────────────────────────────────────
 
   async upsert(
     dto: CreatePartnerDto,
     portalPhoneNumber?: string,
   ): Promise<Partner> {
+    // A portal account already linked to a customer keeps that customer: a
+    // company partner often has a different phone than the person ordering,
+    // so a phone lookup would create a duplicate and detach the account from
+    // its order history. Only the delivery details are refreshed.
+    const linked = await this.findLinkedPortalPartner(portalPhoneNumber);
+    if (linked) {
+      const delivery: Partial<Partner> = {
+        deliveryAddress: dto.deliveryAddress,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        googleMapsUrl: dto.googleMapsUrl,
+        wazeUrl: dto.wazeUrl,
+      };
+      for (const [key, value] of Object.entries(delivery)) {
+        if (value !== undefined) Object.assign(linked, { [key]: value });
+      }
+      const updated = await this.partnerRepository.save(linked);
+      await this.invalidatePartnerCache(updated.id);
+      return updated;
+    }
+
     if (dto.phoneNumber) {
       const existing = await this.partnerRepository.findOne({
         where: { phoneNumber: dto.phoneNumber },
@@ -114,6 +147,7 @@ export class PartnersService {
     search?: string,
     type?: 'customer' | 'supplier',
     isEnabled?: boolean,
+    sort?: { field?: PartnerSortField; order?: PartnerSortOrder },
   ): Promise<{ partners: Partner[]; total: number }> {
     const qb = this.partnerRepository.createQueryBuilder('partner');
 
@@ -141,7 +175,13 @@ export class PartnersService {
       qb.where(conditions.join(' AND '), params);
     }
 
-    qb.orderBy('partner.name', 'ASC').skip(offset).take(limit);
+    const sortField = sort?.field ?? PartnerSortField.NAME;
+    const sortOrder = sort?.order ?? PartnerSortOrder.ASC;
+    // Enum-whitelisted field; `partner.id` tie-breaker keeps pages stable.
+    qb.orderBy(`partner.${sortField}`, sortOrder)
+      .addOrderBy('partner.id', sortOrder)
+      .skip(offset)
+      .take(limit);
     const [partners, total] = await qb.getManyAndCount();
     return { partners, total };
   }

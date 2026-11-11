@@ -1,6 +1,7 @@
 import { UserX } from 'lucide-react';
 import React, { useState } from 'react';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -36,6 +37,8 @@ const InactiveClientsPage: React.FC = () => {
       subtitle={t('analyticsInactiveClientsSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="clients-inactive" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={

@@ -6,7 +6,7 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
@@ -29,6 +29,23 @@ import {
   buildInvoiceExportRows,
   INVOICE_XLSX_COL_WIDTHS,
 } from './invoices.helpers';
+import { InvoiceSortField } from './dto/filter-invoices.dto';
+import {
+  ListSort,
+  applyListSort,
+  partnerSortColumns,
+} from '../../common/utils/list-sort';
+
+/** Filters shared by the invoice list, its aggregates and the XLSX export. */
+export interface InvoiceListFilters {
+  search?: string;
+  status?: string;
+  customerId?: number;
+  supplierId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  direction?: 'ACHAT' | 'VENTE';
+}
 
 @Injectable()
 export class InvoicesService {
@@ -135,6 +152,76 @@ export class InvoicesService {
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
 
+  /**
+   * `overdue` is not a stored status: it is an unpaid invoice whose due date
+   * has passed (same rule the backoffice uses to display the badge). Every
+   * other value maps to the `status` column.
+   */
+  private applyStatusFilter(
+    qb: SelectQueryBuilder<Invoice>,
+    status: string,
+  ): void {
+    if (status === 'overdue') {
+      qb.andWhere('invoice.status = :overdueStatus', {
+        overdueStatus: InvoiceStatus.UNPAID,
+      });
+      qb.andWhere('invoice.dueDate IS NOT NULL');
+      qb.andWhere('invoice.dueDate < CURRENT_DATE');
+      return;
+    }
+    qb.andWhere('invoice.status = :status', { status });
+  }
+
+  /** Filters shared by the list, the aggregates and the XLSX export. */
+  private applyListFilters(
+    qb: SelectQueryBuilder<Invoice>,
+    filters: InvoiceListFilters,
+  ): SelectQueryBuilder<Invoice> {
+    const { search, status, customerId, supplierId, direction } = filters;
+    if (search) {
+      qb.andWhere(
+        '(invoice.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    if (status) this.applyStatusFilter(qb, status);
+    if (customerId)
+      qb.andWhere('invoice.customerId = :customerId', { customerId });
+    if (supplierId)
+      qb.andWhere('invoice.supplierId = :supplierId', { supplierId });
+    if (direction) qb.andWhere('invoice.direction = :direction', { direction });
+    if (filters.dateFrom)
+      qb.andWhere('invoice.date >= :dateFrom', { dateFrom: filters.dateFrom });
+    if (filters.dateTo)
+      qb.andWhere('invoice.date <= :dateTo', { dateTo: filters.dateTo });
+    return qb;
+  }
+
+  /** Whitelisted sort (see INVOICE_SORT_FIELDS); default newest first. */
+  private applySort(
+    qb: SelectQueryBuilder<Invoice>,
+    sort: ListSort<InvoiceSortField> | undefined,
+    direction?: 'ACHAT' | 'VENTE',
+  ): SelectQueryBuilder<Invoice> {
+    const columns: Record<InvoiceSortField, string | string[]> = {
+      number: 'invoice.documentNumber',
+      partnerName: partnerSortColumns(direction),
+      date: 'invoice.date',
+      dueDate: 'invoice.dueDate',
+      validationDate: 'invoice.validationDate',
+      subtotal: 'invoice.subtotal',
+      tax: 'invoice.tax',
+      total: 'invoice.total',
+      paidAmount: 'invoice.paidAmount',
+      remainingAmount: 'invoice.remainingAmount',
+      status: 'invoice.status',
+    };
+    return applyListSort(qb, sort, columns, {
+      column: 'invoice.dateCreated',
+      order: 'DESC',
+    });
+  }
+
   async findAll(
     search?: string,
     status?: string,
@@ -145,6 +232,7 @@ export class InvoicesService {
     page?: number,
     pageSize?: number,
     direction?: 'ACHAT' | 'VENTE',
+    sort?: ListSort<InvoiceSortField>,
   ): Promise<{
     invoices: Invoice[];
     count: number;
@@ -156,21 +244,16 @@ export class InvoicesService {
       .leftJoinAndSelect('invoice.supplier', 'supplier')
       .leftJoinAndSelect('invoice.items', 'items');
 
-    if (search) {
-      qb.andWhere(
-        '(invoice.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-    if (status) qb.andWhere('invoice.status = :status', { status });
-    if (customerId)
-      qb.andWhere('invoice.customerId = :customerId', { customerId });
-    if (supplierId)
-      qb.andWhere('invoice.supplierId = :supplierId', { supplierId });
-    if (direction) qb.andWhere('invoice.direction = :direction', { direction });
-    if (dateFrom) qb.andWhere('invoice.date >= :dateFrom', { dateFrom });
-    if (dateTo) qb.andWhere('invoice.date <= :dateTo', { dateTo });
-    qb.orderBy('invoice.dateCreated', 'DESC');
+    this.applyListFilters(qb, {
+      search,
+      status,
+      customerId,
+      supplierId,
+      dateFrom,
+      dateTo,
+      direction,
+    });
+    this.applySort(qb, sort, direction);
 
     if (page && pageSize) {
       qb.skip((page - 1) * pageSize).take(pageSize);
@@ -212,21 +295,15 @@ export class InvoicesService {
       .addSelect('COALESCE(SUM(invoice.remainingAmount), 0)', 'totalRemaining')
       .addSelect('COALESCE(SUM(invoice.subtotal), 0)', 'totalSubtotal');
 
-    if (search) {
-      aggQb.andWhere(
-        '(invoice.documentNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-    if (status) aggQb.andWhere('invoice.status = :status', { status });
-    if (customerId)
-      aggQb.andWhere('invoice.customerId = :customerId', { customerId });
-    if (supplierId)
-      aggQb.andWhere('invoice.supplierId = :supplierId', { supplierId });
-    if (direction)
-      aggQb.andWhere('invoice.direction = :direction', { direction });
-    if (dateFrom) aggQb.andWhere('invoice.date >= :dateFrom', { dateFrom });
-    if (dateTo) aggQb.andWhere('invoice.date <= :dateTo', { dateTo });
+    this.applyListFilters(aggQb, {
+      search,
+      status,
+      customerId,
+      supplierId,
+      dateFrom,
+      dateTo,
+      direction,
+    });
 
     const aggResult = await aggQb.getRawOne<{
       totalAmount: string;
@@ -661,22 +738,34 @@ export class InvoicesService {
 
   // ─── XLSX Export ──────────────────────────────────────────────────────────
 
-  async exportToXlsx(supplierId?: number): Promise<Buffer> {
+  /**
+   * `supplierId` keeps the legacy bulk-export semantics (0 → sales only,
+   * >0 → that supplier). `filters`/`sort` are the list page's own filters, so
+   * the export contains exactly the rows the user is looking at (all pages).
+   */
+  async exportToXlsx(
+    supplierId?: number,
+    filters: InvoiceListFilters = {},
+    sort?: ListSort<InvoiceSortField>,
+  ): Promise<Buffer> {
     const qb = this.invoiceRepository
       .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('invoice.customer', 'customer')
-      .leftJoinAndSelect('invoice.supplier', 'supplier')
-      .orderBy('invoice.dateCreated', 'DESC');
+      .leftJoinAndSelect('invoice.supplier', 'supplier');
 
     if (supplierId !== undefined) {
       if (supplierId) {
-        qb.where('invoice.supplierId = :supplierId', { supplierId });
+        qb.andWhere('invoice.supplierId = :exportSupplierId', {
+          exportSupplierId: supplierId,
+        });
       } else {
-        qb.where('invoice.supplierId IS NULL');
+        qb.andWhere('invoice.supplierId IS NULL');
       }
     }
+    this.applyListFilters(qb, filters);
+    this.applySort(qb, sort, filters.direction);
 
     const invoices = await qb.getMany();
     const exportData = invoices.flatMap((inv) => buildInvoiceExportRows(inv));
@@ -685,12 +774,18 @@ export class InvoicesService {
     const ws = XLSX.utils.json_to_sheet(exportData);
     ws['!cols'] = INVOICE_XLSX_COL_WIDTHS;
 
-    const sheetName =
+    const isPurchase =
       supplierId !== undefined
-        ? supplierId
+        ? Boolean(supplierId)
+        : filters.direction
+          ? filters.direction === 'ACHAT'
+          : undefined;
+    const sheetName =
+      isPurchase === undefined
+        ? 'Factures'
+        : isPurchase
           ? 'Factures achat'
-          : 'Factures vente'
-        : 'Factures';
+          : 'Factures vente';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;

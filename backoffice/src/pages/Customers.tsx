@@ -5,18 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Eye, Edit2, Trash2, Search, X } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { EmptyState } from '../components/EmptyState';
-import { partnersService } from '../modules/partners';
+import { partnersService, type PartnerSortField } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toastDeleted, toastDeleteError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
-import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 import { PartnerAvatar } from '@/components/ui';
 
 export default function Customers() {
@@ -25,10 +25,18 @@ export default function Customers() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  // Server-side sort: the table is lazy, so sorting must go through the API.
+  const [sortField, setSortField] = useState<PartnerSortField | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
 
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 400);
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
@@ -43,16 +51,30 @@ export default function Customers() {
 
   const isEnabledParam = statusFilter === 'all' ? undefined : statusFilter === 'active';
   const { data, isLoading } = useQuery({
-    queryKey: ['partners-customers', debouncedSearch, statusFilter],
+    queryKey: [
+      'partners-customers',
+      debouncedSearch,
+      statusFilter,
+      page,
+      pageSize,
+      sortField,
+      sortOrder,
+    ],
     queryFn: () =>
       partnersService.getAll({
         search: debouncedSearch || undefined,
         type: 'customer',
         isEnabled: isEnabledParam,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
       }),
+    placeholderData: keepPreviousData,
   });
 
   const customers = data?.partners || [];
+  const totalRecords = data?.total ?? 0;
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => partnersService.delete(id),
@@ -264,7 +286,10 @@ export default function Customers() {
               </span>
               <AutoCompleteSelect
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.value);
+                  setPage(1);
+                }}
                 options={[
                   { label: t('all'), value: 'all' },
                   { label: t('active'), value: 'active' },
@@ -282,7 +307,9 @@ export default function Customers() {
             keyExtractor={(c: Partner) => c.id}
             onTap={(c: Partner) => handleViewCustomer(c)}
             loading={isLoading}
-            totalCount={customers.length}
+            totalCount={totalRecords}
+            hasMore={page * pageSize < totalRecords}
+            onLoadMore={() => setPage((p) => p + 1)}
             countLabel={t('customers')}
             emptyMessage={t('noCustomersFound')}
             config={{
@@ -365,8 +392,22 @@ export default function Customers() {
               dataKey="id"
               paginator
               paginatorPosition="bottom"
-              rows={25}
+              rows={pageSize}
               rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+              lazy
+              totalRecords={totalRecords}
+              first={(page - 1) * pageSize}
+              onPage={(e) => {
+                setPage(Math.floor(e.first / e.rows) + 1);
+                setPageSize(e.rows);
+              }}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSort={(e: DataTableSortEvent) => {
+                setSortField((e.sortField || undefined) as PartnerSortField | undefined);
+                setSortOrder(e.sortOrder);
+                setPage(1);
+              }}
               removableSort
               emptyMessage={<EmptyState icon={Users} title={t('noCustomersFound')} compact />}
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"

@@ -1,6 +1,6 @@
 export default {
   // ── Welcome screen ──
-  onboardingWelcomeTitle: 'مرحباً بك في Morocom',
+  onboardingWelcomeTitle: 'مرحباً بك في Marnova',
   onboardingWelcomeSubtitle: 'لنقم بإعداد شركتك في خطوتين فقط',
   onboardingTimeEstimate: 'حوالي دقيقتين',
   onboardingGetStarted: '← ابدأ الآن',
@@ -62,7 +62,7 @@ export default {
   onboardingCreatingAccount: 'جاري إنشاء الحساب...',
 
   // ── Success screen ──
-  onboardingSuccessSubtitle: 'مرحباً بك في Morocom، {company}. حساب المدير الخاص بك جاهز.',
+  onboardingSuccessSubtitle: 'مرحباً بك في Marnova، {company}. حساب المدير الخاص بك جاهز.',
   onboardingCopied: 'تم النسخ!',
   onboardingAllSet: 'كل شيء جاهز!',
   onboardingCompanyLogoAlt: 'شعار الشركة',

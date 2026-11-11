@@ -54,7 +54,9 @@ export class TenantMiddleware implements NestMiddleware {
       url.startsWith('/api/admin/') ||
       url.startsWith('/admin/') ||
       url.startsWith('/api/super-admin/') ||
-      url.startsWith('/api/onboarding/public-status')
+      url.startsWith('/api/onboarding/public-status') ||
+      // Landing-page contact form: platform leads, no tenant involved.
+      url === '/api/public/leads'
     ) {
       return next();
     }

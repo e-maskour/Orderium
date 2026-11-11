@@ -73,10 +73,24 @@ export interface TenantModules {
   products: boolean;
   warehouse: boolean;
   category: boolean;
+  /** Optional: older APIs omit them, in which case the module stays visible. */
+  brands?: boolean;
+  stockMovements?: boolean;
+  inventoryAdjustments?: boolean;
   portals: {
     clientPortal: boolean;
     deliveryPortal: boolean;
   };
+  /**
+   * Subscription plan includes advanced reports / analytics. Optional: older
+   * APIs omit it, in which case the module stays visible.
+   */
+  reports?: boolean;
+  /**
+   * Subscription plan includes the customer portal (client sign-up requests).
+   * Optional: older APIs omit it, in which case the module stays visible.
+   */
+  clientRequests?: boolean;
 }
 
 export interface TenantPublicStatus {

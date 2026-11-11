@@ -1,25 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="38 37 184 184" role="img" aria-label="Marnova">
+  <title>Marnova</title>
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#DF7817;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#C06210;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="mGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffd5d5;stop-opacity:1" />
-    </linearGradient>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#5c3007" flood-opacity="0.25"/>
-    </filter>
+    <linearGradient id="mkA" x1="0" y1="1" x2="0.6" y2="0"><stop offset="0" stop-color="#2F6BFF"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+    <linearGradient id="mkB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E3A8A"/><stop offset="1" stop-color="#172E73"/></linearGradient>
+    <linearGradient id="mkC" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="0.45" stop-color="#1E90FF"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+    <linearGradient id="mkD" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E40AF"/><stop offset="1" stop-color="#14286B"/></linearGradient>
+    <linearGradient id="mkS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1D8FF0"/><stop offset="1" stop-color="#38BDF8"/></linearGradient>
   </defs>
-  <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgGrad)" filter="url(#shadow)"/>
-  <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-  <!-- Bold M -->
-  <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150"
-        fill="none" stroke="url(#mGrad)" stroke-width="16"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Moroccan 5-pointed star -->
-  <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-  <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
-           fill="#ffffff" opacity="0.96"/>
+  <path d="M104 96 L126 149" stroke="url(#mkB)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <path d="M61 169 L104 96" stroke="url(#mkA)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <path d="M173 98 L186 98 L186 143 Q186 148 181 149.6 L132 158 L126 149 Z" fill="url(#mkD)"/>
+  <path d="M126 149 L173 98" stroke="url(#mkC)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <g fill="#FFFFFF">
+    <rect x="149" y="145" width="7" height="12" rx="1.2"/>
+    <rect x="159" y="138" width="7" height="16" rx="1.2"/>
+    <rect x="169" y="128" width="7" height="23" rx="1.2"/>
+  </g>
+  <path d="M82 181 Q188 180 194 133 Q190 166 82 181 Z" fill="url(#mkS)"/>
+  <path d="M124 88 C130 78 140 74 148 77 C152 62 168 56 178 61 C186 65 189 72 188 80 C200 78 212 86 211 98 C211 105 207 110 202 113" stroke="url(#mkS)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <g fill="#1D8FF0">
+    <rect x="197.5" y="51.5" width="6" height="6" rx="1.2"/>
+    <rect x="189.5" y="59.5" width="6.5" height="6.5" rx="1.2"/>
+    <rect x="200" y="64" width="5" height="5" rx="1.1"/>
+  </g>
+  <path d="M64 196 Q94 189.5 118 198 Q94 193.8 64 196 Z" fill="#D7262E"/>
+  <path d="M189 196 Q159 189.5 135 198 Q159 193.8 189 196 Z" fill="#D7262E"/>
+  <path d="M126.5 188 L128.6 194.1 L135 194.2 L129.9 198.1 L131.7 204.3 L126.5 200.6 L121.3 204.3 L123.1 198.1 L118 194.2 L124.4 194.1 Z" fill="none" stroke="#0A7A3E" stroke-width="2" stroke-linejoin="round"/>
 </svg>

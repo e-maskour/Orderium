@@ -86,6 +86,21 @@ export class TenantResponseDto {
   @Expose()
   maxStorageMb: number;
 
+  @ApiProperty({ description: '-1 = unlimited' })
+  @Expose()
+  maxWarehouses: number;
+
+  @ApiProperty({ description: '-1 = unlimited' })
+  @Expose()
+  maxDeliveryPersons: number;
+
+  @ApiProperty({
+    description:
+      'Plan feature flags: { pos, delivery, client_portal, reports }',
+  })
+  @Expose()
+  features: Record<string, boolean>;
+
   @ApiProperty()
   @Expose()
   dateCreated: Date;

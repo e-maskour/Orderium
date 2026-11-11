@@ -69,10 +69,3 @@ export interface ValidateAdjustmentDTO {
   adjustmentId: number;
   userId?: number;
 }
-
-export interface AdjustmentFilters {
-  locationId?: number;
-  status?: AdjustmentStatus;
-  startDate?: string;
-  endDate?: string;
-}

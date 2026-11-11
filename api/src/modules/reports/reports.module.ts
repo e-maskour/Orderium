@@ -32,11 +32,14 @@ import { PdfReportModule } from '../pdf-report';
 import { ReportPdfController } from './pdf/report-pdf.controller';
 import { ReportPdfService } from './pdf/report-pdf.service';
 import { ReportPdfResolver } from './pdf/report-pdf.resolver';
+import { ReportXlsxController } from './xlsx/report-xlsx.controller';
+import { ReportXlsxService } from './xlsx/report-xlsx.service';
 
 @Module({
   imports: [TenantModule, ConfigurationsModule, PdfReportModule],
   controllers: [
     ReportPdfController,
+    ReportXlsxController,
     SalesReportsController,
     PurchasesReportsController,
     InvoiceReportsController,
@@ -58,6 +61,7 @@ import { ReportPdfResolver } from './pdf/report-pdf.resolver';
     ReportExportService,
     ReportPdfResolver,
     ReportPdfService,
+    ReportXlsxService,
   ],
 })
 export class ReportsModule {}

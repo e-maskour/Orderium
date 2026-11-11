@@ -1,4 +1,4 @@
-# Arabic / RTL Audit — Morocom Back-Office
+# Arabic / RTL Audit — Marnova Back-Office
 
 **Date:** 2026-09-08  
 **App under test:** `http://demo-admin.localhost:3001` (tenant `demo`)  
@@ -162,7 +162,7 @@ Every visible text node, `placeholder`, `title` and `aria-label` was walked on e
 | `Symbols` | `@aria-label` | `backoffice/src/components/keyboard/LanguageSwitcher.tsx:10`<br>`backoffice/src/components/keyboard/layouts/symbols.ts:3` | 6 (e.g. `/onboarding`) | `rtl-audit/screenshots/onboarding.ar.png` |
 | `Tab ↹` | `@aria-label` | `backoffice/src/components/keyboard/layouts/arabic.ts:88`<br>`backoffice/src/components/keyboard/layouts/english.ts:72`<br>`backoffice/src/components/keyboard/layouts/french.ts:85` | 6 (e.g. `/onboarding`) | `rtl-audit/screenshots/onboarding.ar.png` |
 | `Enterprise` | text node | `backoffice/src/DataTableTheme.css:2`<br>`backoffice/src/common/api/api-client.ts:3`<br>`backoffice/src/components/AppDataTable.tsx:2`<br>`backoffice/src/components/Sidebar.tsx:689` | 6 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
-| `Morocom ERP` | text node | `backoffice/src/components/Sidebar.tsx:986` | 6 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
+| `Marnova ERP` | text node | `backoffice/src/components/Sidebar.tsx:986` | 6 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
 | `v2.0.0 PRO` | text node | `backoffice/src/components/Sidebar.tsx:989` | 6 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
 | `Client C` | text node | `backoffice/src/common/api/api-client.ts:291` | 3 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
 | `Search (⌘K)` | `@title` | `backoffice/src/components/Header.tsx:1066`<br>`backoffice/src/components/Header.tsx:1067` | 6 (e.g. `/dashboard`) | `rtl-audit/screenshots/dashboard.ar.png` |
@@ -965,7 +965,7 @@ Every visible text node, `placeholder`, `title` and `aria-label` was walked on e
 
 **Selector:** `#root > div:nth-of-type(2) > div > div.login-left-panel.login-panel-left:nth-of-type(1)`
 
-**Rendered text:** `Morocomلوحة التحكم الإداريةأدر أعمالكبكل ثقة.مجموعة متكاملة لإدارة الطلبات والمخزون والعملاء والتحليلات.التحليلات والتقا`
+**Rendered text:** `Marnovaلوحة التحكم الإداريةأدر أعمالكبكل ثقة.مجموعة متكاملة لإدارة الطلبات والمخزون والعملاء والتحليلات.التحليلات والتقا`
 
 **Routes (1):** `/login`
 
@@ -1045,7 +1045,7 @@ Every visible text node, `placeholder`, `title` and `aria-label` was walked on e
 
 **Selector:** `#root > div:nth-of-type(2) > div.hidden.lg:block:nth-of-type(1) > aside.sidebar-enterprise`
 
-**Rendered text:** `MorocomEnterpriseلوحة القيادةالطلباتالصندوقنقطة البيعالتحليلاتالمبيعاتعرض أسعارسند تسليمفاتورة عميلالمدفوعاتالعملاءالمشت`
+**Rendered text:** `MarnovaEnterpriseلوحة القيادةالطلباتالصندوقنقطة البيعالتحليلاتالمبيعاتعرض أسعارسند تسليمفاتورة عميلالمدفوعاتالعملاءالمشت`
 
 **Routes (95):** `/dashboard`, `/delivery-persons`, `/orders`, `/caisse`, `/products`, `/products/create`, `/categories`, `/brands`, `/customers`, `/customers/create`, `/fournisseurs`, `/fournisseurs/create` … +83 more
 
@@ -1057,7 +1057,7 @@ Every visible text node, `placeholder`, `title` and `aria-label` was walked on e
 
 **Selector:** `#root > div:nth-of-type(2) > div.hidden.lg:block:nth-of-type(1) > aside.sidebar-enterprise > div:nth-of-type(1)`
 
-**Rendered text:** `MorocomEnterprise`
+**Rendered text:** `MarnovaEnterprise`
 
 **Routes (95):** `/dashboard`, `/delivery-persons`, `/orders`, `/caisse`, `/products`, `/products/create`, `/categories`, `/brands`, `/customers`, `/customers/create`, `/fournisseurs`, `/fournisseurs/create` … +83 more
 
@@ -3107,7 +3107,7 @@ Entries sitting in the Arabic bundle whose value is Latin. Most are intentional 
 
 | Key | Value | Location | Assessment |
 |---|---|---|---|
-| `appName` | `Morocom` | `backoffice/src/lib/langs/ar_MA/common.ts:3` | intentional (brand / URL / code) |
+| `appName` | `Marnova` | `backoffice/src/lib/langs/ar_MA/common.ts:3` | intentional (brand / URL / code) |
 | `switchToFrench` | `Changer en français` | `backoffice/src/lib/langs/ar_MA/common.ts:127` | **untranslated** |
 | `navBoard` | `Board` | `backoffice/src/lib/langs/ar_MA/common.ts:398` | **untranslated** |
 | `analyticsExportExcel` | `Excel` | `backoffice/src/lib/langs/ar_MA/common.ts:412` | intentional (brand / URL / code) |

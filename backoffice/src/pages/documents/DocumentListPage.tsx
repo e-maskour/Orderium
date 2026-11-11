@@ -30,6 +30,20 @@ import {
   toastSuccess,
 } from '../../services/toast.service';
 
+/**
+ * Formats a Date as the *local* calendar day (YYYY-MM-DD). The API compares it
+ * to a DATE column, so `toISOString()` must not be used: in UTC+1 local
+ * midnight is 23:00 the previous day in UTC, which shifted every period back
+ * by one day.
+ */
+function toLocalDateKey(date?: Date): string | undefined {
+  if (!date) return undefined;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 interface DocumentListPageProps {
   documentType: DocumentType;
   direction: DocumentDirection;
@@ -100,6 +114,27 @@ export default function DocumentListPage({
     return {};
   }, [dateFilterType, dateRange]);
 
+  // Server-side sort (undefined → API default: newest first)
+  const [sort, setSort] = useState<{ field?: string; order?: 'ASC' | 'DESC' }>({});
+
+  /**
+   * The list's active filters — the single source used by the list query, the
+   * aggregates and the XLSX export, so the export matches what is displayed.
+   */
+  const activeFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      dateFrom: toLocalDateKey(getDateRange.start),
+      dateTo: toLocalDateKey(getDateRange.end),
+    }),
+    [debouncedSearch, statusFilter, getDateRange],
+  );
+  const activeSort = useMemo(
+    () => ({ sortField: sort.field, sortOrder: sort.order }),
+    [sort.field, sort.order],
+  );
+
   const statusOptions = useMemo(() => {
     if (documentType === 'devis')
       return [
@@ -108,6 +143,7 @@ export default function DocumentListPage({
         { label: t('statusOpen'), value: 'open' },
         { label: t('statusSigned'), value: 'signed' },
         { label: t('statusClosed'), value: 'closed' },
+        { label: t('statusDeliveredBon'), value: 'delivered' },
         { label: t('statusInvoiced'), value: 'invoiced' },
       ];
     if (documentType === 'bon_livraison')
@@ -140,20 +176,15 @@ export default function DocumentListPage({
       'documents',
       documentType,
       direction,
-      debouncedSearch,
-      statusFilter,
-      dateFilterType,
-      getDateRange.start,
-      getDateRange.end,
+      activeFilters,
+      activeSort,
       currentPage,
       pageSize,
     ],
     queryFn: () =>
       documentsService.getDocuments(documentType, direction, {
-        search: debouncedSearch || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        dateFrom: getDateRange.start ? getDateRange.start.toISOString().split('T')[0] : undefined,
-        dateTo: getDateRange.end ? getDateRange.end.toISOString().split('T')[0] : undefined,
+        ...activeFilters,
+        ...activeSort,
         page: currentPage,
         pageSize,
       }),
@@ -167,24 +198,12 @@ export default function DocumentListPage({
       totalSubtotal: 0,
     },
   } = useQuery({
-    queryKey: [
-      'documents-aggregates',
-      documentType,
-      direction,
-      debouncedSearch,
-      statusFilter,
-      dateFilterType,
-      getDateRange.start,
-      getDateRange.end,
-    ],
-    queryFn: () =>
-      documentsService.getAggregates(documentType, direction, {
-        search: debouncedSearch || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        dateFrom: getDateRange.start ? getDateRange.start.toISOString().split('T')[0] : undefined,
-        dateTo: getDateRange.end ? getDateRange.end.toISOString().split('T')[0] : undefined,
-      }),
+    queryKey: ['documents-aggregates', documentType, direction, activeFilters],
+    queryFn: () => documentsService.getAggregates(documentType, direction, activeFilters),
   });
+
+  /** Changes whenever the result set changes → the table clears its selection. */
+  const selectionResetKey = JSON.stringify([documentType, direction, activeFilters, activeSort]);
 
   const documents = documentsData.documents || [];
   const totalCount = documentsData.totalCount || 0;
@@ -320,25 +339,26 @@ export default function DocumentListPage({
 
   const handleExport = async () => {
     try {
-      let blob: Blob;
       let filename: string;
       if (documentType === 'devis') {
-        blob = await quotesService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'demandes-prix' : 'devis';
       } else if (documentType === 'facture') {
-        blob = await invoicesService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'factures-achat' : 'factures-vente';
       } else if (documentType === 'bon_livraison') {
-        blob = await ordersService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'bons-achat' : 'bons-livraison';
       } else {
         toastError(t('unsupportedDocumentType'));
         return;
       }
+      // Same filters + sort as the list (every page, not just the current one)
+      const blob = await documentsService.exportDocuments(documentType, direction, {
+        ...activeFilters,
+        ...activeSort,
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${filename}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.download = `${filename}-${toLocalDateKey(new Date())}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -536,6 +556,13 @@ export default function DocumentListPage({
             setCurrentPage(1);
           }}
           aggregates={documentAggregates}
+          sortField={sort.field}
+          sortOrder={sort.order}
+          onSortChange={(field, order) => {
+            setSort(field ? { field, order } : {});
+            setCurrentPage(1);
+          }}
+          selectionResetKey={selectionResetKey}
         />
       </div>
 

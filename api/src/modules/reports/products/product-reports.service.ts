@@ -202,9 +202,21 @@ export class ProductReportsService {
             (s, r) => s + (Number(r.totalRevenue) - Number(r.totalCost)),
             0,
           ),
+          // Mean of per-product margin rates over ALL products, not just the
+          // current page — otherwise the KPI changed with page / perPage.
           avgMarginRate:
             total > 0
-              ? Math.round(rows.reduce((s, r) => s + r.marginPct, 0) / total)
+              ? Math.round(
+                  allRaw.reduce((s, r) => {
+                    const revenue = Number(r.totalRevenue);
+                    return (
+                      s +
+                      (revenue > 0
+                        ? ((revenue - Number(r.totalCost)) / revenue) * 100
+                        : 0)
+                    );
+                  }, 0) / total,
+                )
               : 0,
         },
         chart: {

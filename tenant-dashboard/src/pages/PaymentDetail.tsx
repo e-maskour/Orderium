@@ -28,6 +28,8 @@ import {
   useDeleteInstallment,
 } from '../hooks/usePayments';
 import { PaymentForm } from '../components/PaymentForm';
+import { usePlans } from '../hooks/useTenants';
+import { planLabel } from '../utils/plans';
 import { RecordInstallmentDialog } from '../components/RecordInstallmentDialog';
 import {
   PaymentStatusBadge,
@@ -52,6 +54,7 @@ export function PaymentDetail() {
   const navigate = useNavigate();
 
   const { data: payment, isLoading, isError, error, refetch } = usePayment(id);
+  const { data: plans } = usePlans();
 
   const voidPayment = useVoidPayment();
   const deletePayment = useDeletePayment();
@@ -199,7 +202,7 @@ export function PaymentDetail() {
             <PaymentStatusBadge status={payment.status} isOverdue={payment.isOverdue} />
           </div>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            <span className="capitalize">{payment.planName}</span> ·{' '}
+            <span>{planLabel(payment.planName, plans)}</span> ·{' '}
             {BILLING_CYCLE_LABELS[payment.billingCycle]} · {formatDate(payment.periodStart)} –{' '}
             {formatDate(payment.periodEnd)}
           </p>

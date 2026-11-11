@@ -19,7 +19,7 @@
     --primary-800: #064e3b;
     --primary-900: #022c22;
 
-    /* ── Morocom semantic palette ── */
+    /* ── Marnova semantic palette ── */
     --orderium-primary: #059669;
     --orderium-primary-light: #10b981;
     --orderium-primary-dark: #047857;
@@ -40,16 +40,16 @@
 }
 
 /* ── Print styles ───────────────────────────────────────── */
-#morocom-receipt {
+#marnova-receipt {
     display: none;
 }
 
 @media print {
-    body>*:not(#morocom-receipt) {
+    body>*:not(#marnova-receipt) {
         display: none !important;
     }
 
-    #morocom-receipt {
+    #marnova-receipt {
         display: block !important;
         width: 80mm;
         margin: 0;
@@ -57,5 +57,4 @@
         font-family: 'Courier New', monospace;
         font-size: 12px;
     }
-}
 }

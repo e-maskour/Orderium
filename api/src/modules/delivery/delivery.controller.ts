@@ -28,8 +28,10 @@ import { ApiRes } from '../../common/api-response';
 import { DLV } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import { RequirePlanFeature } from '../tenant/decorators/require-plan-feature.decorator';
 
 @ApiTags('Delivery')
+@RequirePlanFeature('delivery')
 @Controller('delivery')
 @PortalRoute()
 export class DeliveryController {

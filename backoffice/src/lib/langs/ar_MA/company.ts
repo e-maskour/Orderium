@@ -40,7 +40,6 @@ export default {
   invalidEmail: 'عنوان البريد الإلكتروني غير صالح',
   imageFilesOnly: 'يُقبل ملفات الصور فقط',
   clickToUpload: 'انقر للتحميل',
-  companyLogo: 'شعار الشركة',
 
   // AdminStep password strength
   passwordWeak: 'ضعيف',
@@ -53,4 +52,15 @@ export default {
   // SuccessScreen
   copyCredentials: 'نسخ بيانات الدخول',
   credentialsCopied: 'تم نسخ البيانات',
+  // Company logo
+  companyLogo: 'الشعار',
+  uploadLogo: 'إضافة شعار',
+  changeLogo: 'تغيير',
+  removeLogo: 'حذف',
+  logoDocumentsHint:
+    'يظهر على الفواتير وعروض الأسعار والوصولات والإيصالات. PNG أو JPG أو WebP، بحد أقصى 2 ميغابايت.',
+  logoUploaded: 'تم تحديث الشعار',
+  logoRemoved: 'تم حذف الشعار',
+  logoInvalidType: 'يجب أن يكون الشعار صورة PNG أو JPG أو WebP',
+  logoTooLarge: 'يجب أن يكون حجم الشعار أقل من 2 ميغابايت',
 };

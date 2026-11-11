@@ -3,6 +3,9 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { StockMovementController } from './stock-movement.controller';
 import { StockService } from './stock.service';
 import { MovementType, MovementStatus } from './entities/stock-movement.entity';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { FilterStockMovementDto } from './dto/filter-stock-movement.dto';
 
 // ─── Service Mock ─────────────────────────────────────────────────────────────
 
@@ -102,75 +105,123 @@ describe('StockMovementController', () => {
   // ─── GET /inventory/movements ───────────────────────────────────────────────
 
   describe('findAll', () => {
-    it('returns all movements without filters', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([movementStub]);
+    const resolve = (movements: unknown[], total = movements.length) =>
+      mockStockService.findAllMovements.mockResolvedValue({ movements, total });
+
+    it('returns all movements without filters (no pagination)', async () => {
+      resolve([movementStub]);
 
       const result = await controller.findAll();
 
-      expect(mockStockService.findAllMovements).toHaveBeenCalledWith({});
+      expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
+        expect.objectContaining({ page: undefined, limit: undefined }),
+      );
       expect(result.data).toHaveLength(1);
+      expect(result.metadata).toEqual(
+        expect.objectContaining({
+          total: 1,
+          limit: 1,
+          offset: 0,
+          hasNext: false,
+        }),
+      );
     });
 
-    it('passes productId filter as number', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([]);
+    it('passes typed filters through', async () => {
+      resolve([]);
 
-      await controller.findAll('1');
+      await controller.findAll({
+        productId: 1,
+        warehouseId: 2,
+        status: MovementStatus.DONE,
+        movementType: MovementType.DELIVERY,
+        search: '  abc  ',
+      });
 
       expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
-        expect.objectContaining({ productId: 1 }),
+        expect.objectContaining({
+          productId: 1,
+          warehouseId: 2,
+          status: MovementStatus.DONE,
+          movementType: MovementType.DELIVERY,
+          search: 'abc',
+        }),
       );
     });
 
-    it('passes warehouseId filter as number', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([]);
+    it('passes date range filters as Date objects, end date inclusive', async () => {
+      resolve([]);
 
-      await controller.findAll(undefined, '2');
-
-      expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
-        expect.objectContaining({ warehouseId: 2 }),
-      );
-    });
-
-    it('passes status filter', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([]);
-
-      await controller.findAll(undefined, undefined, MovementStatus.DONE);
-
-      expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
-        expect.objectContaining({ status: MovementStatus.DONE }),
-      );
-    });
-
-    it('passes movementType filter', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([]);
-
-      await controller.findAll(
-        undefined,
-        undefined,
-        undefined,
-        MovementType.DELIVERY,
-      );
-
-      expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
-        expect.objectContaining({ movementType: MovementType.DELIVERY }),
-      );
-    });
-
-    it('passes date range filters as Date objects', async () => {
-      mockStockService.findAllMovements.mockResolvedValue([]);
-
-      await controller.findAll(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        '2026-01-01',
-        '2026-03-31',
-      );
+      await controller.findAll({
+        startDate: '2026-01-01',
+        endDate: '2026-03-31',
+      });
 
       const call = mockStockService.findAllMovements.mock.calls[0][0];
       expect(call.startDate).toBeInstanceOf(Date);
       expect(call.endDate).toBeInstanceOf(Date);
+      expect(call.endDate.toISOString()).toBe('2026-03-31T23:59:59.999Z');
+    });
+
+    it('passes pagination + sort and returns page metadata', async () => {
+      resolve([movementStub], 60);
+
+      const result = await controller.findAll({
+        page: 2,
+        limit: 25,
+        sortField: 'productName',
+        sortOrder: 'ASC',
+      });
+
+      expect(mockStockService.findAllMovements).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 2,
+          limit: 25,
+          sortField: 'productName',
+          sortOrder: 'ASC',
+        }),
+      );
+      expect(result.metadata).toEqual(
+        expect.objectContaining({
+          total: 60,
+          limit: 25,
+          offset: 25,
+          page: 2,
+          hasNext: true,
+          hasPrev: true,
+        }),
+      );
+    });
+  });
+
+  describe('FilterStockMovementDto validation', () => {
+    const errorsFor = async (raw: Record<string, unknown>) =>
+      validate(plainToInstance(FilterStockMovementDto, raw));
+
+    it('accepts valid values and drops the "all" sentinel', async () => {
+      const dto = plainToInstance(FilterStockMovementDto, {
+        status: 'all',
+        movementType: 'receipt',
+        page: '2',
+        limit: '50',
+        sortOrder: 'desc',
+      });
+      expect(await validate(dto)).toHaveLength(0);
+      expect(dto.status).toBeUndefined();
+      expect(dto.page).toBe(2);
+      expect(dto.sortOrder).toBe('DESC');
+    });
+
+    it.each([
+      [{ status: 'bogus' }],
+      [{ movementType: 'teleport' }],
+      [{ startDate: 'not-a-date' }],
+      [{ page: '0' }],
+      [{ limit: '1000' }],
+      [{ productId: 'abc' }],
+      [{ sortField: 'product.name; DROP TABLE x' }],
+    ])('rejects %o', async (raw) => {
+      expect((await errorsFor(raw)).length).toBeGreaterThan(0);
     });
   });
 

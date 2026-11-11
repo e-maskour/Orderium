@@ -13,6 +13,8 @@ import {
   NotFoundException,
   Res,
   Header,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -95,6 +97,7 @@ export class OrdersController {
       directionValue,
       filterDto.status,
       filterDto.search,
+      { field: filterDto.sortField, order: filterDto.sortOrder },
     );
 
     const offset = (pageNum - 1) * pageSize;
@@ -516,32 +519,57 @@ export class OrdersController {
     return ApiRes(ORD.SHARE_REVOKED, null);
   }
 
-  @Get('export/xlsx')
+  @Post('export/xlsx')
+  @HttpCode(HttpStatus.OK)
   @Header(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({
-    summary: "Export orders (bon de livraison / bon d'achat) to XLSX file",
+    summary:
+      "Export orders (bon de livraison / bon d'achat) to XLSX file (same body filters / sort as POST /orders/filter)",
   })
+  @ApiResponse({ status: 200, description: 'Export successful' })
   @RequirePermission('orders.export')
   async exportToXlsx(
-    @Query('supplierId') supplierId?: string,
-    @Res() res?: Response,
+    @Res() res: Response,
+    @Body() filterDto: FilterOrdersDto,
+    @Query('direction') direction?: string,
   ) {
-    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
-    const buffer = await this.ordersService.exportToXlsx(supplierIdNum);
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const buffer = await this.ordersService.exportToXlsx(
+      undefined,
+      {
+        startDate: filterDto.startDate
+          ? new Date(filterDto.startDate)
+          : undefined,
+        endDate: filterDto.endDate ? new Date(filterDto.endDate) : undefined,
+        deliveryStatus: filterDto.deliveryStatus,
+        status: filterDto.status,
+        search: filterDto.search,
+        orderNumber: filterDto.orderNumber,
+        customerId: filterDto.customerId,
+        supplierId: filterDto.supplierId,
+        deliveryPersonId: filterDto.deliveryPersonId,
+        originType: filterDto.originType,
+        direction: directionValue,
+      },
+      { field: filterDto.sortField, order: filterDto.sortOrder },
+    );
 
     const filename =
-      supplierIdNum !== undefined
-        ? supplierIdNum
-          ? 'bons-achat.xlsx'
-          : 'bons-livraison.xlsx'
-        : 'bons.xlsx';
+      directionValue === 'ACHAT'
+        ? 'bons-achat.xlsx'
+        : directionValue === 'VENTE'
+          ? 'bons-livraison.xlsx'
+          : 'bons.xlsx';
 
-    if (res) {
-      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-      res.send(buffer);
-    }
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(buffer);
   }
 }

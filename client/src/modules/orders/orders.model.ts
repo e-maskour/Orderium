@@ -75,6 +75,7 @@ export class Order implements IOrder {
     public internalNote?: string,
     public date?: string,
     public isValidated?: boolean,
+    public deliveryStatus?: string,
   ) {}
 
   get displayTotal(): string {
@@ -161,6 +162,7 @@ export class Order implements IOrder {
       data.internalNote as string | undefined,
       data.date as string | undefined,
       data.isValidated as boolean | undefined,
+      data.deliveryStatus as string | undefined,
     );
   }
 
@@ -196,6 +198,7 @@ export class Order implements IOrder {
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
       isValidated: this.isValidated,
+      deliveryStatus: this.deliveryStatus,
     };
   }
 }

@@ -99,6 +99,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        { field: undefined, order: undefined },
       );
       expect(result.data).toHaveLength(1);
       expect(result.metadata).toMatchObject({
@@ -128,6 +129,32 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        { field: undefined, order: undefined },
+      );
+    });
+
+    it('passes sortField/sortOrder from body to the service', async () => {
+      mockProductsService.findAll.mockResolvedValue({
+        products: [],
+        count: 0,
+        totalCount: 0,
+      });
+
+      await controller.filterProducts({
+        sortField: 'price',
+        sortOrder: 'DESC',
+      } as any);
+
+      expect(mockProductsService.findAll).toHaveBeenCalledWith(
+        1,
+        50,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { field: 'price', order: 'DESC' },
       );
     });
 
@@ -149,6 +176,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        { field: undefined, order: undefined },
       );
     });
 
@@ -170,6 +198,7 @@ describe('ProductsController', () => {
         undefined,
         undefined,
         undefined,
+        { field: undefined, order: undefined },
       );
     });
 

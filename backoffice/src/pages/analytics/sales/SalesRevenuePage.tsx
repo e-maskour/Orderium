@@ -39,28 +39,6 @@ const SalesRevenuePage: React.FC = () => {
     { field: 'channel', header: t('channel') },
   ];
 
-  const kpis = data
-    ? [
-        {
-          label: t('analyticsSalesRevenueTitle'),
-          value: Number(data.kpis.totalRevenue ?? 0),
-          suffix: 'MAD',
-          color: 'green' as const,
-        },
-        {
-          label: t('analyticsSalesRevenueOrdersCount'),
-          value: Number(data.kpis.totalOrders ?? 0),
-          color: 'blue' as const,
-        },
-        {
-          label: t('analyticsSalesRevenueAverageBasket'),
-          value: Number(data.kpis.avgBasket ?? data.kpis.avgOrder ?? 0),
-          suffix: 'MAD',
-          color: 'orange' as const,
-        },
-      ]
-    : [];
-
   return (
     <ReportLayout
       icon={TrendingUp}
@@ -68,8 +46,9 @@ const SalesRevenuePage: React.FC = () => {
       subtitle={t('analyticsSalesRevenueSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="sales-revenue" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
-      kpiCards={kpis.length > 0 && <ReportKpiCards cards={kpis} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={
         <ReportTable
@@ -94,23 +73,6 @@ const SalesRevenuePage: React.FC = () => {
               subtitle: t('analyticsSalesRevenueSubtitle'),
               fileName: 'ca-ventes',
               landscape: true,
-              kpis: [
-                {
-                  key: 'totalRevenue',
-                  label: t('analyticsSalesRevenueTitle'),
-                  format: 'currency',
-                },
-                {
-                  key: 'totalOrders',
-                  label: t('analyticsSalesRevenueOrdersCount'),
-                  format: 'integer',
-                },
-                {
-                  key: 'avgOrder',
-                  label: t('analyticsSalesRevenueAverageBasket'),
-                  format: 'currency',
-                },
-              ],
               columns: [
                 { key: 'reference', header: t('reference'), emphasis: true },
                 { key: 'date', header: t('date'), format: 'date' },

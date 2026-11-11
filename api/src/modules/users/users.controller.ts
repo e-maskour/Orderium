@@ -16,7 +16,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FilterUsersDto } from './dto/filter-users.dto';
+import { FilterUsersDto, USERS_MAX_PER_PAGE } from './dto/filter-users.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { USR } from '../../common/response-codes';
@@ -36,7 +36,8 @@ export class UsersController {
   async findAll(@Query() dto: FilterUsersDto) {
     const { users, total } = await this.usersService.findAll(dto);
     const page = dto.page ?? 1;
-    const perPage = dto.perPage ?? 20;
+    // Mirror the service's clamp so metadata reflects the page actually served.
+    const perPage = Math.min(dto.perPage ?? 20, USERS_MAX_PER_PAGE);
     const offset = (page - 1) * perPage;
     return ApiRes(USR.LIST, users, {
       limit: perPage,

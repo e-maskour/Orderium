@@ -2,6 +2,8 @@ import { Timer } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
+import ReportChart from '../components/ReportChart';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
 import { useReport } from '../../../hooks/useReport';
@@ -16,7 +18,7 @@ const MAD = (row: Record<string, unknown>, field: string) => formatAmount(Number
 const SupplierAgingPage: React.FC = () => {
   const { t } = useLanguage();
   const [filter] = useState<AgingReportFilter>({});
-  const { data, isLoading, error } = useReport<ReportData>(() =>
+  const { data, isLoading, error, refetch } = useReport<ReportData>(() =>
     analyticsService.getSupplierAging(filter),
   );
 
@@ -61,6 +63,9 @@ const SupplierAgingPage: React.FC = () => {
       subtitle={t('analyticsSupplierAgingSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      kpiCards={data && <ReportKpiCards reportKey="suppliers-aging" values={data.kpis} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={
         <ExportButtons

@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef, useEffect } from 'react';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import {
@@ -14,11 +14,14 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableSortEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dialog } from 'primereact/dialog';
 import { formatAmount, formatDate, formatDateTime } from '@orderium/ui';
-import { stockMovementService } from '../modules/inventory/stock-movements.service';
+import {
+  stockMovementService,
+  type StockMovementSortField,
+} from '../modules/inventory/stock-movements.service';
 import { StockMovement } from '../modules/inventory/inventory.model';
 import {
   toastValidated,
@@ -34,7 +37,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AutoCompleteSelect } from '../components/ui/AutoCompleteSelect';
 import { RefLink } from '../components/ui/RefLink';
 import { entityRoutes } from '../lib/entityRoutes';
-import { PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
 
 export default function StockMovements() {
   const { t, language } = useLanguage();
@@ -43,20 +46,42 @@ export default function StockMovements() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  // Server-side pagination/sort. Any filter or sort change jumps back to page 1.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [sortField, setSortField] = useState<StockMovementSortField | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null | undefined>(undefined);
   const [selectedMovement, setSelectedMovement] = useState<StockMovement | null>(null);
   const [selectedRows, setSelectedRows] = useState<StockMovement[]>([]);
 
   const queryClient = useQueryClient();
 
-  const { data: movements = [], isLoading } = useQuery({
-    queryKey: ['stock-movements', statusFilter, typeFilter, debouncedSearch],
+  const { data: listData, isLoading } = useQuery({
+    queryKey: [
+      'stock-movements',
+      { statusFilter, typeFilter, debouncedSearch, page, pageSize, sortField, sortOrder },
+    ],
     queryFn: () =>
-      stockMovementService.getAll({
+      stockMovementService.getPage({
         status: statusFilter !== 'all' ? statusFilter : undefined,
         movementType: typeFilter !== 'all' ? typeFilter : undefined,
-        search: debouncedSearch || undefined,
+        search: debouncedSearch.trim() || undefined,
+        page,
+        limit: pageSize,
+        sortField: sortOrder ? sortField : undefined,
+        sortOrder: sortOrder ? (sortOrder === 1 ? 'ASC' : 'DESC') : undefined,
       }),
+    placeholderData: keepPreviousData,
   });
+  const movements = listData?.movements ?? [];
+  const totalRecords = listData?.total ?? 0;
+
+  // If the current page no longer exists (data changed), step back to the last page.
+  useEffect(() => {
+    if (listData && listData.movements.length === 0 && page > 1 && totalRecords > 0) {
+      setPage(Math.ceil(totalRecords / pageSize));
+    }
+  }, [listData, page, pageSize, totalRecords]);
 
   const validateMutation = useMutation({
     mutationFn: (movementId: number) => stockMovementService.validate({ movementId }),
@@ -85,6 +110,7 @@ export default function StockMovements() {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
       setDebouncedSearch(value);
+      setPage(1);
     }, 500);
   };
 
@@ -215,7 +241,10 @@ export default function StockMovements() {
               {/* Type Filter */}
               <AutoCompleteSelect
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.value)}
+                onChange={(e) => {
+                  setTypeFilter(e.value);
+                  setPage(1);
+                }}
                 options={typeOptions}
                 optionLabel="label"
                 optionValue="value"
@@ -225,7 +254,10 @@ export default function StockMovements() {
               {/* Status Filter */}
               <AutoCompleteSelect
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.value);
+                  setPage(1);
+                }}
                 options={statusOptions}
                 optionLabel="label"
                 optionValue="value"
@@ -241,7 +273,9 @@ export default function StockMovements() {
             items={movements}
             keyExtractor={(m: StockMovement) => m.id}
             loading={isLoading}
-            totalCount={movements.length}
+            totalCount={totalRecords}
+            hasMore={page * pageSize < totalRecords}
+            onLoadMore={() => setPage((p) => p + 1)}
             countLabel="mouvements"
             emptyMessage={t('noMovementsFound' as any)}
             config={{
@@ -285,9 +319,23 @@ export default function StockMovements() {
             onSelectionChange={(e) => setSelectedRows(e.value as StockMovement[])}
             selectionMode="checkbox"
             dataKey="id"
+            lazy
             paginator
             paginatorPosition="bottom"
-            rows={25}
+            first={(page - 1) * pageSize}
+            rows={pageSize}
+            totalRecords={totalRecords}
+            onPage={(e) => {
+              setPage(Math.floor(e.first / e.rows) + 1);
+              setPageSize(e.rows);
+            }}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={(e: DataTableSortEvent) => {
+              setSortField((e.sortField || undefined) as StockMovementSortField | undefined);
+              setSortOrder(e.sortOrder);
+              setPage(1);
+            }}
             rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             removableSort
             loading={isLoading}

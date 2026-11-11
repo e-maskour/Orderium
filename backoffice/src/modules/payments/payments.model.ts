@@ -1,5 +1,10 @@
 import { formatAmount, formatDate } from '@orderium/ui';
-import { CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS } from './payments.interface';
+import {
+  CreatePaymentDTO,
+  UpdatePaymentDTO,
+  PAYMENT_TYPE_LABELS,
+  PaymentInvoiceRef,
+} from './payments.interface';
 
 export class Payment {
   id: number;
@@ -13,6 +18,7 @@ export class Payment {
   referenceNumber?: string;
   createdAt: string;
   updatedAt: string;
+  invoice?: PaymentInvoiceRef | null;
 
   constructor(data: any) {
     this.id = data.id;
@@ -26,6 +32,7 @@ export class Payment {
     this.referenceNumber = data.referenceNumber;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+    this.invoice = data.invoice ?? null;
   }
 
   get displayAmount(): string {

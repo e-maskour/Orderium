@@ -75,7 +75,7 @@ describe('InventoryAdjustmentService (backoffice)', () => {
 
       const result = await service.getAll();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/inventory/adjustments');
+      expect(apiClient.get).toHaveBeenCalledWith('/inventory/adjustments', { params: {} });
       expect(result).toHaveLength(1);
       expect(result[0].reference).toBe('ADJ/2026/00001');
     });
@@ -88,41 +88,39 @@ describe('InventoryAdjustmentService (backoffice)', () => {
       expect(result).toEqual([]);
     });
 
-    it('passes warehouseId filter as query param', async () => {
+    it('passes filters as query params', async () => {
       (apiClient.get as any).mockResolvedValue(apiResList([]));
 
-      await service.getAll({ warehouseId: 2 });
+      await service.getAll({
+        warehouseId: 2,
+        status: 'done',
+        startDate: '2026-01-01',
+        endDate: '2026-03-31',
+      });
 
-      const url = (apiClient.get as any).mock.calls[0][0];
-      expect(url).toContain('warehouseId=2');
+      expect(apiClient.get).toHaveBeenCalledWith('/inventory/adjustments', {
+        params: { warehouseId: 2, status: 'done', startDate: '2026-01-01', endDate: '2026-03-31' },
+      });
     });
 
-    it('passes status filter as query param', async () => {
-      (apiClient.get as any).mockResolvedValue(apiResList([]));
+    it('getPage passes pagination/sort params and reads total from metadata', async () => {
+      (apiClient.get as any).mockResolvedValue({
+        data: [adjustmentApiData],
+        metadata: { total: 42 },
+      });
 
-      await service.getAll({ status: 'done' });
+      const result = await service.getPage({
+        page: 2,
+        limit: 25,
+        sortField: 'warehouseName',
+        sortOrder: 'ASC',
+      });
 
-      const url = (apiClient.get as any).mock.calls[0][0];
-      expect(url).toContain('status=done');
-    });
-
-    it('passes date range filters as query params', async () => {
-      (apiClient.get as any).mockResolvedValue(apiResList([]));
-
-      await service.getAll({ startDate: '2026-01-01', endDate: '2026-03-31' });
-
-      const url = (apiClient.get as any).mock.calls[0][0];
-      expect(url).toContain('startDate=2026-01-01');
-      expect(url).toContain('endDate=2026-03-31');
-    });
-
-    it('uses base URL when no filters provided', async () => {
-      (apiClient.get as any).mockResolvedValue(apiResList([]));
-
-      await service.getAll();
-
-      const url = (apiClient.get as any).mock.calls[0][0];
-      expect(url).toBe('/inventory/adjustments');
+      expect(apiClient.get).toHaveBeenCalledWith('/inventory/adjustments', {
+        params: { page: 2, limit: 25, sortField: 'warehouseName', sortOrder: 'ASC' },
+      });
+      expect(result.total).toBe(42);
+      expect(result.adjustments).toHaveLength(1);
     });
 
     it('correctly parses lines with numeric strings', async () => {

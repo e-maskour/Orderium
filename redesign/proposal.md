@@ -2,7 +2,7 @@
 
 **Status:** Phase 1 deliverable. Awaiting approval before any implementation code.
 **Scope decision (confirmed):** whole `ProductDetail` page, including stock tab, dialogs and movement history.
-**App:** Morocom backoffice — React 18 + Vite + PrimeReact 10.9 + primeflex, styles in `src/theme.css`.
+**App:** Marnova backoffice — React 18 + Vite + PrimeReact 10.9 + primeflex, styles in `src/theme.css`.
 
 ---
 

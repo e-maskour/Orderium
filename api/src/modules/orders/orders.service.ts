@@ -55,7 +55,11 @@ import {
   ORDER_ITEM_FIELDS,
   PRODUCT_SUMMARY_FIELDS,
   applyOrderFilters,
+  applyOrderSort,
+  OrderListFilters,
 } from './orders.queries';
+import type { OrderSortField } from './dto/filter-orders.dto';
+import type { ListSort } from '../../common/utils/list-sort';
 
 /** Statuses an admin can set by hand on a POS order (see changePosOrderStatus). */
 const POS_SETTABLE_STATUSES: OrderStatus[] = [
@@ -69,6 +73,7 @@ const isPosOrigin = (order: Pick<Order, 'originType'>): boolean =>
   order.originType === (OrderOriginType.CLIENT_POS as string) ||
   order.originType === (OrderOriginType.ADMIN_POS as string);
 
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -85,6 +90,7 @@ export class OrdersService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get orderRepository(): Repository<Order> {
@@ -213,6 +219,17 @@ export class OrdersService {
     if (!createOrderDto.items?.length) {
       throw new BadRequestException('Order must have at least one item');
     }
+
+    // Subscription: POS needs `pos`, customer-portal checkout needs
+    // `client_portal`, and every order counts toward the monthly fair use.
+    const requestedOrigin =
+      createOrderDto.originType ?? OrderOriginType.BACKOFFICE;
+    if (requestedOrigin === OrderOriginType.ADMIN_POS) {
+      await this.entitlements.assertFeature('pos');
+    } else if (requestedOrigin === OrderOriginType.CLIENT_POS) {
+      await this.entitlements.assertFeature('client_portal');
+    }
+    await this.entitlements.assertCanAdd('ordersPerMonth');
 
     const result = await this.dataSource.transaction(async (manager) => {
       const now = new Date();
@@ -418,11 +435,13 @@ export class OrdersService {
       .orderBy('order.dateCreated', 'DESC')
       .take(limit);
 
-    applyOrderFilters(qb, { originType, deliveryStatus, direction });
-    if (startDate && endDate) {
-      qb.andWhere('order.dateCreated >= :startDate', { startDate });
-      qb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
+    applyOrderFilters(qb, {
+      originType,
+      deliveryStatus,
+      direction,
+      startDate,
+      endDate,
+    });
 
     const orders = await qb.getMany();
 
@@ -433,11 +452,7 @@ export class OrdersService {
       .addSelect('COUNT(*)', 'count')
       .groupBy('order.deliveryStatus');
 
-    applyOrderFilters(countQb, { originType, direction });
-    if (startDate && endDate) {
-      countQb.andWhere('order.dateCreated >= :startDate', { startDate });
-      countQb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
+    applyOrderFilters(countQb, { originType, direction, startDate, endDate });
 
     const countRows = await countQb.getRawMany<{
       deliveryStatus: string | null;
@@ -466,6 +481,7 @@ export class OrdersService {
     direction?: 'ACHAT' | 'VENTE',
     status?: string[],
     search?: string,
+    sort?: ListSort<OrderSortField>,
   ): Promise<{
     orders: any[];
     count: number;
@@ -498,15 +514,11 @@ export class OrdersService {
         ...CUSTOMER_SUMMARY_FIELDS,
         ...SUPPLIER_SUMMARY_FIELDS,
       ])
-      .orderBy('order.dateCreated', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
 
     applyOrderFilters(qb, filters);
-    if (startDate && endDate) {
-      qb.andWhere('order.dateCreated >= :startDate', { startDate });
-      qb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
+    applyOrderSort(qb, sort, direction);
 
     const orders = await qb.getMany();
 
@@ -514,16 +526,13 @@ export class OrdersService {
     const dsCountQb = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
       .select('order.deliveryStatus', 'deliveryStatus')
       .addSelect('COUNT(*)', 'count')
       .groupBy('order.deliveryStatus');
 
     applyOrderFilters(dsCountQb, filters);
-    if (startDate && endDate) {
-      dsCountQb.andWhere('order.dateCreated >= :startDate', { startDate });
-      dsCountQb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
 
     const dsRows = await dsCountQb.getRawMany<{
       deliveryStatus: string | null;
@@ -535,16 +544,13 @@ export class OrdersService {
     const osCountQb = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
       .select('order.status', 'status')
       .addSelect('COUNT(*)', 'count')
       .groupBy('order.status');
 
     applyOrderFilters(osCountQb, filters);
-    if (startDate && endDate) {
-      osCountQb.andWhere('order.dateCreated >= :startDate', { startDate });
-      osCountQb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
 
     const osRows = await osCountQb.getRawMany<{
       status: string | null;
@@ -595,6 +601,7 @@ export class OrdersService {
     const aggQb = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
       .select('COALESCE(SUM(order.total), 0)', 'totalAmount')
       .addSelect('COALESCE(SUM(order.paidAmount), 0)', 'totalPaid')
@@ -602,10 +609,6 @@ export class OrdersService {
       .addSelect('COALESCE(SUM(order.subtotal), 0)', 'totalSubtotal');
 
     applyOrderFilters(aggQb, filters);
-    if (startDate && endDate) {
-      aggQb.andWhere('order.dateCreated >= :startDate', { startDate });
-      aggQb.andWhere('order.dateCreated <= :endDate', { endDate });
-    }
 
     const aggResult = await aggQb.getRawOne<{
       totalAmount: string;
@@ -1412,22 +1415,40 @@ export class OrdersService {
     };
   }
 
-  async exportToXlsx(supplierId?: number): Promise<Buffer> {
+  /**
+   * `supplierId` keeps the legacy bulk-export semantics (0 → sales only,
+   * >0 → that supplier). `filters`/`sort` are the list page's own filters
+   * (same `applyOrderFilters` as POST /orders/filter), so the export contains
+   * exactly the rows the user is looking at (all pages).
+   */
+  async exportToXlsx(
+    supplierId?: number,
+    filters: OrderListFilters = {},
+    sort?: ListSort<OrderSortField>,
+  ): Promise<Buffer> {
     const qb = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('order.customer', 'customer')
-      .leftJoinAndSelect('order.supplier', 'supplier')
-      .orderBy('order.dateCreated', 'DESC');
+      .leftJoinAndSelect('order.supplier', 'supplier');
+
+    // `applyOrderFilters` filters on the delivery row for deliveryPersonId.
+    if (filters.deliveryPersonId) {
+      qb.leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id');
+    }
 
     if (supplierId !== undefined) {
       if (supplierId) {
-        qb.where('order.supplierId = :supplierId', { supplierId });
+        qb.andWhere('order.supplierId = :exportSupplierId', {
+          exportSupplierId: supplierId,
+        });
       } else {
-        qb.where('order.supplierId IS NULL');
+        qb.andWhere('order.supplierId IS NULL');
       }
     }
+    applyOrderFilters(qb, filters);
+    applyOrderSort(qb, sort, filters.direction);
 
     const orders = await qb.getMany();
     const exportData = orders.flatMap((order) => buildOrderExportRows(order));
@@ -1436,12 +1457,18 @@ export class OrdersService {
     const ws = XLSX.utils.json_to_sheet(exportData);
     ws['!cols'] = ORDER_XLSX_COL_WIDTHS;
 
-    const sheetName =
+    const isPurchase =
       supplierId !== undefined
-        ? supplierId
+        ? Boolean(supplierId)
+        : filters.direction
+          ? filters.direction === 'ACHAT'
+          : undefined;
+    const sheetName =
+      isPurchase === undefined
+        ? 'Bons'
+        : isPurchase
           ? "Bons d'achat"
-          : 'Bons de livraison'
-        : 'Bons';
+          : 'Bons de livraison';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   }

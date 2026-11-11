@@ -11,7 +11,6 @@ import { chromium, Browser } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import {
-  renderDocumentTemplate,
   renderHeaderTemplate,
   renderFooterTemplate,
 } from './templates/document.template';
@@ -19,9 +18,22 @@ import {
   renderReceiptTemplate,
   RECEIPT_WIDTH_MM,
 } from './templates/receipt.template';
+import {
+  renderDeliveryNoteTemplate,
+  renderDeliveryNotePageFooter,
+  DELIVERY_NOTE_MARGINS,
+} from './templates/delivery-note.template';
+import type { DeliveryNoteTemplateData } from './templates/delivery-note.template';
+import {
+  OrderPrintData,
+  PaymentHints,
+  amountToFrenchWords,
+  getPaymentStatusView,
+  renderCode128Svg,
+  resolvePaymentState,
+} from './templates/order-print.shared';
 import { renderOrdersMergeTemplate } from './templates/orders-merge.template';
 import type { OrdersMergeView } from './templates/orders-merge.template';
-import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { Order } from '../orders/entities/order.entity';
 import { MinioProvider } from '../images/providers/minio.provider';
@@ -68,6 +80,7 @@ interface DocumentData {
   originType?: string;
   isDemandePrix?: boolean; // For purchase quotes (achat)
   supplierName?: string;
+  paidAmount?: number;
 }
 
 interface DocumentItemData {
@@ -91,6 +104,7 @@ interface CompanyConfigData {
   registrationNumber?: string;
   taxId?: string;
   vatNumber?: string;
+  logo?: string;
 }
 
 @Injectable()
@@ -104,7 +118,7 @@ export class PDFService implements OnModuleDestroy {
   /** PDF buffer TTL in Redis: 5 minutes */
   private static readonly PDF_CACHE_TTL_MS = 5 * 60 * 1000;
   /** Bump whenever a PDF template/layout changes so stale cached PDFs are bypassed. */
-  private static readonly PDF_CACHE_VERSION = 'v2';
+  private static readonly PDF_CACHE_VERSION = 'v6';
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
@@ -233,7 +247,11 @@ export class PDFService implements OnModuleDestroy {
       pdfBuffer = await this.generateReceiptPDF(documentData, lang);
       fileName = `Recu_${documentData.documentNumber}.pdf`;
     } else {
-      pdfBuffer = await this.generateA5PDF(documentType, documentData, lang);
+      pdfBuffer = await this.generateA5DocumentPDF(
+        documentType,
+        documentData,
+        lang,
+      );
       fileName = this.getFileName(documentType, documentData);
     }
 
@@ -334,6 +352,7 @@ export class PDFService implements OnModuleDestroy {
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
         companyLines: this.buildCompanyLines(companyConfig, lang),
+        logoSrc: await this.resolveLogoSrc(companyConfig.logo),
         documentLabel:
           lang === 'ar' ? 'ملخص الطلبات' : 'RÉCAPITULATIF DE COMMANDES',
         documentNumber: String(summary.orderCount),
@@ -551,6 +570,7 @@ export class PDFService implements OnModuleDestroy {
       notes: invoice.notes || undefined,
       status: invoice.status,
       isDemandePrix,
+      paidAmount: Number(invoice.paidAmount) || 0,
       items: mapDocumentItems(invoice.items),
     };
   }
@@ -621,6 +641,7 @@ export class PDFService implements OnModuleDestroy {
       total: Number(order.total) || 0,
       originType: order.originType || 'BACKOFFICE',
       isDemandePrix,
+      paidAmount: Number(order.paidAmount) || 0,
       items: mapDocumentItems(order.items),
     };
   }
@@ -644,78 +665,6 @@ export class PDFService implements OnModuleDestroy {
     return `${typeMap[documentType]}_${data.documentNumber}.pdf`;
   }
 
-  private async generateA5PDF(
-    documentType: DocumentType,
-    data: DocumentData,
-    lang: 'fr' | 'ar' = 'fr',
-  ): Promise<Buffer> {
-    const page = await this.getNewPage({
-      viewport: {
-        width: 420,
-        height: 595,
-      },
-      deviceScaleFactor: 2,
-    });
-
-    try {
-      const htmlContent = this.renderDocumentHTML(documentType, data, lang);
-      await page.setContent(htmlContent, {
-        waitUntil: 'networkidle',
-        timeout: 30000,
-      });
-      // Ensure web fonts (Noto Sans Arabic) are fully loaded before rendering
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      await page.evaluate(() => (document as any).fonts.ready);
-
-      const companyConfig = await this.getCompanyConfig();
-      const companyLines = this.buildCompanyLines(companyConfig, lang);
-      const footerLines = this.buildCompanyFooterLines(companyConfig);
-
-      // Generate header and footer templates
-      const headerTemplate = renderHeaderTemplate({
-        companyName: companyConfig.companyName || '',
-        companyLines,
-        documentLabel: this.getDocumentLabel(
-          documentType,
-          data.isDemandePrix,
-          lang,
-        ),
-        documentNumber: data.documentNumber,
-        date: formatDate(data.date),
-        dueDate: data.dueDate ? formatDate(data.dueDate) : undefined,
-        expirationDate: data.expirationDate
-          ? formatDate(data.expirationDate)
-          : undefined,
-        lang,
-      });
-
-      const footerTemplate = renderFooterTemplate({
-        footerLines,
-        hideVAT:
-          data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS',
-        lang,
-      });
-
-      const pdfBuffer = await page.pdf({
-        format: 'A5',
-        printBackground: true,
-        displayHeaderFooter: true,
-        headerTemplate,
-        footerTemplate,
-        margin: {
-          top: '32mm',
-          bottom: '14mm',
-          left: '5mm',
-          right: '5mm',
-        },
-      });
-
-      return pdfBuffer;
-    } finally {
-      await page.close();
-    }
-  }
-
   private async generateReceiptPDF(
     data: DocumentData,
     lang: 'fr' | 'ar' = 'fr',
@@ -730,8 +679,11 @@ export class PDFService implements OnModuleDestroy {
     });
 
     try {
-      const companyConfig = await this.getCompanyConfig();
-      const htmlContent = this.renderReceiptHTML(data, companyConfig, lang);
+      const print = await this.buildOrderPrintData('receipt', data, lang);
+      const htmlContent = renderReceiptTemplate({
+        ...print,
+        barcodeSvg: renderCode128Svg(data.documentNumber, 32),
+      });
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
@@ -761,188 +713,288 @@ export class PDFService implements OnModuleDestroy {
     }
   }
 
-  private renderDocumentHTML(
-    documentType: DocumentType,
+  /**
+   * A5 layout shared by every sales and purchase document (order delivery
+   * note, invoice, quote, facture d'achat, demande de prix, bon d'achat).
+   */
+  private async generateA5DocumentPDF(
+    documentType: Exclude<DocumentType, 'receipt'>,
     data: DocumentData,
     lang: 'fr' | 'ar' = 'fr',
-  ): string {
-    const documentTitle = this.getDocumentTitle(
-      documentType,
-      data.isDemandePrix,
-      lang,
-    );
-    const documentLabel = this.getDocumentLabel(
-      documentType,
-      data.isDemandePrix,
-      lang,
-    );
-    const hideVAT =
-      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
-    // Only hide prices for demande de prix (quotes with supplier), not for facture achat or bon d'achat
-    const hidePrices =
-      (documentType === 'quote' && data.isDemandePrix) || false;
-
-    // Generate items HTML
-    const isRTL = lang === 'ar';
-    const totalAlign = 'right'; // total always right in both languages
-    const midAlign = isRTL ? 'center' : 'right'; // qty/price/discount/tva center in RTL
-    const itemsHtml = data.items
-      .map((item) => {
-        if (hidePrices) {
-          // For demande de prix, only show description and quantity
-          return `
-              <tr class="table-row">
-                <td class="cell-desc">${item.description}</td>
-                <td style="text-align: center; font-weight: 600;">${formatQuantity(item.quantity)}</td>
-              </tr>
-            `;
-        } else {
-          // Normal quote/invoice with prices
-          return `
-              <tr class="table-row">
-                <td class="cell-desc">${item.description}</td>
-                <td style="text-align: center; font-weight: 600;">${formatQuantity(item.quantity)}</td>
-                <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.unitPrice)}</td>
-                <td class="num" style="text-align: ${midAlign};">${this.formatCurrency(item.discount)}</td>
-                ${!hideVAT ? `<td class="num" style="text-align: ${midAlign};">${formatQuantity(item.tax)}%</td>` : ''}
-                <td class="num" style="text-align: ${totalAlign}; font-weight: 600;">${this.formatCurrency(item.total)}</td>
-              </tr>
-            `;
-        }
-      })
-      .join('');
-
-    // Calculate total quantity for demande de prix (only for quotes with supplier)
-    const totalQuantity = hidePrices
-      ? data.items.reduce((sum, item) => sum + item.quantity, 0)
-      : 0;
-
-    return renderDocumentTemplate({
-      documentTitle,
-      documentLabel,
-      documentNumber: data.documentNumber,
-      date: formatDate(data.date),
-      dueDate: data.dueDate ? formatDate(data.dueDate) : undefined,
-      expirationDate: data.expirationDate
-        ? formatDate(data.expirationDate)
-        : undefined,
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-      customerAddress: data.customerAddress,
-      customerIce: data.customerIce,
-      documentType,
-      signedBy: data.signedBy,
-      itemsHtml,
-      subtotal: this.formatCurrency(data.subtotal),
-      discount: data.discount ? this.formatCurrency(data.discount) : undefined,
-      discountType: data.discountType,
-      tax: this.formatCurrency(data.tax),
-      total: this.formatCurrency(data.total),
-      notes: data.notes,
-      styles: this.getDocumentStyles(lang),
-      hideVAT,
-      isPurchaseDocument: data.isDemandePrix,
-      isDemandePrix: hidePrices,
-      totalQuantity: formatQuantity(totalQuantity),
-      lang,
+  ): Promise<Buffer> {
+    const page = await this.getNewPage({
+      viewport: { width: 559, height: 794 },
+      deviceScaleFactor: 2,
     });
+
+    try {
+      const print = await this.buildOrderPrintData(documentType, data, lang);
+      const htmlContent = renderDeliveryNoteTemplate({
+        ...print,
+        ...this.buildA5DocumentOptions(documentType, data, lang),
+        barcodeSvg: renderCode128Svg(data.documentNumber, 28),
+      });
+      await page.setContent(htmlContent, {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      await page.evaluate(() => (document as any).fonts.ready);
+
+      return await page.pdf({
+        format: 'A5',
+        printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate: '<span></span>',
+        footerTemplate: renderDeliveryNotePageFooter(lang),
+        margin: DELIVERY_NOTE_MARGINS,
+      });
+    } finally {
+      await page.close();
+    }
   }
 
-  private renderReceiptHTML(
-    data: DocumentData,
-    company: CompanyConfigData,
-    lang: 'fr' | 'ar' = 'fr',
-  ): string {
-    const hideVAT =
-      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
-    const companyLines = this.buildCompanyLines(company, lang);
-
-    // Generate items HTML — table rows for the new design
-    const itemsHtml = data.items
-      .map((item) => {
-        const discountSub =
-          item.discount > 0
-            ? `${lang === 'ar' ? 'خصم' : 'Remise'}: -${this.formatCurrency(item.discount)} DH`
-            : '';
-        const taxSub =
-          !hideVAT && item.tax > 0 ? `TVA: ${formatQuantity(item.tax)}%` : '';
-        const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
-        const qtyLine = `${formatQuantity(item.quantity)} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
-        return `<tr class="t-item">
-            <td class="t-desc">
-              ${item.description}
-              <span class="t-desc-sub">${qtyLine}</span>
-            </td>
-            <td class="t-total">${this.formatCurrency(item.total)}</td>
-          </tr>`;
-      })
-      .join('');
-
-    const totalQty = data.items.reduce((sum, i) => sum + i.quantity, 0);
-    const totalProducts = data.items.length;
-
-    return renderReceiptTemplate({
-      documentNumber: data.documentNumber,
-      date: formatDate(data.date),
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-      itemsHtml,
-      totalQty,
-      totalProducts,
-      subtotal: this.formatCurrency(data.subtotal),
-      discount:
-        data.discount && data.discount > 0
-          ? this.formatCurrency(data.discount)
-          : undefined,
-      discountType: data.discountType,
-      tax: this.formatCurrency(data.tax),
-      total: this.formatCurrency(data.total),
-      hideVAT,
-      companyName: company.companyName || 'MOROCOM',
-      companyLines,
-      lang,
-    });
-  }
-
-  private getDocumentStyles(lang: 'fr' | 'ar' = 'fr'): string {
-    return getDocumentStyles(lang);
-  }
-
-  private getDocumentTitle(
+  /** View-model shared by the A5 documents and the 80mm ticket. */
+  private async buildOrderPrintData(
     documentType: DocumentType,
-    isDemandePrix?: boolean,
-    lang: 'fr' | 'ar' = 'fr',
-  ): string {
-    if (lang === 'ar') {
-      if (isDemandePrix) {
-        if (documentType === 'quote') return 'طلب سعر';
-        if (documentType === 'invoice') return 'فاتورة شراء';
-        if (documentType === 'delivery-note') return 'وصل شراء';
-      }
-      const titles: Record<DocumentType, string> = {
-        invoice: 'فاتورة',
-        quote: 'عرض سعر',
-        'delivery-note': 'وصل تسليم',
-        receipt: 'إيصال',
+    data: DocumentData,
+    lang: 'fr' | 'ar',
+  ): Promise<OrderPrintData> {
+    const ar = lang === 'ar';
+    const currency = ar ? 'د.م' : 'DH';
+    const money = (v: number) => `${this.formatCurrency(v)} ${currency}`;
+    const hideVAT =
+      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
+    const company = await this.getCompanyConfig();
+
+    const items = data.items.map((item) => {
+      const extras = [
+        item.discount > 0
+          ? `${ar ? 'خصم' : 'Remise'} -${money(item.discount)}`
+          : '',
+        !hideVAT && item.tax > 0 ? `TVA ${formatQuantity(item.tax)}%` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const calc = `${formatQuantity(item.quantity)} × ${money(item.unitPrice)}`;
+      return {
+        name: item.description,
+        qty: formatQuantity(item.quantity),
+        price: this.formatCurrency(item.unitPrice),
+        total: this.formatCurrency(item.total),
+        sub: extras ? `${calc} · ${extras}` : calc,
+        extras,
       };
-      return titles[documentType];
-    }
-    if (isDemandePrix) {
-      if (documentType === 'quote') {
-        return 'Demande de Prix';
-      } else if (documentType === 'invoice') {
-        return "Facture d'Achat";
-      } else if (documentType === 'delivery-note') {
-        return "Bon d'Achat";
-      }
-    }
-    const titles = {
-      invoice: 'Facture',
-      quote: 'Devis',
-      'delivery-note': 'Bon de Livraison',
-      receipt: 'Reçu',
+    });
+
+    const discount = data.discount ?? 0;
+    const discountRow =
+      discount > 0
+        ? {
+            label: ar ? 'الخصم' : 'Remise',
+            value:
+              data.discountType === 1
+                ? `-${formatQuantity(discount)}%`
+                : `-${money(discount)}`,
+          }
+        : null;
+    const breakdown = hideVAT
+      ? discountRow
+        ? [
+            {
+              label: ar ? 'المجموع الجزئي' : 'Sous-total',
+              value: money(data.subtotal),
+            },
+            discountRow,
+          ]
+        : []
+      : [
+          {
+            label: ar ? 'المجموع بدون ضريبة' : 'Sous-total HT',
+            value: money(data.subtotal),
+          },
+          ...(discountRow ? [discountRow] : []),
+          { label: 'TVA', value: money(data.tax) },
+        ];
+
+    const lines = data.items.length;
+    const units = formatQuantity(
+      data.items.reduce((sum, i) => sum + i.quantity, 0),
+    );
+
+    const paid = data.paidAmount ?? 0;
+    const state = resolvePaymentState(data.total, paid);
+
+    const addressLine = [
+      company.address?.trim(),
+      [company.city?.trim(), company.zipCode?.trim()].filter(Boolean).join(' '),
+      company.country?.trim(),
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    return {
+      lang,
+      title: this.getDocumentLabel(documentType, data.isDemandePrix, lang),
+      documentNumber: data.documentNumber,
+      date: formatDate(data.date),
+      company: {
+        name: company.companyName?.trim() || 'MARNOVA',
+        addressLine: addressLine || undefined,
+        phone: company.phone?.trim() || undefined,
+        email: company.email?.trim() || undefined,
+        legalLine: this.buildCompanyFooterLines(company)[0],
+        logoSrc: await this.resolveLogoSrc(company.logo),
+      },
+      client: {
+        name: data.customerName,
+        phone: data.customerPhone,
+        address: data.customerAddress,
+      },
+      status: getPaymentStatusView(
+        state,
+        lang,
+        state === 'partiel' ? money(data.total - paid) : undefined,
+        this.getPaymentHints(documentType, data, lang),
+      ),
+      items,
+      linesLabel: ar
+        ? `${lines} ${lines > 1 ? 'أصناف' : 'صنف'}`
+        : `${lines} article${lines > 1 ? 's' : ''}`,
+      unitsLabel: ar
+        ? `${units} وحدة في المجموع`
+        : `${units} unité${units === '1' ? '' : 's'} au total`,
+      breakdown,
+      grandTotal: this.formatCurrency(data.total),
+      totalWords: ar ? undefined : amountToFrenchWords(data.total),
+      currency,
     };
-    return titles[documentType];
+  }
+
+  /**
+   * Company logo as something Chromium can render offline: data URIs pass
+   * through, stored MinIO images are inlined. Anything else → no logo
+   * (the template falls back to the company initial).
+   */
+  private async resolveLogoSrc(logo?: string): Promise<string | undefined> {
+    const ref = logo?.trim();
+    if (!ref) return undefined;
+    if (ref.startsWith('data:image/')) return ref;
+    return (await this.minioProvider.getObjectAsDataUri(ref)) ?? undefined;
+  }
+
+  /**
+   * Badge wording: a delivery collects cash at the door, an invoice is
+   * settled by the customer, a purchase is paid to the supplier.
+   */
+  private getPaymentHints(
+    documentType: DocumentType,
+    data: DocumentData,
+    lang: 'fr' | 'ar',
+  ): PaymentHints {
+    const ar = lang === 'ar';
+    if (data.isDemandePrix) {
+      return {
+        paid: ar ? 'لا شيء للأداء' : 'Rien à régler',
+        unpaid: ar ? 'للأداء للمورد' : 'À régler au fournisseur',
+      };
+    }
+    if (documentType === 'invoice') {
+      const due = data.dueDate ? formatDate(data.dueDate) : undefined;
+      return {
+        unpaid: due
+          ? `${ar ? 'للأداء قبل' : 'À régler avant le'} ${due}`
+          : ar
+            ? 'للأداء'
+            : 'À régler',
+      };
+    }
+    return {};
+  }
+
+  /**
+   * Per-document options of the A5 layout. The sales delivery note keeps the
+   * template defaults (LIVRER À, repère line, TOTAL À PAYER).
+   */
+  private buildA5DocumentOptions(
+    documentType: Exclude<DocumentType, 'receipt'>,
+    data: DocumentData,
+    lang: 'fr' | 'ar',
+  ): Partial<DeliveryNoteTemplateData> {
+    const ar = lang === 'ar';
+    const purchase = !!data.isDemandePrix;
+    const isPOS =
+      data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
+    const common = {
+      notes: data.notes,
+      partyIce: data.customerIce,
+    };
+
+    if (documentType === 'delivery-note') {
+      if (!purchase) return common;
+      return {
+        ...common,
+        numberLabel: ar ? 'رقم الوصل' : 'N° DE BON',
+        partyLabel: ar ? 'المورد' : 'FOURNISSEUR',
+        totalLabel: isPOS ? undefined : ar ? 'المجموع الإجمالي' : 'TOTAL TTC',
+      };
+    }
+
+    const partyLabel = purchase
+      ? ar
+        ? 'المورد'
+        : 'FOURNISSEUR'
+      : ar
+        ? 'العميل'
+        : 'CLIENT';
+
+    if (documentType === 'invoice') {
+      return {
+        ...common,
+        numberLabel: ar ? 'رقم الفاتورة' : 'N° FACTURE',
+        partyLabel,
+        extraDates: data.dueDate
+          ? [
+              {
+                label: ar ? 'الاستحقاق' : 'ÉCHÉANCE',
+                value: formatDate(data.dueDate),
+              },
+            ]
+          : [],
+        totalLabel: purchase
+          ? ar
+            ? 'المجموع الإجمالي'
+            : 'TOTAL TTC'
+          : ar
+            ? 'الصافي للأداء'
+            : 'NET À PAYER',
+      };
+    }
+
+    // Quotes: no payment yet, so no badge. A supplier quote is a
+    // "demande de prix" and prints quantities only.
+    return {
+      ...common,
+      status: undefined,
+      numberLabel: purchase
+        ? ar
+          ? 'رقم الطلب'
+          : 'N° DEMANDE'
+        : ar
+          ? 'رقم العرض'
+          : 'N° DEVIS',
+      partyLabel,
+      extraDates: data.expirationDate
+        ? [
+            {
+              label: ar ? 'صالح حتى' : "VALIDE JUSQU'AU",
+              value: formatDate(data.expirationDate),
+            },
+          ]
+        : [],
+      totalLabel: ar ? 'المجموع الإجمالي' : 'TOTAL TTC',
+      hidePrices: purchase,
+    };
   }
 
   private getDocumentLabel(

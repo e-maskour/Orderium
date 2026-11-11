@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Centralized API Route Configuration
+ *  MARNOVA — Centralized API Route Configuration
  * ═══════════════════════════════════════════════════════════════
  *
  *  Single source of truth for all API endpoints.
@@ -170,6 +170,7 @@ export const API_ROUTES = {
     UPDATE: (id: number) => `/api/configurations/${id}`,
     GENERAL: '/api/configurations/entity/general',
     GENERAL_UPDATE: '/api/configurations/entity/general',
+    COMPANY_LOGO: '/api/configurations/entity/my_company/logo',
   },
 
   // ─── Sequences ─────────────────────────────────────────────
@@ -195,6 +196,8 @@ export const API_ROUTES = {
   REPORTS: {
     /** POST — renders any report as a branded PDF. See PDF_KEYS for the keys. */
     PDF: (reportKey: string) => `/api/reports/pdf/${reportKey}`,
+    /** POST — exports any report as XLSX, same spec as PDF. */
+    XLSX: (reportKey: string) => `/api/reports/xlsx/${reportKey}`,
     SALES: {
       REVENUE: '/api/reports/sales/revenue',
       REVENUE_XLSX: '/api/reports/sales/revenue/xlsx',
@@ -392,6 +395,11 @@ export const API_ROUTES = {
     COMPANY: '/api/onboarding/company',
     ADMIN: '/api/onboarding/admin',
     COMPLETE: '/api/onboarding/complete',
+  },
+
+  // ─── Subscription (tenant plan, features & usage) ───────────
+  SUBSCRIPTION: {
+    CURRENT: '/api/subscription/current',
   },
 
   // ─── Access Control ────────────────────────────────────────

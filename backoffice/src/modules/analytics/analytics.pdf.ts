@@ -1,6 +1,7 @@
 import { formatDate } from '@orderium/ui';
 import type { TranslationKey } from '../../lib/i18n';
 import type { AnyReportFilter, PdfBadgeTone, PdfReportSpec } from './analytics.interface';
+import { pdfKpisFor } from './analytics.kpis';
 
 /** The `t` function from LanguageContext, matched exactly on its key union. */
 type Translate = (key: TranslationKey) => string;
@@ -90,6 +91,8 @@ export function buildPdfSpec(
     emptyMessage: t('analyticsPdfEmpty'),
     footerNote: t('analyticsPdfFooterNote'),
     ...spec,
+    // Registered KPIs (analytics.kpis.ts) win so the PDF always matches the screen.
+    kpis: pdfKpisFor(spec.reportKey, t) ?? spec.kpis,
     meta: spec.meta ?? buildPdfMeta(filter, t),
   };
 }

@@ -9,6 +9,8 @@ import { MigrationRunLog } from '../modules/super-admin/entities/migration-log.e
 import { SeederRunLog } from '../modules/super-admin/entities/seeder-log.entity';
 import { TenantDailyMetric } from '../modules/platform-metrics/entities/tenant-daily-metric.entity';
 import { TenantHealthBucket } from '../modules/platform-metrics/entities/tenant-health-bucket.entity';
+import { PlatformAdmin } from '../modules/admin-auth/entities/platform-admin.entity';
+import { Lead } from '../modules/leads/entities/lead.entity';
 
 config({ path: '.env.local' });
 config(); // fallback
@@ -39,6 +41,8 @@ export const MasterDataSource = new DataSource({
     SeederRunLog,
     TenantDailyMetric,
     TenantHealthBucket,
+    PlatformAdmin,
+    Lead,
   ],
   migrations: [__dirname + '/master-migrations/*{.ts,.js}'],
   synchronize: false,

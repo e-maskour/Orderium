@@ -1,142 +1,94 @@
 import React from 'react';
 import { formatAmount, formatQuantity } from '@orderium/ui';
+import { useLanguage } from '../../../context/LanguageContext';
+import { REPORT_KPIS, type KpiFormat } from '../../../modules/analytics/analytics.kpis';
+import { codedValue } from '../../../modules/analytics/analytics.labels';
 
 interface KpiCard {
   label: string;
   value: string | number;
   suffix?: string;
+  format?: KpiFormat;
   color?: 'green' | 'red' | 'blue' | 'orange' | 'purple' | 'teal';
+  /** PrimeIcons class (e.g. `pi-wallet`). Defaults by colour. */
   icon?: string;
 }
 
-interface ReportKpiCardsProps {
-  cards: KpiCard[];
+type ReportKpiCardsProps =
+  | { cards: KpiCard[]; reportKey?: never; values?: never }
+  /** Renders the report's registered KPIs (analytics.kpis.ts) from the API values. */
+  | { reportKey: string; values?: Record<string, number | string> | null; cards?: never };
+
+function toNumber(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))) return Number(v);
+  return null;
 }
 
-function formatValue(value: string | number, suffix?: string): string {
-  if (typeof value === 'number') {
-    if (suffix === 'MAD') {
-      return `${formatAmount(value)} MAD`;
-    }
-    return formatQuantity(value, 2);
+/** Splits a formatted value from its unit so the unit can be set smaller. */
+function formatParts(
+  value: string | number | null | undefined,
+  format?: KpiFormat,
+  suffix?: string,
+): { main: string; unit?: string } {
+  const n = toNumber(value);
+  if (format === 'text' || (n === null && value != null && value !== '')) {
+    return { main: value == null || value === '' ? '—' : String(value) };
   }
-  return String(value) + (suffix ? ` ${suffix}` : '');
+  if (n === null) return { main: '—' };
+  if (format === 'currency' || suffix === 'MAD') return { main: formatAmount(n), unit: 'MAD' };
+  if (format === 'percent' || suffix === '%') return { main: formatQuantity(n, 1), unit: '%' };
+  if (format === 'integer') return { main: formatQuantity(Math.round(n), 0), unit: suffix };
+  return { main: formatQuantity(n, 2), unit: suffix };
 }
 
-const COLOR_STYLES: Record<string, { text: string; icon: string; bg: string; border: string }> = {
-  green: {
-    text: 'var(--green-700)',
-    icon: 'pi-arrow-up-right',
-    bg: 'var(--green-50)',
-    border: 'var(--green-200)',
-  },
-  red: {
-    text: 'var(--red-600)',
-    icon: 'pi-arrow-down-right',
-    bg: 'var(--red-50)',
-    border: 'var(--red-200)',
-  },
-  blue: {
-    text: 'var(--blue-700)',
-    icon: 'pi-chart-bar',
-    bg: 'var(--blue-50)',
-    border: 'var(--blue-200)',
-  },
-  orange: {
-    text: 'var(--orange-600)',
-    icon: 'pi-shopping-bag',
-    bg: 'var(--orange-50)',
-    border: 'var(--orange-200)',
-  },
-  purple: {
-    text: 'var(--purple-700)',
-    icon: 'pi-file',
-    bg: 'var(--purple-50)',
-    border: 'var(--purple-200)',
-  },
-  teal: { text: '#0d9488', icon: 'pi-users', bg: '#f0fdfa', border: '#99f6e4' },
+const DEFAULT_ICON: Record<string, string> = {
+  green: 'pi-arrow-up-right',
+  red: 'pi-exclamation-circle',
+  blue: 'pi-chart-bar',
+  orange: 'pi-shopping-bag',
+  purple: 'pi-file',
+  teal: 'pi-users',
 };
 
-const DEFAULT_ICONS: string[] = [
-  'pi-chart-line',
-  'pi-shopping-bag',
-  'pi-percentage',
-  'pi-wallet',
-  'pi-box',
-];
+const ReportKpiCards: React.FC<ReportKpiCardsProps> = (props) => {
+  const { t } = useLanguage();
 
-const ReportKpiCards: React.FC<ReportKpiCardsProps> = ({ cards }) => {
+  const cards: KpiCard[] = props.cards
+    ? props.cards
+    : (REPORT_KPIS[props.reportKey] ?? []).map((d) => ({
+        label: t(d.labelKey),
+        value: (codedValue(d.key, props.values?.[d.key], t)?.label ??
+          props.values?.[d.key] ??
+          '') as string | number,
+        format: d.format,
+        color: d.tone,
+        icon: d.icon,
+      }));
+
+  if (cards.length === 0) return null;
+
   return (
-    <div className="grid m-0" style={{ gap: '0.75rem' }}>
+    <div className="ax-kpis">
       {cards.map((card, i) => {
-        const style = COLOR_STYLES[card.color ?? 'blue'] ?? COLOR_STYLES.blue;
-        const iconClass = card.icon ?? DEFAULT_ICONS[i % DEFAULT_ICONS.length];
+        const color = card.color ?? 'blue';
+        const icon = card.icon ?? DEFAULT_ICON[color] ?? 'pi-chart-line';
+        const { main, unit } = formatParts(card.value, card.format, card.suffix);
         return (
-          <div key={i} className="col-12 md:col-6 lg:col-3" style={{ padding: '0.375rem' }}>
-            <div
-              style={{
-                background: '#ffffff',
-                borderRadius: 'var(--erp-radius)',
-                border: `1px solid var(--erp-border)`,
-                boxShadow: 'var(--erp-shadow-sm)',
-                padding: '1.25rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Decorative blob */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-1rem',
-                  insetInlineEnd: '-1rem',
-                  width: '4rem',
-                  height: '4rem',
-                  borderRadius: '9999px',
-                  background: `radial-gradient(circle, ${style.bg} 0%, transparent 70%)`,
-                  pointerEvents: 'none',
-                }}
-              />
-
-              {/* Icon box + label row */}
-              <div className="flex align-items-center justify-content-between">
-                <span className="text-600 text-sm font-medium">{card.label}</span>
-                <div
-                  style={{
-                    width: '2.25rem',
-                    height: '2.25rem',
-                    borderRadius: '0.625rem',
-                    background: style.bg,
-                    border: `1px solid ${style.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <i
-                    className={`pi ${iconClass} analytics-kpi__icon`}
-                    style={{ fontSize: '0.875rem', color: style.text }}
-                  />
-                </div>
-              </div>
-
-              {/* Value */}
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '1.5rem',
-                  fontWeight: 800,
-                  color: style.text,
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2,
-                }}
-              >
-                {formatValue(card.value, card.suffix)}
-              </p>
+          <div
+            key={i}
+            className={`ax-kpi ax-kpi--${color}${card.format === 'text' ? ' ax-kpi--text' : ''}`}
+          >
+            <div className="ax-kpi__head">
+              <span className="ax-kpi__label">{card.label}</span>
+              <span className="ax-kpi__icon" aria-hidden="true">
+                <i className={`pi ${icon} analytics-kpi__icon`} />
+              </span>
             </div>
+            <p className="ax-kpi__value" title={main}>
+              <bdi>{main}</bdi>
+              {unit && <span className="ax-kpi__unit">{unit}</span>}
+            </p>
           </div>
         );
       })}

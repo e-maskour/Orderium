@@ -8,31 +8,61 @@ import type {
 
 export type { CreateMovementDto, InternalTransferDto, ValidateMovementDto };
 
-export class StockMovementService {
-  async getAll(filters?: {
-    productId?: number;
-    warehouseId?: number;
-    status?: string;
-    movementType?: string;
-    startDate?: string;
-    endDate?: string;
-    search?: string;
-  }): Promise<StockMovement[]> {
-    const params = new URLSearchParams();
-    if (filters?.productId) params.append('productId', filters.productId.toString());
-    if (filters?.warehouseId) params.append('warehouseId', filters.warehouseId.toString());
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.movementType) params.append('movementType', filters.movementType);
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-    if (filters?.search) params.append('search', filters.search);
+/** Sort fields accepted by GET inventory/movements (server whitelist). */
+export type StockMovementSortField =
+  | 'reference'
+  | 'movementType'
+  | 'productName'
+  | 'quantity'
+  | 'status'
+  | 'dateDone'
+  | 'dateCreated';
 
-    const queryString = params.toString();
-    const url = queryString
-      ? `${API_ROUTES.STOCK.MOVEMENTS}?${queryString}`
-      : API_ROUTES.STOCK.MOVEMENTS;
-    const result = await apiClient.get<any[]>(url);
-    return (result.data || []).map((m: any) => StockMovement.fromApiResponse(m));
+export interface StockMovementListFilters {
+  productId?: number;
+  warehouseId?: number;
+  status?: string;
+  movementType?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  /** 1-based page. Omit page and limit to fetch every matching row. */
+  page?: number;
+  limit?: number;
+  sortField?: StockMovementSortField;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export class StockMovementService {
+  /** All matching movements (no pagination unless page/limit are passed). */
+  async getAll(filters?: StockMovementListFilters): Promise<StockMovement[]> {
+    return (await this.getPage(filters)).movements;
+  }
+
+  /**
+   * Server-filtered, sorted and (optionally) paginated movements.
+   * `total` is the size of the whole filtered set, not just this page.
+   */
+  async getPage(
+    filters?: StockMovementListFilters,
+  ): Promise<{ movements: StockMovement[]; total: number }> {
+    const params: Record<string, string | number> = {};
+    if (filters?.productId) params.productId = filters.productId;
+    if (filters?.warehouseId) params.warehouseId = filters.warehouseId;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.movementType) params.movementType = filters.movementType;
+    if (filters?.startDate) params.startDate = filters.startDate;
+    if (filters?.endDate) params.endDate = filters.endDate;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.limit) params.limit = filters.limit;
+    if (filters?.sortField) params.sortField = filters.sortField;
+    if (filters?.sortOrder) params.sortOrder = filters.sortOrder;
+
+    const result = await apiClient.get<any[]>(API_ROUTES.STOCK.MOVEMENTS, { params });
+    const movements = (result.data || []).map((m: any) => StockMovement.fromApiResponse(m));
+    const meta = (result.metadata ?? {}) as { total?: number };
+    return { movements, total: meta.total ?? movements.length };
   }
 
   async getById(id: number): Promise<StockMovement> {

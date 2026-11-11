@@ -1,4 +1,5 @@
 import { IsOptional, IsIn, IsString, IsInt, Min } from 'class-validator';
+import { PLAN_KEYS } from '../plan-features';
 import { Type } from 'class-transformer';
 
 export class ListTenantsDto {
@@ -20,7 +21,7 @@ export class ListTenantsDto {
   status?: string;
 
   @IsOptional()
-  @IsIn(['trial', 'basic', 'pro', 'enterprise', 'all'])
+  @IsIn([...PLAN_KEYS, 'all'])
   plan?: string;
 
   @IsOptional()

@@ -2,6 +2,7 @@ import { Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportChart from '../components/ReportChart';
 import ReportTable from '../components/ReportTable';
@@ -52,6 +53,8 @@ const CashflowPage: React.FC = () => {
       subtitle={t('analyticsCashflowSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="payments-cashflow" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}

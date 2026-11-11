@@ -54,7 +54,7 @@ export default {
   'notification.message.payment_failed': 'فشل الدفع للطلب {{reference}}',
   'notification.message.new_user': 'انضم {{name}} إلى الفريق بصفة {{role}}',
   'notification.message.user_deactivated': 'تم تعطيل حساب {{name}}',
-  'notification.message.system_update': 'الإصدار {{version}} من Morocom متاح',
+  'notification.message.system_update': 'الإصدار {{version}} من Marnova متاح',
   'notification.message.backup_done': 'تم النسخ الاحتياطي التلقائي في {{date}}',
   'notification.message.order_assigned': 'تم تعيين الطلب {{orderNumber}} لك',
   'notification.message.order_status_changed': 'تم تحديث حالة الطلب {{orderNumber}} إلى {{status}}',

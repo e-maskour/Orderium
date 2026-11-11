@@ -17,7 +17,7 @@ import {
 } from '@/modules/auth/schemas/login.schema';
 import { TranslationKey } from '@/lib/i18n';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import orderiumLogo from '../assets/logo-client.svg';
+import marnovaLogo from '../assets/marnova-logo-light.svg';
 import {
   ShoppingCart,
   Phone,
@@ -227,33 +227,18 @@ export default function Login() {
             }}
           />
 
-          {/* Logo icon */}
-          <img
-            src={orderiumLogo}
-            alt="Morocom"
-            style={{
-              width: '90px',
-              height: '90px',
-              marginBottom: '1.25rem',
-              position: 'relative',
-              zIndex: 1,
-              filter: 'drop-shadow(0 8px 30px rgba(0,0,0,0.22))',
-            }}
-          />
-
-          <h1
-            style={{
-              color: '#fff',
-              fontSize: '2.4rem',
-              fontWeight: 900,
-              margin: '0',
-              letterSpacing: '-0.5px',
-              lineHeight: 1.05,
-              position: 'relative',
-              zIndex: 1,
-            }}
-          >
-            Morocom
+          {/* Logo */}
+          <h1 style={{ margin: '0 0 0.75rem', position: 'relative', zIndex: 1, lineHeight: 0 }}>
+            <img
+              src={marnovaLogo}
+              alt="Marnova"
+              style={{
+                display: 'block',
+                width: 'min(290px, 100%)',
+                height: 'auto',
+                filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.25))',
+              }}
+            />
           </h1>
           <p
             style={{

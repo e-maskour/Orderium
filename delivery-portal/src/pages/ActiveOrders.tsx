@@ -123,7 +123,7 @@ export default function ActiveOrders() {
         >
           <img
             src={orderiumLogo}
-            alt="Morocom"
+            alt="Marnova"
             style={{
               height: '28px',
               width: 'auto',

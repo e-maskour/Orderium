@@ -19,14 +19,19 @@ const makeQueryBuilderMock = () => ({
   andWhere: jest.fn().mockReturnThis(),
   where: jest.fn().mockReturnThis(),
   orderBy: jest.fn().mockReturnThis(),
+  addOrderBy: jest.fn().mockReturnThis(),
+  offset: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
   getMany: jest.fn(),
+  getManyAndCount: jest.fn(),
   getOne: jest.fn(),
 });
 
 const mockRepository = () => {
   const qb = makeQueryBuilderMock();
   return {
-    find: jest.fn(),
+    // Reference generation reads the last row; an empty table is the default.
+    find: jest.fn().mockResolvedValue([]),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
@@ -326,13 +331,36 @@ describe('InventoryAdjustmentService', () => {
 
   describe('findAll', () => {
     beforeEach(() => {
-      adjustmentRepo._qb.getMany.mockResolvedValue([makeAdjustment()]);
+      adjustmentRepo._qb.getManyAndCount.mockResolvedValue([
+        [makeAdjustment()],
+        1,
+      ]);
     });
 
-    it('returns all adjustments without filters', async () => {
+    it('returns all adjustments without filters (no pagination)', async () => {
       const result = await service.findAll();
 
-      expect(result).toHaveLength(1);
+      expect(result.adjustments).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(adjustmentRepo._qb.offset).not.toHaveBeenCalled();
+      expect(adjustmentRepo._qb.limit).not.toHaveBeenCalled();
+    });
+
+    it('applies offset/limit when paginated', async () => {
+      await service.findAll({ page: 2, limit: 10 });
+
+      expect(adjustmentRepo._qb.offset).toHaveBeenCalledWith(10);
+      expect(adjustmentRepo._qb.limit).toHaveBeenCalledWith(10);
+    });
+
+    it('maps whitelisted sort fields to SQL columns', async () => {
+      await service.findAll({ sortField: 'warehouseName', sortOrder: 'ASC' });
+
+      expect(adjustmentRepo._qb.orderBy).toHaveBeenCalledWith(
+        'warehouse.name',
+        'ASC',
+        'NULLS LAST',
+      );
     });
 
     it('applies warehouseId filter', async () => {

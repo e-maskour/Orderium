@@ -94,7 +94,7 @@ const DOC_TYPE_OPTIONS = [
 
 /** Built per call so the printed sample follows the active language. */
 const buildDummyReceipt = (t: (k: TranslationKey) => string): ReceiptData => ({
-  storeName: 'Morocom — Test',
+  storeName: 'Marnova — Test',
   storePhone: '0600000000',
   orderNumber: 'TEST-001',
   date: formatDateTime(new Date()),

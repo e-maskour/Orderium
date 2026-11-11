@@ -65,6 +65,7 @@ export class QuotesController {
       pageSizeNum,
       filterDto.supplierId,
       directionValue,
+      { field: filterDto.sortField, order: filterDto.sortOrder },
     );
     const effectivePage = pageNum ?? 1;
     const effectiveLimit = pageSizeNum ?? 50;
@@ -323,27 +324,49 @@ export class QuotesController {
     return ApiRes(QUO.ANALYTICS, analytics);
   }
 
-  @Get('export/xlsx')
+  @Post('export/xlsx')
+  @HttpCode(HttpStatus.OK)
   @Header(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
-  @ApiOperation({ summary: 'Export quotes/devis to XLSX file' })
+  @ApiOperation({
+    summary:
+      'Export quotes/devis to XLSX file (same body filters / sort as POST /quotes/list)',
+  })
   @ApiResponse({ status: 200, description: 'Export successful' })
   @RequirePermission('quotes.export')
   async exportToXlsx(
     @Res() res: Response,
-    @Query('supplierId') supplierId?: string,
+    @Body() filterDto: FilterQuotesDto,
+    @Query('direction') direction?: string,
   ) {
-    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
-    const buffer = await this.quotesService.exportToXlsx(supplierIdNum);
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const buffer = await this.quotesService.exportToXlsx(
+      undefined,
+      {
+        search: filterDto.search,
+        status: filterDto.status,
+        customerId: filterDto.customerId,
+        supplierId: filterDto.supplierId,
+        dateFrom: filterDto.dateFrom,
+        dateTo: filterDto.dateTo,
+        direction: directionValue,
+      },
+      { field: filterDto.sortField, order: filterDto.sortOrder },
+    );
 
     const filename =
-      supplierIdNum !== undefined
-        ? supplierIdNum
-          ? 'demandes-de-prix.xlsx'
-          : 'devis.xlsx'
-        : 'devis-et-demandes.xlsx';
+      directionValue === 'ACHAT'
+        ? 'demandes-de-prix.xlsx'
+        : directionValue === 'VENTE'
+          ? 'devis.xlsx'
+          : 'devis-et-demandes.xlsx';
 
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);

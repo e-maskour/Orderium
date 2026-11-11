@@ -19,7 +19,7 @@ import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { posService, ICheckoutState } from '../modules/pos';
 import { orderPaymentsService } from '../modules';
-import { DecimalInput, formatCurrency } from '@orderium/ui';
+import { DecimalInput, formatCurrency, formatQuantity } from '@orderium/ui';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -241,7 +241,8 @@ export default function CheckoutPage() {
                   {t('items')}
                 </h2>
                 <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  {totalItemsCount} {totalItemsCount === 1 ? t('piece') : t('pieces')}
+                  {formatQuantity(totalItemsCount)}{' '}
+                  {totalItemsCount === 1 ? t('piece') : t('pieces')}
                 </span>
               </div>
 
@@ -285,7 +286,7 @@ export default function CheckoutPage() {
                         >
                           <span>
                             {formatCurrency(item.product.price, language as 'fr' | 'ar')} ×{' '}
-                            {item.quantity}
+                            {formatQuantity(item.quantity)}
                           </span>
                           {item.discount > 0 && (
                             <span
@@ -298,7 +299,7 @@ export default function CheckoutPage() {
                             >
                               <Tag style={{ width: '0.75rem', height: '0.75rem' }} />-
                               {item.discountType === 1
-                                ? `${item.discount}%`
+                                ? `${formatQuantity(item.discount, 2)}%`
                                 : formatCurrency(item.discount, language as 'fr' | 'ar')}
                             </span>
                           )}

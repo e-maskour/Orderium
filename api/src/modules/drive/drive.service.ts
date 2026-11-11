@@ -23,6 +23,7 @@ import { SearchDriveDto } from './dto/search-drive.dto';
 import { DrivePermission } from './enums/drive-permission.enum';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 @Injectable()
 export class DriveService {
   private readonly logger = new Logger(DriveService.name);
@@ -30,6 +31,7 @@ export class DriveService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly storage: DriveStorageService,
+    private readonly entitlements: PlanEntitlementsService,
   ) {}
 
   private get nodeRepo(): Repository<DriveNode> {
@@ -254,8 +256,10 @@ export class DriveService {
       if (parent.type !== DriveNodeType.FOLDER)
         throw new ForbiddenException('Parent must be a folder');
     }
+    await this.entitlements.assertCanAdd('storageMb', file.size);
     const folder = parentNodeId ?? 'files';
     const upload = await this.storage.uploadFile(file, folder);
+    this.entitlements.recordStorage(upload.sizeBytes);
     const ext = file.originalname.includes('.')
       ? file.originalname.split('.').pop()!.toLowerCase()
       : null;
@@ -313,10 +317,13 @@ export class DriveService {
     if (!(await this.canWrite(node, userId, isAdmin)))
       throw new ForbiddenException('No write access');
 
+    // Old versions are kept, so a replacement adds to the stored total.
+    await this.entitlements.assertCanAdd('storageMb', file.size);
     const upload = await this.storage.uploadFile(
       file,
       node.parentId ?? 'files',
     );
+    this.entitlements.recordStorage(upload.sizeBytes);
     const latestVersion = await this.versionRepo.findOne({
       where: { nodeId },
       order: { versionNumber: 'DESC' },

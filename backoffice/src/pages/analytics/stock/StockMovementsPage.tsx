@@ -1,6 +1,7 @@
 import { ArrowUpDown } from 'lucide-react';
 import React, { useState } from 'react';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -39,6 +40,8 @@ const StockMovementsPage: React.FC = () => {
       subtitle={t('analyticsStockMovementsSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      kpiCards={data && <ReportKpiCards reportKey="stock-movements" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={
         <ReportTable

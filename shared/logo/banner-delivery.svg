@@ -27,8 +27,8 @@
              fill="#ffffff" opacity="0.96"/>
   </g>
 
-  <!-- Wordmark: "Morocom" -->
-  <text x="84" y="43" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="26" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Morocom</text>
+  <!-- Wordmark: "Marnova" -->
+  <text x="84" y="43" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="26" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Marnova</text>
   <!-- Subtitle: "Delivery" -->
   <text x="85" y="60" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="600" fill="#df7817" letter-spacing="2">DELIVERY PORTAL</text>
 </svg>

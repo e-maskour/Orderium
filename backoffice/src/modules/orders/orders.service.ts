@@ -2,6 +2,58 @@ import { Order, OrderWithDetails } from './orders.model';
 import type { IOrdersMergeSummary } from './orders.interface';
 import { apiClient, API_ROUTES } from '../../common';
 
+/** Server-side sort for POST /orders/filter (field must be whitelisted by the API). */
+export interface OrderSort {
+  field?: string;
+  order?: 'ASC' | 'DESC';
+}
+
+/** Filters accepted by POST /orders/filter (and its aggregates / export). */
+export interface OrderFilterInput {
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+  originType?: string | string[];
+  deliveryStatus?: string[];
+  orderNumber?: string;
+  status?: string[];
+}
+
+/**
+ * Request body shared by the list, the aggregates and the XLSX export, so they
+ * always apply exactly the same filters. `customerId:` / `deliveryPersonId:`
+ * tokens in the search string are extracted into their own filters.
+ */
+function buildOrderFilterBody(f: OrderFilterInput, sort?: OrderSort): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  let remainingSearch = f.search || '';
+  if (f.search) {
+    f.search.split(' ').forEach((part) => {
+      if (part.startsWith('customerId:')) {
+        const id = parseInt(part.split(':')[1]);
+        if (id) body.customerId = id;
+        remainingSearch = remainingSearch.replace(part, '').trim();
+      } else if (part.startsWith('deliveryPersonId:')) {
+        const id = parseInt(part.split(':')[1]);
+        if (id) body.deliveryPersonId = id;
+        remainingSearch = remainingSearch.replace(part, '').trim();
+      }
+    });
+  }
+  if (remainingSearch) body.search = remainingSearch;
+  if (f.startDate) body.startDate = f.startDate.toISOString();
+  if (f.endDate) body.endDate = f.endDate.toISOString();
+  if (f.deliveryStatus) body.deliveryStatus = f.deliveryStatus;
+  if (f.status) body.status = f.status;
+  if (f.orderNumber) body.orderNumber = f.orderNumber;
+  if (f.originType !== undefined) body.originType = f.originType;
+  if (sort?.field) {
+    body.sortField = sort.field;
+    body.sortOrder = sort.order ?? 'ASC';
+  }
+  return body;
+}
+
 export class OrdersService {
   async create(orderData: any): Promise<Order> {
     const response = await apiClient.post<any>(API_ROUTES.ORDERS.CREATE, orderData);
@@ -19,34 +71,14 @@ export class OrdersService {
     perPage: number = 50,
     direction?: 'ACHAT' | 'VENTE',
     status?: string[],
+    sort?: OrderSort,
   ): Promise<any> {
-    const filters: any = {};
-    let remainingSearch = search || '';
-    if (search) {
-      search.split(' ').forEach((part) => {
-        if (part.startsWith('customerId:')) {
-          filters.customerId = parseInt(part.split(':')[1]);
-          remainingSearch = remainingSearch.replace(part, '').trim();
-        } else if (part.startsWith('deliveryPersonId:')) {
-          filters.deliveryPersonId = parseInt(part.split(':')[1]);
-          remainingSearch = remainingSearch.replace(part, '').trim();
-        }
-      });
-    }
-
+    const body = buildOrderFilterBody(
+      { search, startDate, endDate, originType, deliveryStatus, orderNumber, status },
+      sort,
+    );
     const queryParams: Record<string, string | number | boolean | undefined> = { page, perPage };
     if (direction) queryParams.direction = direction;
-
-    const body: any = {};
-    if (remainingSearch) body.search = remainingSearch;
-    if (startDate) body.startDate = startDate.toISOString();
-    if (endDate) body.endDate = endDate.toISOString();
-    if (deliveryStatus) body.deliveryStatus = deliveryStatus;
-    if (status) body.status = status;
-    if (orderNumber) body.orderNumber = orderNumber;
-    if (filters.customerId) body.customerId = filters.customerId;
-    if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
-    if (originType !== undefined) body.originType = originType;
 
     const response = await apiClient.post<any[]>(API_ROUTES.ORDERS.FILTER, body, {
       params: queryParams,
@@ -80,33 +112,17 @@ export class OrdersService {
     totalRemaining: number;
     totalSubtotal: number;
   }> {
-    const filters: any = {};
-    let remainingSearch = search || '';
-    if (search) {
-      search.split(' ').forEach((part) => {
-        if (part.startsWith('customerId:')) {
-          filters.customerId = parseInt(part.split(':')[1]);
-          remainingSearch = remainingSearch.replace(part, '').trim();
-        } else if (part.startsWith('deliveryPersonId:')) {
-          filters.deliveryPersonId = parseInt(part.split(':')[1]);
-          remainingSearch = remainingSearch.replace(part, '').trim();
-        }
-      });
-    }
-
+    const body = buildOrderFilterBody({
+      search,
+      startDate,
+      endDate,
+      originType,
+      deliveryStatus,
+      orderNumber,
+      status,
+    });
     const queryParams: Record<string, string | number | boolean | undefined> = {};
     if (direction) queryParams.direction = direction;
-
-    const body: any = {};
-    if (remainingSearch) body.search = remainingSearch;
-    if (startDate) body.startDate = startDate.toISOString();
-    if (endDate) body.endDate = endDate.toISOString();
-    if (deliveryStatus) body.deliveryStatus = deliveryStatus;
-    if (status) body.status = status;
-    if (orderNumber) body.orderNumber = orderNumber;
-    if (filters.customerId) body.customerId = filters.customerId;
-    if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
-    if (originType !== undefined) body.originType = originType;
 
     const response = await apiClient.post<any>(API_ROUTES.ORDERS.FILTER_AGGREGATES, body, {
       params: queryParams,
@@ -206,9 +222,18 @@ export class OrdersService {
     return response.data;
   }
 
-  async exportToXlsx(supplierId?: number): Promise<Blob> {
-    const raw = await apiClient.raw('GET', API_ROUTES.ORDERS.EXPORT_XLSX, {
-      params: supplierId !== undefined ? { supplierId } : undefined,
+  /**
+   * XLSX export of every order matching the list filters/sort (not just the
+   * current page) — same body as POST /orders/filter.
+   */
+  async exportToXlsx(
+    filters: OrderFilterInput & { direction?: 'ACHAT' | 'VENTE' } = {},
+    sort?: OrderSort,
+  ): Promise<Blob> {
+    const { direction, ...rest } = filters;
+    const raw = await apiClient.raw('POST', API_ROUTES.ORDERS.EXPORT_XLSX, {
+      body: buildOrderFilterBody(rest, sort),
+      params: direction ? { direction } : undefined,
     });
     return raw.blob();
   }

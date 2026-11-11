@@ -17,12 +17,13 @@ import {
   UpdateInventoryAdjustmentDto,
   ValidateAdjustmentDto,
 } from './dto/inventory-adjustment.dto';
-import { AdjustmentStatus } from './entities/inventory-adjustment.entity';
+import { FilterInventoryAdjustmentDto } from './dto/filter-inventory-adjustment.dto';
 import { InventoryAdjustmentResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { ADJ } from '../../common/response-codes';
 import { Serialize } from '../../common/decorators/serialize.decorator';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import { buildListMeta, parseEndDateFilter } from './stock.helpers';
 
 @ApiTags('Inventory - Adjustments')
 @Serialize(InventoryAdjustmentResponseDto)
@@ -40,27 +41,34 @@ export class InventoryAdjustmentController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all inventory adjustments with filters' })
+  @ApiOperation({
+    summary:
+      'List inventory adjustments (filters, sorting, optional pagination)',
+    description:
+      'All filters are applied in SQL. metadata.total is the filtered count. ' +
+      'Omit page/limit to receive every matching row.',
+  })
   @ApiResponse({ status: 200, description: 'List of inventory adjustments' })
-  @ApiQuery({ name: 'warehouseId', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: AdjustmentStatus })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiResponse({ status: 400, description: 'Invalid filter values' })
   @RequirePermission('stock.view')
-  async findAll(
-    @Query('warehouseId') warehouseId?: string,
-    @Query('status') status?: AdjustmentStatus,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    const filters: any = {};
-    if (warehouseId) filters.warehouseId = +warehouseId;
-    if (status) filters.status = status;
-    if (startDate) filters.startDate = new Date(startDate);
-    if (endDate) filters.endDate = new Date(endDate);
-
-    const adjustments = await this.adjustmentService.findAll(filters);
-    return ApiRes(ADJ.LIST, adjustments);
+  async findAll(@Query() query: FilterInventoryAdjustmentDto = {}) {
+    const search = query.search?.trim();
+    const { adjustments, total } = await this.adjustmentService.findAll({
+      warehouseId: query.warehouseId,
+      status: query.status,
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? parseEndDateFilter(query.endDate) : undefined,
+      search: search || undefined,
+      page: query.page,
+      limit: query.limit,
+      sortField: query.sortField,
+      sortOrder: query.sortOrder,
+    });
+    return ApiRes(
+      ADJ.LIST,
+      adjustments,
+      buildListMeta(query, total, adjustments.length),
+    );
   }
 
   @Get('generate-list/:warehouseId')

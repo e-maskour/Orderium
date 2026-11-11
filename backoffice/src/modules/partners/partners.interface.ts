@@ -71,3 +71,6 @@ export interface UpdatePartnerDTO {
   isCustomer?: boolean;
   isSupplier?: boolean;
 }
+
+/** Sortable columns accepted by `GET /api/partners`. */
+export type PartnerSortField = 'name' | 'phoneNumber' | 'email' | 'dateCreated';

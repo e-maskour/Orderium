@@ -1,6 +1,6 @@
 /* ============================================================
    @orderium/ui - Global Styles
-   PrimeReact + PrimeIcons + PrimeFlex + Custom Morocom theme
+   PrimeReact + PrimeIcons + PrimeFlex + Custom Marnova theme
    ============================================================ */
 
 /* PrimeReact Lara Light Amber Theme */
@@ -78,7 +78,7 @@
    Do NOT use @import here — it blocks CSS parsing until the font CSS is fetched. */
 
 /* ============================================================
-   Morocom Custom Theme Overrides
+   Marnova Custom Theme Overrides
    ============================================================ */
 
 :root {
@@ -292,7 +292,7 @@ header .p-inputtext {
    PrimeReact Component Overrides
    ============================================================ */
 
-/* Primary color override to match Morocom Terracotta theme */
+/* Primary color override to match Marnova Terracotta theme */
 .p-button {
     border-radius: var(--orderium-radius-md);
 }

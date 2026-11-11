@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  MOROCOM — Enterprise API Client
+ *  MARNOVA — Enterprise API Client
  * ═══════════════════════════════════════════════════════════════
  *
  *  Centralized, strongly-typed HTTP client that replaces all

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   PHONE_ERROR_MESSAGES,
   getMoroccanPhoneError,
@@ -18,11 +18,41 @@ import {
   ChevronRight,
   ChevronLeft,
   Zap,
+  RotateCcw,
+  Star,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useCreateTenant } from '../hooks/useTenants';
+import { useCreateTenant, usePlans } from '../hooks/useTenants';
 import { slugify } from '../utils/slugify';
-import type { CreateTenantInput, CreateTenantResponse } from '../types/tenant';
+import { formatAmount } from '../utils/formatAmount';
+import {
+  DEFAULT_PLAN,
+  DEFAULT_TRIAL_DAYS,
+  NO_FEATURES,
+  RECOMMENDED_PLAN,
+  differsFromPlan,
+  normalizeFeatures,
+  pickLimits,
+  planLabel,
+  planStyle,
+  sortPlans,
+  validateLimits,
+} from '../utils/plans';
+import {
+  FeaturesList,
+  LimitsList,
+  PlanFeaturesEditor,
+  PlanLimitsEditor,
+} from '../components/PlanLimitsEditor';
+import type {
+  CreateTenantInput,
+  CreateTenantResponse,
+  PlanFeatures,
+  PlanLimitKey,
+  PlanLimits,
+  SubscriptionPlan,
+  SubscriptionPlanData,
+} from '../types/tenant';
 
 // ─────────────────────────────── Wizard Steps ─────────────────────────────────
 
@@ -41,30 +71,6 @@ const PROVISIONING_STEPS = [
   'Finalizing tenant…',
 ];
 
-const PLANS = [
-  {
-    value: 'basic',
-    label: 'Basic',
-    price: 'Starting plan',
-    color: 'indigo',
-    features: ['Up to 10 users', '1,000 products', '500 orders/mo', '2 GB storage'],
-  },
-  {
-    value: 'pro',
-    label: 'Pro',
-    price: 'Most popular',
-    color: 'violet',
-    features: ['Up to 50 users', '10,000 products', '5,000 orders/mo', '20 GB storage'],
-  },
-  {
-    value: 'enterprise',
-    label: 'Enterprise',
-    price: 'Full power',
-    color: 'purple',
-    features: ['Unlimited users', 'Unlimited products', 'Unlimited orders', '100 GB storage'],
-  },
-] as const;
-
 type FormData = {
   // Step 1
   name: string;
@@ -76,13 +82,11 @@ type FormData = {
   primaryColor: string;
   logoUrl: string;
   // Step 2
-  subscriptionPlan: 'basic' | 'pro' | 'enterprise';
+  subscriptionPlan: SubscriptionPlan;
   trialDays: number;
-  // Step 3
-  maxUsers: number;
-  maxProducts: number;
-  maxOrdersPerMonth: number;
-  maxStorageMb: number;
+  // Step 3 — pre-filled from the selected plan, overridable
+  limits: PlanLimits;
+  features: PlanFeatures;
   // Internal
   notes: string;
 };
@@ -96,25 +100,38 @@ const DEFAULTS: FormData = {
   address: '',
   primaryColor: '#6366f1',
   logoUrl: '',
-  subscriptionPlan: 'basic',
-  trialDays: 14,
-  maxUsers: 10,
-  maxProducts: 1000,
-  maxOrdersPerMonth: 500,
-  maxStorageMb: 2048,
+  subscriptionPlan: DEFAULT_PLAN,
+  trialDays: DEFAULT_TRIAL_DAYS,
+  // Replaced by the plan's values as soon as `/admin/plans` loads.
+  limits: pickLimits(null),
+  features: NO_FEATURES,
   notes: '',
 };
 
-const PLAN_DEFAULTS: Record<string, Partial<FormData>> = {
-  basic: { maxUsers: 10, maxProducts: 1000, maxOrdersPerMonth: 500, maxStorageMb: 2048 },
-  pro: { maxUsers: 50, maxProducts: 10000, maxOrdersPerMonth: 5000, maxStorageMb: 20480 },
-  enterprise: {
-    maxUsers: 9999,
-    maxProducts: 99999,
-    maxOrdersPerMonth: 99999,
-    maxStorageMb: 102400,
-  },
-};
+/** `MAD` is shown as `DH` across the dashboard's price labels. */
+function currencyLabel(currency: string): string {
+  return currency === 'MAD' ? 'DH' : currency;
+}
+
+function PlanPrice({ plan }: { plan: SubscriptionPlanData }) {
+  if (plan.priceMonthly <= 0 && plan.priceYearly <= 0) {
+    return <p className="text-xs text-white/80">Free — not billed</p>;
+  }
+  const cur = currencyLabel(plan.currency);
+  return (
+    <div className="text-xs text-white/80">
+      <p>
+        <span className="text-base font-bold text-white">
+          {formatAmount(plan.priceMonthly, 0)} {cur}
+        </span>{' '}
+        HT / month
+      </p>
+      <p>
+        {formatAmount(plan.priceYearly, 0)} {cur} HT / year
+      </p>
+    </div>
+  );
+}
 
 // ─────────────────────────────── Success Screen ───────────────────────────────
 
@@ -206,7 +223,14 @@ export function CreateTenant() {
   const [form, setForm] = useState<FormData>(DEFAULTS);
   const [slugEdited, setSlugEdited] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [limitErrors, setLimitErrors] = useState<Partial<Record<PlanLimitKey, string>>>({});
   const [created, setCreated] = useState<CreateTenantResponse | null>(null);
+
+  const { data: plansData, isLoading: plansLoading, isError: plansError, refetch } = usePlans();
+  const plans = sortPlans(plansData);
+  const selectedPlan = plans.find((p) => p.name === form.subscriptionPlan);
+  // Limits/features are seeded from the plan once the catalogue arrives.
+  const [planSeeded, setPlanSeeded] = useState(false);
 
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -221,11 +245,37 @@ export function CreateTenant() {
     }
   };
 
-  const handlePlanSelect = (plan: 'basic' | 'pro' | 'enterprise') => {
-    set('subscriptionPlan', plan);
-    const defaults = PLAN_DEFAULTS[plan];
-    setForm((f) => ({ ...f, subscriptionPlan: plan, ...defaults }));
+  const applyPlan = (plan: SubscriptionPlanData) => {
+    setForm((f) => ({
+      ...f,
+      subscriptionPlan: plan.name,
+      limits: pickLimits(plan),
+      features: normalizeFeatures(plan.features),
+      // The trial plan only makes sense with a trial period.
+      trialDays: plan.name === 'trial' && f.trialDays < 1 ? DEFAULT_TRIAL_DAYS : f.trialDays,
+    }));
+    setErrors((e) => ({ ...e, subscriptionPlan: undefined, trialDays: undefined }));
+    setLimitErrors({});
   };
+
+  useEffect(() => {
+    if (planSeeded || !plansData) return;
+    const initial = plansData.find((p) => p.name === form.subscriptionPlan);
+    if (initial) applyPlan(initial);
+    setPlanSeeded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plansData, planSeeded]);
+
+  const setLimit = (key: PlanLimitKey, value: number) => {
+    setForm((f) => ({ ...f, limits: { ...f.limits, [key]: value } }));
+    setLimitErrors((e) => ({ ...e, [key]: undefined }));
+  };
+
+  const setFeature = (key: keyof PlanFeatures, value: boolean) => {
+    setForm((f) => ({ ...f, features: { ...f.features, [key]: value } }));
+  };
+
+  const customized = !!selectedPlan && differsFromPlan(selectedPlan, form.limits, form.features);
 
   const validateStep = (s: number): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -242,12 +292,19 @@ export function CreateTenant() {
       const phoneError = getMoroccanPhoneError(form.contactPhone);
       if (phoneError) newErrors.contactPhone = PHONE_ERROR_MESSAGES[phoneError];
     }
-    if (s === 3) {
-      if (form.maxUsers < 1) newErrors.maxUsers = 'Must be at least 1';
-      if (form.maxProducts < 1) newErrors.maxProducts = 'Must be at least 1';
+    if (s === 2) {
+      if (!selectedPlan) newErrors.subscriptionPlan = 'Select a plan';
+      if (!Number.isInteger(form.trialDays) || form.trialDays < 0 || form.trialDays > 365) {
+        newErrors.trialDays = 'Between 0 and 365 days';
+      } else if (form.subscriptionPlan === 'trial' && form.trialDays < 1) {
+        newErrors.trialDays = 'The trial plan needs at least 1 trial day';
+      }
     }
+    let newLimitErrors: Partial<Record<PlanLimitKey, string>> = {};
+    if (s === 3) newLimitErrors = validateLimits(form.limits);
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setLimitErrors(newLimitErrors);
+    return Object.keys(newErrors).length === 0 && Object.keys(newLimitErrors).length === 0;
   };
 
   const nextStep = () => {
@@ -256,7 +313,13 @@ export function CreateTenant() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(step)) return;
+    // Re-check every step: the step indicator lets the user jump back and edit.
+    for (const s of [1, 2, 3]) {
+      if (!validateStep(s)) {
+        setStep(s);
+        return;
+      }
+    }
 
     let idx = 0;
     const interval = setInterval(() => {
@@ -276,7 +339,8 @@ export function CreateTenant() {
       ...(form.logoUrl && { logoUrl: form.logoUrl }),
       subscriptionPlan: form.subscriptionPlan,
       trialDays: form.trialDays,
-      maxUsers: form.maxUsers,
+      ...form.limits,
+      features: form.features,
     };
 
     try {
@@ -305,6 +369,7 @@ export function CreateTenant() {
             onCreateAnother={() => {
               setCreated(null);
               setForm(DEFAULTS);
+              setPlanSeeded(false);
               setStep(1);
               setSlugEdited(false);
             }}
@@ -314,7 +379,7 @@ export function CreateTenant() {
     );
   }
 
-  const planCols = 'grid grid-cols-1 gap-3 sm:grid-cols-3';
+  const planCols = 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5';
 
   return (
     <div className="px-8 py-8 animate-fade-in">
@@ -563,56 +628,69 @@ export function CreateTenant() {
                 Subscription Plan
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Select a plan. Limits are pre-filled but can be customized in the next step.
+                Select a plan. Limits and features are pre-filled but can be customized in the next
+                step. Prices are excl. VAT (HT).
               </p>
             </div>
 
-            <div className={planCols}>
-              {PLANS.map((p) => {
-                const isSelected = form.subscriptionPlan === p.value;
-                const colorMap: Record<string, string> = {
-                  indigo:
-                    'border-indigo-500 ring-2 ring-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-900/20',
-                  violet:
-                    'border-violet-500 ring-2 ring-violet-500/30 bg-violet-50/50 dark:bg-violet-900/20',
-                  purple:
-                    'border-purple-500 ring-2 ring-purple-500/30 bg-purple-50/50 dark:bg-purple-900/20',
-                };
-                const headerMap: Record<string, string> = {
-                  indigo: 'bg-indigo-600',
-                  violet: 'bg-violet-600',
-                  purple: 'bg-purple-700',
-                };
-                return (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => handlePlanSelect(p.value)}
-                    className={`rounded-xl border-2 text-left transition-all ${
-                      isSelected
-                        ? colorMap[p.color]
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <div className={`rounded-t-[10px] px-4 py-3 ${headerMap[p.color]}`}>
-                      <p className="font-semibold text-white">{p.label}</p>
-                      <p className="text-xs text-white/70">{p.price}</p>
-                    </div>
-                    <div className="p-4 space-y-1.5">
-                      {p.features.map((f) => (
-                        <div
-                          key={f}
-                          className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                          {f}
+            {plansLoading ? (
+              <div className={planCols}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"
+                  />
+                ))}
+              </div>
+            ) : plansError || plans.length === 0 ? (
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-400">
+                <span>Could not load subscription plans.</span>
+                <button type="button" onClick={() => refetch()} className="btn-secondary py-1.5">
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <div className={planCols}>
+                {plans.map((p) => {
+                  const isSelected = form.subscriptionPlan === p.name;
+                  const style = planStyle(p.name);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => applyPlan(p)}
+                      aria-pressed={isSelected}
+                      className={`relative flex flex-col rounded-xl border-2 text-left transition-all ${
+                        isSelected
+                          ? style.selected
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <div className={`rounded-t-[10px] px-4 py-3 ${style.header}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-white">{p.displayName}</p>
+                          {p.name === RECOMMENDED_PLAN && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              <Star className="h-3 w-3" /> Most popular
+                            </span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                        <PlanPrice plan={p} />
+                      </div>
+                      <div className="flex-1 space-y-3 p-4">
+                        <LimitsList limits={pickLimits(p)} />
+                        <div className="border-t border-slate-100 pt-3 dark:border-slate-800">
+                          <FeaturesList features={normalizeFeatures(p.features)} />
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {errors.subscriptionPlan && (
+              <p className="text-xs text-red-500">{errors.subscriptionPlan}</p>
+            )}
 
             {/* Trial days */}
             <div className="card p-5">
@@ -621,15 +699,21 @@ export function CreateTenant() {
                   <label className="label">Trial Period (days)</label>
                   <input
                     type="number"
-                    min={0}
-                    max={90}
+                    min={form.subscriptionPlan === 'trial' ? 1 : 0}
+                    max={365}
                     value={form.trialDays}
                     onChange={(e) => set('trialDays', Number(e.target.value))}
-                    className="input w-32"
+                    className={`input w-32 ${errors.trialDays ? 'border-red-400' : ''}`}
                   />
-                  <p className="mt-1.5 text-xs text-slate-400">
-                    Set to 0 to skip the trial and start the subscription immediately.
-                  </p>
+                  {errors.trialDays ? (
+                    <p className="mt-1.5 text-xs text-red-500">{errors.trialDays}</p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-slate-400">
+                      {form.subscriptionPlan === 'trial'
+                        ? 'The tenant starts in trial and must move to a paid plan before it ends.'
+                        : 'Trial period on the selected plan. Set to 0 to start the subscription immediately.'}
+                    </p>
+                  )}
                 </div>
                 {form.trialDays > 0 && (
                   <div className="rounded-xl bg-blue-50 px-4 py-3 text-center dark:bg-blue-900/20">
@@ -647,69 +731,53 @@ export function CreateTenant() {
         {/* ── Step 3: Limits ── */}
         {step === 3 && (
           <div className="space-y-6 animate-fade-in">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Settings className="h-4 w-4 text-indigo-500" />
-                Resource Limits
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Customize limits for the{' '}
-                <strong className="text-slate-700 dark:text-slate-300 capitalize">
-                  {form.subscriptionPlan}
-                </strong>{' '}
-                plan. Defaults are pre-filled.
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-indigo-500" />
+                  Limits & Features
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Customize the{' '}
+                  <strong className="text-slate-700 dark:text-slate-300">
+                    {planLabel(form.subscriptionPlan, plans)}
+                  </strong>{' '}
+                  plan for this tenant. Defaults are pre-filled.
+                </p>
+              </div>
+              {selectedPlan && customized && (
+                <button
+                  type="button"
+                  onClick={() => applyPlan(selectedPlan)}
+                  className="btn-secondary flex items-center gap-1.5 py-1.5 text-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset to plan defaults
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {(
-                [
-                  {
-                    key: 'maxUsers' as const,
-                    label: 'Max Users',
-                    unit: 'users',
-                    min: 1,
-                    max: 10000,
-                  },
-                  {
-                    key: 'maxProducts' as const,
-                    label: 'Max Products',
-                    unit: 'products',
-                    min: 1,
-                    max: 999999,
-                  },
-                  {
-                    key: 'maxOrdersPerMonth' as const,
-                    label: 'Max Orders / Month',
-                    unit: 'orders/mo',
-                    min: 1,
-                    max: 999999,
-                  },
-                  {
-                    key: 'maxStorageMb' as const,
-                    label: 'Max Storage',
-                    unit: 'MB',
-                    min: 100,
-                    max: 500000,
-                  },
-                ] as const
-              ).map(({ key, label, unit, min, max }) => (
-                <div key={key}>
-                  <label className="label">{label}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={min}
-                      max={max}
-                      value={form[key]}
-                      onChange={(e) => set(key, Number(e.target.value))}
-                      className={`input flex-1 ${errors[key] ? 'border-red-400' : ''}`}
-                    />
-                    <span className="shrink-0 text-xs text-slate-400">{unit}</span>
-                  </div>
-                  {errors[key] && <p className="mt-1 text-xs text-red-500">{errors[key]}</p>}
-                </div>
-              ))}
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                Resource limits
+              </p>
+              <PlanLimitsEditor
+                limits={form.limits}
+                onChange={setLimit}
+                errors={limitErrors}
+                defaults={selectedPlan}
+              />
+            </div>
+
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                Features
+              </p>
+              <PlanFeaturesEditor
+                features={form.features}
+                onChange={setFeature}
+                defaults={selectedPlan ? normalizeFeatures(selectedPlan.features) : undefined}
+              />
             </div>
           </div>
         )}
@@ -741,12 +809,19 @@ export function CreateTenant() {
                 </p>
                 <code className="text-xs text-slate-400">{form.slug || 'no-slug'}</code>
                 <div className="mt-1 flex gap-2">
-                  <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400 capitalize">
-                    {form.subscriptionPlan}
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${planStyle(form.subscriptionPlan).badge}`}
+                  >
+                    {planLabel(form.subscriptionPlan, plans)}
                   </span>
                   {form.trialDays > 0 && (
                     <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
                       {form.trialDays}d trial
+                    </span>
+                  )}
+                  {customized && (
+                    <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                      Custom limits
                     </span>
                   )}
                 </div>
@@ -759,16 +834,34 @@ export function CreateTenant() {
                 ['Contact Email', form.contactEmail || '—'],
                 ['Contact Phone', form.contactPhone || '—'],
                 ['Address', form.address || '—'],
-                ['Max Users', String(form.maxUsers)],
-                ['Max Products', String(form.maxProducts)],
-                ['Max Orders/mo', String(form.maxOrdersPerMonth)],
-                ['Storage', `${form.maxStorageMb} MB`],
+                [
+                  'List price (HT)',
+                  selectedPlan && selectedPlan.priceMonthly > 0
+                    ? `${formatAmount(selectedPlan.priceMonthly, 0)} ${currencyLabel(selectedPlan.currency)} / month · ${formatAmount(selectedPlan.priceYearly, 0)} ${currencyLabel(selectedPlan.currency)} / year`
+                    : 'Free',
+                ],
+                ['Trial', form.trialDays > 0 ? `${form.trialDays} days` : 'None'],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-xs text-slate-400">{label}</p>
                   <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{value}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Limits
+                </p>
+                <LimitsList limits={form.limits} className="space-y-1 text-sm" />
+              </div>
+              <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Features
+                </p>
+                <FeaturesList features={form.features} className="space-y-1 text-sm" />
+              </div>
             </div>
 
             {form.notes && (

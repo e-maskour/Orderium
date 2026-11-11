@@ -410,7 +410,11 @@ export default function MyOrders() {
         {!isLoading && orders.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             {orders.map((order) => {
-              const status = order.deliveryStatus || 'pending';
+              // Counter (POS) sales have no delivery record: they are closed through the
+              // document status instead, so fall back to it for delivered/canceled orders.
+              const status =
+                order.deliveryStatus ||
+                (['delivered', 'canceled'].includes(order.status) ? order.status : 'pending');
               const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
               const isActive = !['delivered', 'canceled'].includes(status);
               return (

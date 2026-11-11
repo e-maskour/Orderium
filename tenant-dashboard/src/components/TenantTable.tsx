@@ -4,21 +4,13 @@ import { StatusBadge } from './StatusBadge';
 import { SkeletonRow } from './Skeleton';
 import { AlertTriangle, ArrowRight } from 'lucide-react';
 import { formatDate } from '../utils/dateFormat';
-import { formatQuantity } from '../utils/numberFormat';
+import { formatLimit, planLabel, planStyle } from '../utils/plans';
+import { usePlans } from '../hooks/useTenants';
 
 interface Props {
   tenants: Tenant[];
   loading?: boolean;
 }
-
-const PLAN_BADGES: Record<string, string> = {
-  trial: 'bg-blue-50 text-blue-700 ring-blue-600/10 dark:bg-blue-900/30 dark:text-blue-400',
-  basic:
-    'bg-indigo-50 text-indigo-700 ring-indigo-600/10 dark:bg-indigo-900/30 dark:text-indigo-400',
-  pro: 'bg-violet-50 text-violet-700 ring-violet-600/10 dark:bg-violet-900/30 dark:text-violet-400',
-  enterprise:
-    'bg-purple-50 text-purple-700 ring-purple-600/10 dark:bg-purple-900/30 dark:text-purple-400',
-};
 
 function formatExpiry(tenant: Tenant): { label: string; urgent: boolean } | null {
   if (tenant.status === 'trial' && tenant.trialEndsAt) {
@@ -43,6 +35,7 @@ function formatExpiry(tenant: Tenant): { label: string; urgent: boolean } | null
 
 export function TenantTable({ tenants, loading = false }: Props) {
   const navigate = useNavigate();
+  const { data: plans } = usePlans();
 
   return (
     <div className="card overflow-hidden">
@@ -71,7 +64,7 @@ export function TenantTable({ tenants, loading = false }: Props) {
           ) : (
             tenants.map((t) => {
               const expiry = formatExpiry(t);
-              const planBadge = PLAN_BADGES[t.subscriptionPlan] ?? PLAN_BADGES.basic;
+              const planBadge = planStyle(t.subscriptionPlan).badge;
 
               return (
                 <tr
@@ -110,9 +103,9 @@ export function TenantTable({ tenants, loading = false }: Props) {
                   {/* Plan badge */}
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset capitalize ${planBadge}`}
+                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${planBadge}`}
                     >
-                      {t.subscriptionPlan}
+                      {planLabel(t.subscriptionPlan, plans)}
                     </span>
                   </td>
 
@@ -123,7 +116,7 @@ export function TenantTable({ tenants, loading = false }: Props) {
 
                   {/* Max users */}
                   <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                    {formatQuantity(t.maxUsers)}
+                    {formatLimit(t.maxUsers)}
                   </td>
 
                   {/* Expiry */}

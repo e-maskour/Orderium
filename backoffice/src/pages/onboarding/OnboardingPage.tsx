@@ -219,10 +219,10 @@ export default function OnboardingPage() {
             >
               <img
                 src={orderiumLogo}
-                alt="Morocom"
+                alt="Marnova"
                 style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
               />
-              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>Morocom</span>
+              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>Marnova</span>
             </div>
 
             <ProgressBar current={step} />

@@ -54,7 +54,11 @@ import {
   useTenantActivity,
   useTenantModules,
   useUpdateTenantModules,
+  usePlans,
+  useTenantSubscription,
 } from '../hooks/useTenants';
+import { TenantSubscriptionPanel } from '../components/TenantSubscriptionPanel';
+import { planLabel, planStyle } from '../utils/plans';
 import { StatusBadge } from '../components/StatusBadge';
 import { CopyableUrl } from '../components/CopyableUrl';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -64,10 +68,23 @@ import { PaymentStatusBadge, PaymentProgress } from '../components/PaymentStatus
 import { useTenantPayments } from '../hooks/usePayments';
 import { BILLING_CYCLE_LABELS } from '../types/payment';
 import { formatMoney } from '../utils/format';
-import type { UpdateTenantInput, TenantModulesConfig } from '../types/tenant';
+import type {
+  UpdateTenantInput,
+  TenantModulesConfig,
+  TenantModuleKey,
+  PlanFeatureKey,
+} from '../types/tenant';
 import { DEFAULT_MODULES } from '../types/tenant';
 import { formatDate as formatAppDate, formatDateTime } from '../utils/dateFormat';
 import { formatQuantity } from '../utils/numberFormat';
+
+/** A module switch; `plan` names the subscription feature it also needs. */
+interface ModuleToggle {
+  key: TenantModuleKey;
+  label: string;
+  description: string;
+  plan?: PlanFeatureKey;
+}
 
 type Tab = 'overview' | 'metrics' | 'subscription' | 'payments' | 'activity' | 'modules' | 'danger';
 
@@ -84,55 +101,6 @@ function formatDate(s: string | null) {
 }
 
 // ───────────────────────── sub-components ────────────────────────────────────
-
-function UsageMeter({
-  label,
-  used,
-  max,
-  icon,
-}: {
-  label: string;
-  used: number;
-  max: number;
-  icon?: React.ReactNode;
-}) {
-  const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
-  const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-indigo-500';
-  const trackColor =
-    pct >= 90
-      ? 'bg-red-50 dark:bg-red-950/30'
-      : pct >= 70
-        ? 'bg-amber-50 dark:bg-amber-950/30'
-        : 'bg-indigo-50 dark:bg-indigo-950/30';
-  const labelColor =
-    pct >= 90
-      ? 'text-red-600 dark:text-red-400'
-      : pct >= 70
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-slate-500 dark:text-slate-400';
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon && <span className={`${labelColor}`}>{icon}</span>}
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            {formatQuantity(used)} / {formatQuantity(max)}
-          </span>
-        </div>
-      </div>
-      <div className={`h-2.5 w-full overflow-hidden rounded-full ${trackColor}`}>
-        <div
-          className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function InfoRow({
   icon,
@@ -167,9 +135,13 @@ export function TenantDetail() {
 
   const { data: tenant, isLoading, error } = useTenant(tenantId);
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useTenantStats(tenantId);
+  // Live plan usage (same source as the Subscription tab; shared query cache).
+  const { data: subscriptionDetail } = useTenantSubscription(tenantId);
+  const liveUsage = subscriptionDetail?.usage ?? null;
   const { data: activityData } = useTenantActivity(tenantId);
   const { data: paymentsData } = useTenantPayments(tenantId);
   const { data: modulesData } = useTenantModules(tenantId);
+  const { data: plans } = usePlans();
   const updateModulesMutation = useUpdateTenantModules(tenantId);
 
   const updateMutation = useUpdateTenant(tenantId);
@@ -188,6 +160,7 @@ export function TenantDetail() {
     'activate' | 'disable' | 'suspend' | 'archive' | 'unarchive' | 'delete' | 'reset' | null
   >(null);
   const [confirmText, setConfirmText] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [extendDays, setExtendDays] = useState(14);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
   const [draftModules, setDraftModules] = useState<TenantModulesConfig>(DEFAULT_MODULES);
@@ -210,6 +183,8 @@ export function TenantDetail() {
     () => (tenant ? trialDaysRemaining(tenant.trialEndsAt) : null),
     [tenant],
   );
+
+  const deletePhrase = tenant ? `DELETE ${tenant.name.toUpperCase()}` : '';
 
   const handleUpdate = async (data: UpdateTenantInput) => {
     try {
@@ -247,30 +222,40 @@ export function TenantDetail() {
           toast.success('Tenant restored');
           break;
         case 'delete':
-          if (confirmText !== `DELETE ${tenant.name}`) return;
-          await softDelete.mutateAsync({ id: tenantId, confirmation: confirmText });
+          if (confirmText.trim().toUpperCase() !== deletePhrase || !adminPassword) return;
+          await softDelete.mutateAsync({
+            id: tenantId,
+            confirmation: deletePhrase,
+            password: adminPassword,
+          });
           toast.success('Tenant deleted');
           navigate('/tenants');
           break;
         case 'reset':
-          if (confirmText !== 'RESET') return;
-          await reset.mutateAsync({ id: tenantId, confirmation: 'RESET' });
+          if (confirmText !== 'RESET' || !adminPassword) return;
+          await reset.mutateAsync({ id: tenantId, confirmation: 'RESET', password: adminPassword });
           toast.success('Tenant data reset');
           refetchStats();
           break;
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Operation failed';
+      const serverMsg = (e as { response?: { data?: { message?: string } } }).response?.data
+        ?.message;
+      const msg = serverMsg ?? (e instanceof Error ? e.message : 'Operation failed');
       toast.error(msg);
-    } finally {
-      setDialog(null);
-      setConfirmText('');
+      // Wrong password: keep the dialog open so the admin can retry
+      if ((e as { response?: { status?: number } }).response?.status === 403) {
+        setAdminPassword('');
+        return;
+      }
     }
+    closeDialog();
   };
 
   const closeDialog = () => {
     setDialog(null);
     setConfirmText('');
+    setAdminPassword('');
   };
 
   if (isLoading) {
@@ -325,31 +310,10 @@ export function TenantDetail() {
   const canActivate = ['disabled', 'suspended', 'expired'].includes(tenant.status);
   const canDisable = ['active', 'trial'].includes(tenant.status);
 
-  const PLAN_META: Record<string, { gradient: string; badge: string; label: string }> = {
-    trial: {
-      gradient: 'from-slate-400 to-slate-500',
-      badge: 'bg-slate-100 text-slate-600 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-300',
-      label: 'Trial',
-    },
-    basic: {
-      gradient: 'from-indigo-400 to-indigo-600',
-      badge:
-        'bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/40 dark:text-indigo-300',
-      label: 'Basic',
-    },
-    pro: {
-      gradient: 'from-violet-500 to-purple-600',
-      badge:
-        'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/40 dark:text-violet-300',
-      label: 'Pro',
-    },
-    enterprise: {
-      gradient: 'from-rose-500 to-pink-600',
-      badge: 'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/40 dark:text-rose-300',
-      label: 'Enterprise',
-    },
+  const planMeta = {
+    ...planStyle(tenant.subscriptionPlan),
+    label: planLabel(tenant.subscriptionPlan, plans),
   };
-  const planMeta = PLAN_META[tenant.subscriptionPlan?.toLowerCase()] ?? PLAN_META.basic;
   const accentColor = tenant.primaryColor ?? '#6366f1';
 
   return (
@@ -404,7 +368,7 @@ export function TenantDetail() {
                   </code>
                   <StatusBadge status={tenant.status} trialDaysRemaining={daysLeft} />
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset capitalize ${planMeta.badge}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${planMeta.badge}`}
                   >
                     {planMeta.label}
                   </span>
@@ -459,21 +423,17 @@ export function TenantDetail() {
             {[
               {
                 icon: <Users className="h-4 w-4" />,
-                label: 'Users',
-                value: statsLoading
-                  ? '—'
-                  : stats?.usersCount != null
-                    ? formatQuantity(stats.usersCount)
-                    : '—',
+                // Staff seats (what the plan limits), not portal customers.
+                label: 'Staff users',
+                value: liveUsage?.users != null ? formatQuantity(liveUsage.users.used) : '—',
                 color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400',
               },
               {
                 icon: <ShoppingCart className="h-4 w-4" />,
-                label: 'Orders',
-                value: statsLoading
-                  ? '—'
-                  : stats?.ordersCount != null
-                    ? formatQuantity(stats.ordersCount)
+                label: 'Orders this month',
+                value:
+                  liveUsage?.ordersPerMonth != null
+                    ? formatQuantity(liveUsage.ordersPerMonth.used)
                     : '—',
                 color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400',
               },
@@ -769,56 +729,12 @@ export function TenantDetail() {
           </div>
         )}
 
-        {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
         {/* ══════════════════ METRICS TAB ══════════════════ */}
         {activeTab === 'metrics' && <TenantMetricsPanel tenantId={tenant.id} />}
 
+        {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
         {activeTab === 'subscription' && (
-          <div className="space-y-6">
-            {/* Plan card */}
-            <div
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${planMeta.gradient} p-6 text-white shadow-lg`}
-            >
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: 'radial-gradient(circle at 70% 30%, white 0%, transparent 60%)',
-                }}
-              />
-              <div className="relative flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-white/70">Current Plan</p>
-                  <h3 className="mt-0.5 text-3xl font-extrabold capitalize tracking-tight">
-                    {planMeta.label}
-                  </h3>
-                  <p className="mt-2 text-sm text-white/80">
-                    {formatDate(tenant.subscriptionStartedAt)} →{' '}
-                    {formatDate(tenant.subscriptionEndsAt)}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur-sm ${tenant.autoRenew ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'}`}
-                  >
-                    {tenant.autoRenew ? '↻ Auto-renew on' : 'Auto-renew off'}
-                  </span>
-                </div>
-              </div>
-              <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-4">
-                {[
-                  { label: 'Max Users', value: formatQuantity(tenant.maxUsers) },
-                  { label: 'Max Products', value: formatQuantity(tenant.maxProducts) },
-                  { label: 'Orders/month', value: formatQuantity(tenant.maxOrdersPerMonth) },
-                  { label: 'Storage', value: `${formatQuantity(tenant.maxStorageMb)} MB` },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-xs font-medium text-white/60">{label}</p>
-                    <p className="mt-0.5 text-lg font-bold">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+          <TenantSubscriptionPanel tenantId={tenantId} plans={plans}>
             {/* Trial info */}
             {tenant.status === 'trial' && (
               <div className="card overflow-hidden p-6">
@@ -899,36 +815,7 @@ export function TenantDetail() {
                 </div>
               </div>
             )}
-
-            {/* Usage meters */}
-            <div className="card p-6">
-              <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                <Shield className="h-4 w-4 text-indigo-500" />
-                Plan Usage
-              </h3>
-              <p className="mb-5 text-xs text-slate-400">Live usage vs. plan limits.</p>
-              <div className="space-y-5">
-                <UsageMeter
-                  label="Users"
-                  used={stats?.usersCount ?? 0}
-                  max={tenant.maxUsers}
-                  icon={<Users className="h-4 w-4" />}
-                />
-                <UsageMeter
-                  label="Orders / month"
-                  used={stats?.ordersCount ?? 0}
-                  max={tenant.maxOrdersPerMonth}
-                  icon={<ShoppingCart className="h-4 w-4" />}
-                />
-                <UsageMeter
-                  label="Storage (MB)"
-                  used={stats ? Math.round(stats.storageUsedBytes / (1024 * 1024)) : 0}
-                  max={tenant.maxStorageMb}
-                  icon={<HardDrive className="h-4 w-4" />}
-                />
-              </div>
-            </div>
-          </div>
+          </TenantSubscriptionPanel>
         )}
 
         {/* ══════════════════ PAYMENTS TAB ══════════════════ */}
@@ -979,8 +866,8 @@ export function TenantDetail() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold capitalize text-slate-900 dark:text-slate-100">
-                            {p.planName}
+                          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {planLabel(p.planName, plans)}
                           </span>
                           <span className="text-xs text-slate-400">
                             ({BILLING_CYCLE_LABELS[p.billingCycle]})
@@ -1203,97 +1090,137 @@ export function TenantDetail() {
             </div>
 
             {/* Module toggles by category */}
-            {[
-              {
-                title: 'Operations',
-                description: 'Core order and point-of-sale features.',
-                modules: [
-                  {
-                    key: 'commandes' as const,
-                    label: 'Commandes',
-                    description: 'Order management',
-                  },
-                  { key: 'pos' as const, label: 'POS', description: 'Point of sale' },
-                  { key: 'caisse' as const, label: 'Caisse', description: 'Cash register' },
-                ],
-              },
-              {
-                title: 'Documents',
-                description: 'Outbound commercial documents.',
-                modules: [
-                  { key: 'devis' as const, label: 'Devis', description: 'Quotes' },
-                  { key: 'factures' as const, label: 'Factures', description: 'Invoices' },
-                  {
-                    key: 'bonLivraison' as const,
-                    label: 'Bon de Livraison',
-                    description: 'Delivery notes',
-                  },
-                ],
-              },
-              {
-                title: 'Finance',
-                description: 'Payment tracking for sales and purchases.',
-                modules: [
-                  { key: 'paiements' as const, label: 'Paiements', description: 'Sales payments' },
-                  {
-                    key: 'paiementsAchat' as const,
-                    label: 'Paiements achat',
-                    description: 'Purchase payments',
-                  },
-                ],
-              },
-              {
-                title: 'Contacts',
-                description: 'Manage customers, suppliers and delivery staff.',
-                modules: [
-                  { key: 'clients' as const, label: 'Clients', description: 'Customer directory' },
-                  {
-                    key: 'fournisseurs' as const,
-                    label: 'Fournisseurs',
-                    description: 'Supplier directory',
-                  },
-                  {
-                    key: 'livreurs' as const,
-                    label: 'Livreurs',
-                    description: 'Delivery personnel',
-                  },
-                ],
-              },
-              {
-                title: 'Purchases',
-                description: 'Inbound purchasing workflow.',
-                modules: [
-                  {
-                    key: 'factureAchat' as const,
-                    label: 'Facture achat',
-                    description: 'Purchase invoices',
-                  },
-                  {
-                    key: 'demandeDesPrix' as const,
-                    label: 'Demande de prix',
-                    description: 'Price requests (RFQ)',
-                  },
-                  {
-                    key: 'bonAchat' as const,
-                    label: "Bon d'achat",
-                    description: 'Purchase orders',
-                  },
-                ],
-              },
-              {
-                title: 'Catalog',
-                description: 'Products and inventory organisation.',
-                modules: [
-                  { key: 'products' as const, label: 'Products', description: 'Product catalogue' },
-                  {
-                    key: 'warehouse' as const,
-                    label: 'Warehouse',
-                    description: 'Warehouse management',
-                  },
-                  { key: 'category' as const, label: 'Category', description: 'Category tree' },
-                ],
-              },
-            ].map((group) => {
+            {(
+              [
+                {
+                  title: 'Operations',
+                  description: 'Core order and point-of-sale features.',
+                  modules: [
+                    {
+                      key: 'commandes' as const,
+                      label: 'Commandes',
+                      description: 'Order management',
+                    },
+                    { key: 'pos', label: 'POS', description: 'Point of sale', plan: 'pos' },
+                    { key: 'caisse', label: 'Caisse', description: 'Cash register', plan: 'pos' },
+                  ],
+                },
+                {
+                  title: 'Insights & portal',
+                  description: 'Reporting and requests coming from the client portal.',
+                  modules: [
+                    {
+                      key: 'reports',
+                      label: 'Rapports',
+                      description: 'Analytics and reports (sales, stock, finance)',
+                      plan: 'reports',
+                    },
+                    {
+                      key: 'clientRequests',
+                      label: 'Demandes clients',
+                      description: 'Sign-up requests from the client portal',
+                      plan: 'client_portal',
+                    },
+                  ],
+                },
+                {
+                  title: 'Documents',
+                  description: 'Outbound commercial documents.',
+                  modules: [
+                    { key: 'devis' as const, label: 'Devis', description: 'Quotes' },
+                    { key: 'factures' as const, label: 'Factures', description: 'Invoices' },
+                    {
+                      key: 'bonLivraison' as const,
+                      label: 'Bon de Livraison',
+                      description: 'Delivery notes',
+                    },
+                  ],
+                },
+                {
+                  title: 'Finance',
+                  description: 'Payment tracking for sales and purchases.',
+                  modules: [
+                    {
+                      key: 'paiements' as const,
+                      label: 'Paiements',
+                      description: 'Sales payments',
+                    },
+                    {
+                      key: 'paiementsAchat' as const,
+                      label: 'Paiements achat',
+                      description: 'Purchase payments',
+                    },
+                  ],
+                },
+                {
+                  title: 'Contacts',
+                  description: 'Manage customers, suppliers and delivery staff.',
+                  modules: [
+                    {
+                      key: 'clients' as const,
+                      label: 'Clients',
+                      description: 'Customer directory',
+                    },
+                    {
+                      key: 'fournisseurs' as const,
+                      label: 'Fournisseurs',
+                      description: 'Supplier directory',
+                    },
+                    {
+                      key: 'livreurs',
+                      label: 'Livreurs',
+                      description: 'Delivery personnel',
+                      plan: 'delivery',
+                    },
+                  ],
+                },
+                {
+                  title: 'Purchases',
+                  description: 'Inbound purchasing workflow.',
+                  modules: [
+                    {
+                      key: 'factureAchat' as const,
+                      label: 'Facture achat',
+                      description: 'Purchase invoices',
+                    },
+                    {
+                      key: 'demandeDesPrix' as const,
+                      label: 'Demande de prix',
+                      description: 'Price requests (RFQ)',
+                    },
+                    {
+                      key: 'bonAchat' as const,
+                      label: "Bon d'achat",
+                      description: 'Purchase orders',
+                    },
+                  ],
+                },
+                {
+                  title: 'Catalog & inventory',
+                  description: 'Products, their organisation and stock operations.',
+                  modules: [
+                    { key: 'products', label: 'Products', description: 'Product catalogue' },
+                    { key: 'category', label: 'Category', description: 'Category tree' },
+                    { key: 'brands', label: 'Marques', description: 'Product brands' },
+                    {
+                      key: 'warehouse',
+                      label: 'Warehouse',
+                      description: 'Warehouse management',
+                    },
+                    {
+                      key: 'stockMovements',
+                      label: 'Mouvements de stock',
+                      description: 'Stock in / out / transfer history',
+                    },
+                    {
+                      key: 'inventoryAdjustments',
+                      label: "Ajustements d'inventaire",
+                      description: 'Stock counts and corrections',
+                    },
+                  ],
+                },
+              ] as { title: string; description: string; modules: ModuleToggle[] }[]
+            ).map((group) => {
               const allOn = group.modules.every((m) => draftModules[m.key]);
               return (
                 <div key={group.title} className="card overflow-hidden">
@@ -1321,8 +1248,9 @@ export function TenantDetail() {
                     </button>
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {group.modules.map(({ key, label, description }) => {
+                    {group.modules.map(({ key, label, description, plan }) => {
                       const enabled = draftModules[key];
+                      const missingFromPlan = Boolean(plan) && tenant?.features?.[plan!] !== true;
                       return (
                         <div
                           key={key}
@@ -1344,6 +1272,11 @@ export function TenantDetail() {
                                 {label}
                               </p>
                               <p className="text-xs text-slate-400">{description}</p>
+                              {missingFromPlan && (
+                                <p className="mt-1 inline-flex rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                                  Not in plan — stays hidden until the plan includes it
+                                </p>
+                              )}
                             </div>
                           </div>
                           {/* Toggle */}
@@ -1576,12 +1509,19 @@ export function TenantDetail() {
                         <p className="text-xs text-red-500/80 dark:text-red-500">
                           Destroys the DB, MinIO bucket, and Redis keys for{' '}
                           <strong>{tenant.name}</strong>.
+                          {tenant.status !== 'archived' && <> Archive the tenant first.</>}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setDialog('delete')}
-                      className="btn-danger text-xs py-2 px-4"
+                      disabled={tenant.status !== 'archived'}
+                      title={
+                        tenant.status !== 'archived'
+                          ? 'Archive the tenant before deleting it permanently'
+                          : undefined
+                      }
+                      className="btn-danger text-xs py-2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Delete Forever
                     </button>
@@ -1714,7 +1654,7 @@ export function TenantDetail() {
         confirmVariant="danger"
         loadingLabel="Deleting…"
         loading={softDelete.isPending}
-        confirmDisabled={confirmText !== `DELETE ${tenant.name}`}
+        confirmDisabled={confirmText.trim().toUpperCase() !== deletePhrase || !adminPassword}
         onConfirm={handleConfirm}
         onCancel={closeDialog}
       >
@@ -1727,7 +1667,7 @@ export function TenantDetail() {
         <label htmlFor="delete-confirm" className="label mt-4">
           Type{' '}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono normal-case tracking-normal dark:bg-slate-800">
-            DELETE {tenant.name}
+            {deletePhrase}
           </code>{' '}
           to confirm
         </label>
@@ -1736,9 +1676,21 @@ export function TenantDetail() {
           type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
-          placeholder={`DELETE ${tenant.name}`}
+          placeholder={deletePhrase}
           className="input font-mono"
           autoComplete="off"
+        />
+        <label htmlFor="delete-password" className="label mt-4">
+          Your account password
+        </label>
+        <input
+          id="delete-password"
+          type="password"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+          placeholder="Re-enter your sign-in password"
+          className="input"
+          autoComplete="current-password"
         />
       </ConfirmDialog>
 
@@ -1756,7 +1708,7 @@ export function TenantDetail() {
         confirmVariant="danger"
         loadingLabel="Resetting…"
         loading={reset.isPending}
-        confirmDisabled={confirmText !== 'RESET'}
+        confirmDisabled={confirmText !== 'RESET' || !adminPassword}
         onConfirm={handleConfirm}
         onCancel={closeDialog}
       >
@@ -1771,6 +1723,18 @@ export function TenantDetail() {
           placeholder="RESET"
           className="input font-mono"
           autoComplete="off"
+        />
+        <label htmlFor="reset-password" className="label mt-4">
+          Your account password
+        </label>
+        <input
+          id="reset-password"
+          type="password"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+          placeholder="Re-enter your sign-in password"
+          className="input"
+          autoComplete="current-password"
         />
       </ConfirmDialog>
     </div>

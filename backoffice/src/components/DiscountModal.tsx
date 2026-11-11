@@ -273,7 +273,7 @@ export const DiscountModal = ({
                 {formatAmount(subtotal, 2)} {t('currency')}
               </span>
               <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>
-                {quantity} × {formatAmount(unitPrice, 2)}
+                {formatQuantity(quantity)} × {formatAmount(unitPrice, 2)}
               </span>
             </div>
           </div>

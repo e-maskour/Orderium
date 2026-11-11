@@ -253,6 +253,66 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     return this.objectUrl(objectName, bucket);
   }
 
+  /**
+   * Read a stored image and return it as a `data:` URI, so headless renderers
+   * (PDF) don't depend on the public MinIO URL being reachable from the API.
+   *
+   * Accepts a full public URL produced by {@link upload} or a bare object key
+   * (resolved against the current tenant bucket). Returns null when the
+   * reference can't be resolved or read.
+   */
+  async getObjectAsDataUri(ref: string): Promise<string | null> {
+    if (!this.ready || !ref) return null;
+
+    let bucket = this.getTenantBucket();
+    let objectName = ref;
+    const prefix = `${this.publicUrl}/`;
+    if (ref.startsWith(prefix)) {
+      const [refBucket, ...rest] = ref.slice(prefix.length).split('/');
+      bucket = refBucket;
+      objectName = rest.join('/');
+    } else if (/^https?:\/\//.test(ref)) {
+      return null;
+    }
+    if (
+      !objectName ||
+      objectName.includes('..') ||
+      objectName.startsWith('/')
+    ) {
+      return null;
+    }
+
+    try {
+      const stat = await this.client.statObject(bucket, objectName);
+      const stream = await this.client.getObject(bucket, objectName);
+      const chunks: Buffer[] = [];
+      for await (const chunk of stream) chunks.push(chunk as Buffer);
+      const contentType =
+        (stat.metaData?.['content-type'] as string | undefined) || 'image/webp';
+      return `data:${contentType};base64,${Buffer.concat(chunks).toString('base64')}`;
+    } catch (error) {
+      this.logger.warn(
+        `Could not read [${bucket}] ${objectName}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Object key for a public URL produced by {@link upload}, or null when the
+   * URL doesn't point into the current tenant bucket (foreign bucket, data
+   * URI, external host). Lets callers delete only what this tenant owns.
+   */
+  objectKeyFromUrl(url?: string): string | null {
+    const ref = url?.trim();
+    if (!ref) return null;
+    const prefix = `${this.publicUrl}/${this.getTenantBucket()}/`;
+    if (!ref.startsWith(prefix)) return null;
+    const key = ref.slice(prefix.length);
+    if (!key || key.includes('..') || key.startsWith('/')) return null;
+    return key;
+  }
+
   isConfigured(): boolean {
     return this.ready;
   }

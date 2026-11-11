@@ -9,7 +9,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CompanyDto {
   // Basic Company Information
-  @ApiProperty({ description: 'Company name', example: 'MOROCOM SARL' })
+  @ApiProperty({ description: 'Company name', example: 'MARNOVA SARL' })
   @IsString()
   companyName: string;
 
@@ -71,7 +71,7 @@ export class CompanyDto {
 
   @ApiProperty({
     description: 'Email address',
-    example: 'contact@morocom.ma',
+    example: 'contact@marnova.ma',
     required: false,
   })
   @IsEmail()
@@ -80,7 +80,7 @@ export class CompanyDto {
 
   @ApiProperty({
     description: 'Website URL',
-    example: 'https://www.morocom.ma',
+    example: 'https://www.marnova.ma',
     required: false,
   })
   @IsUrl()

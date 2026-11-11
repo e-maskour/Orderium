@@ -20,7 +20,7 @@ function portalOptions(): { options: SeederOptionsByKey; generated?: string } {
       portal: {
         name: process.env.SEED_ADMIN_NAME || 'admin',
         phoneNumber: process.env.SEED_ADMIN_PHONE || '0600000000',
-        email: process.env.SEED_ADMIN_EMAIL || 'admin@morocom.local',
+        email: process.env.SEED_ADMIN_EMAIL || 'admin@marnova.local',
         password,
       },
     },

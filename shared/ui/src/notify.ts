@@ -37,7 +37,7 @@ interface PromiseMessages<T = unknown> {
 }
 
 /**
- * Unified notification API for all Morocom apps.
+ * Unified notification API for all Marnova apps.
  */
 export const notify = {
     // ── Base toasts ──

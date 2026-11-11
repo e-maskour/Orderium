@@ -2,6 +2,8 @@ import { Award } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
+import ReportChart from '../components/ReportChart';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -43,6 +45,9 @@ const TopSuppliersPage: React.FC = () => {
       subtitle={t('analyticsTopSuppliersSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      kpiCards={data && <ReportKpiCards reportKey="suppliers-top" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={

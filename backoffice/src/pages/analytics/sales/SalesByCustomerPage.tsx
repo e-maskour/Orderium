@@ -2,6 +2,8 @@ import { Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatAmount } from '@orderium/ui';
 import ReportLayout from '../components/ReportLayout';
+import ReportKpiCards from '../components/ReportKpiCards';
+import ReportChart from '../components/ReportChart';
 import ReportFilterBar from '../components/ReportFilterBar';
 import ReportTable from '../components/ReportTable';
 import ExportButtons from '../components/ExportButtons';
@@ -40,6 +42,9 @@ const SalesByCustomerPage: React.FC = () => {
       subtitle={t('analyticsSalesByCustomerSubtitle')}
       isLoading={isLoading}
       error={error}
+      onRefresh={refetch}
+      chart={data?.chart ? <ReportChart chart={data.chart} /> : undefined}
+      kpiCards={data && <ReportKpiCards reportKey="sales-by-customer" values={data.kpis} />}
       filterBar={<ReportFilterBar filter={filter} onChange={handleFilterChange} />}
       table={<ReportTable columns={columns} rows={data?.rows ?? []} loading={isLoading} />}
       exportButtons={

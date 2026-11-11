@@ -7,6 +7,7 @@ import { Category } from '../categories/entities/category.entity';
 import { UnitOfMeasure } from '../inventory/entities/unit-of-measure.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { PlanEntitlementsService } from '../tenant/plan-entitlements.service';
 
 // ─── Repository & Cache Mock Factories ───────────────────────────────────────
 
@@ -15,6 +16,7 @@ const makeQueryBuilderMock = () => ({
   andWhere: jest.fn().mockReturnThis(),
   where: jest.fn().mockReturnThis(),
   orderBy: jest.fn().mockReturnThis(),
+  addOrderBy: jest.fn().mockReturnThis(),
   skip: jest.fn().mockReturnThis(),
   take: jest.fn().mockReturnThis(),
   getMany: jest.fn(),
@@ -90,6 +92,14 @@ describe('ProductsService', () => {
       providers: [
         ProductsService,
         { provide: TenantConnectionService, useValue: mockTenantConnService },
+        {
+          provide: PlanEntitlementsService,
+          useValue: {
+            assertCanAdd: jest.fn().mockResolvedValue(undefined),
+            assertFeature: jest.fn().mockResolvedValue(undefined),
+            recordStorage: jest.fn(),
+          },
+        },
         { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
@@ -226,7 +236,7 @@ describe('ProductsService', () => {
       await service.findAll(1, 10, 'widget');
 
       expect(productRepo._qb.andWhere).toHaveBeenCalledWith(
-        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search OR brand.name ILIKE :search)',
+        `(product.name ILIKE :search OR product.code ILIKE :search OR brand.name ILIKE :search OR EXISTS (SELECT 1 FROM product_categories pc INNER JOIN categories c ON c.id = pc."categoryId" WHERE pc."productId" = product.id AND c.name ILIKE :search))`,
         { search: '%widget%' },
       );
     });
@@ -268,7 +278,7 @@ describe('ProductsService', () => {
       await service.findAll(1, 10, undefined, undefined, undefined, [1, 2]);
 
       expect(productRepo._qb.andWhere).toHaveBeenCalledWith(
-        'categories.id IN (:...categoryIds)',
+        'EXISTS (SELECT 1 FROM product_categories pc WHERE pc."productId" = product.id AND pc."categoryId" IN (:...categoryIds))',
         { categoryIds: [1, 2] },
       );
     });
@@ -287,6 +297,42 @@ describe('ProductsService', () => {
       expect(productRepo._qb.andWhere).toHaveBeenCalledWith(
         'product.isService = :isService',
         { isService: true },
+      );
+    });
+
+    it('orders by name ASC with an id tie-breaker by default', async () => {
+      await service.findAll(1, 10);
+
+      expect(productRepo._qb.orderBy).toHaveBeenCalledWith(
+        'product.name',
+        'ASC',
+      );
+      expect(productRepo._qb.addOrderBy).toHaveBeenCalledWith(
+        'product.id',
+        'ASC',
+      );
+    });
+
+    it('orders by the whitelisted sort column and direction', async () => {
+      await service.findAll(
+        1,
+        10,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { field: 'stock', order: 'DESC' },
+      );
+
+      expect(productRepo._qb.orderBy).toHaveBeenCalledWith(
+        'product.stock',
+        'DESC',
+      );
+      expect(productRepo._qb.addOrderBy).toHaveBeenCalledWith(
+        'product.id',
+        'DESC',
       );
     });
 

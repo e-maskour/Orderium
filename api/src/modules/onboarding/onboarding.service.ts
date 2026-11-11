@@ -93,7 +93,24 @@ export class OnboardingService {
           Math.ceil((tenant.trialEndsAt.getTime() - Date.now()) / 86_400_000),
         )
       : null;
-    const modules = await this.tenantService.getModules(tenant.id);
+    const configured = await this.tenantService.getModules(tenant.id);
+    // A module shows only when it is switched on for the tenant AND included
+    // in its subscription plan, so the back-office hides what the plan lacks.
+    const plan = tenant.features ?? {};
+    const modules = {
+      ...configured,
+      pos: configured.pos && plan.pos === true,
+      caisse: configured.caisse && plan.pos === true,
+      livreurs: configured.livreurs && plan.delivery === true,
+      reports: configured.reports && plan.reports === true,
+      clientRequests: configured.clientRequests && plan.client_portal === true,
+      portals: {
+        clientPortal:
+          configured.portals.clientPortal && plan.client_portal === true,
+        deliveryPortal:
+          configured.portals.deliveryPortal && plan.delivery === true,
+      },
+    };
     return {
       status: tenant.status,
       isActive: tenant.isActive,
