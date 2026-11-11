@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, ReactNode, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PrimeReactProvider } from 'primereact/api';
 import backofficeConfig from './theme-preset';
 import { AuthProvider } from './context/AuthContext';
@@ -84,10 +84,11 @@ function KeyboardRouteWatcher() {
 }
 import Login from './pages/Login';
 import { REPORT_VIEW_PERMISSIONS } from './modules/access';
-import { registerPlanErrorInterceptor } from './modules/subscription';
+import { registerPlanErrorInterceptor, SUBSCRIPTION_QUERY_KEY } from './modules/subscription';
+import { PlanLimitDialogHost } from './components/PlanLimitNotice';
 
-// Subscription 403s (PLAN_LIMIT_REACHED / PLAN_FEATURE_UNAVAILABLE) → one toast
-// with a link to /subscription, on top of each caller's own error handling.
+// Subscription 403s: PLAN_LIMIT_REACHED → "limit reached" dialog with a
+// change-plan button; PLAN_FEATURE_UNAVAILABLE → one toast linking /subscription.
 registerPlanErrorInterceptor();
 const OnboardingPage = lazy(() => import('./pages/onboarding/OnboardingPage'));
 
@@ -243,7 +244,14 @@ const NeverSoldProductsPage = lazy(
   () => import('./pages/analytics/products/NeverSoldProductsPage'),
 );
 
-const queryClient = new QueryClient({
+const queryClient: QueryClient = new QueryClient({
+  // Any successful save may change plan usage (users, warehouses, delivery
+  // persons…): mark it stale so the "limit reached" checks use fresh numbers.
+  mutationCache: new MutationCache({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,
@@ -1103,6 +1111,8 @@ function App() {
                       {/* POS Virtual Keyboard — available on all pages, unless
                         disabled in Configurations → General params */}
                       <VirtualKeyboardSurface />
+                      {/* "Limit reached — change your plan" dialog (quota 403s, guarded Add buttons) */}
+                      <PlanLimitDialogHost />
                     </BrowserRouter>
                   </AlertProvider>
                 </ConfirmProvider>

@@ -56,4 +56,26 @@ export default {
   planErrorSeeSubscription: 'عرض اشتراكي ←',
   planErrorLimitFallback: 'تم بلوغ حد اشتراكك.',
   planErrorFeatureFallback: 'هذه الميزة غير مضمنة في اشتراكك.',
+
+  // ─── Plan limit reached (create screens) ──────────────────
+  planLimitBadge: 'تم بلوغ الحد',
+  planLimitTitle: 'لقد بلغت حد باقتك',
+  planLimitBody:
+    'باقتك {plan} تسمح بـ {limit} {unit} كحد أقصى ولديك حاليا {used}. غيّر باقتك لمواصلة الإضافة.',
+  planLimitBodyNone: 'باقتك {plan} لا تتضمن {unit}. غيّر باقتك لإضافتهم.',
+  planLimitBodyStorage:
+    'باقتك {plan} تتضمن {limit} من مساحة التخزين وتستعمل حاليا {used}. غيّر باقتك لإضافة ملفات.',
+  planLimitBodyOrders:
+    'باقتك {plan} تسمح بـ {limit} طلبية في الشهر وقد أنشأت {used} هذا الشهر. غيّر باقتك لمواصلة إنشاء الطلبيات.',
+  planLimitUnit_users: 'مستخدمين',
+  planLimitUnit_products: 'منتجات',
+  planLimitUnit_warehouses: 'مستودعات',
+  planLimitUnit_deliveryPersons: 'عمال توصيل',
+  planLimitUnit_ordersPerMonth: 'طلبيات في الشهر',
+  planLimitUnit_storageMb: 'مساحة التخزين',
+  planLimitUsage: '{used} / {limit}',
+  planLimitChangePlan: 'تغيير الباقة',
+  planLimitBack: 'رجوع',
+  planLimitClose: 'إغلاق',
+  planLimitKeepWorking: 'باقي فضائك يبقى متاحا: يمكنك الاطلاع على بياناتك وتعديلها.',
 };
