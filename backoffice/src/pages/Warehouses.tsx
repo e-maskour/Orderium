@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { warehousesService, CreateWarehouseDTO, UpdateWarehouseDTO } from '../modules/warehouses';
+import { usePlanLimitGuard } from '../modules/subscription';
 import { Plus, Edit, Trash2, Search, Building2, MapPin, X, Package, Hash } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -20,6 +21,8 @@ import {
 export default function Warehouses() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  // Plan quota: "Ajouter un dépôt" opens the limit dialog once warehouses are used up.
+  const guardWarehouseLimit = usePlanLimitGuard('warehouses');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -143,7 +146,7 @@ export default function Warehouses() {
             <Button
               icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
               label={t('addWarehouse')}
-              onClick={() => handleOpenModal()}
+              onClick={() => guardWarehouseLimit(() => handleOpenModal())}
             />
           }
         />

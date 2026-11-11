@@ -7,6 +7,7 @@ import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import { brandsService } from '../modules/brands';
 import type { IProduct, ProductSortField } from '../modules/products/products.interface';
+import { usePlanLimitGuard } from '../modules/subscription';
 import {
   Plus,
   Eye,
@@ -44,6 +45,8 @@ export default function Products() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // Plan quota: "Ajouter un produit" opens the limit dialog once products are used up.
+  const guardProductLimit = usePlanLimitGuard('products');
 
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
@@ -295,7 +298,7 @@ export default function Products() {
 
                 {/* Add Product Button */}
                 <Button
-                  onClick={() => navigate('/products/create')}
+                  onClick={() => guardProductLimit(() => navigate('/products/create'))}
                   icon={<Plus style={{ width: 16, height: 16 }} />}
                   label={t('addProduct')}
                 />

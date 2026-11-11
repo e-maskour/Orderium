@@ -57,4 +57,27 @@ export default {
   planErrorSeeSubscription: 'Voir mon abonnement →',
   planErrorLimitFallback: 'Limite de votre abonnement atteinte.',
   planErrorFeatureFallback: "Cette fonctionnalité n'est pas incluse dans votre abonnement.",
+
+  // ─── Plan limit reached (create screens) ──────────────────
+  planLimitBadge: 'Limite atteinte',
+  planLimitTitle: 'Limite de votre offre atteinte',
+  planLimitBody:
+    "Votre offre {plan} permet {limit} {unit} maximum et vous en avez déjà {used}. Changez d'offre pour continuer à en ajouter.",
+  planLimitBodyNone: "Votre offre {plan} n'inclut pas de {unit}. Changez d'offre pour en ajouter.",
+  planLimitBodyStorage:
+    "Votre offre {plan} inclut {limit} de stockage et vous en utilisez déjà {used}. Changez d'offre pour ajouter des fichiers.",
+  planLimitBodyOrders:
+    "Votre offre {plan} permet {limit} commandes par mois et vous en avez déjà créé {used} ce mois-ci. Changez d'offre pour continuer à créer des commandes.",
+  planLimitUnit_users: 'utilisateurs',
+  planLimitUnit_products: 'produits',
+  planLimitUnit_warehouses: 'dépôts',
+  planLimitUnit_deliveryPersons: 'livreurs',
+  planLimitUnit_ordersPerMonth: 'commandes par mois',
+  planLimitUnit_storageMb: 'stockage',
+  planLimitUsage: '{used} / {limit}',
+  planLimitChangePlan: "Changer d'offre",
+  planLimitBack: 'Retour',
+  planLimitClose: 'Fermer',
+  planLimitKeepWorking:
+    'Le reste de votre espace reste disponible : vous pouvez consulter et modifier vos données.',
 };

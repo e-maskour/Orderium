@@ -3,6 +3,7 @@ import { addResponseInterceptor } from '../../common/api/api-client';
 import type { ApiError } from '../../common/types/api.types';
 import { translations, type Language } from '../../lib/i18n';
 import { markPlanErrorShown, wasPlanErrorShown } from '../../services/toast.service';
+import { asSubscriptionResource, openPlanLimitDialog } from './plan-limit';
 
 /**
  * Plan enforcement errors (HTTP 403) sent by the API when the subscription
@@ -123,12 +124,30 @@ function showPlanErrorToast(planError: PlanError) {
   toastId = notify.warning(title, { description, duration: 8000 });
 }
 
+/**
+ * A save hit a quota: open the "limit reached" dialog (with the change-plan
+ * button) instead of a toast. The page's own `toastError(message)` is skipped.
+ */
+function showPlanLimitDialog(planError: PlanError) {
+  const key = planError.message || 'PLAN_LIMIT_REACHED';
+  if (wasPlanErrorShown(key)) return;
+  markPlanErrorShown(key);
+  openPlanLimitDialog({
+    resource: asSubscriptionResource(planError.resource),
+    used: planError.used,
+    limit: planError.limit,
+    plan: planError.plan,
+    message: planError.message,
+  });
+}
+
 let registered = false;
 
 /**
  * Registers a global response interceptor (same mechanism as
- * TenantStatusGuard) that turns plan enforcement 403s into one clear toast
- * with a link to the subscription page. Callers keep their own error handling;
+ * TenantStatusGuard) that turns plan enforcement 403s into the "limit
+ * reached" dialog (quotas) or one clear toast with a link to the subscription
+ * page (features). Callers keep their own error handling;
  * `toastError` skips a message this interceptor has just shown, so the user
  * never sees the same sentence twice.
  */
@@ -139,7 +158,8 @@ export function registerPlanErrorInterceptor(): void {
     onResponse: (res) => res,
     onError: (error: ApiError) => {
       const planError = getPlanError(error);
-      if (planError) showPlanErrorToast(planError);
+      if (planError?.kind === 'limit') showPlanLimitDialog(planError);
+      else if (planError) showPlanErrorToast(planError);
       return error;
     },
   });

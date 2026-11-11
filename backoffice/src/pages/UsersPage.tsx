@@ -44,11 +44,14 @@ import { toastSuccess, toastError, toastConfirm } from '../services/toast.servic
 import { useAccessLabels } from '../hooks/useAccessLabels';
 import { AutoCompleteSelect, AutoCompleteMultiSelect } from '../components/ui/AutoCompleteSelect';
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination';
+import { usePlanLimitGuard } from '../modules/subscription';
 
 export default function UsersPage() {
   const { t, dir } = useLanguage();
   const { admin } = useAuth();
   const queryClient = useQueryClient();
+  // Plan quota: "Créer un utilisateur" opens the limit dialog once seats are used up.
+  const guardUserLimit = usePlanLimitGuard('users');
 
   const [activeTab, setActiveTab] = useState(0);
   const [searchInput, setSearchInput] = useState('');
@@ -600,7 +603,7 @@ export default function UsersPage() {
               <Button
                 icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
                 label={t('createUser')}
-                onClick={openCreate}
+                onClick={() => guardUserLimit(openCreate)}
               />
             }
           />

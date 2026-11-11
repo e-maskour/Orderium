@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // The service hands back the module's `DeliveryPerson` model, not the plain
 // interface in `../types` — importing the latter made every row mismatch.
 import { deliveryPersonService, DeliveryPerson } from '../modules/delivery';
+import { usePlanLimitGuard } from '../modules/subscription';
 import { useLanguage } from '../context/LanguageContext';
 import {
   toastCreated,
@@ -55,6 +56,8 @@ export default function DeliveryPersons() {
   });
 
   const queryClient = useQueryClient();
+  // Plan quota: "Nouveau livreur" opens the limit dialog once delivery persons are used up.
+  const guardDeliveryLimit = usePlanLimitGuard('deliveryPersons');
 
   const statusFilterOptions = [
     { label: t('all'), value: 'all' },
@@ -241,7 +244,7 @@ export default function DeliveryPersons() {
               <Button
                 icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
                 label={t('newDeliveryPerson')}
-                onClick={openCreateModal}
+                onClick={() => guardDeliveryLimit(openCreateModal)}
               />
             }
           />

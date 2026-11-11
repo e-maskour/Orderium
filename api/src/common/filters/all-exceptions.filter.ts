@@ -16,7 +16,7 @@ export function planErrorDetails(
   exception: unknown,
 ): Record<string, unknown> | null {
   if (!(exception instanceof HttpException)) return null;
-  if (exception.getStatus() !== HttpStatus.FORBIDDEN) return null;
+  if (exception.getStatus() !== Number(HttpStatus.FORBIDDEN)) return null;
   const body = exception.getResponse();
   if (typeof body !== 'object' || body === null) return null;
   const code = (body as Record<string, unknown>)['error'];

@@ -1,4 +1,5 @@
 import type { TenantModules } from '../api/onboarding';
+import type { SubscriptionResource } from '../modules/subscription/subscription.interface';
 
 /**
  * Screens that only exist when the tenant's subscription plan includes them.
@@ -46,6 +47,25 @@ export function planModuleForPath(pathname: string): PlanGatedModule | null {
     (r) => pathname === r.prefix || pathname.startsWith(r.prefix + '/'),
   );
   return match?.module ?? null;
+}
+
+/**
+ * Create screens that consume a plan quota. When the quota is used up, only
+ * these screens are replaced by the "limit reached" screen; the lists, detail
+ * and edit pages keep working. Matched exactly (`/checkout/success` is not gated).
+ */
+export const PLAN_LIMITED_ROUTES: Array<{ path: string; resource: SubscriptionResource }> = [
+  { path: '/products/create', resource: 'products' },
+  { path: '/bons-livraison/create', resource: 'ordersPerMonth' },
+  { path: '/bon-achat/create', resource: 'ordersPerMonth' },
+  { path: '/pos', resource: 'ordersPerMonth' },
+  { path: '/checkout', resource: 'ordersPerMonth' },
+];
+
+/** The quota a create screen consumes, or null when the path is not a gated create screen. */
+export function planLimitForPath(pathname: string): SubscriptionResource | null {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  return PLAN_LIMITED_ROUTES.find((r) => r.path === path)?.resource ?? null;
 }
 
 /** False when the path belongs to a module the current plan does not include. */

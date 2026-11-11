@@ -6,9 +6,19 @@ import { AdminLayout } from './AdminLayout';
 import { EmptyState } from './EmptyState';
 import { useTenantModulesState } from './TenantStatusGuard';
 import { useLanguage } from '../context/LanguageContext';
-import { isPlanModuleEnabled, planModuleForPath, type PlanGatedModule } from '../lib/planAccess';
+import {
+  isPlanModuleEnabled,
+  planLimitForPath,
+  planModuleForPath,
+  type PlanGatedModule,
+} from '../lib/planAccess';
 import type { TranslationKey } from '../lib/i18n';
-import { SUBSCRIPTION_PATH } from '../modules/subscription';
+import {
+  SUBSCRIPTION_PATH,
+  usePlanLimit,
+  type SubscriptionResource,
+} from '../modules/subscription';
+import { PlanLimitScreen } from './PlanLimitNotice';
 
 const BODY_KEYS: Record<PlanGatedModule, TranslationKey> = {
   pos: 'planLockedBody_pos',
@@ -105,11 +115,46 @@ export function PlanRouteGate({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const { modules, status } = useTenantModulesState();
   const module = planModuleForPath(pathname);
+  const limitedResource = planLimitForPath(pathname);
 
-  if (!module) return <>{children}</>;
+  const gated = limitedResource ? (
+    <PlanLimitRouteGate resource={limitedResource}>{children}</PlanLimitRouteGate>
+  ) : (
+    <>{children}</>
+  );
+
+  if (!module) return gated;
   if (status === 'loading') return null;
   if (status === 'ready' && !isPlanModuleEnabled(module, modules)) {
     return <PlanLockedScreen module={module} />;
+  }
+  return gated;
+}
+
+/**
+ * Replaces a create screen with the "limit reached" screen once the plan
+ * quota it consumes is used up. Usage is re-read every time the screen opens.
+ * Fails open when the subscription cannot be loaded — the API still enforces.
+ */
+function PlanLimitRouteGate({
+  resource,
+  children,
+}: {
+  resource: SubscriptionResource;
+  children: ReactNode;
+}) {
+  const { usage, planName, reached, loading } = usePlanLimit(resource, {
+    refetchOnMount: 'always',
+  });
+
+  // Avoid flashing a form the user cannot save on the very first load.
+  if (loading) return null;
+  if (reached) {
+    return (
+      <PlanLimitScreen
+        detail={{ resource, used: usage?.used, limit: usage?.max, plan: planName }}
+      />
+    );
   }
   return <>{children}</>;
 }
