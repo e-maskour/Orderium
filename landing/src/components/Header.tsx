@@ -5,11 +5,18 @@ import { LOCALE_COOKIE, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries/fr';
 import { GlobeIcon } from './icons';
 
-type Props = { lang: Locale; t: Pick<Dictionary, 'nav' | 'a11y'> };
+type Props = {
+  lang: Locale;
+  t: Pick<Dictionary, 'nav' | 'a11y'>;
+  /** Prefix for section anchors: '' on the home page, '/fr' or '/ar' on other pages. */
+  base?: string;
+  /** Same page in the other language. */
+  altHref?: string;
+};
 
 const SECTIONS = ['features', 'apps', 'morocco', 'start', 'pricing', 'faq'] as const;
 
-export function Header({ lang, t }: Props) {
+export function Header({ lang, t, base = '', altHref }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const other: Locale = lang === 'ar' ? 'fr' : 'ar';
@@ -33,7 +40,7 @@ export function Header({ lang, t }: Props) {
   };
 
   const links = SECTIONS.map((id) => (
-    <a key={id} href={`#${id}`} onClick={() => setOpen(false)}>
+    <a key={id} href={`${base}#${id}`} onClick={() => setOpen(false)}>
       {t.nav[id]}
     </a>
   ));
@@ -41,7 +48,7 @@ export function Header({ lang, t }: Props) {
   return (
     <header className={`nav${scrolled ? ' is-scrolled' : ''}`} id="top">
       <div className="wrap nav__inner">
-        <a className="brand" href="#top" aria-label="Marnova">
+        <a className="brand" href={base || '#top'} aria-label="Marnova">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="brand__logo brand__logo--light" src="/logo-full-light.svg" alt="" width={218} height={54} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -53,7 +60,7 @@ export function Header({ lang, t }: Props) {
         </nav>
 
         <div className="nav__actions">
-          <a className="lang" href={`/${other}`} hrefLang={other} lang={other} onClick={rememberLang} title={t.a11y.lang}>
+          <a className="lang" href={altHref ?? `/${other}`} hrefLang={other} lang={other} onClick={rememberLang} title={t.a11y.lang}>
             <GlobeIcon />
             <span>{t.nav.otherLang}</span>
           </a>

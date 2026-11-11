@@ -60,6 +60,8 @@ import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
 import { TenantLifecycleModule } from './modules/tenant-lifecycle/tenant-lifecycle.module';
 import { AdminAuthModule } from './modules/admin-auth/admin-auth.module';
 import { PlatformAdmin } from './modules/admin-auth/entities/platform-admin.entity';
+import { Lead } from './modules/leads/entities/lead.entity';
+import { LeadsModule } from './modules/leads/leads.module';
 import { Tenant } from './modules/tenant/tenant.entity';
 import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
 import { PaymentInstallment } from './modules/tenant-lifecycle/entities/payment-installment.entity';
@@ -137,6 +139,7 @@ import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-h
           TenantDailyMetric,
           TenantHealthBucket,
           PlatformAdmin,
+          Lead,
         ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
@@ -201,6 +204,7 @@ import { TenantHealthBucket } from './modules/platform-metrics/entities/tenant-h
     PrintersModule,
     SuperAdminModule,
     PlatformMetricsModule,
+    LeadsModule,
     BulkModule,
     QueueBoardModule,
     SequencesModule,

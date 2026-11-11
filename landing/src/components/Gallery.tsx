@@ -12,13 +12,27 @@ const BO_SHOTS = ['bo-dashboard', 'bo-orders', 'bo-pos', 'bo-invoices', 'bo-anal
 const CLIENT_SHOTS = ['client-catalog', 'client-checkout', 'client-orders', 'client-tracking'];
 const DELIVERY_SHOTS = ['delivery-orders', 'delivery-detail', 'delivery-earnings'];
 
-function Phone({ src, t, d, priority = false }: { src: string; t: string; d: string; priority?: boolean }) {
+function Phone({
+  src,
+  srcSet,
+  t,
+  d,
+  priority = false,
+}: {
+  src: string;
+  srcSet: string;
+  t: string;
+  d: string;
+  priority?: boolean;
+}) {
   return (
     <figure className="gal-phone">
       <div className="gal-phone__frame">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
+          srcSet={srcSet}
+          sizes="(max-width: 720px) 62vw, 220px"
           width={720}
           height={1558}
           alt={t}
@@ -108,6 +122,8 @@ export function Gallery({ t, lang }: { t: T; lang: Locale }) {
                   <img
                     key={src}
                     src={file(src)}
+                    srcSet={`${file(`${src}-800w`)} 800w, ${file(src)} 1600w`}
+                    sizes="(max-width: 900px) 100vw, 900px"
                     width={1600}
                     height={1000}
                     alt={shots[i].t}
@@ -138,7 +154,13 @@ export function Gallery({ t, lang }: { t: T; lang: Locale }) {
               </div>
               <div className="gal-rail">
                 {srcs.map((src, i) => (
-                  <Phone key={src} src={file(src)} t={group.shots[i].t} d={group.shots[i].d} />
+                  <Phone
+                    key={src}
+                    src={file(src)}
+                    srcSet={`${file(`${src}-480w`)} 480w, ${file(src)} 720w`}
+                    t={group.shots[i].t}
+                    d={group.shots[i].d}
+                  />
                 ))}
               </div>
             </div>

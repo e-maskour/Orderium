@@ -16,7 +16,9 @@ import { Split } from '@/components/Split';
 import { Pricing } from '@/components/Pricing';
 import { PLANS, fmt, yearlyPerMonth, type Plan } from '@/lib/plans';
 import type { Dictionary } from '@/i18n/dictionaries/fr';
-import { LogoMark, MailIcon, WhatsAppIcon } from '@/components/icons';
+import { Footer } from '@/components/Footer';
+import { getSolutions, SOLUTION_SLUGS } from '@/i18n/solutions';
+import { MailIcon, WhatsAppIcon } from '@/components/icons';
 
 const css = (vars: Record<string, string | number>) => vars as CSSProperties;
 
@@ -64,6 +66,7 @@ export default async function Home({ params }: PageProps<'/[lang]'>) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const t = getDictionary(lang);
+  const s = getSolutions(lang);
   const wa = waLink(t.wa.greeting);
   const mail = mailLink(t.wa.mailSubject);
   return (
@@ -79,11 +82,15 @@ export default async function Home({ params }: PageProps<'/[lang]'>) {
           <div className="hero__veil" aria-hidden="true" />
           <div className="wrap hero__inner">
             <div className="hero__copy">
-              <p className="kicker">
-                <span className="pulse" aria-hidden="true" />
-                {t.hero.kicker}
-              </p>
-              <h1 className="hero__title" id="hero-title">{t.hero.title}</h1>
+              {/* The kicker carries the search keywords, so it is part of the H1. */}
+              <h1 className="hero__h1" id="hero-title">
+                <span className="kicker">
+                  <span className="pulse" aria-hidden="true" />
+                  {t.hero.kicker}
+                </span>
+                <span className="sr-only">. </span>
+                <span className="hero__title">{t.hero.title}</span>
+              </h1>
               <p className="hero__lead">{t.hero.lead}</p>
               <div className="hero__ctas">
                 <a className="btn btn--primary btn--lg" href={wa} target="_blank" rel="noopener" data-magnetic>
@@ -278,6 +285,12 @@ export default async function Home({ params }: PageProps<'/[lang]'>) {
                 </article>
               ))}
             </div>
+
+            <nav className="sol-links" aria-label={s.ui.solutions} data-anim>
+              {SOLUTION_SLUGS.map((slug) => (
+                <a key={slug} href={`/${lang}/${slug}`}>{s.pages[slug].label}</a>
+              ))}
+            </nav>
           </div>
         </section>
 
@@ -485,42 +498,7 @@ export default async function Home({ params }: PageProps<'/[lang]'>) {
         </section>
       </main>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="footer">
-        <div className="wrap">
-          <div className="footer__top">
-            <div className="footer__brand">
-              <a className="brand" href="#top" aria-label="Marnova">
-                <LogoMark size={34} variant="tile" />
-                <span>Marnova</span>
-              </a>
-              <p>{t.footer.tag}</p>
-            </div>
-            <nav className="footer__col" aria-label={t.footer.product}>
-              <p>{t.footer.product}</p>
-              <a href="#features">{t.nav.features}</a>
-              <a href="#apps">{t.nav.apps}</a>
-              <a href="#morocco">{t.nav.morocco}</a>
-              <a href="#pricing">{t.nav.pricing}</a>
-              <a href="#faq">{t.nav.faq}</a>
-            </nav>
-            <div className="footer__col">
-              <p>{t.footer.contact}</p>
-              <a href={wa} target="_blank" rel="noopener" dir="ltr">{CONTACT.whatsappDisplay}</a>
-              <a href={mail} dir="ltr">{CONTACT.email}</a>
-              <a href={lang === 'ar' ? '/fr' : '/ar'} hrefLang={lang === 'ar' ? 'fr' : 'ar'}>{t.nav.otherLang}</a>
-            </div>
-          </div>
-          <p className="wordmark" aria-hidden="true" data-scrub="wordmark" dir="ltr">
-            {'Marnova'.split('').map((c, i) => (
-              <span key={i}>{c}</span>
-            ))}
-          </p>
-          <div className="footer__bottom">
-            <p>© 2026 Marnova. {t.footer.rights}</p>
-          </div>
-        </div>
-      </footer>
+      <Footer lang={lang} t={t} s={s} wa={wa} mail={mail} />
 
       <WhatsAppFloat href={wa} label={t.a11y.waFloat} />
       <Motion />

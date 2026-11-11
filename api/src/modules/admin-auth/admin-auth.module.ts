@@ -15,6 +15,6 @@ import { AdminSessionGuard } from './admin-session.guard';
   imports: [TypeOrmModule.forFeature([PlatformAdmin], 'master')],
   controllers: [AdminAuthController],
   providers: [AdminAuthService, AdminMailerService, AdminSessionGuard],
-  exports: [AdminAuthService, AdminSessionGuard],
+  exports: [AdminAuthService, AdminSessionGuard, AdminMailerService],
 })
 export class AdminAuthModule {}

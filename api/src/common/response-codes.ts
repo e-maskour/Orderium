@@ -1918,3 +1918,15 @@ export const SUB = {
     message: 'Add-on Catalogue Retrieved',
   },
 } as const satisfies Record<string, ResponseDef>;
+
+// ─── Leads (landing page contact form) ──────────────────────────────────────
+export const LED = {
+  /** POST   /public/leads    → data: { received: true } */
+  RECEIVED: { code: 'LED201_01', status: 201, message: 'Lead Received' },
+  /** GET    /admin/leads     → data: { items, total, page, pageSize, counts } */
+  LIST: { code: 'LED200_01', status: 200, message: 'Leads Retrieved' },
+  /** PATCH  /admin/leads/:id → data: Lead */
+  UPDATED: { code: 'LED200_02', status: 200, message: 'Lead Updated' },
+  /** DELETE /admin/leads/:id → data: null */
+  DELETED: { code: 'LED200_03', status: 200, message: 'Lead Deleted' },
+} as const satisfies Record<string, ResponseDef>;

@@ -70,7 +70,8 @@ export class VerifyApiKeyDto {
 
   @ApiProperty({
     required: false,
-    description: 'Return a 30-day grant so this browser does not ask for the key again',
+    description:
+      'Return a 30-day grant so this browser does not ask for the key again',
   })
   @IsOptional()
   @IsBoolean()

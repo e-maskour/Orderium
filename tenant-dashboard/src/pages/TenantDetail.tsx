@@ -1092,125 +1092,133 @@ export function TenantDetail() {
             {/* Module toggles by category */}
             {(
               [
-              {
-                title: 'Operations',
-                description: 'Core order and point-of-sale features.',
-                modules: [
-                  {
-                    key: 'commandes' as const,
-                    label: 'Commandes',
-                    description: 'Order management',
-                  },
-                  { key: 'pos', label: 'POS', description: 'Point of sale', plan: 'pos' },
-                  { key: 'caisse', label: 'Caisse', description: 'Cash register', plan: 'pos' },
-                ],
-              },
-              {
-                title: 'Insights & portal',
-                description: 'Reporting and requests coming from the client portal.',
-                modules: [
-                  {
-                    key: 'reports',
-                    label: 'Rapports',
-                    description: 'Analytics and reports (sales, stock, finance)',
-                    plan: 'reports',
-                  },
-                  {
-                    key: 'clientRequests',
-                    label: 'Demandes clients',
-                    description: 'Sign-up requests from the client portal',
-                    plan: 'client_portal',
-                  },
-                ],
-              },
-              {
-                title: 'Documents',
-                description: 'Outbound commercial documents.',
-                modules: [
-                  { key: 'devis' as const, label: 'Devis', description: 'Quotes' },
-                  { key: 'factures' as const, label: 'Factures', description: 'Invoices' },
-                  {
-                    key: 'bonLivraison' as const,
-                    label: 'Bon de Livraison',
-                    description: 'Delivery notes',
-                  },
-                ],
-              },
-              {
-                title: 'Finance',
-                description: 'Payment tracking for sales and purchases.',
-                modules: [
-                  { key: 'paiements' as const, label: 'Paiements', description: 'Sales payments' },
-                  {
-                    key: 'paiementsAchat' as const,
-                    label: 'Paiements achat',
-                    description: 'Purchase payments',
-                  },
-                ],
-              },
-              {
-                title: 'Contacts',
-                description: 'Manage customers, suppliers and delivery staff.',
-                modules: [
-                  { key: 'clients' as const, label: 'Clients', description: 'Customer directory' },
-                  {
-                    key: 'fournisseurs' as const,
-                    label: 'Fournisseurs',
-                    description: 'Supplier directory',
-                  },
-                  {
-                    key: 'livreurs',
-                    label: 'Livreurs',
-                    description: 'Delivery personnel',
-                    plan: 'delivery',
-                  },
-                ],
-              },
-              {
-                title: 'Purchases',
-                description: 'Inbound purchasing workflow.',
-                modules: [
-                  {
-                    key: 'factureAchat' as const,
-                    label: 'Facture achat',
-                    description: 'Purchase invoices',
-                  },
-                  {
-                    key: 'demandeDesPrix' as const,
-                    label: 'Demande de prix',
-                    description: 'Price requests (RFQ)',
-                  },
-                  {
-                    key: 'bonAchat' as const,
-                    label: "Bon d'achat",
-                    description: 'Purchase orders',
-                  },
-                ],
-              },
-              {
-                title: 'Catalog & inventory',
-                description: 'Products, their organisation and stock operations.',
-                modules: [
-                  { key: 'products', label: 'Products', description: 'Product catalogue' },
-                  { key: 'category', label: 'Category', description: 'Category tree' },
-                  { key: 'brands', label: 'Marques', description: 'Product brands' },
-                  {
-                    key: 'warehouse',
-                    label: 'Warehouse',
-                    description: 'Warehouse management',
-                  },
-                  {
-                    key: 'stockMovements',
-                    label: 'Mouvements de stock',
-                    description: 'Stock in / out / transfer history',
-                  },
-                  {
-                    key: 'inventoryAdjustments',
-                    label: "Ajustements d'inventaire",
-                    description: 'Stock counts and corrections',
-                  },
-                ],
-              },
+                {
+                  title: 'Operations',
+                  description: 'Core order and point-of-sale features.',
+                  modules: [
+                    {
+                      key: 'commandes' as const,
+                      label: 'Commandes',
+                      description: 'Order management',
+                    },
+                    { key: 'pos', label: 'POS', description: 'Point of sale', plan: 'pos' },
+                    { key: 'caisse', label: 'Caisse', description: 'Cash register', plan: 'pos' },
+                  ],
+                },
+                {
+                  title: 'Insights & portal',
+                  description: 'Reporting and requests coming from the client portal.',
+                  modules: [
+                    {
+                      key: 'reports',
+                      label: 'Rapports',
+                      description: 'Analytics and reports (sales, stock, finance)',
+                      plan: 'reports',
+                    },
+                    {
+                      key: 'clientRequests',
+                      label: 'Demandes clients',
+                      description: 'Sign-up requests from the client portal',
+                      plan: 'client_portal',
+                    },
+                  ],
+                },
+                {
+                  title: 'Documents',
+                  description: 'Outbound commercial documents.',
+                  modules: [
+                    { key: 'devis' as const, label: 'Devis', description: 'Quotes' },
+                    { key: 'factures' as const, label: 'Factures', description: 'Invoices' },
+                    {
+                      key: 'bonLivraison' as const,
+                      label: 'Bon de Livraison',
+                      description: 'Delivery notes',
+                    },
+                  ],
+                },
+                {
+                  title: 'Finance',
+                  description: 'Payment tracking for sales and purchases.',
+                  modules: [
+                    {
+                      key: 'paiements' as const,
+                      label: 'Paiements',
+                      description: 'Sales payments',
+                    },
+                    {
+                      key: 'paiementsAchat' as const,
+                      label: 'Paiements achat',
+                      description: 'Purchase payments',
+                    },
+                  ],
+                },
+                {
+                  title: 'Contacts',
+                  description: 'Manage customers, suppliers and delivery staff.',
+                  modules: [
+                    {
+                      key: 'clients' as const,
+                      label: 'Clients',
+                      description: 'Customer directory',
+                    },
+                    {
+                      key: 'fournisseurs' as const,
+                      label: 'Fournisseurs',
+                      description: 'Supplier directory',
+                    },
+                    {
+                      key: 'livreurs',
+                      label: 'Livreurs',
+                      description: 'Delivery personnel',
+                      plan: 'delivery',
+                    },
+                  ],
+                },
+                {
+                  title: 'Purchases',
+                  description: 'Inbound purchasing workflow.',
+                  modules: [
+                    {
+                      key: 'factureAchat' as const,
+                      label: 'Facture achat',
+                      description: 'Purchase invoices',
+                    },
+                    {
+                      key: 'demandeDesPrix' as const,
+                      label: 'Demande de prix',
+                      description: 'Price requests (RFQ)',
+                    },
+                    {
+                      key: 'bonAchat' as const,
+                      label: "Bon d'achat",
+                      description: 'Purchase orders',
+                    },
+                  ],
+                },
+                {
+                  title: 'Catalog & inventory',
+                  description: 'Products, their organisation and stock operations.',
+                  modules: [
+                    { key: 'products', label: 'Products', description: 'Product catalogue' },
+                    { key: 'category', label: 'Category', description: 'Category tree' },
+                    { key: 'brands', label: 'Marques', description: 'Product brands' },
+                    {
+                      key: 'warehouse',
+                      label: 'Warehouse',
+                      description: 'Warehouse management',
+                    },
+                    {
+                      key: 'stockMovements',
+                      label: 'Mouvements de stock',
+                      description: 'Stock in / out / transfer history',
+                    },
+                    {
+                      key: 'inventoryAdjustments',
+                      label: "Ajustements d'inventaire",
+                      description: 'Stock counts and corrections',
+                    },
+                  ],
+                },
               ] as { title: string; description: string; modules: ModuleToggle[] }[]
             ).map((group) => {
               const allOn = group.modules.every((m) => draftModules[m.key]);

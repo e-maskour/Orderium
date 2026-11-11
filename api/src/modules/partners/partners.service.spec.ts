@@ -8,7 +8,7 @@ import { TenantConnectionService } from '../tenant/tenant-connection.service';
 const mockRepository = () => ({
   findOne: jest.fn(),
   create: jest.fn((dto: unknown) => dto),
-  save: jest.fn(async (entity: unknown) => entity),
+  save: jest.fn((entity: unknown) => Promise.resolve(entity)),
 });
 
 describe('PartnersService.upsert', () => {
@@ -43,7 +43,11 @@ describe('PartnersService.upsert', () => {
       phoneNumber: '0683364348',
       deliveryAddress: 'Ancienne adresse',
     } as Partner;
-    portalRepo.findOne.mockResolvedValue({ id: 13, phoneNumber: '0601876597', customerId: 10 });
+    portalRepo.findOne.mockResolvedValue({
+      id: 13,
+      phoneNumber: '0601876597',
+      customerId: 10,
+    });
     partnerRepo.findOne.mockResolvedValue(company);
 
     const result = await service.upsert(
@@ -69,9 +73,15 @@ describe('PartnersService.upsert', () => {
   });
 
   it('creates a partner and links the portal account when none is linked yet', async () => {
-    portalRepo.findOne.mockResolvedValue({ id: 30, phoneNumber: '0611111111', customerId: null });
+    portalRepo.findOne.mockResolvedValue({
+      id: 30,
+      phoneNumber: '0611111111',
+      customerId: null,
+    });
     partnerRepo.findOne.mockResolvedValue(null);
-    partnerRepo.save.mockImplementation(async (p: Partner) => ({ ...p, id: 99 }));
+    partnerRepo.save.mockImplementation((p: Partner) =>
+      Promise.resolve({ ...p, id: 99 }),
+    );
 
     const result = await service.upsert(
       { phoneNumber: '0611111111', name: 'Nouveau Client' } as never,

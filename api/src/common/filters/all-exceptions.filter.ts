@@ -9,6 +9,22 @@ import {
 import { Request, Response } from 'express';
 import { httpStatusToErrorDef } from '../response-codes';
 
+const PLAN_ERROR_CODES = ['PLAN_LIMIT_REACHED', 'PLAN_FEATURE_UNAVAILABLE'];
+
+/** The body of a subscription enforcement 403, or null for any other error. */
+export function planErrorDetails(
+  exception: unknown,
+): Record<string, unknown> | null {
+  if (!(exception instanceof HttpException)) return null;
+  if (exception.getStatus() !== HttpStatus.FORBIDDEN) return null;
+  const body = exception.getResponse();
+  if (typeof body !== 'object' || body === null) return null;
+  const code = (body as Record<string, unknown>)['error'];
+  return typeof code === 'string' && PLAN_ERROR_CODES.includes(code)
+    ? (body as Record<string, unknown>)
+    : null;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -52,6 +68,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? { details: exception.getResponse() }
           : {}),
       };
+    } else {
+      // Subscription errors carry no secrets and the back-office needs the
+      // resource / limit / used values to show the "limit reached" dialog.
+      const planDetails = planErrorDetails(exception);
+      if (planDetails) errorResponse.metadata = { details: planDetails };
     }
 
     const SILENT_PATHS = ['/.well-known/'];

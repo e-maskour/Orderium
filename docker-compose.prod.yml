@@ -55,8 +55,10 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
+      # Landing-page contact form: new leads are e-mailed here
+      LEADS_NOTIFY_EMAIL: ${LEADS_NOTIFY_EMAIL:-}
       # CORS
-      CORS_ORIGIN: "https://*.mar-nova.com"
+      CORS_ORIGIN: "https://*.mar-nova.com,https://mar-nova.com"
       # Defaults
       DEFAULT_CASH_REGISTER_ID: ${DEFAULT_CASH_REGISTER_ID:-1}
       DEFAULT_WAREHOUSE_ID: ${DEFAULT_WAREHOUSE_ID:-1}
@@ -88,7 +90,7 @@ services:
       # CORS middleware
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,X-Tenant-ID,X-Super-Admin-Key,X-Super-Admin-Grant"
-      - "traefik.http.middlewares.orderium-cors.headers.accesscontrolalloworiginlistregex=^https://([a-z0-9-]+-(admin|app|delivery)|tenants)\\.mar-nova\\.com$$"
+      - "traefik.http.middlewares.orderium-cors.headers.accesscontrolalloworiginlistregex=^https://(([a-z0-9-]+-(admin|app|delivery)|tenants|www)\\.)?mar-nova\\.com$$"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowcredentials=true"
       - "traefik.http.routers.orderium-api.middlewares=orderium-cors,security-headers@file"
     healthcheck:

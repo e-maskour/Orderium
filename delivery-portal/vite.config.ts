@@ -13,6 +13,27 @@ export default defineConfig({
       '@shared-print': path.resolve(__dirname, '../shared/components'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Vendor libraries change rarely: separate chunks cache across app releases.
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          query: ['@tanstack/react-query'],
+          firebase: ['firebase/app', 'firebase/messaging'],
+          primereact: [
+            'primereact/api',
+            'primereact/button',
+            'primereact/card',
+            'primereact/divider',
+            'primereact/progressspinner',
+            'primereact/tag',
+          ],
+        },
+      },
+    },
+  },
   server: {
     port: 3003,
     host: '0.0.0.0',

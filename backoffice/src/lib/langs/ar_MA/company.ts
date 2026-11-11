@@ -40,7 +40,6 @@ export default {
   invalidEmail: 'عنوان البريد الإلكتروني غير صالح',
   imageFilesOnly: 'يُقبل ملفات الصور فقط',
   clickToUpload: 'انقر للتحميل',
-  companyLogo: 'شعار الشركة',
 
   // AdminStep password strength
   passwordWeak: 'ضعيف',

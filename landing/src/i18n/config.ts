@@ -15,6 +15,9 @@ export const CONTACT = {
   email: 'elhoucine.maskour7@gmail.com',
 } as const;
 
+/** Marnova API origin; the contact form posts leads to `${API_URL}/api/public/leads`. */
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+
 /** Absolute site origin, used for canonical URLs, sitemap and structured data. */
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ??

@@ -1,4 +1,7 @@
 import { CONTACT, SITE_URL } from '@/i18n/config';
+import { SOLUTION_SLUGS } from '@/i18n/solutions/types';
+import { solutionsFr } from '@/i18n/solutions/fr';
+import { solutionsAr } from '@/i18n/solutions/ar';
 import { fr, type Dictionary } from '@/i18n/dictionaries/fr';
 import { ar } from '@/i18n/dictionaries/ar';
 import { PLANS, TRIAL_DAYS, fmt, yearlyPerMonth } from '@/lib/plans';
@@ -44,6 +47,7 @@ ${PLANS.map((p) => {
 ## Pages
 - [Marnova (Français)](${SITE_URL}/fr): main landing page in French
 - [مارنوفا (العربية)](${SITE_URL}/ar): main landing page in Arabic
+${SOLUTION_SLUGS.map((slug) => `- [${clean(solutionsFr.pages[slug].label)}](${SITE_URL}/fr/${slug}): ${clean(solutionsFr.pages[slug].meta.description)}\n- [${clean(solutionsAr.pages[slug].label)}](${SITE_URL}/ar/${slug}): Arabic version`).join('\n')}
 - [Full content for LLMs](${SITE_URL}/llms-full.txt): complete page text in both languages, including FAQ
 
 ## Optional

@@ -5,6 +5,7 @@ import { dirOf, isLocale, locales, ogLocale, SITE_URL } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import '../globals.css';
 import { motionBootScript } from '@/components/Motion';
+import { Analytics } from '@/components/Analytics';
 
 const readex = Readex_Pro({
   subsets: ['latin', 'arabic'],
@@ -61,6 +62,13 @@ export async function generateMetadata({ params }: LayoutProps<'/[lang]'>): Prom
     robots: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
     formatDetection: { telephone: false, email: false, address: false },
     category: 'business',
+    // Optional search-console ownership tags (DNS TXT verification needs none of this).
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+      other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+        : undefined,
+    },
   };
 }
 
@@ -73,6 +81,7 @@ export default async function LangLayout({ children, params }: LayoutProps<'/[la
         {/* Must run before the page paints; it only toggles classes on <html>. */}
         <script dangerouslySetInnerHTML={{ __html: motionBootScript }} />
         {children}
+        <Analytics lang={lang} />
       </body>
     </html>
   );

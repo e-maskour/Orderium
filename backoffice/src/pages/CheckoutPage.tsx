@@ -241,7 +241,8 @@ export default function CheckoutPage() {
                   {t('items')}
                 </h2>
                 <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  {formatQuantity(totalItemsCount)} {totalItemsCount === 1 ? t('piece') : t('pieces')}
+                  {formatQuantity(totalItemsCount)}{' '}
+                  {totalItemsCount === 1 ? t('piece') : t('pieces')}
                 </span>
               </div>
 

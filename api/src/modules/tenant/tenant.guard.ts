@@ -67,7 +67,10 @@ export class SuperAdminGuard implements CanActivate {
     const grant = headerOf(request, 'x-super-admin-grant');
     if (!grant) throw new ForbiddenException(API_KEY_REQUIRED);
     const adminId = request.superAdmin?.id;
-    if (!adminId || !(await this.adminAuth.isValidApiKeyGrant(adminId, grant))) {
+    if (
+      !adminId ||
+      !(await this.adminAuth.isValidApiKeyGrant(adminId, grant))
+    ) {
       throw new ForbiddenException(API_KEY_INVALID);
     }
     return true;

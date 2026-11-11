@@ -30,7 +30,8 @@ const makeQueryBuilderMock = () => ({
 const mockRepository = () => {
   const qb = makeQueryBuilderMock();
   return {
-    find: jest.fn(),
+    // Reference generation reads the last row; an empty table is the default.
+    find: jest.fn().mockResolvedValue([]),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),

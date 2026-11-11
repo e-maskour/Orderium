@@ -13,6 +13,8 @@ const mockRepository = () => ({
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  // remove() counts the products still assigned to the warehouse.
+  manager: { query: jest.fn().mockResolvedValue([{ count: '0' }]) },
 });
 
 // ─── Test Data Factory ────────────────────────────────────────────────────────
@@ -43,6 +45,8 @@ describe('WarehouseService', () => {
         return mockRepository();
       }),
       getCurrentDataSource: jest.fn(() => mockDataSource),
+      // Warehouse cache keys are namespaced per tenant.
+      getCurrentTenantSlug: jest.fn(() => 'test-tenant'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

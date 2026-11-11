@@ -675,7 +675,8 @@ export function DocumentItemsTable({
               }}
             >
               <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
-                {items.length} {t('items')} · {t('invoice.quantityHeader')}: {formatQuantity(totalQty)}
+                {items.length} {t('items')} · {t('invoice.quantityHeader')}:{' '}
+                {formatQuantity(totalQty)}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <span

@@ -326,7 +326,10 @@ export class AdminAuthService {
     if (!remember) return { valid: true };
 
     // The browser keeps this signed grant instead of the raw key.
-    const payload: KeyGrantPayload = { sub: admin.id, kfp: this.keyFingerprint(expected) };
+    const payload: KeyGrantPayload = {
+      sub: admin.id,
+      kfp: this.keyFingerprint(expected),
+    };
     const grant = await this.jwt.signAsync(payload, {
       audience: AUD_KEY_GRANT,
       expiresIn: TRUST_TTL,
@@ -376,8 +379,14 @@ export class AdminAuthService {
   }
 
   private signDeviceToken(admin: PlatformAdmin): Promise<string> {
-    const payload: DevicePayload = { sub: admin.id, fp: this.deviceFingerprint(admin) };
-    return this.jwt.signAsync(payload, { audience: AUD_DEVICE, expiresIn: TRUST_TTL });
+    const payload: DevicePayload = {
+      sub: admin.id,
+      fp: this.deviceFingerprint(admin),
+    };
+    return this.jwt.signAsync(payload, {
+      audience: AUD_DEVICE,
+      expiresIn: TRUST_TTL,
+    });
   }
 
   private async isTrustedDevice(

@@ -15,10 +15,12 @@ import {
   HeartPulse,
   Lock,
   LockOpen,
+  Inbox,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTenants } from '../hooks/useTenants';
 import { usePaymentsSummary } from '../hooks/usePayments';
+import { useNewLeadsCount } from '../hooks/useLeads';
 import { useQuery } from '@tanstack/react-query';
 import { apiKeyStore } from '../api/client';
 import { authApi } from '../api/auth';
@@ -74,6 +76,7 @@ export function Layout({ onLogout }: Props) {
   // Summed across currencies deliberately: this is a count of late payments,
   // not a monetary total.
   const overdueCount = paymentsSummary?.reduce((sum, row) => sum + row.overdueCount, 0) ?? 0;
+  const newLeads = useNewLeadsCount();
 
   const activeClass = 'nav-link bg-indigo-600 text-white shadow-sm shadow-indigo-500/30';
   const inactiveClass =
@@ -169,6 +172,27 @@ export function Layout({ onLogout }: Props) {
         >
           <HeartPulse className="h-4 w-4 shrink-0" />
           <span className="flex-1">App Health</span>
+        </NavLink>
+
+        <p className="nav-section-title">Sales</p>
+
+        <NavLink to="/leads" className={({ isActive }) => (isActive ? activeClass : inactiveClass)}>
+          {({ isActive }) => (
+            <>
+              <Inbox className="h-4 w-4 shrink-0" />
+              <span className="flex-1">Leads</span>
+              {newLeads > 0 && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                  }`}
+                  title={`${newLeads} new lead${newLeads !== 1 ? 's' : ''} to contact`}
+                >
+                  {newLeads}
+                </span>
+              )}
+            </>
+          )}
         </NavLink>
 
         <p className="nav-section-title">Billing</p>

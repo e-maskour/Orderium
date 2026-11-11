@@ -40,7 +40,6 @@ export default {
   invalidEmail: 'Adresse e-mail invalide',
   imageFilesOnly: 'Seuls les fichiers image sont acceptés',
   clickToUpload: 'Cliquer pour télécharger',
-  companyLogo: "Logo de l'entreprise",
 
   // AdminStep password strength
   passwordWeak: 'Faible',

@@ -27,26 +27,39 @@ function setup(apiKey = API_KEY) {
   } as unknown as PlatformAdmin;
 
   const repo = {
-    findOne: jest.fn(async () => admin),
-    save: jest.fn(async (a: PlatformAdmin) => a),
+    findOne: jest.fn(() => Promise.resolve(admin)),
+    save: jest.fn((a: PlatformAdmin) => Promise.resolve(a)),
   };
-  const env: Record<string, string> = { ADMIN_AUTH_SECRET: SECRET, SUPER_ADMIN_API_KEY: apiKey };
+  const env: Record<string, string> = {
+    ADMIN_AUTH_SECRET: SECRET,
+    SUPER_ADMIN_API_KEY: apiKey,
+  };
   const config = { get: (k: string) => env[k] } as unknown as ConfigService;
-  const mailer = { sendLoginCode: jest.fn() } as unknown as AdminMailerService;
+  const sendLoginCode = jest.fn();
+  const mailer = { sendLoginCode } as unknown as AdminMailerService;
 
   const service = new AdminAuthService(repo as never, config, mailer);
-  return { service, admin, env, mailer };
+  return { service, admin, env, mailer, sendLoginCode };
 }
 
 /** Signs in with an e-mail code and returns the verify response. */
-async function signInWithCode(s: ReturnType<typeof setup>, rememberDevice: boolean) {
+async function signInWithCode(
+  s: ReturnType<typeof setup>,
+  rememberDevice: boolean,
+) {
   let sentCode = '';
-  (s.mailer.sendLoginCode as jest.Mock).mockImplementation(async (_e: string, code: string) => {
+  s.sendLoginCode.mockImplementation((_e: string, code: string) => {
     sentCode = code;
+    return Promise.resolve();
   });
   const step = await s.service.login(s.admin.email, PASSWORD);
   if (step.step !== 'email') throw new Error(`unexpected step ${step.step}`);
-  return s.service.verifyTwoFactor(step.challengeToken, sentCode, '127.0.0.1', rememberDevice);
+  return s.service.verifyTwoFactor(
+    step.challengeToken,
+    sentCode,
+    '127.0.0.1',
+    rememberDevice,
+  );
 }
 
 describe('AdminAuthService — remember this device', () => {
@@ -61,15 +74,15 @@ describe('AdminAuthService — remember this device', () => {
     const s = setup();
     const { deviceToken } = await signInWithCode(s, true);
     expect(deviceToken).toBeTruthy();
-    (s.mailer.sendLoginCode as jest.Mock).mockClear();
+    s.sendLoginCode.mockClear();
 
     const next = await s.service.login(s.admin.email, PASSWORD, deviceToken);
     expect(next.step).toBe('signed-in');
-    expect(s.mailer.sendLoginCode).not.toHaveBeenCalled();
+    expect(s.sendLoginCode).not.toHaveBeenCalled();
 
-    await expect(s.service.login(s.admin.email, 'wrong', deviceToken)).rejects.toThrow(
-      'Invalid email or password',
-    );
+    await expect(
+      s.service.login(s.admin.email, 'wrong', deviceToken),
+    ).rejects.toThrow('Invalid email or password');
   });
 
   it('stops trusting the device after a password change', async () => {
@@ -77,7 +90,11 @@ describe('AdminAuthService — remember this device', () => {
     const { deviceToken } = await signInWithCode(s, true);
     s.admin.passwordHash = bcrypt.hashSync('New-password-2', 4);
 
-    const next = await s.service.login(s.admin.email, 'New-password-2', deviceToken);
+    const next = await s.service.login(
+      s.admin.email,
+      'New-password-2',
+      deviceToken,
+    );
     expect(next.step).toBe('email');
   });
 
@@ -100,7 +117,9 @@ describe('AdminAuthService — remembered API key', () => {
     expect(grant).toBeTruthy();
     await expect(s.service.isValidApiKeyGrant(7, grant!)).resolves.toBe(true);
     await expect(s.service.isValidApiKeyGrant(8, grant!)).resolves.toBe(false);
-    await expect(s.service.isValidApiKeyGrant(7, 'not-a-token')).resolves.toBe(false);
+    await expect(s.service.isValidApiKeyGrant(7, 'not-a-token')).resolves.toBe(
+      false,
+    );
   });
 
   it('rejects grants after the platform key is rotated', async () => {

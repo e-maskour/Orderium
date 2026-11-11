@@ -38,6 +38,36 @@ export class AdminMailerService {
     return this.transporter;
   }
 
+  /** True when SMTP is configured (otherwise mails are only logged). */
+  get isConfigured(): boolean {
+    return Boolean(this.config.get<string>('SMTP_HOST'));
+  }
+
+  /**
+   * Sends a platform notification (e.g. a new landing-page lead). Without
+   * SMTP the message is logged instead; failures are thrown to the caller.
+   */
+  async send(message: {
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+    replyTo?: string;
+  }): Promise<void> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      this.logger.warn(
+        `[SMTP not configured] Mail to ${message.to} — ${message.subject}`,
+      );
+      return;
+    }
+    const from =
+      this.config.get<string>('SMTP_FROM') ??
+      this.config.get<string>('SMTP_USER') ??
+      'no-reply@localhost';
+    await transporter.sendMail({ from, ...message });
+  }
+
   async sendLoginCode(to: string, code: string, ttlMinutes: number) {
     const transporter = this.getTransporter();
     if (!transporter) {

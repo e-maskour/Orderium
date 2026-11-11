@@ -2,17 +2,20 @@ const NB = ' '; // non-breaking space before French high punctuation
 
 export const fr = {
   meta: {
-    title: 'Marnova — L’ERP en ligne des PME marocaines',
+    title: 'Logiciel de gestion commerciale et facturation Maroc | Marnova',
     description:
-      'Marnova est l’ERP en ligne conçu pour les PME marocaines : devis, commandes, bons de livraison, factures conformes (ICE, IF, RC), stock multi-dépôts, caisse et livraisons. En français et en arabe.',
+      'Logiciel de facturation, stock et caisse pour PME au Maroc : devis, factures ICE, IF, RC, multi-dépôts et livraisons, en arabe et français. Essai gratuit.',
     keywords: [
-      'ERP Maroc',
+      'logiciel de gestion commerciale Maroc',
       'logiciel de facturation Maroc',
-      'logiciel gestion commerciale Maroc',
-      'gestion de stock Maroc',
-      'facture ICE',
-      'logiciel caisse Maroc',
-      'ERP arabe français',
+      'logiciel de gestion de stock Maroc',
+      'logiciel de caisse Maroc',
+      'logiciel devis facture',
+      'ERP Maroc',
+      'ERP PME Maroc',
+      'facture ICE IF RC',
+      'logiciel de gestion en arabe',
+      'logiciel de distribution Maroc',
     ],
     ogAlt: 'Une facture Marnova payée, en dirhams',
   },
@@ -36,7 +39,7 @@ export const fr = {
     otherLang: 'العربية',
   },
   hero: {
-    kicker: 'L’ERP en ligne des PME marocaines',
+    kicker: 'Logiciel de facturation et de gestion pour PME au Maroc',
     title: 'Votre devis devient facture. Sans ressaisir une seule ligne.',
     lead: `Ventes, achats, stock, caisse, livraisons et factures conformes ICE, IF, RC${NB}: Marnova réunit toute votre activité dans un seul outil, en français et en arabe.`,
     cta1: 'Réserver une démo sur WhatsApp',
@@ -143,7 +146,7 @@ export const fr = {
     ],
   },
   features: {
-    title: 'Tout ce qu’il faut pour vendre, acheter et livrer.',
+    title: `Facturation, stock, caisse et livraisons${NB}: tout pour vendre, acheter et livrer.`,
     lead: `Des modules qui parlent entre eux${NB}: une vente sort le produit du stock, une livraison met à jour la commande, un paiement solde la facture.`,
     sales: {
       t: 'Ventes et achats',
@@ -242,7 +245,7 @@ export const fr = {
     },
   },
   morocco: {
-    title: 'Pensé pour le Maroc, pas simplement traduit.',
+    title: `Pensé pour le Maroc${NB}: factures conformes ICE, IF, RC et TVA.`,
     lead: 'Marnova parle la langue de vos documents, de vos clients et de votre administration.',
     specs: [
       { t: 'Identifiants fiscaux', d: 'ICE, IF, RC et CNSS de votre entreprise et de vos partenaires sur chaque document.' },
@@ -262,7 +265,7 @@ export const fr = {
     ],
   },
   pricing: {
-    title: 'Des tarifs clairs, en dirhams, sans mauvaise surprise.',
+    title: 'Le prix du logiciel, en dirhams et sans mauvaise surprise.',
     lead: 'Choisissez l’offre qui correspond à votre équipe aujourd’hui, et changez-en quand votre activité grandit.',
     billing: { label: 'Période de facturation', monthly: 'Mensuel', yearly: 'Annuel', save: '2 mois offerts' },
     currency: 'DH HT',
@@ -336,19 +339,23 @@ export const fr = {
     },
   },
   faq: {
-    title: 'Vos questions, nos réponses.',
+    title: 'Questions fréquentes sur le logiciel Marnova.',
     items: [
       { q: `Marnova fonctionne-t-il vraiment en arabe${NB}?`, a: 'Oui. Toute l’interface existe en arabe et en français, avec un affichage de droite à gauche en arabe. Chaque utilisateur peut changer de langue à tout moment.' },
       { q: `Faut-il installer un logiciel ou acheter un serveur${NB}?`, a: `Non. Marnova est en ligne${NB}: un navigateur et une connexion internet suffisent, sur ordinateur, tablette ou téléphone.` },
       { q: `Mes factures seront-elles conformes${NB}?`, a: `Vos factures portent les mentions attendues au Maroc${NB}: ICE, IF et RC, détail HT, TVA et TTC, et une numérotation séquentielle. Elles s’exportent en PDF.` },
       { q: `Puis-je reprendre mes produits et clients existants${NB}?`, a: 'Oui. Nous vous aidons à importer votre catalogue et votre liste de clients et de fournisseurs pour démarrer sans tout ressaisir.' },
       { q: `Mes données sont-elles séparées de celles des autres entreprises${NB}?`, a: 'Oui. Chaque entreprise dispose de son propre espace de données, et chaque employé n’accède qu’aux écrans autorisés par son rôle.' },
+      { q: `Marnova est-il aussi un logiciel de gestion de stock${NB}?`, a: 'Oui. Le stock se met à jour à chaque vente, achat et livraison, dépôt par dépôt. Vous voyez les quantités en temps réel, justifiez chaque ajustement et repérez les produits en stock bas avant la rupture.' },
+      { q: `Peut-on utiliser Marnova comme logiciel de caisse${NB}?`, a: `Oui, à partir de l’offre Business. Le point de vente tactile encaisse au comptoir, imprime le ticket sur imprimante thermique et sort les articles du stock du magasin. Les ventes de caisse apparaissent dans les mêmes rapports que vos factures.` },
+      { q: `Quelle différence avec Excel ou un simple logiciel de facturation${NB}?`, a: `Un tableur ou un outil de facturation ne fait qu’un morceau du travail. Avec Marnova, le devis devient commande, bon de livraison puis facture sans ressaisie, le stock et le reste à payer se mettent à jour seuls, et vos clients et livreurs ont leur propre espace.` },
+      { q: `Pour quels types d’entreprises${NB}?`, a: 'Pour les PME qui vendent, stockent et livrent : distributeurs, grossistes, épiceries et supérettes, quincailleries, matériaux de construction, pièces auto, cosmétiques, import-export et commerces de détail.' },
       { q: `Combien coûte Marnova${NB}?`, a: `Marnova est disponible dès 149${NB}DH HT par mois avec l’offre Starter, et vous pouvez l’essayer gratuitement pendant 14 jours, sans carte bancaire. Toutes les offres et ce qu’elles incluent sont détaillées dans la section Tarifs, juste au-dessus.` },
     ],
   },
   contact: {
     title: 'Voyons ensemble si Marnova convient à votre entreprise.',
-    lead: 'Laissez-nous quelques informations. Votre message s’ouvre dans WhatsApp, prêt à envoyer.',
+    lead: 'Laissez-nous quelques informations, nous vous répondons sous 24 h. Vous préférez WhatsApp ? C’est possible aussi.',
     email: 'Email',
   },
   form: {
@@ -356,6 +363,8 @@ export const fr = {
     errName: 'Indiquez votre nom pour que nous sachions qui contacter.',
     company: 'Entreprise',
     phone: 'Téléphone',
+    email: 'Email',
+    errEmail: 'Cette adresse email ne semble pas valide, par exemple nom@exemple.ma.',
     errPhone: 'Indiquez un numéro de téléphone valide, par exemple 06 12 34 56 78.',
     activity: 'Activité',
     choose: 'Choisir',
@@ -370,17 +379,19 @@ export const fr = {
     msg: 'Votre besoin',
     optional: '(facultatif)',
     msgPh: 'Ex. : 3 dépôts, 5 commerciaux, facturation en arabe',
-    submit: 'Envoyer sur WhatsApp',
-    mail: 'Envoyer plutôt par email',
+    submit: 'Envoyer ma demande',
+    sending: 'Envoi en cours…',
+    sent: 'Merci, votre demande est bien envoyée. Nous vous contactons sous 24 h.',
+    sendFailed: 'L’envoi a échoué. Réessayez, ou envoyez votre demande sur WhatsApp.',
+    whatsapp: 'Envoyer plutôt sur WhatsApp',
     opened: 'WhatsApp s’est ouvert avec votre message. Il ne reste qu’à l’envoyer.',
-    openedMail: 'Votre application email s’est ouverte avec votre message.',
   },
   wa: {
     greeting: 'Bonjour, je souhaite une démo de Marnova.',
-    labels: { name: 'Nom', company: 'Entreprise', phone: 'Téléphone', activity: 'Activité', message: 'Besoin' },
+    labels: { name: 'Nom', company: 'Entreprise', phone: 'Téléphone', email: 'Email', activity: 'Activité', message: 'Besoin' },
     mailSubject: 'Demande de démo Marnova',
   },
-  footer: { tag: 'L’ERP en ligne des PME marocaines.', product: 'Produit', contact: 'Contact', rights: 'Tous droits réservés.' },
+  footer: { tag: 'Logiciel de facturation et de gestion des PME marocaines.', product: 'Produit', contact: 'Contact', rights: 'Tous droits réservés.' },
 };
 
 type Widen<T> = T extends string
