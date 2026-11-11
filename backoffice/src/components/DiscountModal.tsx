@@ -270,7 +270,9 @@ export const DiscountModal = ({
               <span
                 style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}
               >
-                {formatAmount(subtotal, 2)} {t('currency')}
+                {formatAmount(subtotal, 2)}
+                {'\u00A0'}
+                {t('currency')}
               </span>
               <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>
                 {formatQuantity(quantity)} × {formatAmount(unitPrice, 2)}
@@ -449,7 +451,9 @@ export const DiscountModal = ({
                   {t('subtotal')}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#374151' }}>
-                  {formatAmount(subtotal, 2)} {t('currency')}
+                  {formatAmount(subtotal, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
               <div
@@ -468,7 +472,9 @@ export const DiscountModal = ({
                     : `(${formatQuantity(discountPct, 1)}%)`}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#235ae4' }}>
-                  −{formatAmount(discountAmount, 2)} {t('currency')}
+                  −{formatAmount(discountAmount, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
               <div
@@ -491,7 +497,9 @@ export const DiscountModal = ({
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  {formatAmount(total, 2)} {t('currency')}
+                  {formatAmount(total, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
             </div>

@@ -56,11 +56,11 @@ export function PrintableReceipt({ data }: Props) {
             <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
             <div style={{ textAlign: 'right' }}>
-                <div>Sous-total : {formatAmount(data.subtotal)} DH</div>
+                <div>Sous-total : {formatAmount(data.subtotal)}{'\u00A0'}DH</div>
                 {data.discount != null && data.discount > 0 && (
-                    <div>Remise : -{formatAmount(data.discount)} DH</div>
+                    <div>Remise : -{formatAmount(data.discount)}{'\u00A0'}DH</div>
                 )}
-                <strong style={{ fontSize: 14 }}>TOTAL : {formatAmount(data.total)} DH</strong>
+                <strong style={{ fontSize: 14 }}>TOTAL : {formatAmount(data.total)}{'\u00A0'}DH</strong>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 12 }}>

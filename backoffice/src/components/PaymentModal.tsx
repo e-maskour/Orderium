@@ -411,7 +411,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 type="button"
                 onClick={() => setFormData({ ...formData, amount: remainingAmount })}
                 icon={<AlertCircle style={{ width: '0.625rem', height: '0.625rem' }} />}
-                label={`Payer le reste (${formatAmount(remainingAmount, 2)} ${currency})`}
+                label={`Payer le reste (${formatAmount(remainingAmount, 2)}\u00A0${currency})`}
                 pt={{
                   root: {
                     style: {

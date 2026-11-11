@@ -390,7 +390,7 @@ export default function SharedDocumentPage() {
                   color: '#334155',
                 }}
                 body={(item: any) =>
-                  `${formatAmount(Number(item.unitPrice || item.priceBeforeTax || 0), 2)} ${t('currency')}`
+                  `${formatAmount(Number(item.unitPrice || item.priceBeforeTax || 0), 2)}\u00A0${t('currency')}`
                 }
               />
               <Column
@@ -413,7 +413,9 @@ export default function SharedDocumentPage() {
                   fontWeight: 700,
                   color: '#0f172a',
                 }}
-                body={(item: any) => `${formatAmount(Number(item.total || 0), 2)} ${t('currency')}`}
+                body={(item: any) =>
+                  `${formatAmount(Number(item.total || 0), 2)}\u00A0${t('currency')}`
+                }
               />
             </DataTable>
           </div>
@@ -439,7 +441,9 @@ export default function SharedDocumentPage() {
               >
                 <span style={{ color: '#64748b' }}>{t('subtotalExclTax')}</span>
                 <span style={{ fontWeight: 600, color: '#334155' }}>
-                  {formatAmount(subtotal, 2)} {t('currency')}
+                  {formatAmount(subtotal, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
               <div
@@ -453,7 +457,9 @@ export default function SharedDocumentPage() {
               >
                 <span style={{ color: '#64748b' }}>TVA</span>
                 <span style={{ fontWeight: 600, color: '#334155' }}>
-                  {formatAmount(tax, 2)} {t('currency')}
+                  {formatAmount(tax, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
               <div
@@ -471,7 +477,9 @@ export default function SharedDocumentPage() {
                   {t('totalInclTax')}
                 </span>
                 <span style={{ fontWeight: 800, color: '#235ae4', fontSize: '1.125rem' }}>
-                  {formatAmount(total, 2)} {t('currency')}
+                  {formatAmount(total, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
               </div>
             </div>

@@ -340,7 +340,7 @@ export default function OrderDetailPage() {
     if (!id) return;
     const isReceipt = type === 'receipt';
     const orderRef = order?.displayOrderNumber || `#${id}`;
-    const total = order?.total != null ? `${formatAmount(Number(order.total), 2)} DH` : '';
+    const total = order?.total != null ? `${formatAmount(Number(order.total), 2)}\u00A0DH` : '';
     const message = isAr
       ? `مرحباً، يرجى الاطلاع على ${isReceipt ? 'إيصال' : 'وصل التسليم'} الخاص بطلبكم ${orderRef}${total ? ` بمبلغ ${total}` : ''}.`
       : `Bonjour, veuillez trouver ci-joint ${isReceipt ? 'le reçu' : 'le bon de livraison'} de votre commande ${orderRef}${total ? ` d'un montant de ${total}` : ''}.`;
@@ -623,7 +623,7 @@ export default function OrderDetailPage() {
         toastConfirm(
           t('odDeletePaymentConfirm').replace(
             '{amount}',
-            `${formatAmount(p.amount, 2)} ${t('currency')}`,
+            `${formatAmount(p.amount, 2)}\u00A0${t('currency')}`,
           ),
           () => deletePaymentMutation.mutate(p.id),
           { variant: 'destructive', confirmLabel: t('delete') },
@@ -788,7 +788,7 @@ export default function OrderDetailPage() {
           <OrderStatusBanner
             stage={stage}
             remainingAmount={remainingAmount}
-            remainingLabel={`${formatAmount(remainingAmount, 2)} ${t('currency')}`}
+            remainingLabel={`${formatAmount(remainingAmount, 2)}\u00A0${t('currency')}`}
             action={primaryAction}
           />
 
@@ -999,7 +999,9 @@ export default function OrderDetailPage() {
                                 </span>
                                 <span className="od-line__calc">
                                   <span className="od-qty">{formatQuantity(qty, 2)}</span>×{' '}
-                                  {formatAmount(unitPrice, 2)} {t('currency')}
+                                  {formatAmount(unitPrice, 2)}
+                                  {'\u00A0'}
+                                  {t('currency')}
                                 </span>
                                 {disc > 0 && (
                                   <span className="od-line__discount">
@@ -1008,7 +1010,9 @@ export default function OrderDetailPage() {
                                 )}
                               </div>
                               <span className="od-line__sum">
-                                {formatAmount(lineTotal, 2)} {t('currency')}
+                                {formatAmount(lineTotal, 2)}
+                                {'\u00A0'}
+                                {t('currency')}
                               </span>
                             </>
                           )}
@@ -1227,14 +1231,18 @@ export default function OrderDetailPage() {
                     <div className="od-totals__row od-totals__row--discount">
                       <span>{t('discount')}</span>
                       <span>
-                        − {formatAmount(globalDiscount, 2)} {t('currency')}
+                        − {formatAmount(globalDiscount, 2)}
+                        {'\u00A0'}
+                        {t('currency')}
                       </span>
                     </div>
                   )}
                   <div className="od-totals__row od-totals__row--grand">
                     <span>{t('odTotalToPay')}</span>
                     <span>
-                      {formatAmount(computedTotal, 2)} {t('currency')}
+                      {formatAmount(computedTotal, 2)}
+                      {'\u00A0'}
+                      {t('currency')}
                     </span>
                   </div>
                 </div>
@@ -1262,7 +1270,9 @@ export default function OrderDetailPage() {
                       </span>
                       <div className="od-pay__what">
                         <span className="od-pay__amount">
-                          {formatAmount(p.amount, 2)} {t('currency')}
+                          {formatAmount(p.amount, 2)}
+                          {'\u00A0'}
+                          {t('currency')}
                         </span>
                         <span className="od-pay__meta">
                           {paymentTypeLabel(p.paymentType)} · {formatDay(p.paymentDate)}

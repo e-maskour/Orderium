@@ -229,7 +229,7 @@ export function differsFromPlan(
 /** `1490` → `1.490 DH HT`, `49.5` → `49,50 DH HT`. Plan and add-on prices are HT. */
 export function formatPriceHt(amount: number | null | undefined): string {
   const n = Number(amount) || 0;
-  return `${formatAmount(n, Number.isInteger(n) ? 0 : 2)} DH HT`;
+  return `${formatAmount(n, Number.isInteger(n) ? 0 : 2)}\u00A0DH HT`;
 }
 
 /** Add-on yearly price: 10 × monthly, like plans (2 months free). */

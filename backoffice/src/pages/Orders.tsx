@@ -412,7 +412,7 @@ export default function Orders() {
     const phone = rawPhone.replace(/[\s\-()]/g, '').replace(/^\+/, '');
     const orderRef = order?.displayOrderNumber || `#${orderId}`;
     const total =
-      order?.totalAmount != null ? `${formatAmount(Number(order.totalAmount), 2)} DH` : '';
+      order?.totalAmount != null ? `${formatAmount(Number(order.totalAmount), 2)}\u00A0DH` : '';
     const isAr = language?.startsWith('ar');
     const isReceipt = documentType === 'receipt';
     const message = isAr
@@ -856,7 +856,7 @@ export default function Orders() {
             onToggleSelect={(key) => toggleSelectOrder(key as number)}
             config={{
               topLeft: (o: any) => `${o.displayOrderNumber}`, // uses displayOrderNumber getter (orderNumber ?? documentNumber ?? #id)
-              topRight: (o: any) => `${formatAmount(o.total || 0, 2)} ${t('currency')}`,
+              topRight: (o: any) => `${formatAmount(o.total || 0, 2)}\u00A0${t('currency')}`,
               bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
               bottomRight: (o: any) => {
                 const osb = getOrderStatusBadge(o.status);
@@ -935,7 +935,9 @@ export default function Orders() {
                     color: stat.color,
                   }}
                 >
-                  {formatAmount(stat.value, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(stat.value, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               </div>
             ))}
@@ -1310,13 +1312,15 @@ export default function Orders() {
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   footer={
                     <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
-                      {formatAmount(orderAggregates.totalAmount, 2)}{' '}
+                      {formatAmount(orderAggregates.totalAmount, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   }
                   body={(order: any) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
-                      {formatAmount(order.total, 2)}{' '}
+                      {formatAmount(order.total, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
@@ -1330,13 +1334,15 @@ export default function Orders() {
                   headerStyle={{ fontSize: '0.8125rem', fontWeight: 700 }}
                   footer={
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
-                      {formatAmount(orderAggregates.totalPaid, 2)}{' '}
+                      {formatAmount(orderAggregates.totalPaid, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
                     </span>
                   }
                   body={(order: any) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
-                      {formatAmount(order.paidAmount ?? 0, 2)}{' '}
+                      {formatAmount(order.paidAmount ?? 0, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
                     </span>
                   )}
@@ -1356,7 +1362,8 @@ export default function Orders() {
                         color: orderAggregates.totalRemaining > 0 ? '#dc2626' : '#047857',
                       }}
                     >
-                      {formatAmount(orderAggregates.totalRemaining, 2)}{' '}
+                      {formatAmount(orderAggregates.totalRemaining, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
                     </span>
                   }
@@ -1371,7 +1378,8 @@ export default function Orders() {
                             color: remaining > 0 ? '#dc2626' : '#047857',
                           }}
                         >
-                          {formatAmount(remaining, 2)}{' '}
+                          {formatAmount(remaining, 2)}
+                          {'\u00A0'}
                           <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>
                             {t('currency')}
                           </span>
@@ -1869,7 +1877,9 @@ export default function Orders() {
                 >
                   <div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#047857' }}>
-                      {formatAmount(p.amount, 2)} {t('currency')}
+                      {formatAmount(p.amount, 2)}
+                      {'\u00A0'}
+                      {t('currency')}
                     </span>
                     <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>
                       {p.paymentDate} · {p.paymentType}

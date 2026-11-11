@@ -482,7 +482,7 @@ export default function Products() {
               onToggleSelect={(key) => toggleSelectProduct(key as number)}
               config={{
                 topLeft: (p: IProduct) => p.name,
-                topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)} ${t('currency')}`,
+                topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)}\u00A0${t('currency')}`,
                 bottomLeft: (p: IProduct) =>
                   [p.code, p.stock != null ? `Stock: ${formatQuantity(p.stock)}` : null]
                     .filter(Boolean)
@@ -692,7 +692,8 @@ export default function Products() {
                   sortField="price"
                   body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#235ae4' }}>
-                      {formatAmount(product.price || 0, 2)}{' '}
+                      {formatAmount(product.price || 0, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
@@ -703,7 +704,8 @@ export default function Products() {
                   sortField="cost"
                   body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                      {formatAmount(product.cost || 0, 2)}{' '}
+                      {formatAmount(product.cost || 0, 2)}
+                      {'\u00A0'}
                       <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                     </span>
                   )}
@@ -729,7 +731,8 @@ export default function Products() {
                             color: '#b91c1c',
                           }}
                         >
-                          {formatQuantity(product.stock)}{' '}
+                          {formatQuantity(product.stock)}
+                          {'\u00A0'}
                           {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
                         </span>
                       );
@@ -763,7 +766,8 @@ export default function Products() {
                           color: '#166534',
                         }}
                       >
-                        {formatQuantity(product.stock)}{' '}
+                        {formatQuantity(product.stock)}
+                        {'\u00A0'}
                         {translateUomCode((product as any).saleUnitOfMeasure?.code, language)}
                       </span>
                     );

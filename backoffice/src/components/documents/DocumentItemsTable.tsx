@@ -335,7 +335,7 @@ export function DocumentItemsTable({
               </h3>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
                 {items.length} {t('items')}
-                {showTotalColumn && ` — ${formatAmount(grandTotal)} ${currency}`}
+                {showTotalColumn && ` — ${formatAmount(grandTotal)}\u00A0${currency}`}
               </p>
             </div>
           </div>
@@ -634,7 +634,8 @@ export function DocumentItemsTable({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {formatAmount(calculateItemTotal(item))}{' '}
+                    {formatAmount(calculateItemTotal(item))}
+                    {'\u00A0'}
                     <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>
                       {currency}
                     </span>
@@ -698,7 +699,9 @@ export function DocumentItemsTable({
                     letterSpacing: '-0.01em',
                   }}
                 >
-                  {formatAmount(grandTotal)} {currency}
+                  {formatAmount(grandTotal)}
+                  {'\u00A0'}
+                  {currency}
                 </span>
               </div>
             </div>
@@ -877,7 +880,9 @@ export function DocumentItemsTable({
                       {t('invoice.totalHeader')} HT
                     </span>
                     <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#235ae4' }}>
-                      {formatAmount(calculateItemTotal(item))} {currency}
+                      {formatAmount(calculateItemTotal(item))}
+                      {'\u00A0'}
+                      {currency}
                     </span>
                   </div>
                 )}

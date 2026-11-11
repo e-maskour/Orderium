@@ -125,7 +125,7 @@ export function ProductForm({
     [t],
   );
 
-  const money = (v: number) => `${formatAmount(v, 2)} ${currency}`;
+  const money = (v: number) => `${formatAmount(v, 2)}\u00A0${currency}`;
 
   /** Money input bound to a numeric form field. */
   const moneyInput = (

@@ -27,7 +27,7 @@ function toLocalIso(date: Date): string {
  */
 export function formatMoney(amount: number, currency = 'MAD'): string {
   // French format regardless of browser locale: `12.374,90 MAD`
-  return `${formatAmount(amount, 2)} ${currency}`;
+  return `${formatAmount(amount, 2)}\u00A0${currency}`;
 }
 
 /** `2026-08-08` → `08/08/2026`. Date-only strings are parsed as local dates. */
@@ -73,7 +73,7 @@ export function formatBytes(bytes: number | null | undefined): string {
   if (!bytes || bytes <= 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${formatAmount(bytes / Math.pow(1024, i), i === 0 ? 0 : 1)} ${units[i]}`;
+  return `${formatAmount(bytes / Math.pow(1024, i), i === 0 ? 0 : 1)}\u00A0${units[i]}`;
 }
 
 /**

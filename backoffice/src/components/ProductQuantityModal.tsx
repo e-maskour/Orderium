@@ -261,7 +261,9 @@ export const ProductQuantityModal = ({
                     letterSpacing: '-0.01em',
                   }}
                 >
-                  {formatAmount(product.price, 2)} {t('currency')}
+                  {formatAmount(product.price, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </span>
                 <span
                   style={{
@@ -385,7 +387,9 @@ export const ProductQuantityModal = ({
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  {formatAmount(totalPrice, 2)} {t('currency')}
+                  {formatAmount(totalPrice, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </p>
               </div>
             )}

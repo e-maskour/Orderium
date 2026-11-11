@@ -458,7 +458,9 @@ export function DocumentTable({
                   marginLeft: 'auto',
                 }}
               >
-                {formatAmount(stat.value, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(stat.value, 2)}
+                {'\u00A0'}
+                {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             </div>
           ))}
@@ -643,13 +645,17 @@ export function DocumentTable({
             footer={
               aggregates ? (
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
-                  {formatAmount(aggregates.totalSubtotal, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(aggregates.totalSubtotal, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               ) : undefined
             }
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
-                {formatAmount(doc.subtotal, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(doc.subtotal, 2)}
+                {'\u00A0'}
+                {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             )}
           />
@@ -661,7 +667,9 @@ export function DocumentTable({
               sortable
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
-                  {formatAmount(doc.tax, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(doc.tax, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               )}
             />
@@ -674,13 +682,17 @@ export function DocumentTable({
             footer={
               aggregates ? (
                 <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
-                  {formatAmount(aggregates.totalAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(aggregates.totalAmount, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               ) : undefined
             }
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
-                {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(doc.total, 2)}
+                {'\u00A0'}
+                {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             )}
           />
@@ -693,13 +705,17 @@ export function DocumentTable({
               footer={
                 aggregates ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
-                    {formatAmount(aggregates.totalPaid, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                    {formatAmount(aggregates.totalPaid, 2)}
+                    {'\u00A0'}
+                    {language === 'ar' ? 'د.م' : 'DH'}
                   </span>
                 ) : undefined
               }
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
-                  {formatAmount(doc.paidAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(doc.paidAmount, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               )}
             />
@@ -719,7 +735,9 @@ export function DocumentTable({
                       color: aggregates.totalRemaining > 0 ? '#b91c1c' : '#64748b',
                     }}
                   >
-                    {formatAmount(aggregates.totalRemaining, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                    {formatAmount(aggregates.totalRemaining, 2)}
+                    {'\u00A0'}
+                    {language === 'ar' ? 'د.م' : 'DH'}
                   </span>
                 ) : undefined
               }
@@ -731,7 +749,9 @@ export function DocumentTable({
                     color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b',
                   }}
                 >
-                  {formatAmount(doc.remainingAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(doc.remainingAmount, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               )}
             />
@@ -777,7 +797,9 @@ export function DocumentTable({
             ),
             topRight: (doc) => (
               <span>
-                {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(doc.total, 2)}
+                {'\u00A0'}
+                {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             ),
             bottomLeft: (doc) => `${doc.partnerName} · ${formatDate(doc.date)}`,

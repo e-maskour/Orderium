@@ -992,7 +992,7 @@ export default function Caisse() {
               <>
                 <Plus />
                 {t('recordPayment')} —{' '}
-                {payAmount > 0 ? `${formatAmount(payAmount, 2)} ${currency}` : ''}
+                {payAmount > 0 ? `${formatAmount(payAmount, 2)}\u00A0${currency}` : ''}
               </>
             )}
           </button>
@@ -1244,7 +1244,9 @@ export default function Caisse() {
                     </div>
                     <div className="caisse-timeline-content">
                       <div className="caisse-timeline-amount">
-                        +{formatAmount(p.amount, 2)} {currency}
+                        +{formatAmount(p.amount, 2)}
+                        {'\u00A0'}
+                        {currency}
                       </div>
                       <div className="caisse-timeline-meta">
                         {ORDER_PAYMENT_TYPE_LABELS[p.paymentType]} · {fmtDatetime(p.dateCreated)}
@@ -1306,7 +1308,9 @@ export default function Caisse() {
               }}
             >
               <Plus />
-              {t('addPayment')} — {formatAmount(historyOrder.remainingAmount, 2)} {currency}
+              {t('addPayment')} — {formatAmount(historyOrder.remainingAmount, 2)}
+              {'\u00A0'}
+              {currency}
             </button>
           </div>
         )}

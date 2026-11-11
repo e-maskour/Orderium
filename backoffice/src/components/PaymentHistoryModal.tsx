@@ -147,7 +147,9 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                 {t('totalInvoice')}
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
-                {formatAmount(invoiceTotal, 2)} {currency}
+                {formatAmount(invoiceTotal, 2)}
+                {'\u00A0'}
+                {currency}
               </div>
             </div>
             <div>
@@ -155,7 +157,9 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                 {t('totalPaid')}
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>
-                {formatAmount(totalPaid, 2)} {currency}
+                {formatAmount(totalPaid, 2)}
+                {'\u00A0'}
+                {currency}
               </div>
             </div>
             <div>
@@ -169,7 +173,9 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                   color: isFullyPaid ? '#059669' : '#d97706',
                 }}
               >
-                {formatAmount(remainingAmount, 2)} {currency}
+                {formatAmount(remainingAmount, 2)}
+                {'\u00A0'}
+                {currency}
               </div>
             </div>
           </div>
@@ -246,7 +252,9 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         {t('amount')}
                       </div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>
-                        {formatAmount(p.amount, 2)} {currency}
+                        {formatAmount(p.amount, 2)}
+                        {'\u00A0'}
+                        {currency}
                       </div>
                     </div>
                     <div>

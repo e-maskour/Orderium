@@ -837,7 +837,7 @@ export function CreateTenant() {
                 [
                   'List price (HT)',
                   selectedPlan && selectedPlan.priceMonthly > 0
-                    ? `${formatAmount(selectedPlan.priceMonthly, 0)} ${currencyLabel(selectedPlan.currency)} / month · ${formatAmount(selectedPlan.priceYearly, 0)} ${currencyLabel(selectedPlan.currency)} / year`
+                    ? `${formatAmount(selectedPlan.priceMonthly, 0)}\u00A0${currencyLabel(selectedPlan.currency)} / month · ${formatAmount(selectedPlan.priceYearly, 0)}\u00A0${currencyLabel(selectedPlan.currency)} / year`
                     : 'Free',
                 ],
                 ['Trial', form.trialDays > 0 ? `${form.trialDays} days` : 'None'],

@@ -58,7 +58,9 @@ function OrderBlock({ order, t, currency }: OrderBlockProps) {
           {order.partnerName}
         </span>
         <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}>
-          {formatAmount(order.total, 2)} {currency}
+          {formatAmount(order.total, 2)}
+          {'\u00A0'}
+          {currency}
         </span>
       </header>
 
@@ -419,7 +421,9 @@ export function OrdersMergeModal({ isOpen, onClose, orderIds, onPrint }: OrdersM
             >
               <span>{t('mergeGrandTotal')}</span>
               <span>
-                {formatAmount(data.grandTotal, 2)} {currency}
+                {formatAmount(data.grandTotal, 2)}
+                {'\u00A0'}
+                {currency}
               </span>
             </div>
           </div>

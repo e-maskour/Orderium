@@ -280,7 +280,9 @@ export const PriceConfirmModal = ({
                   color: 'rgba(255,255,255,0.85)',
                 }}
               >
-                {formatAmount(product.price, 2)} {t('currency')}
+                {formatAmount(product.price, 2)}
+                {'\u00A0'}
+                {t('currency')}
               </p>
             </div>
             {product.cost != null && (
@@ -313,7 +315,9 @@ export const PriceConfirmModal = ({
                     color: '#fca5a5',
                   }}
                 >
-                  {formatAmount(product.cost, 2)} {t('currency')}
+                  {formatAmount(product.cost, 2)}
+                  {'\u00A0'}
+                  {t('currency')}
                 </p>
               </div>
             )}

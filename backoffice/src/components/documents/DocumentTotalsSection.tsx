@@ -82,7 +82,9 @@ export function DocumentTotalsSection({
                 {t('subtotalHT')}
               </span>
               <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
-                {formatAmount(totalHT, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(totalHT, 2)}
+                {'\u00A0'}
+                {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             </div>
 
@@ -126,7 +128,9 @@ export function DocumentTotalsSection({
                       <span style={{ fontSize: '0.875rem', color: '#475569' }}>TVA {rate}%</span>
                     </div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
-                      {formatAmount(amount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                      {formatAmount(amount, 2)}
+                      {'\u00A0'}
+                      {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
                 ))}
@@ -148,7 +152,9 @@ export function DocumentTotalsSection({
                   {t('totalTVA')}
                 </span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#334155' }}>
-                  {formatAmount(totalTVA, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(totalTVA, 2)}
+                  {'\u00A0'}
+                  {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               </div>
             )}

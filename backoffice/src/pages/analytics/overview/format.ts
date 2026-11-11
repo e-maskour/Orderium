@@ -25,5 +25,5 @@ export function fmtParts(v: unknown, f: Fmt): { main: string; unit?: string } {
 
 export function fmt(v: unknown, f: Fmt): string {
   const { main, unit } = fmtParts(v, f);
-  return unit ? `${main} ${unit}` : main;
+  return unit ? `${main}\u00A0${unit}` : main;
 }

@@ -31,5 +31,6 @@ export function formatCurrency(
   decimals: number = 2
 ): string {
   const symbol = lang === 'ar' ? 'د.م' : 'DH';
-  return `${formatAmount(value, decimals)} ${symbol}`;
+  // Non-breaking space: the amount and its symbol never split across lines.
+  return `${formatAmount(value, decimals)}\u00A0${symbol}`;
 }
